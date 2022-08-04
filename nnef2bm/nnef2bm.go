@@ -2,7 +2,7 @@ package nnef2bm
 
 import (
 	"fmt"
-	parser "github.com/BondMachineHQ/nnef2bm/nnef2bm_parser"
+	parser "github.com/BondMachineHQ/BondMachine/nnef2bm/nnef2bm_parser"
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 )
 
