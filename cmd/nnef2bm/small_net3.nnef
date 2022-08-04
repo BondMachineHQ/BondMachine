@@ -1,0 +1,10 @@
+version 1.0;
+
+graph small_net3( input ) -> ( output_ )
+{
+    input = external<scalar>(shape = [1]);
+    W1 = variable<scalar>(shape = [1], label = 'W');
+    b1 = variable<scalar>(shape = [1], label = 'b');
+    mul1 = mul(x = input, y = W1);
+    output_ = add(x = mul1, y = b1);
+}
