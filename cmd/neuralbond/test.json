@@ -1,0 +1,132 @@
+{
+	"Nodes": [
+		{
+			"Layer": 1,
+			"Pos": 0,
+			"Type": "ccc",
+			"Bias": 0.0
+		}
+	],
+	"Weights": [
+		{
+			"Layer": 1,
+			"PosCurrLayer": 0,
+			"PosPrevLayer": 0,
+			"Value": 0
+		},
+		{
+			"Layer": 1,
+			"PosCurrLayer": 1,
+			"PosPrevLayer": 0,
+			"Value": 0
+		},
+		{
+			"Layer": 1,
+			"PosCurrLayer": 2,
+			"PosPrevLayer": 0,
+			"Value": 0
+		},
+		{
+			"Layer": 1,
+			"PosCurrLayer": 3,
+			"PosPrevLayer": 0,
+			"Value": 0
+		},
+		{
+			"Layer": 1,
+			"PosCurrLayer": 4,
+			"PosPrevLayer": 0,
+			"Value": 0
+		},
+		{
+			"Layer": 1,
+			"PosCurrLayer": 0,
+			"PosPrevLayer": 1,
+			"Value": 0
+		},
+		{
+			"Layer": 1,
+			"PosCurrLayer": 1,
+			"PosPrevLayer": 1,
+			"Value": 0
+		},
+		{
+			"Layer": 1,
+			"PosCurrLayer": 2,
+			"PosPrevLayer": 1,
+			"Value": 0
+		},
+		{
+			"Layer": 1,
+			"PosCurrLayer": 3,
+			"PosPrevLayer": 1,
+			"Value": 0
+		},
+		{
+			"Layer": 1,
+			"PosCurrLayer": 4,
+			"PosPrevLayer": 1,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 0,
+			"PosPrevLayer": 0,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 1,
+			"PosPrevLayer": 0,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 0,
+			"PosPrevLayer": 1,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 1,
+			"PosPrevLayer": 1,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 0,
+			"PosPrevLayer": 2,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 1,
+			"PosPrevLayer": 2,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 0,
+			"PosPrevLayer": 3,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 1,
+			"PosPrevLayer": 3,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 0,
+			"PosPrevLayer": 4,
+			"Value": 0
+		},
+		{
+			"Layer": 2,
+			"PosCurrLayer": 1,
+			"PosPrevLayer": 4,
+			"Value": 0
+		}
+	]
+}
