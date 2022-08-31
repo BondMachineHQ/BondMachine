@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 
 	"github.com/BondMachineHQ/BondMachine/neuralbond"
@@ -37,6 +36,7 @@ func main() {
 		} else {
 			panic(err)
 		}
+	} else {
+		panic("No net file specified")
 	}
-	fmt.Println(net)
 }
