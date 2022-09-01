@@ -1,0 +1,9 @@
+%section softmax .romtext iomode:sync
+        entry _start    ; Entry point
+_start:
+	clr r0
+        i2r	r0, i0
+	r2o	r0, o0
+        j _start
+
+%endsection

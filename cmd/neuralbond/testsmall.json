@@ -1,0 +1,108 @@
+{
+    "Nodes": [
+        {
+            "Layer": 0,
+            "Pos": 0,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 1,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 2,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 3,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 1,
+            "Pos": 0,
+            "Type": "linear",
+            "Bias": 0.0010602055117487907
+        },
+        {
+            "Layer": 2,
+            "Pos": 0,
+            "Type": "softmax",
+            "Bias": 0.0010604208800941706
+        },
+        {
+            "Layer": 2,
+            "Pos": 1,
+            "Type": "softmax",
+            "Bias": -0.0010604208800941706
+        },
+        {
+            "Layer": 3,
+            "Pos": 0,
+            "Type": "output",
+            "Bias": 0
+        },
+        {
+            "Layer": 3,
+            "Pos": 1,
+            "Type": "output",
+            "Bias": 0
+        }
+    ],
+    "Weights": [
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 0,
+            "Value": -0.8297362327575684
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 1,
+            "Value": -0.8517279624938965
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 2,
+            "Value": -0.5390800833702087
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 3,
+            "Value": 0.4787808358669281
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 0,
+            "Value": 0.11026980727910995
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 0,
+            "Value": -1.115295171737671
+        },
+        {
+            "Layer": 3,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 0,
+            "Value": 0
+        },
+        {
+            "Layer": 3,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 1,
+            "Value": 0
+        }
+    ]
+}

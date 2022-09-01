@@ -40,11 +40,14 @@ func main() {
 		panic("No net file specified")
 	}
 
+	// fmt.Println(net.Weights)
+	net.Normalize()
+
 	// fmt.Println(net)
 
 	if *saveBasm != "" {
-		if basmFile, err := neuralbond.WriteBasm(); err == nil {
-			ioutil.WriteFile(*saveBasm, basmFile, 0644)
+		if basmFile, err := net.WriteBasm(); err == nil {
+			ioutil.WriteFile(*saveBasm, []byte(basmFile), 0644)
 		} else {
 			panic(err)
 		}
