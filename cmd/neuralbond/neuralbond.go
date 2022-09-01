@@ -13,14 +13,14 @@ var debug = flag.Bool("d", false, "Verbose")
 
 var registerSize = flag.Int("register-size", 8, "Number of bits per register (n-bit)")
 
-var saveBondMachine = flag.String("save-bondmachine", "", "Create a BondMachine JSON file")
+var saveBasm = flag.String("save-basm", "", "Create a basm file")
 
 var netFile = flag.String("net-file", "", "JSON description of the net")
 
 func init() {
 	flag.Parse()
-	if *saveBondMachine == "" {
-		*saveBondMachine = "a.out.json"
+	if *saveBasm == "" {
+		*saveBasm = "out.basm"
 	}
 }
 
@@ -39,4 +39,15 @@ func main() {
 	} else {
 		panic("No net file specified")
 	}
+
+	// fmt.Println(net)
+
+	if *saveBasm != "" {
+		if basmFile, err := neuralbond.WriteBasm(); err == nil {
+			ioutil.WriteFile(*saveBasm, basmFile, 0644)
+		} else {
+			panic(err)
+		}
+	}
+
 }
