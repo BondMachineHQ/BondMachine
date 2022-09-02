@@ -2,7 +2,7 @@
         entry _start    ; Entry point
 _start:
 	clr r0
-        i2r	r0, i0
+{{range $y := intRange "0" .Params.inputs}}{{printf "i2r r0,i%d\n" $y}}{{end}}
 	r2o	r0, o0
         j _start
 

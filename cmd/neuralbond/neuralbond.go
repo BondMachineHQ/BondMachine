@@ -43,8 +43,6 @@ func main() {
 	// fmt.Println(net.Weights)
 	net.Normalize()
 
-	// fmt.Println(net)
-
 	if *saveBasm != "" {
 		if basmFile, err := net.WriteBasm(); err == nil {
 			ioutil.WriteFile(*saveBasm, []byte(basmFile), 0644)

@@ -20,16 +20,27 @@ type Weight struct {
 }
 
 type Node struct {
-	Layer int
-	Pos   int
-	Type  string
-	Bias  float32
+	Layer   int
+	Pos     int
+	Type    string
+	Bias    float32
+	Inputs  int
+	Outputs int
 }
 
 func (n *TrainedNet) Normalize() {
 	for w, weight := range n.Weights {
 		downL, downP := weight.Layer-1, weight.PosPrevLayer
 		upL, upP := weight.Layer, weight.PosCurrLayer
+
+		for i, node := range n.Nodes {
+			if node.Layer == downL && node.Pos == downP {
+				n.Nodes[i].Outputs++
+			}
+			if node.Layer == upL && node.Pos == upP {
+				n.Nodes[i].Inputs++
+			}
+		}
 
 		sameDown := make([]int, 0)
 		sameUp := make([]int, 0)
@@ -75,10 +86,9 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 			result += fmt.Sprintf("%%meta ioatt input_%d cp:node_0_%d, type:input, index:0\n", node.Pos, node.Pos)
 			result += fmt.Sprintf("%%meta ioatt input_%d cp:bm, type:input, index:%d\n", node.Pos, node.Pos)
 		} else if node.Type == "linear" {
-			result += fmt.Sprintf("%%meta cpdef node_%d_%d romcode:linear, inputs:4\n", node.Layer, node.Pos)
+			result += fmt.Sprintf("%%meta cpdef node_%d_%d romcode:linear, inputs:%d\n", node.Layer, node.Pos, node.Inputs)
 		} else if node.Type == "softmax" {
-			// result += fmt.Sprintf("%%meta cpdef node_%d_%d romcode:softmax, bias:%f\n", node.Layer, node.Pos, node.Bias)
-			result += fmt.Sprintf("%%meta cpdef node_%d_%d romcode:softmax\n", node.Layer, node.Pos)
+			result += fmt.Sprintf("%%meta cpdef node_%d_%d romcode:softmax, inputs:%d\n", node.Layer, node.Pos, node.Inputs)
 		} else if node.Type == "output" {
 			result += fmt.Sprintf("%%meta cpdef node_%d_%d romcode:terminal\n", node.Layer, node.Pos)
 			result += fmt.Sprintf("%%meta iodef output_%d type:io\n", node.Pos)
@@ -98,7 +108,7 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 		result += fmt.Sprintf("%%meta iodef up%s type:io\n", weightCP)
 		result += fmt.Sprintf("%%meta iodef down%s type:io\n", weightCP)
 		result += fmt.Sprintf("%%meta ioatt down%s cp:%s, type:input, index:0\n", weightCP, weightCP)
-		result += fmt.Sprintf("%%meta ioatt down%s cp:%s, type:output, index:%d\n", weightCP, downNode, weight.RelPosDown)
+		result += fmt.Sprintf("%%meta ioatt down%s cp:%s, type:output, index:0\n", weightCP, downNode)
 		result += fmt.Sprintf("%%meta ioatt up%s cp:%s, type:input, index:%d\n", weightCP, upNode, weight.RelPosUp)
 		result += fmt.Sprintf("%%meta ioatt up%s cp:%s, type:output, index:0\n", weightCP, weightCP)
 	}

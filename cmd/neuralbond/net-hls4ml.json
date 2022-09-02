@@ -1,0 +1,1512 @@
+{
+    "Nodes": [
+        {
+            "Layer": 0,
+            "Pos": 0,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 1,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 2,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 3,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 4,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 5,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 6,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 7,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 8,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 9,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 10,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 11,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 12,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 13,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 14,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 0,
+            "Pos": 15,
+            "Type": "input",
+            "Bias": 0
+        },
+        {
+            "Layer": 1,
+            "Pos": 0,
+            "Type": "linear",
+            "Bias": 0.09884274750947952
+        },
+        {
+            "Layer": 1,
+            "Pos": 1,
+            "Type": "linear",
+            "Bias": -0.07835071533918381
+        },
+        {
+            "Layer": 1,
+            "Pos": 2,
+            "Type": "linear",
+            "Bias": 0.023214945569634438
+        },
+        {
+            "Layer": 1,
+            "Pos": 3,
+            "Type": "linear",
+            "Bias": -0.04130195453763008
+        },
+        {
+            "Layer": 1,
+            "Pos": 4,
+            "Type": "linear",
+            "Bias": -0.08307968825101852
+        },
+        {
+            "Layer": 1,
+            "Pos": 5,
+            "Type": "linear",
+            "Bias": -0.018267454579472542
+        },
+        {
+            "Layer": 1,
+            "Pos": 6,
+            "Type": "linear",
+            "Bias": 0.03880077973008156
+        },
+        {
+            "Layer": 1,
+            "Pos": 7,
+            "Type": "linear",
+            "Bias": 0.05456779897212982
+        },
+        {
+            "Layer": 1,
+            "Pos": 8,
+            "Type": "linear",
+            "Bias": 0.025428814813494682
+        },
+        {
+            "Layer": 1,
+            "Pos": 9,
+            "Type": "linear",
+            "Bias": -0.02398042194545269
+        },
+        {
+            "Layer": 2,
+            "Pos": 0,
+            "Type": "softmax",
+            "Bias": 0.032041750848293304
+        },
+        {
+            "Layer": 2,
+            "Pos": 1,
+            "Type": "softmax",
+            "Bias": -0.050754860043525696
+        },
+        {
+            "Layer": 2,
+            "Pos": 2,
+            "Type": "softmax",
+            "Bias": -0.09558224678039551
+        },
+        {
+            "Layer": 2,
+            "Pos": 3,
+            "Type": "softmax",
+            "Bias": 0.0043151178397238255
+        },
+        {
+            "Layer": 2,
+            "Pos": 4,
+            "Type": "softmax",
+            "Bias": 0.08361799269914627
+        },
+        {
+            "Layer": 3,
+            "Pos": 0,
+            "Type": "output",
+            "Bias": 0
+        },
+        {
+            "Layer": 3,
+            "Pos": 1,
+            "Type": "output",
+            "Bias": 0
+        },
+        {
+            "Layer": 3,
+            "Pos": 2,
+            "Type": "output",
+            "Bias": 0
+        },
+        {
+            "Layer": 3,
+            "Pos": 3,
+            "Type": "output",
+            "Bias": 0
+        },
+        {
+            "Layer": 3,
+            "Pos": 4,
+            "Type": "output",
+            "Bias": 0
+        }
+    ],
+    "Weights": [
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 0,
+            "Value": -0.3732176721096039
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 0,
+            "Value": -0.4417039752006531
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 0,
+            "Value": -0.22463205456733704
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 0,
+            "Value": 0.25580140948295593
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 0,
+            "Value": -0.11351704597473145
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 0,
+            "Value": 0.14554736018180847
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 0,
+            "Value": -0.16594773530960083
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 0,
+            "Value": -0.0945199653506279
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 0,
+            "Value": 0.3458292782306671
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 0,
+            "Value": -0.0353318490087986
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 1,
+            "Value": 0.07582799345254898
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 1,
+            "Value": -0.1519888937473297
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 1,
+            "Value": -0.17819510400295258
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 1,
+            "Value": -0.19675259292125702
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 1,
+            "Value": -0.28721433877944946
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 1,
+            "Value": 0.02475028857588768
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 1,
+            "Value": 0.2825673818588257
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 1,
+            "Value": -0.12169539928436279
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 1,
+            "Value": -0.12189605087041855
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 1,
+            "Value": 0.09692960977554321
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 2,
+            "Value": 0.532947838306427
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 2,
+            "Value": 0.0448831170797348
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 2,
+            "Value": 0.06245061755180359
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 2,
+            "Value": 0.1252368986606598
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 2,
+            "Value": 0.08718626201152802
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 2,
+            "Value": -0.33108359575271606
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 2,
+            "Value": -0.21944591403007507
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 2,
+            "Value": 0.026734227314591408
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 2,
+            "Value": -0.24667410552501678
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 2,
+            "Value": -0.24181222915649414
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 3,
+            "Value": 0.12779733538627625
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 3,
+            "Value": -0.14598900079727173
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 3,
+            "Value": 0.37470945715904236
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 3,
+            "Value": 0.44576385617256165
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 3,
+            "Value": 0.02523438073694706
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 3,
+            "Value": -0.10759761929512024
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 3,
+            "Value": -0.30942460894584656
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 3,
+            "Value": -0.5368393063545227
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 3,
+            "Value": -0.2953173816204071
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 3,
+            "Value": -0.4224061071872711
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 4,
+            "Value": -0.26826485991477966
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 4,
+            "Value": 0.3088720738887787
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 4,
+            "Value": 0.1478724479675293
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 4,
+            "Value": 0.12096283584833145
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 4,
+            "Value": -0.2547937333583832
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 4,
+            "Value": 0.21886833012104034
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 4,
+            "Value": -0.22591257095336914
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 4,
+            "Value": -0.4289463460445404
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 4,
+            "Value": -0.03573776036500931
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 4,
+            "Value": -0.22589276731014252
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 5,
+            "Value": -0.12914498150348663
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 5,
+            "Value": 0.48423197865486145
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 5,
+            "Value": 0.3028939962387085
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 5,
+            "Value": 0.024884860962629318
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 5,
+            "Value": 0.41128453612327576
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 5,
+            "Value": -0.22789472341537476
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 5,
+            "Value": -0.3098880648612976
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 5,
+            "Value": 0.12028979510068893
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 5,
+            "Value": 0.018354568630456924
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 5,
+            "Value": 0.08161045610904694
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 6,
+            "Value": 0.08741068840026855
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 6,
+            "Value": 0.3442930281162262
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 6,
+            "Value": 0.43963098526000977
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 6,
+            "Value": -0.2121787816286087
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 6,
+            "Value": -0.1249794140458107
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 6,
+            "Value": 0.17896313965320587
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 6,
+            "Value": -0.14098365604877472
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 6,
+            "Value": 0.002173390705138445
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 6,
+            "Value": -0.02502504549920559
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 6,
+            "Value": 0.24428118765354156
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 7,
+            "Value": 0.18215133249759674
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 7,
+            "Value": 0.31676530838012695
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 7,
+            "Value": 0.37153515219688416
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 7,
+            "Value": -0.15452362596988678
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 7,
+            "Value": 0.45437556505203247
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 7,
+            "Value": -0.39974117279052734
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 7,
+            "Value": 0.048728276044130325
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 7,
+            "Value": 0.0026055637281388044
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 7,
+            "Value": -0.3950260281562805
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 7,
+            "Value": 0.005614904221147299
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 8,
+            "Value": 0.1574224829673767
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 8,
+            "Value": -0.10404502600431442
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 8,
+            "Value": -0.1083475798368454
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 8,
+            "Value": 0.029673326760530472
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 8,
+            "Value": -0.32332396507263184
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 8,
+            "Value": 0.41478168964385986
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 8,
+            "Value": -0.38531291484832764
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 8,
+            "Value": 0.14471159875392914
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 8,
+            "Value": -0.12457410246133804
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 8,
+            "Value": -0.17815299332141876
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 9,
+            "Value": -0.19328387081623077
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 9,
+            "Value": -0.3281550109386444
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 9,
+            "Value": -0.3838271498680115
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 9,
+            "Value": 0.0668611079454422
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 9,
+            "Value": -0.1834132820367813
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 9,
+            "Value": 0.46111875772476196
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 9,
+            "Value": -0.07458113878965378
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 9,
+            "Value": 0.37230074405670166
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 9,
+            "Value": -0.38766035437583923
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 9,
+            "Value": -0.3328430950641632
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 10,
+            "Value": -0.30558595061302185
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 10,
+            "Value": -0.3181864321231842
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 10,
+            "Value": 0.08409939706325531
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 10,
+            "Value": 0.12423092126846313
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 10,
+            "Value": 0.08560951054096222
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 10,
+            "Value": 0.0829332172870636
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 10,
+            "Value": -0.014419861137866974
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 10,
+            "Value": 0.1841665804386139
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 10,
+            "Value": -0.14676283299922943
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 10,
+            "Value": 0.07125404477119446
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 11,
+            "Value": -0.002201338531449437
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 11,
+            "Value": 0.22797605395317078
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 11,
+            "Value": 0.1394246369600296
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 11,
+            "Value": 0.14010579884052277
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 11,
+            "Value": 0.28144025802612305
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 11,
+            "Value": -0.15240751206874847
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 11,
+            "Value": -0.24659396708011627
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 11,
+            "Value": -0.15730562806129456
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 11,
+            "Value": 0.010586632415652275
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 11,
+            "Value": -0.2886715531349182
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 12,
+            "Value": 0.12206743657588959
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 12,
+            "Value": 0.16423434019088745
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 12,
+            "Value": 0.09131038188934326
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 12,
+            "Value": -0.40719011425971985
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 12,
+            "Value": -0.2766397297382355
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 12,
+            "Value": -0.09335000813007355
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 12,
+            "Value": 0.16842885315418243
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 12,
+            "Value": -0.1134716048836708
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 12,
+            "Value": 0.14721550047397614
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 12,
+            "Value": -0.291639119386673
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 13,
+            "Value": -0.42021676898002625
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 13,
+            "Value": 0.167744979262352
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 13,
+            "Value": -0.18723218142986298
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 13,
+            "Value": 0.18844260275363922
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 13,
+            "Value": -0.1041998490691185
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 13,
+            "Value": 0.3742774724960327
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 13,
+            "Value": 0.3261292576789856
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 13,
+            "Value": 0.011659824289381504
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 13,
+            "Value": 0.2267199456691742
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 13,
+            "Value": -0.3736031949520111
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 14,
+            "Value": 0.30049291253089905
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 14,
+            "Value": 0.20382948219776154
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 14,
+            "Value": 0.15782389044761658
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 14,
+            "Value": 0.2757938802242279
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 14,
+            "Value": -0.03263251110911369
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 14,
+            "Value": -0.11016323417425156
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 14,
+            "Value": -0.27713391184806824
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 14,
+            "Value": -0.38152849674224854
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 14,
+            "Value": -0.21652807295322418
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 14,
+            "Value": 0.31461089849472046
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 15,
+            "Value": -0.2528192698955536
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 15,
+            "Value": 0.2725884020328522
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 15,
+            "Value": 0.2616848647594452
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 15,
+            "Value": -0.4818252623081207
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 15,
+            "Value": -0.06576337665319443
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 5,
+            "PosPrevLayer": 15,
+            "Value": 0.02296431176364422
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 6,
+            "PosPrevLayer": 15,
+            "Value": 0.3267310857772827
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 7,
+            "PosPrevLayer": 15,
+            "Value": -0.03625491261482239
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 8,
+            "PosPrevLayer": 15,
+            "Value": -0.46647539734840393
+        },
+        {
+            "Layer": 1,
+            "PosCurrLayer": 9,
+            "PosPrevLayer": 15,
+            "Value": -0.10254312306642532
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 0,
+            "Value": -0.15125608444213867
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 0,
+            "Value": -0.5380340218544006
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 0,
+            "Value": -0.22385115921497345
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 0,
+            "Value": 0.6176936626434326
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 0,
+            "Value": 0.7080161571502686
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 1,
+            "Value": 0.2176319658756256
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 1,
+            "Value": 0.3952072262763977
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 1,
+            "Value": 0.3788966238498688
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 1,
+            "Value": 0.4928097426891327
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 1,
+            "Value": 0.01788971573114395
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 2,
+            "Value": 0.5420478582382202
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 2,
+            "Value": -0.06395505368709564
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 2,
+            "Value": 0.4609090983867645
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 2,
+            "Value": -0.6357966661453247
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 2,
+            "Value": 0.39008569717407227
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 3,
+            "Value": -0.15921272337436676
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 3,
+            "Value": -0.3234142065048218
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 3,
+            "Value": 0.5596415400505066
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 3,
+            "Value": 0.5459020137786865
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 3,
+            "Value": -0.10749293118715286
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 4,
+            "Value": 0.38604971766471863
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 4,
+            "Value": 0.274576872587204
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 4,
+            "Value": 0.5359888672828674
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 4,
+            "Value": 0.2131398767232895
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 4,
+            "Value": 0.0806468203663826
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 5,
+            "Value": -0.167258158326149
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 5,
+            "Value": 0.5342558026313782
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 5,
+            "Value": -0.5668920278549194
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 5,
+            "Value": 0.334695041179657
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 5,
+            "Value": -0.22507451474666595
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 6,
+            "Value": 0.5393537878990173
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 6,
+            "Value": -0.262006551027298
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 6,
+            "Value": 0.3710993230342865
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 6,
+            "Value": 0.12441838532686234
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 6,
+            "Value": 0.34686097502708435
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 7,
+            "Value": 0.21139608323574066
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 7,
+            "Value": -0.5511412620544434
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 7,
+            "Value": -0.4238305985927582
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 7,
+            "Value": 0.5060297250747681
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 7,
+            "Value": -0.23960858583450317
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 8,
+            "Value": -0.6595887541770935
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 8,
+            "Value": 0.5072818398475647
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 8,
+            "Value": -0.514984667301178
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 8,
+            "Value": -0.4565064609050751
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 8,
+            "Value": 0.5420749187469482
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 9,
+            "Value": -0.2117508351802826
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 9,
+            "Value": -0.2755163609981537
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 9,
+            "Value": -0.12883920967578888
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 9,
+            "Value": 0.5179847478866577
+        },
+        {
+            "Layer": 2,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 9,
+            "Value": -0.43817347288131714
+        },
+        {
+            "Layer": 3,
+            "PosCurrLayer": 0,
+            "PosPrevLayer": 0,
+            "Value": 0
+        },
+        {
+            "Layer": 3,
+            "PosCurrLayer": 1,
+            "PosPrevLayer": 1,
+            "Value": 0
+        },
+        {
+            "Layer": 3,
+            "PosCurrLayer": 2,
+            "PosPrevLayer": 2,
+            "Value": 0
+        },
+        {
+            "Layer": 3,
+            "PosCurrLayer": 3,
+            "PosPrevLayer": 3,
+            "Value": 0
+        },
+        {
+            "Layer": 3,
+            "PosCurrLayer": 4,
+            "PosPrevLayer": 4,
+            "Value": 0
+        }
+    ]
+}
