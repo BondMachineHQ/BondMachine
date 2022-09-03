@@ -1,0 +1,18 @@
+syntax = "proto3";
+package brvga;
+
+message Textmemupdate {
+  uint32 cpid = 1;
+
+  message Byteseq {
+    uint32 pos = 1
+    bytes payload = 2
+  }
+  
+  repeated Byteseq = 2
+
+}
+
+message Update {
+  repeated Textmemupdate = 1;
+}
