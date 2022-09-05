@@ -1,0 +1,6 @@
+#!/bin/bash
+
+SRC_DIR=`pwd`
+DST_DIR=`pwd`
+rm $DST_DIR/brvga/brvga.pb.go
+protoc -I=$SRC_DIR --go_out=$DST_DIR $SRC_DIR/brvga.proto

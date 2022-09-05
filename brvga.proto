@@ -1,0 +1,19 @@
+syntax = "proto3";
+option go_package = "./brvga";
+package brvga;
+
+message Textmemupdate {
+  uint32 cpid = 1;
+
+  message Byteseq {
+    uint32 pos = 1;
+    bytes payload = 2;
+  }
+  
+  repeated Byteseq seq = 2;
+
+}
+
+message Update {
+  repeated Textmemupdate updates = 1;
+}
