@@ -1,9 +1,11 @@
-%section weight .romtext iomode:sync
+%section weight .romtext
         entry _start    ; Entry point
 _start:
-	clr r0
+	rset r1,{{.Params.weight}}
+loop:
         i2r	r0, i0
+	multf	r0, r1
 	r2o	r0, o0
-        j _start
+        j loop
 
 %endsection

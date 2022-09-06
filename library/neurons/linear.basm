@@ -1,15 +1,14 @@
-%section linear .romtext iomode:sync
+%section linear .romtext
         entry _start    ; Entry point
 _start:
 	clr r0
 
-;        i2r	r0, i0
-;        i2r	r0, i1
-;        i2r	r0, i2
-;        i2r	r0, i3
-{{range $y := intRange "0" .Params.inputs}}{{printf "i2r r0,i%d\n" $y}}{{end}}
+	{{range $y := intRange "0" .Params.inputs}}{{printf "i2r r1,i%d\naddf r0 r1" $y}}{{end}}
+	addf	r0, {{.Params.bias}}
+	jgt0f	r0, sendo0
+	clr	r0
+sendo0:
 	r2o	r0, o0
-	;r2o	r0, o1
         j _start
 
 %endsection
