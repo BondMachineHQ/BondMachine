@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/BondMachineHQ/BondMachine/brvga"
+	"github.com/BondMachineHQ/BondMachine/brvgasdl"
 )
 
 var verbose = flag.Bool("v", false, "Verbose")
@@ -21,7 +21,7 @@ func init() {
 }
 
 func main() {
-	if mem, err := brvga.NewBrvgaTextMemory(*constraint); err != nil {
+	if mem, err := brvgasdl.NewBrvgaSdl(*constraint); err != nil {
 		panic(err)
 	} else {
 		fmt.Print(mem.Dump())
