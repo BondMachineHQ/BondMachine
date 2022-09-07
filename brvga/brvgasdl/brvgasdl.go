@@ -3,6 +3,8 @@ package brvgasdl
 import (
 	"bufio"
 	"encoding/hex"
+	"image"
+	"image/color"
 	"os"
 
 	"github.com/BondMachineHQ/BondMachine/brvga"
@@ -16,7 +18,7 @@ type Header struct {
 
 type Fonts struct {
 	fonts  []byte
-	images map[byte]canvas.Image
+	images map[byte]*image.RGBA
 }
 
 type BrvgaSdl struct {
@@ -49,6 +51,29 @@ func NewBrvgaSdlUnixSock(constraint string, sockPath string, headerPath string, 
 	result.Fonts = new(Fonts)
 	result.Fonts.fonts = make([]byte, 0)
 
+	// Allocate the header array
+	result.Header = new(Header)
+	result.Header.header = make([]byte, 0)
+
+	// Read the header
+	headerFile, err := os.Open(headerPath)
+	if err != nil {
+		return nil, err
+	}
+	defer headerFile.Close()
+
+	headerReader := bufio.NewScanner(headerFile)
+	for headerReader.Scan() {
+		if line := headerReader.Text(); len(line) > 0 {
+			if line[:2] == "0x" {
+				hexString := line[2:]
+				if decoded, err := hex.DecodeString(hexString); err == nil {
+					result.header = append(result.header, decoded...)
+				}
+			}
+		}
+	}
+
 	// Read the fonts file
 	fontsFile, err := os.Open(fontsPath)
 	if err != nil {
@@ -56,9 +81,9 @@ func NewBrvgaSdlUnixSock(constraint string, sockPath string, headerPath string, 
 	}
 	defer fontsFile.Close()
 
-	scanner := bufio.NewScanner(fontsFile)
-	for scanner.Scan() {
-		if line := scanner.Text(); len(line) > 0 {
+	fontsReader := bufio.NewScanner(fontsFile)
+	for fontsReader.Scan() {
+		if line := fontsReader.Text(); len(line) > 0 {
 
 			if line[:2] == "0x" {
 				hexString := line[2:]
@@ -69,11 +94,26 @@ func NewBrvgaSdlUnixSock(constraint string, sockPath string, headerPath string, 
 		}
 	}
 
+	result.images = make(map[byte]*image.RGBA)
+
 	// Load 8x8 fonts
 	for c := 0; c < 128; c++ {
+
+		newChar := image.NewRGBA(image.Rectangle{Max: image.Point{X: 8, Y: 8}})
+
 		for i := 0; i < 8; i++ {
-			// charLine := result.Fonts.fonts[c*8+i]
+			charLine := result.Fonts.fonts[c*8+i]
+
+			for j := 0; j < 8; j++ {
+				if charLine&byte((1<<j)) > 0 {
+					newChar.Set(j, i, color.White)
+				} else {
+					newChar.Set(j, i, color.Black)
+				}
+			}
 		}
+
+		result.Fonts.images[byte(c)] = newChar
 	}
 
 	return result, nil
@@ -86,6 +126,22 @@ func (b *BrvgaSdl) Run() {
 		w, h := float64(cv.Width()), float64(cv.Height())
 		cv.SetFillStyle("#000000")
 		cv.FillRect(0, 0, w, h)
+
+		for i := 0; i < len(b.header); i++ {
+			cv.DrawImage(b.Fonts.images[b.header[i]], 1+float64(i*8), 1)
+		}
+
+		for i, cp := range b.BrvgaTextMemory.Cps {
+			switch i % 3 {
+			case 0:
+				cv.SetStrokeStyle("#ff0000")
+			case 1:
+				cv.SetStrokeStyle("#00ff00")
+			case 2:
+				cv.SetStrokeStyle("#0000ff")
+			}
+			cv.StrokeRect(8*float64(cp.LeftPos), 8*float64(cp.TopPos), 8*float64(cp.Width), 8*float64(cp.Height))
+		}
 
 		// for r := 0.0; r < math.Pi*2; r += math.Pi * 0.1 {
 		// 	cv.SetFillStyle(int(r*10), int(r*20), int(r*40))
