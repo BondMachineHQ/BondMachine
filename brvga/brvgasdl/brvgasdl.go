@@ -1,6 +1,10 @@
 package brvgasdl
 
 import (
+	"bufio"
+	"encoding/hex"
+	"os"
+
 	"github.com/BondMachineHQ/BondMachine/brvga"
 	"github.com/tfriedel6/canvas"
 	"github.com/tfriedel6/canvas/sdlcanvas"
@@ -11,7 +15,8 @@ type Header struct {
 }
 
 type Fonts struct {
-	fonts []byte
+	fonts  []byte
+	images map[byte]canvas.Image
 }
 
 type BrvgaSdl struct {
@@ -40,7 +45,36 @@ func NewBrvgaSdlUnixSock(constraint string, sockPath string, headerPath string, 
 	result.Window = wnd
 	result.Canvas = canvas
 
-	// TODO: Load the header and fonts
+	// Allocate the fonts array
+	result.Fonts = new(Fonts)
+	result.Fonts.fonts = make([]byte, 0)
+
+	// Read the fonts file
+	fontsFile, err := os.Open(fontsPath)
+	if err != nil {
+		return nil, err
+	}
+	defer fontsFile.Close()
+
+	scanner := bufio.NewScanner(fontsFile)
+	for scanner.Scan() {
+		if line := scanner.Text(); len(line) > 0 {
+
+			if line[:2] == "0x" {
+				hexString := line[2:]
+				if decoded, err := hex.DecodeString(hexString); err == nil {
+					result.Fonts.fonts = append(result.Fonts.fonts, decoded...)
+				}
+			}
+		}
+	}
+
+	// Load 8x8 fonts
+	for c := 0; c < 128; c++ {
+		for i := 0; i < 8; i++ {
+			// charLine := result.Fonts.fonts[c*8+i]
+		}
+	}
 
 	return result, nil
 }
