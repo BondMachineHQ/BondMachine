@@ -12,17 +12,17 @@ import (
 )
 
 type cpTextMemory struct {
-	cpId    int
-	width   int
-	height  int
-	topPos  int
-	leftPos int
+	CpId    int
+	Width   int
+	Height  int
+	TopPos  int
+	LeftPos int
 	mem     []byte
 }
 
 type BrvgaTextMemory struct {
 	constraintString string
-	cps              []cpTextMemory
+	Cps              []cpTextMemory
 }
 
 func NewBrvgaTextMemory(constraint string) (*BrvgaTextMemory, error) {
@@ -34,32 +34,32 @@ func NewBrvgaTextMemory(constraint string) (*BrvgaTextMemory, error) {
 		for i := 1; i < componentsN; i = i + 5 {
 			newBox := cpTextMemory{}
 			if newCP, err := strconv.Atoi(components[i]); err == nil {
-				newBox.cpId = newCP
+				newBox.CpId = newCP
 			} else {
 				return nil, err
 			}
 			if newLeft, err := strconv.Atoi(components[i+1]); err == nil {
-				newBox.leftPos = newLeft
+				newBox.LeftPos = newLeft
 			} else {
 				return nil, err
 			}
 			if newTop, err := strconv.Atoi(components[i+2]); err == nil {
-				newBox.topPos = newTop
+				newBox.TopPos = newTop
 			} else {
 				return nil, err
 			}
 			if newWidth, err := strconv.Atoi(components[i+3]); err == nil {
-				newBox.width = newWidth
+				newBox.Width = newWidth
 			} else {
 				return nil, err
 			}
 			if newHeight, err := strconv.Atoi(components[i+4]); err == nil {
-				newBox.height = newHeight
+				newBox.Height = newHeight
 			} else {
 				return nil, err
 			}
 
-			memL := newBox.width * newBox.height
+			memL := newBox.Width * newBox.Height
 			newBox.mem = make([]byte, memL)
 			for j := 0; j < memL; j++ {
 				newBox.mem[j] = 0x00
@@ -70,7 +70,7 @@ func NewBrvgaTextMemory(constraint string) (*BrvgaTextMemory, error) {
 
 		result := new(BrvgaTextMemory)
 		result.constraintString = constraint
-		result.cps = boxes
+		result.Cps = boxes
 		return result, nil
 	}
 
@@ -80,10 +80,10 @@ func NewBrvgaTextMemory(constraint string) (*BrvgaTextMemory, error) {
 func (b *BrvgaTextMemory) Dump() string {
 	result := ""
 	result += fmt.Sprintf("Constraint %s\n\n", b.constraintString)
-	for _, cp := range b.cps {
-		result += fmt.Sprintf("cp %d: %d x %d at %d, %d\n", cp.cpId, cp.width, cp.height, cp.leftPos, cp.topPos)
-		for i := 0; i < cp.height*cp.width; i++ {
-			if i%cp.width == 0 {
+	for _, cp := range b.Cps {
+		result += fmt.Sprintf("cp %d: %d x %d at %d, %d\n", cp.CpId, cp.Width, cp.Height, cp.LeftPos, cp.TopPos)
+		for i := 0; i < cp.Height*cp.Width; i++ {
+			if i%cp.Width == 0 {
 				result += "\n"
 			}
 			result += fmt.Sprintf("%02x ", cp.mem[i])
