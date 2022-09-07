@@ -1,10 +1,14 @@
 package brvga
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type cpTextMemory struct {
@@ -87,4 +91,71 @@ func (b *BrvgaTextMemory) Dump() string {
 		result += "\n\n"
 	}
 	return result
+}
+
+func (b *BrvgaTextMemory) UNIXSockReceiver(ctx context.Context, path string) {
+
+	// Create the socket
+	sock, err := net.Listen("unix", path)
+	if err != nil {
+		panic(err)
+	}
+
+	// Wait for a connection
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			conn, err := sock.Accept()
+			if err != nil {
+				panic(err)
+			}
+			go b.handleConnection(ctx, conn)
+		}
+	}
+}
+
+func (b *BrvgaTextMemory) handleConnection(ctx context.Context, conn net.Conn) {
+	defer conn.Close()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			buf := make([]byte, 1024)
+			n, err := conn.Read(buf)
+			if err != nil {
+				return
+			}
+			b.handleMessage(ctx, buf[:n])
+		}
+	}
+}
+
+func (b *BrvgaTextMemory) handleMessage(ctx context.Context, buf []byte) {
+	recv := &Textmemupdate{}
+
+	proto.Unmarshal(buf, recv)
+	fmt.Println(recv)
+}
+
+func (b *BrvgaTextMemory) UNIXSockSender(ctx context.Context, path string, buf *Textmemupdate) error {
+
+	// Marshal the message into a buffer
+	out, err := proto.Marshal(buf)
+	if err != nil {
+		return err
+	}
+
+	// Connect to the socket
+	conn, err := net.Dial("unix", path)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	// Send the message
+	_, err = conn.Write(out)
+	return err
 }
