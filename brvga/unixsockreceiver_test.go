@@ -11,7 +11,7 @@ import (
 )
 
 func TestUnixSocketReceiver(t *testing.T) {
-	vga, err := NewBrvgaTextMemory("textvga:1:1:1:16:16")
+	vga, err := NewBrvgaTextMemory("vtextmem:0:0:0:16:16:1:25:25:16:16")
 
 	if err != nil {
 		t.Fatal(err)

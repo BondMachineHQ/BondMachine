@@ -2,6 +2,7 @@ package brvgasdl
 
 import (
 	"bufio"
+	"context"
 	"encoding/hex"
 	"image"
 	"image/color"
@@ -108,13 +109,17 @@ func NewBrvgaSdlUnixSock(constraint string, sockPath string, headerPath string, 
 				if charLine&byte((1<<j)) > 0 {
 					newChar.Set(j, i, color.White)
 				} else {
-					newChar.Set(j, i, color.Black)
+					// newChar.Set(j, i, color.Black)
 				}
 			}
 		}
 
 		result.Fonts.images[byte(c)] = newChar
 	}
+
+	ctx, _ := context.WithCancel(context.Background())
+
+	go result.UNIXSockReceiver(ctx, "/tmp/brvga.sock")
 
 	return result, nil
 }
@@ -124,23 +129,43 @@ func (b *BrvgaSdl) Run() {
 	cv := b.Canvas
 	wnd.MainLoop(func() {
 		w, h := float64(cv.Width()), float64(cv.Height())
-		cv.SetFillStyle("#000000")
+		cv.SetFillStyle("#111")
 		cv.FillRect(0, 0, w, h)
+		cv.SetFillStyle("#000000")
+		cv.FillRect(0, 0, 800, 600)
 
 		for i := 0; i < len(b.header); i++ {
 			cv.DrawImage(b.Fonts.images[b.header[i]], 1+float64(i*8), 1)
 		}
 
+		offsetX := 6
+		offsetY := 14
+
 		for i, cp := range b.BrvgaTextMemory.Cps {
-			switch i % 3 {
+			cv.SetFillStyle("#333")
+			cv.FillRect(8*float64(cp.LeftPos)+float64(offsetX), 8*float64(cp.TopPos)+float64(offsetY), 8*float64(cp.Width), 8*float64(cp.Height))
+			switch i % 4 {
 			case 0:
-				cv.SetStrokeStyle("#ff0000")
+				cv.SetStrokeStyle("#01c")
 			case 1:
-				cv.SetStrokeStyle("#00ff00")
+				cv.SetStrokeStyle("#075")
 			case 2:
-				cv.SetStrokeStyle("#0000ff")
+				cv.SetStrokeStyle("#a3d")
+			case 3:
+				cv.SetStrokeStyle("#603")
 			}
-			cv.StrokeRect(8*float64(cp.LeftPos), 8*float64(cp.TopPos), 8*float64(cp.Width), 8*float64(cp.Height))
+			cv.StrokeRect(8*float64(cp.LeftPos)-2+float64(offsetX), 8*float64(cp.TopPos)-2+float64(offsetY), 8*float64(cp.Width)+4, 8*float64(cp.Height)+4)
+		}
+
+		cv.SetStrokeStyle("#ffffff")
+		for _, cp := range b.BrvgaTextMemory.Cps {
+			if mem, err := b.GetCpMem(cp.CpId); err == nil {
+				posX := 8*float64(cp.LeftPos) + float64(offsetX)
+				posY := 8*float64(cp.TopPos) + float64(offsetY)
+				for i := 0; i < len(mem); i++ {
+					cv.DrawImage(b.Fonts.images[mem[i]], posX+float64(i%cp.Width)*8, posY+float64(i/cp.Width)*8)
+				}
+			}
 		}
 
 		// for r := 0.0; r < math.Pi*2; r += math.Pi * 0.1 {

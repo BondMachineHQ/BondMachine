@@ -7,17 +7,19 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 
 	"google.golang.org/protobuf/proto"
 )
 
 type cpTextMemory struct {
-	CpId    int
-	Width   int
-	Height  int
-	TopPos  int
-	LeftPos int
-	mem     []byte
+	CpId        int
+	Width       int
+	Height      int
+	TopPos      int
+	LeftPos     int
+	Mem         []byte
+	cpProtector sync.RWMutex
 }
 
 type BrvgaTextMemory struct {
@@ -60,10 +62,12 @@ func NewBrvgaTextMemory(constraint string) (*BrvgaTextMemory, error) {
 			}
 
 			memL := newBox.Width * newBox.Height
-			newBox.mem = make([]byte, memL)
+			newBox.Mem = make([]byte, memL)
 			for j := 0; j < memL; j++ {
-				newBox.mem[j] = 0x00
+				newBox.Mem[j] = 0x00
 			}
+
+			newBox.cpProtector = sync.RWMutex{}
 
 			boxes = append(boxes, newBox)
 		}
@@ -82,15 +86,30 @@ func (b *BrvgaTextMemory) Dump() string {
 	result += fmt.Sprintf("Constraint %s\n\n", b.constraintString)
 	for _, cp := range b.Cps {
 		result += fmt.Sprintf("cp %d: %d x %d at %d, %d\n", cp.CpId, cp.Width, cp.Height, cp.LeftPos, cp.TopPos)
+		cp.cpProtector.RLock()
 		for i := 0; i < cp.Height*cp.Width; i++ {
 			if i%cp.Width == 0 {
 				result += "\n"
 			}
-			result += fmt.Sprintf("%02x ", cp.mem[i])
+			result += fmt.Sprintf("%02x ", cp.Mem[i])
 		}
+		cp.cpProtector.RUnlock()
 		result += "\n\n"
 	}
 	return result
+}
+
+func (b *BrvgaTextMemory) GetCpMem(cpId int) ([]byte, error) {
+	for _, cp := range b.Cps {
+		if cp.CpId == cpId {
+			cp.cpProtector.RLock()
+			result := make([]byte, len(cp.Mem))
+			copy(result, cp.Mem)
+			cp.cpProtector.RUnlock()
+			return result, nil
+		}
+	}
+	return nil, errors.New("cp not found")
 }
 
 func (b *BrvgaTextMemory) UNIXSockReceiver(ctx context.Context, path string) {
@@ -136,8 +155,19 @@ func (b *BrvgaTextMemory) handleConnection(ctx context.Context, conn net.Conn) {
 func (b *BrvgaTextMemory) handleMessage(ctx context.Context, buf []byte) {
 	recv := &Textmemupdate{}
 
-	proto.Unmarshal(buf, recv)
-	fmt.Println(recv)
+	if err := proto.Unmarshal(buf, recv); err != nil {
+		return
+	}
+
+	for _, box := range b.Cps {
+		if box.CpId == int(recv.Cpid) {
+			box.cpProtector.Lock()
+			for _, seq := range recv.Seq {
+				copy(box.Mem[seq.Pos:seq.Pos+uint32(len(seq.Payload))], seq.Payload)
+			}
+			box.cpProtector.Unlock()
+		}
+	}
 }
 
 func (b *BrvgaTextMemory) UNIXSockSender(ctx context.Context, path string, buf *Textmemupdate) error {
