@@ -1,9 +1,36 @@
 %section softmax .romtext iomode:sync
         entry _start    ; Entry point
 _start:
-	clr r0
-{{range $y := intRange "0" .Params.inputs}}{{printf "i2r r0,i%d\n" $y}}{{end}}
-	r2o	r0, o0
+	mov	r8, 0f0.0
+{{range $y := intRange "0" .Params.inputs}}
+{{printf "i2r r1,i%d\n" $y}}
+        mov     r0, 0f1.0
+        mov     r2, 0f1.0
+        mov     r3, 0f1.0
+        mov     r4, 0f1.0
+        mov     r5, 0f1.0
+        mov     r7, 8
+loop{{printf "%d" $y}}:
+        multf   r2, r1
+        multf   r3, r4
+        addf    r4, r5
+        mov     r6, r2
+        divf    r6, r3
+
+        addf    r0, r6
+
+        dec     r7
+        jz      r7,exit{{printf "%d" $y}}
+        j       loop{{printf "%d" $y}}
+exit{{printf "%d" $y}}:
+{{$z := atoi $.Params.pos}}
+{{if eq $y $z}} 
+	mov	r9, r0
+{{end}}
+	addf	r8, r0
+{{end}}
+	divf	r9, r8
+	r2o	r9, o0
         j _start
 
 %endsection
