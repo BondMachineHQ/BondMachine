@@ -9,7 +9,7 @@ _start:
         mov     r3, 0f1.0
         mov     r4, 0f1.0
         mov     r5, 0f1.0
-        mov     r7, 8
+        mov     r7, 20
 loop{{printf "%d" $y}}:
         multf   r2, r1
         multf   r3, r4
