@@ -15,7 +15,10 @@ var registerSize = flag.Int("register-size", 8, "Number of bits per register (n-
 
 var saveBasm = flag.String("save-basm", "", "Create a basm file")
 
+var neuronLibPath = flag.String("neuron-lib-path", "", "Path to the neuron library to use")
+
 var netFile = flag.String("net-file", "", "JSON description of the net")
+var configFile = flag.String("config-file", "", "JSON description of the net configuration")
 
 func init() {
 	flag.Parse()
@@ -40,7 +43,33 @@ func main() {
 		panic("No net file specified")
 	}
 
-	// fmt.Println(net.Weights)
+	config := new(neuralbond.Config)
+
+	// Load net from a JSON file the configuration
+	if *configFile != "" {
+		if netFileJSON, err := ioutil.ReadFile(*configFile); err == nil {
+			if err := json.Unmarshal(netFileJSON, config); err != nil {
+				panic(err)
+			}
+		} else {
+			panic(err)
+		}
+	} else {
+		config.Debug = *debug
+		config.Verbose = *verbose
+		config.Params = make(map[string]string)
+	}
+
+	if *neuronLibPath != "" {
+		config.NeuronLibPath = *neuronLibPath
+	} else {
+		panic("No neuron library path specified")
+	}
+
+	if err := net.Init(config); err != nil {
+		panic(err)
+	}
+
 	net.Normalize()
 
 	if *saveBasm != "" {
