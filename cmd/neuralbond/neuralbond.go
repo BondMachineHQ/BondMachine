@@ -11,7 +11,7 @@ import (
 var verbose = flag.Bool("v", false, "Verbose")
 var debug = flag.Bool("d", false, "Verbose")
 
-var registerSize = flag.Int("register-size", 8, "Number of bits per register (n-bit)")
+var registerSize = flag.Int("register-size", 32, "Number of bits per register (n-bit)")
 
 var saveBasm = flag.String("save-basm", "", "Create a basm file")
 
@@ -19,6 +19,8 @@ var neuronLibPath = flag.String("neuron-lib-path", "", "Path to the neuron libra
 
 var netFile = flag.String("net-file", "", "JSON description of the net")
 var configFile = flag.String("config-file", "", "JSON description of the net configuration")
+
+var operatingMode = flag.String("operating-mode", "romcode", "Operating mode: romcode, fragment")
 
 func init() {
 	flag.Parse()
@@ -41,6 +43,17 @@ func main() {
 		}
 	} else {
 		panic("No net file specified")
+	}
+
+	net.RegisterSize = *registerSize
+
+	switch *operatingMode {
+	case "romcode":
+		net.OperatingMode = neuralbond.ROMCODE
+	case "fragment":
+		net.OperatingMode = neuralbond.FRAGMENT
+	default:
+		panic("Unknown operating mode")
 	}
 
 	config := new(neuralbond.Config)
