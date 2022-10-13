@@ -189,16 +189,16 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 	case FRAGMENT:
 		for _, node := range n.Nodes {
 			if node.Type == "input" {
-				result += fmt.Sprintf("%%meta fraginst node_0_%d fragment:terminal\n", node.Pos)
-				result += fmt.Sprintf("%%meta filink input_%d type:fl\n", node.Pos)
+				result += fmt.Sprintf("%%meta fidef node_0_%d fragment:terminal\n", node.Pos)
+				result += fmt.Sprintf("%%meta filinkdef input_%d type:fl\n", node.Pos)
 				result += fmt.Sprintf("%%meta filinkatt input_%d fi:node_0_%d, type:input, index:0\n", node.Pos, node.Pos)
 			} else if node.Type == "output" {
-				result += fmt.Sprintf("%%meta fraginst node_%d_%d fragment:terminal\n", node.Layer, node.Pos)
-				result += fmt.Sprintf("%%meta filink output_%d type:fl\n", node.Pos)
+				result += fmt.Sprintf("%%meta fidef node_%d_%d fragment:terminal\n", node.Layer, node.Pos)
+				result += fmt.Sprintf("%%meta filinkdef output_%d type:fl\n", node.Pos)
 				result += fmt.Sprintf("%%meta filinkatt output_%d fi:node_%d_%d, type:output, index:0\n", node.Pos, node.Layer, node.Pos)
 			} else {
 				if neuron, ok := n.Neurons[node.Type]; ok {
-					result += fmt.Sprintf("%%meta fraginst node_%d_%d fragment:%s", node.Layer, node.Pos, node.Type)
+					result += fmt.Sprintf("%%meta fidef node_%d_%d fragment:%s", node.Layer, node.Pos, node.Type)
 					for _, param := range neuron.Params {
 						switch param {
 						case "inputs":
@@ -226,9 +226,9 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 			weightFI := fmt.Sprintf("weightfi_%d_%d__%d_%d", weight.Layer-1, weight.PosPrevLayer, weight.Layer, weight.PosCurrLayer)
 			downNode := fmt.Sprintf("node_%d_%d", weight.Layer-1, weight.PosPrevLayer)
 			upNode := fmt.Sprintf("node_%d_%d", weight.Layer, weight.PosCurrLayer)
-			result += fmt.Sprintf("%%meta fraginst %s fragment:weight, weight:0f%f\n", weightFI, weight.Value)
-			result += fmt.Sprintf("%%meta filink up%s type:fi\n", weightFI)
-			result += fmt.Sprintf("%%meta filink down%s type:fi\n", weightFI)
+			result += fmt.Sprintf("%%meta fidef %s fragment:weight, weight:0f%f\n", weightFI, weight.Value)
+			result += fmt.Sprintf("%%meta filinkdef up%s type:fi\n", weightFI)
+			result += fmt.Sprintf("%%meta filinkdef down%s type:fi\n", weightFI)
 			result += fmt.Sprintf("%%meta filinkatt down%s fi:%s, type:input, index:0\n", weightFI, weightFI)
 			result += fmt.Sprintf("%%meta filinkatt down%s fi:%s, type:output, index:0\n", weightFI, downNode)
 			result += fmt.Sprintf("%%meta filinkatt up%s fi:%s, type:input, index:%d\n", weightFI, upNode, weight.RelPosUp)
