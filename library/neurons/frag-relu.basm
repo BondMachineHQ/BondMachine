@@ -1,0 +1,10 @@
+%fragment relu template:true
+	clr r0
+;	{{range $y := intRange "0" .Params.inputs}}{{printf "i2r r1,i%d\naddf r0,r1\n" $y}}{{end}}
+;	mov	r1, {{.Params.bias}}
+	addf	r0, r1
+	jgt0f	r0, sendo0
+	clr	r0
+sendo0:
+	r2o	r0, o0
+%endfragment

@@ -1,4 +1,4 @@
-%section softmax .romtext iomode:sync
+%section softmax .romtext iomode:sync,template:true
         entry _start    ; Entry point
 _start:
 	mov	r8, 0f0.0

@@ -1,4 +1,4 @@
-%section weight .romtext
+%section weight .romtext template:true
         entry _start    ; Entry point
 _start:
 	rset r1,{{.Params.weight}}

@@ -1,4 +1,4 @@
-%section summation .romtext
+%section linear .romtext template:true
         entry _start    ; Entry point
 _start:
 	clr r0

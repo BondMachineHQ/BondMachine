@@ -1,0 +1,7 @@
+%fragment summation template:true resout:r0
+%meta literal resin {{with $last := incs .Params.inputs}}{{range $y := intRange "1" $last}}{{printf "r%d:" $y}}{{end}}{{end}}
+	clr r0
+	{{with $last := incs .Params.inputs}}{{range $y := intRange "1" $last}}{{printf "addf r0,r%d\n" $y}}{{end}}{{end}}	
+	mov	r1, {{.Params.bias}}
+	addf	r0, r1
+%endfragment

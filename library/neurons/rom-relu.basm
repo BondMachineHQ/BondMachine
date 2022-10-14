@@ -1,4 +1,4 @@
-%section relu .romtext
+%section relu .romtext template:true
         entry _start    ; Entry point
 _start:
 	clr r0
