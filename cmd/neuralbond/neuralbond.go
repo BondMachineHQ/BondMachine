@@ -73,6 +73,16 @@ func main() {
 		config.Params = make(map[string]string)
 	}
 
+	if config.Params == nil {
+		config.Params = make(map[string]string)
+	}
+	if config.List == nil {
+		config.List = make(map[string]string)
+	}
+	if config.Pruned == nil {
+		config.Pruned = make([]string, 0)
+	}
+
 	if *neuronLibPath != "" {
 		config.NeuronLibPath = *neuronLibPath
 	} else {
@@ -93,4 +103,12 @@ func main() {
 		}
 	}
 
+	if *configFile != "" {
+		// Write the config file
+		if configFileJSON, err := json.MarshalIndent(config, "", "  "); err == nil {
+			ioutil.WriteFile(*configFile, configFileJSON, 0644)
+		} else {
+			panic(err)
+		}
+	}
 }
