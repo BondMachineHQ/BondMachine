@@ -271,7 +271,7 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 					delete(ProcessedNodes, cNode)
 				}
 			}
-			result += fmt.Sprintf("%%meta cpdef %s fragcollapse%s\n", cName, cCode)
+			result += fmt.Sprintf("%%meta cpdef %s fragcollapse%s\n", cName[:len(cName)-1], cCode)
 		}
 
 		// Processing remaining nodes

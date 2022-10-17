@@ -23,7 +23,8 @@ loop{{printf "%d" $y}}:
         jz      r7,exit{{printf "%d" $y}}
         j       loop{{printf "%d" $y}}
 exit{{printf "%d" $y}}:
-{{$z := atoi $.Params.pos}}
+{{$zs := adds "10" $.Params.pos}}
+{{$z := atoi $zs}}
 {{if eq $y $z}} 
 	mov	r9, r0
 {{end}}
