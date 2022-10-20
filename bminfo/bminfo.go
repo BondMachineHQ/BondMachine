@@ -6,7 +6,8 @@ import (
 )
 
 type BMinfo struct {
-	List map[string]string
+	List    map[string]string
+	CPNames map[int]string
 }
 
 // WriteBMinfo writes a BMinfo struct to a file JSON encoded.
