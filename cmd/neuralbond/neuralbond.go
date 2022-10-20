@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io/ioutil"
 
+	"github.com/BondMachineHQ/BondMachine/bminfo"
 	"github.com/BondMachineHQ/BondMachine/neuralbond"
 )
 
@@ -19,6 +20,7 @@ var neuronLibPath = flag.String("neuron-lib-path", "", "Path to the neuron libra
 
 var netFile = flag.String("net-file", "", "JSON description of the net")
 var configFile = flag.String("config-file", "", "JSON description of the net configuration")
+var bmInfoFile = flag.String("bminfo-file", "", "JSON description of the BondMachine abstraction")
 
 var operatingMode = flag.String("operating-mode", "romcode", "Operating mode: romcode, fragment")
 
@@ -73,6 +75,18 @@ func main() {
 		config.Params = make(map[string]string)
 	}
 
+	config.BMinfo = new(bminfo.BMinfo)
+
+	if *bmInfoFile != "" {
+		if bmInfoJSON, err := ioutil.ReadFile(*bmInfoFile); err == nil {
+			if err := json.Unmarshal(bmInfoJSON, config.BMinfo); err != nil {
+				panic(err)
+			}
+		} else {
+			panic(err)
+		}
+	}
+
 	if config.Params == nil {
 		config.Params = make(map[string]string)
 	}
@@ -103,10 +117,10 @@ func main() {
 		}
 	}
 
-	if *configFile != "" {
+	if *bmInfoFile != "" {
 		// Write the config file
-		if configFileJSON, err := json.MarshalIndent(config, "", "  "); err == nil {
-			ioutil.WriteFile(*configFile, configFileJSON, 0644)
+		if bmInfoFileJSON, err := json.MarshalIndent(config.BMinfo, "", "  "); err == nil {
+			ioutil.WriteFile(*bmInfoFile, bmInfoFileJSON, 0644)
 		} else {
 			panic(err)
 		}

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"sort"
+
+	"github.com/BondMachineHQ/BondMachine/bminfo"
 )
 
 const (
@@ -24,8 +26,8 @@ type TrainedNet struct {
 
 type Group []string
 type Config struct {
-	Params        map[string]string
-	List          map[string]string
+	Params map[string]string
+	*bminfo.BMinfo
 	Pruned        []string
 	Collapsed     []Group
 	Debug         bool
