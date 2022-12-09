@@ -9,7 +9,11 @@ import (
 type Bin struct{}
 
 func (d Bin) getName() string {
-	return "unsigned"
+	return "bin"
+}
+
+func (d Bin) getInfo() string {
+	return ""
 }
 
 func (d Bin) importMatchers() map[string]ImportFunc {
@@ -21,7 +25,13 @@ func (d Bin) importMatchers() map[string]ImportFunc {
 	return result
 }
 
-func (d Bin) convert(n *BMNumber) error {
+func (d Bin) Convert(n *BMNumber) error {
+	convertFrom := n.nType.getName()
+
+	switch convertFrom {
+	default:
+		return errors.New("cannot convert from " + convertFrom + " to " + d.getName())
+	}
 	return nil
 }
 

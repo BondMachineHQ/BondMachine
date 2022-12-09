@@ -10,7 +10,11 @@ import (
 type Float32 struct{}
 
 func (d Float32) getName() string {
-	return "unsigned"
+	return "float32"
+}
+
+func (d Float32) getInfo() string {
+	return ""
 }
 
 func (d Float32) importMatchers() map[string]ImportFunc {
@@ -21,7 +25,13 @@ func (d Float32) importMatchers() map[string]ImportFunc {
 	return result
 }
 
-func (d Float32) convert(n *BMNumber) error {
+func (d Float32) Convert(n *BMNumber) error {
+	convertFrom := n.nType.getName()
+
+	switch convertFrom {
+	default:
+		return errors.New("cannot convert from " + convertFrom + " to " + d.getName())
+	}
 	return nil
 }
 

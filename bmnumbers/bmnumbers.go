@@ -6,8 +6,9 @@ type ImportFunc func(*regexp.Regexp, string) (*BMNumber, error)
 
 type BMNumberType interface {
 	getName() string
+	getInfo() string
 	importMatchers() map[string]ImportFunc
-	convert(*BMNumber) error
+	Convert(*BMNumber) error
 }
 
 // BMNumber is a binary representation of a number as a slice of bytes
@@ -19,6 +20,7 @@ type BMNumber struct {
 
 var AllTypes []BMNumberType
 var AllMatchers map[string]ImportFunc
+var AllDynamicalTypes []DynamicalType
 
 func init() {
 	AllTypes = make([]BMNumberType, 0)

@@ -9,7 +9,11 @@ import (
 type Hex struct{}
 
 func (d Hex) getName() string {
-	return "unsigned"
+	return "hex"
+}
+
+func (d Hex) getInfo() string {
+	return ""
 }
 
 func (d Hex) importMatchers() map[string]ImportFunc {
@@ -21,7 +25,13 @@ func (d Hex) importMatchers() map[string]ImportFunc {
 	return result
 }
 
-func (d Hex) convert(n *BMNumber) error {
+func (d Hex) Convert(n *BMNumber) error {
+	convertFrom := n.nType.getName()
+
+	switch convertFrom {
+	default:
+		return errors.New("cannot convert from " + convertFrom + " to " + d.getName())
+	}
 	return nil
 }
 

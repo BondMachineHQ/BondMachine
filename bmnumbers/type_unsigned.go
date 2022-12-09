@@ -12,6 +12,10 @@ func (d Unsigned) getName() string {
 	return "unsigned"
 }
 
+func (d Unsigned) getInfo() string {
+	return ""
+}
+
 func (d Unsigned) importMatchers() map[string]ImportFunc {
 	result := make(map[string]ImportFunc)
 
@@ -22,7 +26,13 @@ func (d Unsigned) importMatchers() map[string]ImportFunc {
 	return result
 }
 
-func (d Unsigned) convert(n *BMNumber) error {
+func (d Unsigned) Convert(n *BMNumber) error {
+	convertFrom := n.nType.getName()
+
+	switch convertFrom {
+	default:
+		return errors.New("cannot convert from " + convertFrom + " to " + d.getName())
+	}
 	return nil
 }
 
