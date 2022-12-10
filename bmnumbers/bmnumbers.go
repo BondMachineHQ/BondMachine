@@ -29,6 +29,9 @@ func init() {
 	AllTypes = append(AllTypes, Hex{})
 	AllTypes = append(AllTypes, Bin{})
 
+	AllDynamicalTypes = make([]DynamicalType, 0)
+	AllDynamicalTypes = append(AllDynamicalTypes, DynFloPoCo{})
+
 	AllMatchers = make(map[string]ImportFunc)
 	for _, t := range AllTypes {
 		for k, v := range t.importMatchers() {

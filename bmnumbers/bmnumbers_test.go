@@ -8,6 +8,8 @@ func TestNumberToUint64(t *testing.T) {
 
 	dataSetUint := testDataSet("uintData")
 
+	EventuallyCreateType("flpe4f4", nil)
+
 	// Loop through the inputs and expected outputs
 	for input, expected := range dataSetUint.(map[string]uint64) {
 		// Get the output

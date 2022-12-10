@@ -6,6 +6,9 @@ func testDataSet(dataSet string) interface{} {
 	dataSetBin := make(map[string]string)
 	dataSetBinNoSize := make(map[string]string)
 
+	dataSetBin["0flp<4,4>1.45"] = "0b<11>1001110111"
+	dataSetBin["0flp<5,7>-4.3"] = "0b<15>11100010001010"
+
 	dataSetUint["56"] = 56
 	dataSetBin["56"] = "0b<64>111000"
 	dataSetBinNoSize["56"] = "111000"

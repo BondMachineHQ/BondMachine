@@ -22,6 +22,9 @@ func EventuallyCreateType(name string, param interface{}) (bool, error) {
 				return false, err
 			} else {
 				AllTypes = append(AllTypes, newType)
+				for k, v := range newType.importMatchers() {
+					AllMatchers[k] = v
+				}
 				return true, nil
 			}
 		}
