@@ -1,6 +1,9 @@
 package bmnumbers
 
-import "regexp"
+import (
+	"fmt"
+	"regexp"
+)
 
 type ImportFunc func(*regexp.Regexp, string) (*BMNumber, error)
 
@@ -37,5 +40,14 @@ func init() {
 		for k, v := range t.importMatchers() {
 			AllMatchers[k] = v
 		}
+	}
+
+	EventuallyCreateType("flpe4f4", nil)
+
+}
+
+func ListTypes() {
+	for _, t := range AllTypes {
+		fmt.Println(t.getName())
 	}
 }

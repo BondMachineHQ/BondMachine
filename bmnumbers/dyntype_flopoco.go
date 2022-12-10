@@ -45,6 +45,10 @@ func floPoCoImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 	number := re.ReplaceAllString(input, "${number}")
 	es := re.ReplaceAllString(input, "${e}")
 	fs := re.ReplaceAllString(input, "${f}")
+	e, _ := strconv.Atoi(es)
+	f, _ := strconv.Atoi(fs)
+
+	EventuallyCreateType("flpe"+es+"f"+fs, nil)
 
 	runCommand := []string{"fp2bin", es, fs, number}
 
@@ -71,7 +75,7 @@ func floPoCoImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 				newNumber := BMNumber{}
 				newNumber.number = make([]byte, (len(binNum)-1)/8+1)
 				newNumber.bits = len(binNum)
-				newNumber.nType = Bin{}
+				newNumber.nType = FloPoCo{floPoCoName: "flpe" + es + "f" + fs, e: e, f: f}
 
 				for i := 0; ; i++ {
 
@@ -98,23 +102,4 @@ func floPoCoImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 	}
 
 	return nil, nil
-
-	// if s, err := strconv.ParseFloat(number, 32); err == nil {
-	// 	newNumber := BMNumber{}
-	// 	newNumber.number = make([]byte, 4)
-
-	// 	s := uint64(math.Float32bits(float32(s)))
-	// 	mask := uint64(255)
-	// 	for i := 0; i < 4; i++ {
-	// 		newNumber.number[i] = byte(s & mask)
-	// 		s = s >> 8
-	// 	}
-
-	// 	newNumber.bits = 32
-	// 	newNumber.nType = FloPoCo{}
-	// 	return &newNumber, nil
-
-	// } else {
-	// 	return nil, errors.New("unknown float32 number " + input)
-	// }
 }
