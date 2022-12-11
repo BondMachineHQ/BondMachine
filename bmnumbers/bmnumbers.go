@@ -51,3 +51,12 @@ func ListTypes() {
 		fmt.Println(t.getName())
 	}
 }
+
+func GetType(name string) BMNumberType {
+	for _, t := range AllTypes {
+		if t.getName() == name {
+			return t
+		}
+	}
+	return nil
+}

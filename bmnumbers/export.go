@@ -31,7 +31,7 @@ func (n *BMNumber) ExportBinary(withSize bool) (string, error) {
 		result = dataVal[len(dataVal)-8:] + result
 	}
 
-	for len(result) > 0 && result[0] == '0' {
+	for len(result) > 1 && result[0] == '0' {
 		result = result[1:]
 	}
 
