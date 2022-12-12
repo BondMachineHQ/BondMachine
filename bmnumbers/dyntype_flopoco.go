@@ -23,6 +23,10 @@ func (d FloPoCo) getInfo() string {
 	return ""
 }
 
+func (d FloPoCo) getSize() int {
+	return d.e + d.f + 3
+}
+
 func (d FloPoCo) importMatchers() map[string]ImportFunc {
 	result := make(map[string]ImportFunc)
 
@@ -102,4 +106,8 @@ func floPoCoImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 	}
 
 	return nil, nil
+}
+
+func (d FloPoCo) ExportString(n *BMNumber) (string, error) {
+	return "", errors.New("export not implemented")
 }

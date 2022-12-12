@@ -1,6 +1,7 @@
 package bmnumbers
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 )
@@ -10,8 +11,10 @@ type ImportFunc func(*regexp.Regexp, string) (*BMNumber, error)
 type BMNumberType interface {
 	getName() string
 	getInfo() string
+	getSize() int
 	importMatchers() map[string]ImportFunc
 	Convert(*BMNumber) error
+	ExportString(*BMNumber) (string, error)
 }
 
 // BMNumber is a binary representation of a number as a slice of bytes
@@ -58,5 +61,18 @@ func GetType(name string) BMNumberType {
 			return t
 		}
 	}
+	return nil
+}
+
+func OverrideType(n *BMNumber, t BMNumberType) error {
+	if n == nil || n.number == nil {
+		return errors.New("Cannot override type of nil number")
+	}
+
+	if t.getSize() != -1 && t.getSize() != n.bits {
+		return errors.New("Cannot override number of type " + n.nType.getName() + " with type " + t.getName() + " because they have different sizes")
+	}
+
+	n.nType = t
 	return nil
 }

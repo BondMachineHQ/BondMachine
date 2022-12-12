@@ -5,6 +5,14 @@ import (
 	"strconv"
 )
 
+func (n *BMNumber) ExportString() (string, error) {
+	if n == nil || n.number == nil {
+		return "", errors.New("undefined number")
+	}
+
+	return n.nType.ExportString(n)
+}
+
 func (n *BMNumber) ExportUint64() (uint64, error) {
 	if n == nil || n.number == nil || len(n.number) > 8 {
 		return 0, errors.New("number cannot be exported as uint64")

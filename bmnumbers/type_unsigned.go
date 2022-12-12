@@ -16,6 +16,10 @@ func (d Unsigned) getInfo() string {
 	return ""
 }
 
+func (d Unsigned) getSize() int {
+	return -1 // Any size
+}
+
 func (d Unsigned) importMatchers() map[string]ImportFunc {
 	result := make(map[string]ImportFunc)
 
@@ -54,4 +58,8 @@ func unsignedImportNoSize(re *regexp.Regexp, input string) (*BMNumber, error) {
 	} else {
 		return nil, errors.New("invalid number" + input)
 	}
+}
+
+func (d Unsigned) ExportString(n *BMNumber) (string, error) {
+	return "", errors.New("not implemented")
 }

@@ -17,10 +17,14 @@ func (d Float32) getInfo() string {
 	return ""
 }
 
+func (d Float32) getSize() int {
+	return 32
+}
+
 func (d Float32) importMatchers() map[string]ImportFunc {
 	result := make(map[string]ImportFunc)
 
-	result["^0f(?P<number>[^lL].+)$"] = float32Import
+	result["^0f(?P<number>[^lL].*)$"] = float32Import
 
 	return result
 }
@@ -56,4 +60,17 @@ func float32Import(re *regexp.Regexp, input string) (*BMNumber, error) {
 	} else {
 		return nil, errors.New("unknown float32 number " + input)
 	}
+}
+
+func (d Float32) ExportString(n *BMNumber) (string, error) {
+	if n.bits != 32 {
+		return "", errors.New("cannot export float32 number with " + strconv.Itoa(n.bits) + " bits")
+	}
+
+	var s uint32
+	for i := 0; i < 4; i++ {
+		s = s | (uint32(n.number[i]) << uint32(8*i))
+	}
+
+	return "0f<32>" + strconv.FormatFloat(float64(math.Float32frombits(s)), 'f', -1, 32), nil
 }
