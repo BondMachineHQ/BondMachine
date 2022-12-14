@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/BondMachineHQ/BondMachine/bmnumbers"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 )
 
 var verbose = flag.Bool("v", false, "Verbose")

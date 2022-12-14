@@ -5,8 +5,8 @@ import (
 	"flag"
 	"io/ioutil"
 
-	"github.com/BondMachineHQ/BondMachine/bminfo"
-	"github.com/BondMachineHQ/BondMachine/neuralbond"
+	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
+	"github.com/BondMachineHQ/BondMachine/pkg/neuralbond"
 )
 
 var verbose = flag.Bool("v", false, "Verbose")

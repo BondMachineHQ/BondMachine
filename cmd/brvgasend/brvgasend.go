@@ -5,7 +5,7 @@ import (
 
 	"context"
 
-	"github.com/BondMachineHQ/BondMachine/brvga"
+	"github.com/BondMachineHQ/BondMachine/pkg/brvga"
 )
 
 var verbose = flag.Bool("v", false, "Verbose")

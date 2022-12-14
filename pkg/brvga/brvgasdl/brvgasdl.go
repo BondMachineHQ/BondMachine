@@ -8,7 +8,7 @@ import (
 	"image/color"
 	"os"
 
-	"github.com/BondMachineHQ/BondMachine/brvga"
+	"github.com/BondMachineHQ/BondMachine/pkg/brvga"
 	"github.com/tfriedel6/canvas"
 	"github.com/tfriedel6/canvas/sdlcanvas"
 )
