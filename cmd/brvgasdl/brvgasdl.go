@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/BondMachineHQ/BondMachine/brvga/brvgasdl"
+	"github.com/BondMachineHQ/BondMachine/pkg/brvga/brvgasdl"
 )
 
 var verbose = flag.Bool("v", false, "Verbose")

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/BondMachineHQ/BondMachine/nnef2bm"
 	"io/ioutil"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/nnef2bm"
 )
 
 func main() {

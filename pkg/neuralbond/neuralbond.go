@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"sort"
 
-	"github.com/BondMachineHQ/BondMachine/bminfo"
+	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 )
 
 const (
