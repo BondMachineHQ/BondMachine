@@ -1,0 +1,13 @@
+syntax = "proto3";
+option go_package = "./brkbd";
+package brkbd;
+
+message KeySeq {
+
+  message KeyCode {
+    bytes code = 1;
+  }
+  
+  repeated KeyCode seq = 1;
+
+}
