@@ -1,6 +1,7 @@
 package bmstack
 
 import (
+	"bytes"
 	"text/template"
 )
 
@@ -46,4 +47,22 @@ func CreateBasicStack() *BmStack {
 	}
 	result.funcMap = funcMap
 	return result
+}
+
+func (s *BmStack) WriteHDL() (string, error) {
+
+	var f bytes.Buffer
+
+	t, err := template.New("stack").Funcs(s.funcMap).Parse(stack)
+	if err != nil {
+		return "", err
+	}
+
+	err = t.Execute(&f, *s)
+	if err != nil {
+		return "", err
+	}
+
+	return f.String(), nil
+
 }
