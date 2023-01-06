@@ -2,6 +2,13 @@ package bmstack
 
 const (
 	stack = `
+module {{ .ModuleName }}(clk,
+    reset,
+);
+    input clk;
+    input reset;
+endmodule
+
     wire [31:0] states;
     wire [31:0] changes;
     wire [31:0] DVDR_PS2PL;

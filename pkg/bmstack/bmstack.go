@@ -14,6 +14,8 @@ type stateMachine struct {
 }
 
 type BmStack struct {
+	ModuleName string
+
 	Rsize       uint8
 	Buswidth    string
 	Inputs      []string
@@ -23,7 +25,6 @@ type BmStack struct {
 	SendSM      stateMachine
 	funcMap     template.FuncMap
 	PackageName string
-	ModuleName  string
 }
 
 func CreateBasicStack() *BmStack {
@@ -46,6 +47,10 @@ func CreateBasicStack() *BmStack {
 		},
 	}
 	result.funcMap = funcMap
+
+	// Default values
+	result.ModuleName = "bmstack"
+
 	return result
 }
 
