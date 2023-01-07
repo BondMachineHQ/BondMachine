@@ -3,48 +3,45 @@ package bmstack
 const (
 	stack = `
 module {{ .ModuleName }}(clk,
+    {{- if .Senders }}
+    {{- range .Senders }}
+    {{ . }}Data,
+    {{ . }}Write,
+    {{ . }}Ack,
+    {{- end }}
+    {{- end }}
+    {{- if .Receivers }}
+    {{- range .Receivers }}
+    {{ . }}Data,
+    {{ . }}Read,
+    {{ . }}Ack,
+    {{- end }}
+    {{- end }}
     reset,
+    empty,
+    full
 );
     input clk;
     input reset;
+    output empty;
+    output full;
+    {{- if .Senders }}
+    {{- range .Senders }}
+    input [{{ dec $.DataSize }}:0] {{ . }}Data;
+    input {{ . }}Write;
+    output {{ . }}Ack;
+    {{- end }}
+    {{- end }}
+    {{- if .Receivers }}
+    {{- range .Receivers }}
+    output reg [{{ dec $.DataSize }}:0] {{ . }}Data;
+    input {{ . }}Read;
+    output {{ . }}Ack;
+    {{- end }}
+    {{- end }}
 endmodule
 
-    wire [31:0] states;
-    wire [31:0] changes;
-    wire [31:0] DVDR_PS2PL;
-    wire [31:0] DVDR_PL2PS;
 
-    {{- if .Outputs }}
-    {{- range .Outputs }}
-    wire [31:0] {{ . }};
-    {{- end }}
-    {{- end }}
-    {{- if .Inputs }}
-    {{- range .Inputs }}
-    wire [31:0] {{ . }};
-    {{- end }}
-    {{- end }}
-
-    bondmachine_main bondmachine_inst(
-        .clk(S_AXI_ACLK),
-        .btnC(btnC),
-    //    .led(led),
-        .A_DVDR_PS2PL(DVDR_PS2PL),
-        .A_DVDR_PL2PS(DVDR_PL2PS),
-        .A_changes(changes),
-        .A_states(states),
-	{{- if .Outputs }}
-	{{- range .Outputs }}
-	.A_{{ . }}({{ . }}),
-	{{- end }}
-	{{- end }}
-	{{- if .Inputs }}
-	{{- range .Inputs }}
-	.A_{{ . }}({{ . }}),
-	{{- end }}
-	{{- end }}
-        .interrupt(interrupt)
-    );
 
     {{- $smindex:= 0 }}
     {{- if .Inputs }}

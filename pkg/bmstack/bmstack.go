@@ -15,6 +15,9 @@ type stateMachine struct {
 
 type BmStack struct {
 	ModuleName string
+	DataSize   int
+	Senders    []string
+	Receivers  []string
 
 	Rsize       uint8
 	Buswidth    string
