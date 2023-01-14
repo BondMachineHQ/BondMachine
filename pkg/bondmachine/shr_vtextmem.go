@@ -27,9 +27,9 @@ func (op Vtextmem) GV_config(element uint8) string {
 	result := ""
 	switch element {
 	case GVNODEINPROC:
-		result += "style=filled fillcolor=cyan color=black"
+		result += "style=filled fillcolor=indianred1 color=black"
 	case GVNODE:
-		result += "style=filled fillcolor=cyan color=black"
+		result += "style=filled fillcolor=indianred1 color=black"
 	case GVEDGE:
 		result += "arrowhead=none"
 	case GVCLUS:

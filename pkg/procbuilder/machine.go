@@ -109,6 +109,8 @@ func init() {
 	Allshared = append(Allshared, Channel{})
 	Allshared = append(Allshared, Barrier{})
 	Allshared = append(Allshared, Lfsr8{})
+	Allshared = append(Allshared, Queue{})
+	Allshared = append(Allshared, Stack{})
 	Allshared = append(Allshared, Vtextmem{})
 }
 

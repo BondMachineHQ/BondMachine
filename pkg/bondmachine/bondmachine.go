@@ -25,6 +25,8 @@ func init() {
 	Allshared = append(Allshared, Barrier{})
 	Allshared = append(Allshared, Lfsr8{})
 	Allshared = append(Allshared, Vtextmem{})
+	Allshared = append(Allshared, Queue{})
+	Allshared = append(Allshared, Stack{})
 }
 
 func (e Prerror) Error() string {

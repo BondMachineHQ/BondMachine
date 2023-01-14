@@ -25,9 +25,9 @@ func (op Lfsr8) GV_config(element uint8) string {
 	result := ""
 	switch element {
 	case GVNODEINPROC:
-		result += "style=filled fillcolor=orange color=black"
+		result += "style=filled fillcolor=mediumorchid1 color=black"
 	case GVNODE:
-		result += "style=filled fillcolor=orange color=black"
+		result += "style=filled fillcolor=mediumorchid1 color=black"
 	case GVEDGE:
 		result += "arrowhead=none"
 	case GVCLUS:
