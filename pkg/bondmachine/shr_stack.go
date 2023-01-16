@@ -3,6 +3,7 @@ package bondmachine
 import (
 	//"fmt"
 
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -65,9 +66,31 @@ func (sm Stack_instance) String() string {
 	return "stack:" + strconv.Itoa(sm.Depth)
 }
 
-func (sm Stack_instance) Write_verilog(bmach *Bondmachine, so_index int, stack_name string, flavor string) string {
+func (sm Stack_instance) Write_verilog(bmach *Bondmachine, soIndex int, stackName string, flavor string) string {
 
 	result := ""
+
+	receivers := make([]string, 0)
+	senders := make([]string, 0)
+
+	for numProcessor, soList := range bmach.Shared_links {
+		for _, soId := range soList {
+			if soId == soIndex {
+				for _, op := range bmach.Domains[bmach.Processors[numProcessor]].Op {
+					switch op.Op_get_name() {
+					case "t2r":
+						receivers = append(receivers, "p"+strconv.Itoa(numProcessor)+"stack_recv")
+						continue
+					case "r2t":
+						senders = append(senders, "p"+strconv.Itoa(numProcessor)+"stack_send")
+						continue
+					}
+				}
+			}
+		}
+	}
+
+	fmt.Println("Stack", stackName, "receivers", receivers, "senders", senders)
 
 	return result
 
