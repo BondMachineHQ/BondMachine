@@ -26,7 +26,7 @@ var execution_model = flag.String("execution-model", "ha", "Execution model: vn 
 
 var register_size = flag.Int("register-size", 8, "Number of bits per register (n-bit)")
 
-var enabled_opcodes = flag.String("opcodes", "adc,add,addf,addi,and,cil,cilc,cir,cirn,chc,chw,clc,clr,cpy,cset,dec,div,divf,dpc,hit,hlt,i2r,i2rw,incc,inc,j,jc,je,jz,lfsr82r,m2r,mod,mulc,mult,multf,nand,nop,nor,not,or,r2m,r2o,r2owa,r2owaa,r2s,r2v,r2vri,rsc,rset,sic,s2r,saj,sbc,sub,wrd,wwr,xnor,xor", "Enabled opcodes")
+var enabledOpcodes = flag.String("opcodes", "nop", "Enabled opcodes")
 
 var rbit = flag.Int("registers", 3, "Number of n-bit registers 2^")
 var lbit = flag.Int("ram", 8, "Number of n-bit RAM memory cells 2^")
@@ -199,22 +199,35 @@ func main() {
 				panic(err)
 			}
 		} else {
-			// TODO include opcodes checks
-			// TODO keep the opcodes unique and sorted
-			var eops []string
-			if *enabled_opcodes != "" {
-				eops = strings.Split(*enabled_opcodes, ",")
+			var eOps []string
+			if *enabledOpcodes != "" {
+				eOps = strings.Split(*enabledOpcodes, ",")
 			} else {
 				panic("Missing opcodes")
 			}
 
-			opcodes := make([]procbuilder.Opcode, len(eops))
+			opcodes := make([]procbuilder.Opcode, len(eOps))
+			checked := make(map[string]struct{})
 
-			for i, opname := range eops {
+			for i, opName := range eOps {
+				if _, err := procbuilder.EventuallyCreateInstruction(opName); err != nil {
+					panic(err)
+				}
+
+				found := false
 				for _, op := range procbuilder.Allopcodes {
-					if op.Op_get_name() == opname {
+					if op.Op_get_name() == opName {
+						if _, ok := checked[opName]; ok {
+							panic("Duplicate opcode " + opName)
+						}
 						opcodes[i] = op
+						found = true
+						checked[opName] = struct{}{}
+						break
 					}
+				}
+				if !found {
+					panic("Unknown opcode " + opName)
 				}
 			}
 
