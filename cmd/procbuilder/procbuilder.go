@@ -34,9 +34,9 @@ var nbit = flag.Int("inputs", 1, "Number of n-bit inputs")
 var mbit = flag.Int("outputs", 1, "Number of n-bit outputs")
 var obit = flag.Int("rom", 8, "Number of ROM memory cells 2^")
 
-var input_assembly = flag.String("input-assembly", "", "Take assembly file as input")
-var input_binary = flag.String("input-binary", "", "Take binary file as input")
-var input_random = flag.Bool("input-random", false, "Generate a random input")
+var inputAssembly = flag.String("input-assembly", "", "Take assembly file as input")
+var inputBinary = flag.String("input-binary", "", "Take binary file as input")
+var inputRandom = flag.Bool("input-random", false, "Generate a random input")
 
 var opcode_optimizer = flag.Bool("opcode-optimizer", false, "Activate opecode optimizator for assembly input")
 
@@ -145,31 +145,31 @@ func main() {
 		//ep.Pars["procbuilder:o"] = strconv.Itoa(*obit)
 
 		// Processing enabled opcodes
-		if *input_assembly != "" && *opcode_optimizer {
-			if _, err := os.Stat(*input_assembly); err == nil {
-				if prog, err := ioutil.ReadFile(*input_assembly); err == nil {
+		if *inputAssembly != "" && *opcode_optimizer {
+			if _, err := os.Stat(*inputAssembly); err == nil {
+				if prog, err := ioutil.ReadFile(*inputAssembly); err == nil {
 
 					// TODO keep the opecodes ordered by name
 					opcodes := make([]procbuilder.Opcode, 0)
 
-					currline := make([]byte, 256)
+					curLine := make([]byte, 256)
 
-					iline := 0
+					iLine := 0
 
 					for _, ch := range prog {
 						if ch == 10 {
-							currline[iline] = ' '
-							if len(strings.Split(string(currline), " ")) > 0 {
-								tcheck := false
-								opn := strings.Split(string(currline), " ")[0]
+							curLine[iLine] = ' '
+							if len(strings.Split(string(curLine), " ")) > 0 {
+								tCheck := false
+								opn := strings.Split(string(curLine), " ")[0]
 								for _, op := range opcodes {
 									if opn == op.Op_get_name() {
-										tcheck = true
+										tCheck = true
 										break
 									}
 								}
 
-								if !tcheck {
+								if !tCheck {
 									for _, op := range procbuilder.Allopcodes {
 										if opn == op.Op_get_name() {
 											opcodes = append(opcodes, op)
@@ -178,11 +178,11 @@ func main() {
 									}
 								}
 							}
-							iline = 0
+							iLine = 0
 
 						} else {
-							currline[iline] = ch
-							iline = iline + 1
+							curLine[iLine] = ch
+							iLine = iLine + 1
 						}
 					}
 
@@ -210,6 +210,7 @@ func main() {
 			checked := make(map[string]struct{})
 
 			for i, opName := range eOps {
+				// This is the support for dynamic opcodes. It eventually creates the opcode if it does not exist and follows the naming convention
 				if _, err := procbuilder.EventuallyCreateInstruction(opName); err != nil {
 					panic(err)
 				}
@@ -238,9 +239,9 @@ func main() {
 		}
 
 		// Precessing assembly
-		if *input_assembly != "" {
-			if _, err := os.Stat(*input_assembly); err == nil {
-				if prog, err := ioutil.ReadFile(*input_assembly); err == nil {
+		if *inputAssembly != "" {
+			if _, err := os.Stat(*inputAssembly); err == nil {
+				if prog, err := ioutil.ReadFile(*inputAssembly); err == nil {
 					if prog, err := myarch.Assembler(prog); err == nil {
 						mymachine.Program = prog
 					} else {
@@ -253,9 +254,9 @@ func main() {
 			} else {
 				panic(err)
 			}
-		} else if *input_binary != "" {
+		} else if *inputBinary != "" {
 			//TODO input from binary file
-		} else if *input_random {
+		} else if *inputRandom {
 			//mymachine = procbuilder.Machine_Program_Generate(ep).(*procbuilder.Machine)
 		} else {
 			fmt.Println("Warning no program loaded")
