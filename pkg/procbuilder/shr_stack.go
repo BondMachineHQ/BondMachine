@@ -16,18 +16,44 @@ func (op Stack) Shortname() string {
 }
 
 func (op Stack) Get_header(arch *Arch, shared_constraint string, seq int) string {
+	result := ""
 	stackName := "st" + strconv.Itoa(seq)
-	return ", " + stackName + "din, " + stackName + "dout, " + stackName + "addr, " + stackName + "wren, " + stackName + "en"
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "r2t" {
+			result += ", " + stackName + "senderData, " + stackName + "senderWrite, " + stackName + "senderAck"
+			break
+		}
+	}
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "t2r" {
+			result += ", " + stackName + "receiverData, " + stackName + "receiverRead, " + stackName + "receiverAck"
+			break
+		}
+	}
+	return result
 }
 
 func (op Stack) Get_params(arch *Arch, shared_constraint string, seq int) string {
 	stackName := "st" + strconv.Itoa(seq)
 	result := ""
-	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "din;\n"
-	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "addr;\n"
-	result += "	output " + stackName + "wren;\n"
-	result += "	output " + stackName + "en;\n"
-	result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "dout;\n"
+
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "r2t" {
+			result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "senderData;\n"
+			result += "	output " + stackName + "senderWrite;\n"
+			result += "	input " + stackName + "senderAck;\n"
+			break
+		}
+	}
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "t2r" {
+			result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "receiverData;\n"
+			result += "	input " + stackName + "receiverRead;\n"
+			result += "	output " + stackName + "receiverAck;\n"
+			break
+		}
+	}
+
 	return result
 }
 
@@ -49,24 +75,22 @@ func (op Stack) Get_internal_params(arch *Arch, shared_constraint string, seq in
 
 	stackName := "st" + strconv.Itoa(seq)
 
-	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "din;\n"
-	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "addr;\n"
-	result += "	output " + stackName + "wren;\n"
-	result += "	output " + stackName + "en;\n"
-	result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "dout;\n"
-
-	if seq == 0 {
-		result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] q_din_i[" + strconv.Itoa(stackNum-1) + ":0];\n"
-		result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] q_addr_i [" + strconv.Itoa(stackNum-1) + ":0];\n"
-		result += "\treg [" + strconv.Itoa(stackNum-1) + ":0] q_wren_i;\n"
-		result += "\twire [" + strconv.Itoa(stackNum-1) + ":0] q_en_i;\n"
-		result += "\twire [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] q_dout_i [" + strconv.Itoa(stackNum-1) + ":0];\n"
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "r2t" {
+			result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "senderData;\n"
+			result += "	output " + stackName + "senderWrite;\n"
+			result += "	input " + stackName + "senderAck;\n"
+			break
+		}
+	}
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "t2r" {
+			result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "receiverData;\n"
+			result += "	input " + stackName + "receiverRead;\n"
+			result += "	output " + stackName + "receiverAck;\n"
+			break
+		}
 	}
 
-	result += "\tassign " + stackName + "din = q_din_i[" + strconv.Itoa(seq) + "];\n"
-	result += "\tassign " + stackName + "addr = q_addr_i[" + strconv.Itoa(seq) + "];\n"
-	result += "\tassign " + stackName + "wren = q_wren_i[" + strconv.Itoa(seq) + "];\n"
-	result += "\tassign " + stackName + "en = q_en_i[" + strconv.Itoa(seq) + "];\n"
-	result += "\tassign q_dout_i[" + strconv.Itoa(seq) + "] = " + stackName + "dout;\n"
 	return result
 }

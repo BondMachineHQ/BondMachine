@@ -12,12 +12,16 @@ import (
 // The R2t opcode
 type R2t struct{}
 
+func (op R2t) getStackName(stackId int) string {
+	return "st" + strconv.Itoa(stackId)
+}
+
 func (op R2t) Op_get_name() string {
 	return "r2t"
 }
 
 func (op R2t) Op_get_desc() string {
-	return "Copy a register value to the video ram"
+	return "Copy a register value to a shared stack"
 }
 
 func (op R2t) Op_show_assembler(arch *Arch) string {
@@ -48,97 +52,64 @@ func (Op R2t) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 }
 
 func (op R2t) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
-	//rom_word := arch.Max_word()
-	//opbits := arch.Opcodes_bits()
 
-	//reg_num := 1 << arch.R
+	stackNum := 0
+	if arch.Shared_constraints != "" {
+		constraints := strings.Split(arch.Shared_constraints, ",")
+		for _, constraint := range constraints {
+			values := strings.Split(constraint, ":")
+			soname := values[0]
+			if soname == "stack" {
+				stackNum++
+			}
+		}
+	}
+
+	rom_word := arch.Max_word()
+	opBits := arch.Opcodes_bits()
+	outbits := arch.Outputs_bits()
+
+	reg_num := 1 << arch.R
 
 	result := ""
 	result += "					R2T: begin\n"
-	/*if arch.R == 1 {
-		result += "					case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+	if stackNum > 0 {
+		if arch.R == 1 {
+			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
+		} else {
+			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
+		}
+		for i := 0; i < reg_num; i++ {
+			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
+
+			if outbits == 1 {
+				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + "])\n"
+			} else {
+				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(outbits)) + "])\n"
+			}
+
+			for j := 0; j < stackNum; j++ {
+				result += "							" + strings.ToUpper(op.getStackName(j)) + " : begin\n"
+				result += "								_aux" + strings.ToLower(op.getStackName(j)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
+				result += "								$display(\"R2O " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(op.getStackName(j)) + "\");\n"
+				result += "							end\n"
+
+			}
+			result += "							endcase\n"
+			result += "						end\n"
+		}
+		result += "						endcase\n"
 	} else {
-		result += "					case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "						$display(\"NOP\");\n"
 	}
-	for i := 0; i < reg_num; i++ {
-		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "							wr_int_ram <= #1 1'b1;\n"
-		result += "							addr_ram_r2m <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.Rsize)) + "];\n"
-		result += "							ram_din_i <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
-		result += "							$display(\"R2M " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
-		result += "						end\n"
-	}
-	result += "						endcase\n"*/
 	result += "						_pc <= #1 _pc + 1'b1 ;\n"
 	result += "					end\n"
-
 	return result
+
 }
 
 func (op R2t) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 	result := ""
-
-	rom_word := arch.Max_word()
-	opbits := arch.Opcodes_bits()
-
-	reg_num := 1 << arch.R
-
-	// This is always the first module if present
-	firstModule := true
-	lastModule := true
-
-	// If r2tri is also present, that will be the last opcode
-	for _, currOp := range arch.Op {
-		if currOp.Op_get_name() == "r2tri" {
-			lastModule = false
-			break
-		}
-	}
-	//	result += "\tassign vram_din = vram_din_i;\n"
-	//	result += "\tassign vram_addr = addr_vram_r2t;\n"
-	//	result += "\tassign vram_wren = wr_int_vram;\n"
-	//	result += "\tassign vram_en = 1'b1;\n"
-
-	// Check for differences
-	//	result += "\talways @(rom_value"
-	//	for i := 0; i < reg_num; i++ {
-	//		result += ",_" + strings.ToLower(Get_register_name(i))
-	//}
-	//result += ")\n"
-	if firstModule {
-		result += "\talways @(posedge clock_signal)\n"
-		result += "\tbegin\n"
-		if opbits == 1 {
-			result += "\t\tcase (rom_value[" + strconv.Itoa(rom_word-1) + "])\n"
-		} else {
-			result += "\t\tcase (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
-		}
-	}
-
-	result += "		R2T: begin\n"
-
-	if arch.R == 1 {
-		result += "			case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
-	} else {
-		result += "			case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
-	}
-	for i := 0; i < reg_num; i++ {
-		result += "				" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "					vtm0_wren_i <= 1'b1;\n"
-		result += "					vtm0_addr_i[7:0] <= rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-8) + "];\n"
-		result += "					vtm0_din_i[7:0] <= _" + strings.ToLower(Get_register_name(i)) + "[7:0];\n"
-		result += "					$display(\"R2T " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
-		result += "				end\n"
-	}
-	result += "			endcase\n"
-	result += "\t	end\n"
-	if lastModule {
-		result += "\t	default:\n"
-		result += "			vtm0_wren_i <= 1'b0;\n"
-		result += "\t	endcase\n"
-		result += "\tend\n"
-	}
-
 	return result
 }
 
