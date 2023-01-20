@@ -3,9 +3,10 @@ package bondmachine
 import (
 	//"fmt"
 
-	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bmstack"
 )
 
 // The placeholder struct
@@ -70,6 +71,7 @@ func (sm Stack_instance) Write_verilog(bmach *Bondmachine, soIndex int, stackNam
 
 	result := ""
 
+	// Compute the receivers and senders of the stack
 	receivers := make([]string, 0)
 	senders := make([]string, 0)
 
@@ -90,33 +92,65 @@ func (sm Stack_instance) Write_verilog(bmach *Bondmachine, soIndex int, stackNam
 		}
 	}
 
-	fmt.Println("Stack", stackName, "receivers", receivers, "senders", senders)
+	s := bmstack.CreateBasicStack()
+	s.DataSize = int(bmach.Rsize)
+	s.Depth = sm.Depth
+	s.MemType = "LIFO"
+	s.Senders = senders
+	s.Receivers = receivers
+
+	r, _ := s.WriteHDL()
+
+	result += r
 
 	return result
 
 }
 
-func (sm Stack_instance) GetPerProcPortsWires(bmach *Bondmachine, proc_id int, so_id int, flavor string) string {
+func (sm Stack_instance) GetPerProcPortsWires(bmach *Bondmachine, procId int, soId int, flavor string) string {
 	result := ""
-	if soname, ok := bmach.Get_so_name(so_id); ok {
-		result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] p" + strconv.Itoa(proc_id) + soname + "din;\n"
-		result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] p" + strconv.Itoa(proc_id) + soname + "dout;\n"
-		result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] p" + strconv.Itoa(proc_id) + soname + "addr;\n"
-		result += "\twire p" + strconv.Itoa(proc_id) + soname + "wren;\n"
-		result += "\twire p" + strconv.Itoa(proc_id) + soname + "en;\n"
-		result += "\n"
+	if soName, ok := bmach.Get_so_name(soId); ok {
+		for _, op := range bmach.Domains[bmach.Processors[procId]].Op {
+			if op.Op_get_name() == "r2t" {
+				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] p" + strconv.Itoa(procId) + soName + "senderData;\n"
+				result += "\twire p" + strconv.Itoa(procId) + soName + "senderWrite;\n"
+				result += "\twire p" + strconv.Itoa(procId) + soName + "senderAck;\n"
+				result += "\n"
+				break
+			}
+		}
+		for _, op := range bmach.Domains[bmach.Processors[procId]].Op {
+			if op.Op_get_name() == "t2r" {
+				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] p" + strconv.Itoa(procId) + soName + "receiverData;\n"
+				result += "\twire p" + strconv.Itoa(procId) + soName + "receiverRead;\n"
+				result += "\twire p" + strconv.Itoa(procId) + soName + "receiverAck;\n"
+				result += "\n"
+				break
+			}
+		}
 	}
 	return result
 }
 
 func (sm Stack_instance) GetPerProcPortsHeader(bmach *Bondmachine, proc_id int, so_id int, flavor string) string {
 	result := ""
-	if soname, ok := bmach.Get_so_name(so_id); ok {
-		result += ", p" + strconv.Itoa(proc_id) + soname + "din"
-		result += ", p" + strconv.Itoa(proc_id) + soname + "dout"
-		result += ", p" + strconv.Itoa(proc_id) + soname + "addr"
-		result += ", p" + strconv.Itoa(proc_id) + soname + "wren"
-		result += ", p" + strconv.Itoa(proc_id) + soname + "en"
+	if soName, ok := bmach.Get_so_name(so_id); ok {
+		for _, op := range bmach.Domains[bmach.Processors[proc_id]].Op {
+			if op.Op_get_name() == "r2t" {
+				result += ", p" + strconv.Itoa(proc_id) + soName + "senderData"
+				result += ", p" + strconv.Itoa(proc_id) + soName + "senderWrite"
+				result += ", p" + strconv.Itoa(proc_id) + soName + "senderAck"
+				break
+			}
+		}
+		for _, op := range bmach.Domains[bmach.Processors[proc_id]].Op {
+			if op.Op_get_name() == "t2r" {
+				result += ", p" + strconv.Itoa(proc_id) + soName + "receiverData"
+				result += ", p" + strconv.Itoa(proc_id) + soName + "receiverRead"
+				result += ", p" + strconv.Itoa(proc_id) + soName + "receiverAck"
+				break
+			}
+		}
 	}
 	return result
 }
