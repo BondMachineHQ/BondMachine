@@ -3,6 +3,7 @@ package bmstack
 const (
 	stack = `
 module {{ .ModuleName }}(clk,
+    reset,
     {{- if .Senders }}
     {{- range .Senders }}
     {{ . }}Data,
@@ -17,7 +18,6 @@ module {{ .ModuleName }}(clk,
     {{ . }}Ack,
     {{- end }}
     {{- end }}
-    reset,
     empty,
     full
 );
