@@ -25,49 +25,39 @@ func (op R2t) Op_get_desc() string {
 }
 
 func (op R2t) Op_show_assembler(arch *Arch) string {
-	opbits := arch.Opcodes_bits()
-	result := "r2t [" + strconv.Itoa(int(arch.R)) + "(Reg)] [ 8 (RAM address)]	// " + op.Op_get_desc() + " [" + strconv.Itoa(opbits+int(arch.R)+8) + "]\n"
+	stSo := Stack{}
+	opBits := arch.Opcodes_bits()
+	stackBits := arch.Shared_bits(stSo.Shr_get_name())
+	result := "r2t [" + strconv.Itoa(int(arch.R)) + "(Reg)] [ " + strconv.Itoa(int(stackBits)) + " (Shared Stack)]	// " + op.Op_get_desc() + " [" + strconv.Itoa(opBits+int(arch.R)+stackBits) + "]\n"
 	return result
 }
 
 func (op R2t) Op_get_instruction_len(arch *Arch) int {
-	opbits := arch.Opcodes_bits()
-	return opbits + int(arch.R) + 8 // The bits for the opcode + bits for a register + bits for vRAM address
+	stSo := Stack{}
+	opBits := arch.Opcodes_bits()
+	stackBits := arch.Shared_bits(stSo.Shr_get_name())
+	return opBits + int(arch.R) + int(stackBits) // The bits for the opcode + bits for a register + bits stacks
 }
 
-func (op R2t) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
+func (op R2t) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
 	result := ""
-	//	result += "\treg [7:0] addr_vram_r2t;\n"
-	//	result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] vram_din_i;\n"
-	//	result += "\treg wr_int_vram;\n"
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q"}) {
+		result += "	reg stackqueuesSM;\n"
+	}
 	return result
 }
 
 func (Op R2t) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	result := ""
-	//result += "\t\t\twr_int_ram <= #1 1'b0;\n"
-	//result += "\t\t\taddr_ram_r2m <= #1 'b0;\n"
-	//result += "\t\t\tram_din_i <= #1 'b0;\n"
 	return result
 }
 
 func (op R2t) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
-
-	stackNum := 0
-	if arch.Shared_constraints != "" {
-		constraints := strings.Split(arch.Shared_constraints, ",")
-		for _, constraint := range constraints {
-			values := strings.Split(constraint, ":")
-			soname := values[0]
-			if soname == "stack" {
-				stackNum++
-			}
-		}
-	}
-
+	stSo := Stack{}
+	stackBits := arch.Shared_bits(stSo.Shr_get_name())
+	stackNum := arch.Shared_num(stSo.Shr_get_name())
 	rom_word := arch.Max_word()
 	opBits := arch.Opcodes_bits()
-	outbits := arch.Outputs_bits()
 
 	reg_num := 1 << arch.R
 
@@ -82,16 +72,29 @@ func (op R2t) Op_instruction_verilog_state_machine(arch *Arch, flavor string) st
 		for i := 0; i < reg_num; i++ {
 			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
-			if outbits == 1 {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + "])\n"
+			if stackBits == 1 {
+				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-stackBits-1) + "])\n"
 			} else {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(outbits)) + "])\n"
+				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-stackBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(stackBits)) + "])\n"
 			}
 
 			for j := 0; j < stackNum; j++ {
 				result += "							" + strings.ToUpper(op.getStackName(j)) + " : begin\n"
-				result += "								_aux" + strings.ToLower(op.getStackName(j)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
-				result += "								$display(\"R2O " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(op.getStackName(j)) + "\");\n"
+				result += "								case (stackqueueSM)\n"
+				result += "								   1'b0: begin\n"
+				result += "								     " + strings.ToLower(op.getStackName(j)) + "senderData[" + strconv.Itoa(int(arch.Rsize)-1) + ":0] <= #1 _" + strings.ToLower(Get_register_name(i)) + "[" + strconv.Itoa(int(arch.Rsize)-1) + ":0];\n"
+				result += "								     " + strings.ToLower(op.getStackName(j)) + "senderWrite <= #1 1'b1;\n"
+				result += "								     stackqueueSM <= 1'b1;\n"
+				result += "								   end\n"
+				result += "								   1'b1: begin\n"
+				result += "								     if (" + strings.ToLower(op.getStackName((j))) + "senderAck) begin\n"
+				result += "								       " + strings.ToLower(op.getStackName(j)) + "senderWrite <= #1 1'b0;\n"
+				result += "								       _pc <= #1 _pc + 1'b1 ;\n"
+				result += "								       stackqueueSM <= 1'b0;\n"
+				result += "								     end\n"
+				result += "								   end\n"
+				result += "								endcase\n"
+				result += "								$display(\"R2T " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(op.getStackName(j)) + "\");\n"
 				result += "							end\n"
 
 			}
@@ -114,18 +117,21 @@ func (op R2t) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 }
 
 func (op R2t) Assembler(arch *Arch, words []string) (string, error) {
-	opbits := arch.Opcodes_bits()
-	rom_word := arch.Max_word()
-	ramdepth := 8
+	opBits := arch.Opcodes_bits()
+	stSo := Stack{}
+	stackNum := arch.Shared_num(stSo.Shr_get_name())
+	stackBits := arch.Shared_bits(stSo.Shr_get_name())
+	shortName := stSo.Shortname()
+	romWord := arch.Max_word()
 
-	reg_num := 1 << arch.R
+	regNum := 1 << arch.R
 
 	if len(words) != 2 {
 		return "", Prerror{"Wrong arguments number"}
 	}
 
 	result := ""
-	for i := 0; i < reg_num; i++ {
+	for i := 0; i < regNum; i++ {
 		if words[0] == strings.ToLower(Get_register_name(i)) {
 			result += zeros_prefix(int(arch.R), get_binary(i))
 			break
@@ -136,13 +142,13 @@ func (op R2t) Assembler(arch *Arch, words []string) (string, error) {
 		return "", Prerror{"Unknown register name " + words[0]}
 	}
 
-	if partial, err := Process_number(words[1]); err == nil {
-		result += zeros_prefix(ramdepth, partial)
+	if partial, err := Process_shared(shortName, words[1], stackNum); err == nil {
+		result += zeros_prefix(stackBits, partial)
 	} else {
 		return "", Prerror{err.Error()}
 	}
 
-	for i := opbits + int(arch.R) + ramdepth; i < rom_word; i++ {
+	for i := opBits + int(arch.R) + stackBits; i < romWord; i++ {
 		result += "0"
 	}
 
@@ -150,11 +156,13 @@ func (op R2t) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op R2t) Disassembler(arch *Arch, instr string) (string, error) {
-	ramdepth := 8
-	reg_id := get_id(instr[:arch.R])
-	result := strings.ToLower(Get_register_name(reg_id)) + " "
-	value := get_id(instr[arch.R : int(arch.R)+ramdepth])
-	result += strconv.Itoa(value)
+	chso := Stack{}
+	stackBits := arch.Shared_bits(chso.Shr_get_name())
+	shortname := chso.Shortname()
+	regId := get_id(instr[:arch.R])
+	result := strings.ToLower(Get_register_name(regId)) + " "
+	stId := get_id(instr[arch.R : int(arch.R)+stackBits])
+	result += shortname + strconv.Itoa(stId)
 	return result, nil
 }
 
@@ -202,7 +210,6 @@ func (op R2t) Forbidden_modes() (bool, []string) {
 
 func (Op R2t) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
 	result := ""
-	//result += "\t\t\t\twr_int_ram <= #1 1'b0;\n"
 	return result
 }
 
