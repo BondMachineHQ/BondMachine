@@ -61,6 +61,7 @@ var show_program_binary = flag.Bool("show-program-binary", false, "Show program 
 var showProgramDisassembled = flag.Bool("show-program-disassembled", false, "Show disassebled program")
 
 var showOpcodes = flag.Bool("show-opcodes", false, "Show loaded opcodes")
+var showOpcodesDetails = flag.Bool("show-opcodes-details", false, "Show loaded opcodes and details")
 
 var hex = flag.Bool("hex", false, "Use HEX")
 var numlines = flag.Bool("numlines", false, "Use line numbers")
@@ -291,6 +292,13 @@ func main() {
 		if *showOpcodes {
 			for _, op := range myarch.Op {
 				fmt.Println(op.Op_get_name())
+			}
+		}
+
+		// Eventually show opcodes details
+		if *showOpcodesDetails {
+			for _, op := range myarch.Op {
+				fmt.Println(op.Op_show_assembler(&mymachine.Arch))
 			}
 		}
 
