@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"regexp"
+	"sort"
 	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
@@ -227,4 +228,22 @@ func Sequence_to_0(start string) ([]string, uint8) {
 	}
 
 	return result, types
+}
+
+func (arch *Arch) OnlyOne(curOp string, ops []string) bool {
+	sorted := make([]string, len(ops))
+	copy(sorted, ops)
+	sort.Strings(sorted)
+	for _, op := range sorted {
+		if op == curOp {
+			return true
+		} else {
+			for _, op2 := range arch.Conproc.Op {
+				if op2.Op_get_name() == op {
+					return false
+				}
+			}
+		}
+	}
+	return false
 }
