@@ -22,16 +22,16 @@ func (op Wwr) Op_get_desc() string {
 }
 
 func (op Wwr) Op_show_assembler(arch *Arch) string {
-	opbits := arch.Opcodes_bits()
-	chanbits := arch.Shared_bits("channel")
-	result := "wwr [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(chanbits) + "(Channel)]	// Want write from a register to a channel  [" + strconv.Itoa(opbits+int(arch.R)+chanbits) + "]\n"
+	opBits := arch.Opcodes_bits()
+	chanBits := arch.Shared_bits("channel")
+	result := "wwr [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(chanBits) + "(Channel)]	// Want write from a register to a channel  [" + strconv.Itoa(opBits+int(arch.R)+chanBits) + "]\n"
 	return result
 }
 
 func (op Wwr) Op_get_instruction_len(arch *Arch) int {
-	opbits := arch.Opcodes_bits()
-	chanbits := arch.Shared_bits("channel")
-	return opbits + int(arch.R) + int(chanbits) // The bits for the opcode + bits for a register + bits for the channel id
+	opBits := arch.Opcodes_bits()
+	chanBits := arch.Shared_bits("channel")
+	return opBits + int(arch.R) + int(chanBits) // The bits for the opcode + bits for a register + bits for the channel id
 }
 
 func (op Wwr) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
