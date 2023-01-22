@@ -98,6 +98,7 @@ func init() {
 	Allopcodes = append(Allopcodes, Sbc{})
 	Allopcodes = append(Allopcodes, Sub{})
 	Allopcodes = append(Allopcodes, Wrd{})
+	Allopcodes = append(Allopcodes, T2r{})
 	Allopcodes = append(Allopcodes, Wwr{})
 	Allopcodes = append(Allopcodes, Xnor{})
 	Allopcodes = append(Allopcodes, Xor{})
