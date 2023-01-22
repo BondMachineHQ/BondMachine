@@ -93,6 +93,7 @@ func (sm Stack_instance) Write_verilog(bmach *Bondmachine, soIndex int, stackNam
 	}
 
 	s := bmstack.CreateBasicStack()
+	s.ModuleName = stackName
 	s.DataSize = int(bmach.Rsize)
 	s.Depth = sm.Depth
 	s.MemType = "LIFO"
