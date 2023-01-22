@@ -48,8 +48,8 @@ func (op Stack) Get_params(arch *Arch, shared_constraint string, seq int) string
 	for _, op := range arch.Op {
 		if op.Op_get_name() == "t2r" {
 			result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "receiverData;\n"
-			result += "	input " + stackName + "receiverRead;\n"
-			result += "	output " + stackName + "receiverAck;\n"
+			result += "	output " + stackName + "receiverRead;\n"
+			result += "	input " + stackName + "receiverAck;\n"
 			break
 		}
 	}
@@ -77,8 +77,8 @@ func (op Stack) Get_internal_params(arch *Arch, shared_constraint string, seq in
 
 	for _, op := range arch.Op {
 		if op.Op_get_name() == "r2t" {
-			result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "senderData;\n"
-			result += "	output " + stackName + "senderWrite;\n"
+			result += "	output reg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "senderData;\n"
+			result += "	output reg " + stackName + "senderWrite;\n"
 			result += "	input " + stackName + "senderAck;\n"
 			break
 		}
@@ -86,8 +86,8 @@ func (op Stack) Get_internal_params(arch *Arch, shared_constraint string, seq in
 	for _, op := range arch.Op {
 		if op.Op_get_name() == "t2r" {
 			result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + stackName + "receiverData;\n"
-			result += "	input " + stackName + "receiverRead;\n"
-			result += "	output " + stackName + "receiverAck;\n"
+			result += "	output reg " + stackName + "receiverRead;\n"
+			result += "	input " + stackName + "receiverAck;\n"
 			break
 		}
 	}

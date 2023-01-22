@@ -40,9 +40,24 @@ func (op R2t) Op_get_instruction_len(arch *Arch) int {
 }
 
 func (op R2t) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
+	stSo := Stack{}
+	stackBits := arch.Shared_bits(stSo.Shr_get_name())
+	stackNum := arch.Shared_num(stSo.Shr_get_name())
+
 	result := ""
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q"}) {
-		result += "	reg stackqueuesSM;\n"
+		result += "	reg stackqueueSM;\n"
+	}
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r"}) {
+		result += "	localparam "
+		for i := 0; i < stackNum; i++ {
+			result += strings.ToUpper(op.getStackName(i)) + "=" + strconv.Itoa(int(stackBits)) + "'d" + strconv.Itoa(i)
+			if i < stackNum-1 {
+				result += ",\n"
+			} else {
+				result += ";\n"
+			}
+		}
 	}
 	return result
 }
