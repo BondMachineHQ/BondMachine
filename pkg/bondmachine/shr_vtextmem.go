@@ -311,3 +311,13 @@ func (sm Vtextmem_instance) GetExternalPortsWires(bmach *Bondmachine, proc_id in
 
 	return result
 }
+
+func (sm Vtextmem_instance) GetCPSharedPortsHeader(bmach *Bondmachine, so_id int, flavor string) string {
+	result := ""
+	return result
+}
+
+func (sm Vtextmem_instance) GetCPSharedPortsWires(bmach *Bondmachine, so_id int, flavor string) string {
+	result := ""
+	return result
+}

@@ -20,4 +20,6 @@ type Shared_instance interface {
 	GetPerProcPortsHeader(*Bondmachine, int, int, string) string
 	GetExternalPortsHeader(*Bondmachine, int, int, string) string
 	GetExternalPortsWires(*Bondmachine, int, int, string) string
+	GetCPSharedPortsHeader(*Bondmachine, int, string) string // The ports on the Shared element shared by all the cores (header)
+	GetCPSharedPortsWires(*Bondmachine, int, string) string  // The ports on the Shared element shared by all the cores (module)
 }

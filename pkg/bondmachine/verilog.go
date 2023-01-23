@@ -291,11 +291,15 @@ func (bmach *Bondmachine) Write_verilog_main(conf *Config, module_name string, f
 
 	// The internal wire for the connection to the SOs
 	if len(bmach.Shared_objects) > 0 {
-		for proc_id, solist := range bmach.Shared_links {
-			for _, so_id := range solist {
+		for procId, soList := range bmach.Shared_links {
+			for _, soId := range soList {
 				//fmt.Println(proc_id, so_id)
-				result += bmach.Shared_objects[so_id].GetPerProcPortsWires(bmach, proc_id, so_id, flavor)
+				result += bmach.Shared_objects[soId].GetPerProcPortsWires(bmach, procId, soId, flavor)
 			}
+		}
+
+		for siId, so := range bmach.Shared_objects {
+			result += so.GetCPSharedPortsWires(bmach, siId, flavor)
 		}
 	}
 
@@ -336,7 +340,7 @@ func (bmach *Bondmachine) Write_verilog_main(conf *Config, module_name string, f
 			}
 		}
 
-		// A Processor output always use its name connected wheather or not
+		// A Processor output always use its name connected whether or not
 		for j := 0; j < int(arch.M); j++ {
 			map_to := uint8(3)
 			res_id := i
@@ -349,9 +353,10 @@ func (bmach *Bondmachine) Write_verilog_main(conf *Config, module_name string, f
 		//memorize the name of the shared object
 		// The module for the connection to the shared memory and the channel
 		if len(bmach.Shared_objects) > 0 {
-			solist := bmach.Shared_links[i]
-			for _, so_id := range solist {
-				result += bmach.Shared_objects[so_id].GetPerProcPortsHeader(bmach, i, so_id, flavor)
+			soList := bmach.Shared_links[i]
+			for _, soId := range soList {
+				result += bmach.Shared_objects[soId].GetPerProcPortsHeader(bmach, i, soId, flavor)
+				result += bmach.Shared_objects[soId].GetCPSharedPortsHeader(bmach, soId, flavor)
 			}
 		}
 		result += ");\n"
@@ -370,14 +375,26 @@ func (bmach *Bondmachine) Write_verilog_main(conf *Config, module_name string, f
 
 			result += "	" + sname + strconv.Itoa(seq[sname]) + " " + sname + strconv.Itoa(seq[sname]) + "_inst (clk, reset"
 
-			for proc_id, solist := range bmach.Shared_links {
-				for _, so_id := range solist {
-					if so_id == i {
-						result += bmach.Shared_objects[so_id].GetPerProcPortsHeader(bmach, proc_id, so_id, flavor)
-						result += bmach.Shared_objects[so_id].GetExternalPortsHeader(bmach, proc_id, so_id, flavor)
+			for procId, solist := range bmach.Shared_links {
+				for _, soId := range solist {
+					if soId == i {
+						result += bmach.Shared_objects[soId].GetPerProcPortsHeader(bmach, procId, soId, flavor)
+						result += bmach.Shared_objects[soId].GetExternalPortsHeader(bmach, procId, soId, flavor)
 					}
 				}
 			}
+
+			// Inlcude SO ports eventually shared with CORES (not core dependent)
+		sharedLoop:
+			for _, soList := range bmach.Shared_links {
+				for _, soId := range soList {
+					if soId == i {
+						result += bmach.Shared_objects[soId].GetCPSharedPortsHeader(bmach, soId, flavor)
+						break sharedLoop
+					}
+				}
+			}
+
 			result += ");\n"
 			seq[sname]++
 		}

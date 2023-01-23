@@ -165,3 +165,23 @@ func (sm Stack_instance) GetExternalPortsWires(bmach *Bondmachine, proc_id int, 
 	result := ""
 	return result
 }
+
+func (sm Stack_instance) GetCPSharedPortsHeader(bmach *Bondmachine, soId int, flavor string) string {
+	result := ""
+	if soName, ok := bmach.Get_so_name(soId); ok {
+		result += ", " + soName + "empty"
+		result += ", " + soName + "full"
+	}
+	return result
+}
+
+func (sm Stack_instance) GetCPSharedPortsWires(bmach *Bondmachine, soId int, flavor string) string {
+	result := ""
+	if soName, ok := bmach.Get_so_name(soId); ok {
+		result += "\n"
+		result += "	wire " + soName + "empty;\n"
+		result += "	wire " + soName + "full\n;"
+		result += "\n"
+	}
+	return result
+}

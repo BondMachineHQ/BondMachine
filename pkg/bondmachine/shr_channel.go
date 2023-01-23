@@ -723,3 +723,13 @@ func (sm Channel_instance) GetExternalPortsWires(bmach *Bondmachine, proc_id int
 	result := ""
 	return result
 }
+
+func (sm Channel_instance) GetCPSharedPortsHeader(bmach *Bondmachine, so_id int, flavor string) string {
+	result := ""
+	return result
+}
+
+func (sm Channel_instance) GetCPSharedPortsWires(bmach *Bondmachine, so_id int, flavor string) string {
+	result := ""
+	return result
+}

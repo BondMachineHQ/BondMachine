@@ -252,3 +252,13 @@ func (sm Sharedmem_instance) GetExternalPortsWires(bmach *Bondmachine, proc_id i
 	result := ""
 	return result
 }
+
+func (sm Sharedmem_instance) GetCPSharedPortsHeader(bmach *Bondmachine, so_id int, flavor string) string {
+	result := ""
+	return result
+}
+
+func (sm Sharedmem_instance) GetCPSharedPortsWires(bmach *Bondmachine, so_id int, flavor string) string {
+	result := ""
+	return result
+}
