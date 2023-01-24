@@ -165,6 +165,31 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 		}
 	}
 
+	// Now that Shared Objects are attached, we can assemble the code (it was not possible before)
+
+	for i, cp := range bi.cps {
+		romCode := cp.GetMeta("romcode")
+		myMachine := bMach.Domains[i]
+		myArch := &myMachine.Arch
+
+		prog := ""
+
+		for _, line := range bi.sections[romCode].sectionBody.Lines {
+			prog += line.Operation.GetValue()
+			for _, arg := range line.Elements {
+				prog += " " + arg.GetValue()
+			}
+			prog += "\n"
+		}
+
+		if prog, err := myArch.Assembler([]byte(prog)); err == nil {
+			myMachine.Program = prog
+		} else {
+			return err
+		}
+
+	}
+
 	// Will keep track of the processed attach
 	ioAttDone := make([]bool, len(bi.ioAttach))
 
@@ -507,23 +532,22 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 	// The shared constrains will be populated later from the basm metadata
 	myArch.Shared_constraints = ""
 
-	// TODO finish this
+	// This comports that program will be assembled later, after the bondmachine is created. Eventually, this will be done
+	// prog := ""
 
-	prog := ""
+	// for _, line := range bi.sections[romCode].sectionBody.Lines {
+	// 	prog += line.Operation.GetValue()
+	// 	for _, arg := range line.Elements {
+	// 		prog += " " + arg.GetValue()
+	// 	}
+	// 	prog += "\n"
+	// }
 
-	for _, line := range bi.sections[romCode].sectionBody.Lines {
-		prog += line.Operation.GetValue()
-		for _, arg := range line.Elements {
-			prog += " " + arg.GetValue()
-		}
-		prog += "\n"
-	}
-
-	if prog, err := myArch.Assembler([]byte(prog)); err == nil {
-		myMachine.Program = prog
-	} else {
-		return nil, err
-	}
+	// if prog, err := myArch.Assembler([]byte(prog)); err == nil {
+	// 	myMachine.Program = prog
+	// } else {
+	// 	return nil, err
+	// }
 
 	return myMachine, nil
 }
