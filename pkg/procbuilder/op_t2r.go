@@ -256,29 +256,39 @@ func (Op T2r) HLAssemblerMatch(arch *Arch) []string {
 func (Op T2r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
 	case "t2r":
-		regNeed := line.Elements[0].GetValue()
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		regVal := line.Elements[0].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
+		soVal := line.Elements[1].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		return line, nil
 	case "pull":
-		regNeed := line.Elements[0].GetValue()
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
-		// Count the number of stacks in the architecture
-		count := 0
-		for _, sos := range strings.Split(arch.Shared_constraints, ",") {
-			if strings.HasPrefix(sos, "stack:") {
-				count++
-			}
-		}
-		if count != 1 {
-			return nil, errors.New("the architecture must have exactly one stack for push to work")
-		}
-		return line, nil
-		// TODO Verify that
-	case "mov":
-		regVal := line.Elements[1].GetValue()
+		regVal := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		soVal := line.Elements[0].GetValue()
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "outputs", Value: soVal, Op: bmreqs.OpAdd})
+		soVal := "st0" // Pull implicitly uses stack 0
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
+		if regVal != "" && soVal != "" {
+			newLine := new(bmline.BasmLine)
+			newOp := new(bmline.BasmElement)
+			newOp.SetValue("t2r")
+			newLine.Operation = newOp
+			newArgs := make([]*bmline.BasmElement, 2)
+			newArg0 := new(bmline.BasmElement)
+			newArg0.BasmMeta = newArg0.SetMeta("type", "reg")
+			newArg0.SetValue(regVal)
+			newArgs[0] = newArg0
+			newArg1 := new(bmline.BasmElement)
+			newArg1.SetValue(soVal)
+			newArg1.BasmMeta = newArg1.SetMeta("type", "somov")
+			newArg1.BasmMeta = newArg1.SetMeta("sotype", "st")
+			newArgs[1] = newArg1
+			newLine.Elements = newArgs
+			return newLine, nil
+		}
+	case "mov":
+		regVal := line.Elements[0].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
+		soVal := line.Elements[1].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		if regVal != "" && soVal != "" {
 			newLine := new(bmline.BasmLine)
 			newOp := new(bmline.BasmElement)
