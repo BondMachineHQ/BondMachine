@@ -156,7 +156,6 @@ func (op R2t) Assembler(arch *Arch, words []string) (string, error) {
 	if result == "" {
 		return "", Prerror{"Unknown register name " + words[0]}
 	}
-
 	if partial, err := Process_shared(shortName, words[1], stackNum); err == nil {
 		result += zeros_prefix(stackBits, partial)
 	} else {
@@ -255,8 +254,8 @@ func (Op R2t) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 func (Op R2t) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
 	result = append(result, "push::*--type=reg")
-	result = append(result, "r2t::*--type=reg::*--type=somov--sotype=stack")
-	result = append(result, "mov::*--type=somov--sotype=stack::*--type=reg")
+	result = append(result, "r2t::*--type=reg::*--type=somov--sotype=st")
+	result = append(result, "mov::*--type=somov--sotype=st::*--type=reg")
 	return result
 }
 func (Op R2t) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
@@ -298,7 +297,7 @@ func (Op R2t) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 			newArg1 := new(bmline.BasmElement)
 			newArg1.SetValue(soVal)
 			newArg1.BasmMeta = newArg1.SetMeta("type", "somov")
-			newArg1.BasmMeta = newArg1.SetMeta("sotype", "stack")
+			newArg1.BasmMeta = newArg1.SetMeta("sotype", "st")
 			newArgs[1] = newArg1
 			newLine.Elements = newArgs
 			return newLine, nil

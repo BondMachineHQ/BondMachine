@@ -249,17 +249,17 @@ func (Op T2r) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 func (Op T2r) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
 	result = append(result, "pull::*--type=reg")
-	result = append(result, "t2r::*--type=reg::*--type=somov--sotype=stack")
-	result = append(result, "mov::*--type=somov--sotype=stack::*--type=reg")
+	result = append(result, "t2r::*--type=reg::*--type=somov--sotype=st")
+	result = append(result, "mov::*--type=reg::*--type=somov--sotype=st")
 	return result
 }
 func (Op T2r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
-	case "r2t":
+	case "t2r":
 		regNeed := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
 		return line, nil
-	case "push":
+	case "pull":
 		regNeed := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
 		// Count the number of stacks in the architecture
@@ -292,7 +292,7 @@ func (Op T2r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 			newArg1 := new(bmline.BasmElement)
 			newArg1.SetValue(soVal)
 			newArg1.BasmMeta = newArg1.SetMeta("type", "somov")
-			newArg1.BasmMeta = newArg1.SetMeta("sotype", "stack")
+			newArg1.BasmMeta = newArg1.SetMeta("sotype", "st")
 			newArgs[1] = newArg1
 			newLine.Elements = newArgs
 			return newLine, nil
