@@ -34,9 +34,9 @@ type Opcode interface {
 type Sharedel interface {
 	Shr_get_name() string
 	Shortname() string
-	Get_header(*Arch, string, int) string
-	Get_params(*Arch, string, int) string
-	Get_internal_params(*Arch, string, int) string
+	GetArchHeader(*Arch, string, int) string // returns the architecture header for the shared element
+	GetArchParams(*Arch, string, int) string // returns the architecture module parameters for the shared element
+	GetCPParams(*Arch, string, int) string   // returns the processor (CP) module internal parameters for the shared element
 }
 
 type Prerror struct {

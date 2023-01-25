@@ -15,12 +15,12 @@ func (op Queue) Shortname() string {
 	return "q"
 }
 
-func (op Queue) Get_header(arch *Arch, shared_constraint string, seq int) string {
+func (op Queue) GetArchHeader(arch *Arch, shared_constraint string, seq int) string {
 	qName := "q" + strconv.Itoa(seq)
 	return ", " + qName + "din, " + qName + "dout, " + qName + "addr, " + qName + "wren, " + qName + "en"
 }
 
-func (op Queue) Get_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Queue) GetArchParams(arch *Arch, shared_constraint string, seq int) string {
 	qName := "q" + strconv.Itoa(seq)
 	result := ""
 	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + qName + "din;\n"
@@ -31,7 +31,7 @@ func (op Queue) Get_params(arch *Arch, shared_constraint string, seq int) string
 	return result
 }
 
-func (op Queue) Get_internal_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Queue) GetCPParams(arch *Arch, shared_constraint string, seq int) string {
 
 	result := ""
 

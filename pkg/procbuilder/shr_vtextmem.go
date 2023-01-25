@@ -15,12 +15,12 @@ func (op Vtextmem) Shortname() string {
 	return "vtm"
 }
 
-func (op Vtextmem) Get_header(arch *Arch, shared_constraint string, seq int) string {
+func (op Vtextmem) GetArchHeader(arch *Arch, shared_constraint string, seq int) string {
 	shname := "vtm" + strconv.Itoa(seq)
 	return ", " + shname + "din, " + shname + "addr, " + shname + "wren, " + shname + "en"
 }
 
-func (op Vtextmem) Get_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Vtextmem) GetArchParams(arch *Arch, shared_constraint string, seq int) string {
 	shname := "vtm" + strconv.Itoa(seq)
 	result := ""
 	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + shname + "din;\n"
@@ -31,7 +31,7 @@ func (op Vtextmem) Get_params(arch *Arch, shared_constraint string, seq int) str
 	return result
 }
 
-func (op Vtextmem) Get_internal_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Vtextmem) GetCPParams(arch *Arch, shared_constraint string, seq int) string {
 
 	result := ""
 

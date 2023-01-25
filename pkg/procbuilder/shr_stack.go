@@ -15,7 +15,7 @@ func (op Stack) Shortname() string {
 	return "st"
 }
 
-func (op Stack) Get_header(arch *Arch, shared_constraint string, seq int) string {
+func (op Stack) GetArchHeader(arch *Arch, shared_constraint string, seq int) string {
 	result := ""
 	stackName := "st" + strconv.Itoa(seq)
 	for _, op := range arch.Op {
@@ -30,10 +30,11 @@ func (op Stack) Get_header(arch *Arch, shared_constraint string, seq int) string
 			break
 		}
 	}
+	result += ", " + stackName + "empty, " + stackName + "full"
 	return result
 }
 
-func (op Stack) Get_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Stack) GetArchParams(arch *Arch, shared_constraint string, seq int) string {
 	stackName := "st" + strconv.Itoa(seq)
 	result := ""
 
@@ -54,10 +55,13 @@ func (op Stack) Get_params(arch *Arch, shared_constraint string, seq int) string
 		}
 	}
 
+	result += "	input " + stackName + "empty;\n"
+	result += "	input " + stackName + "full;\n"
+
 	return result
 }
 
-func (op Stack) Get_internal_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Stack) GetCPParams(arch *Arch, shared_constraint string, seq int) string {
 
 	result := ""
 
@@ -91,6 +95,9 @@ func (op Stack) Get_internal_params(arch *Arch, shared_constraint string, seq in
 			break
 		}
 	}
+
+	result += "	input " + stackName + "empty;\n"
+	result += "	input " + stackName + "full;\n"
 
 	return result
 }

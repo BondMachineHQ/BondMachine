@@ -176,7 +176,7 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 
 			for _, so := range Allshared {
 				if so.Shr_get_name() == soname {
-					header += so.Get_header(arch, constraint, seq[soname])
+					header += so.GetArchHeader(arch, constraint, seq[soname])
 				}
 			}
 		}
@@ -230,7 +230,7 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 
 			for _, so := range Allshared {
 				if so.Shr_get_name() == soname {
-					params += so.Get_internal_params(arch, constraint, seq[soname])
+					params += so.GetCPParams(arch, constraint, seq[soname])
 					params += "\n"
 				}
 			}

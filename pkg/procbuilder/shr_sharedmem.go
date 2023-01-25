@@ -15,12 +15,12 @@ func (op Sharedmem) Shortname() string {
 	return "sh"
 }
 
-func (op Sharedmem) Get_header(arch *Arch, shared_constraint string, seq int) string {
+func (op Sharedmem) GetArchHeader(arch *Arch, shared_constraint string, seq int) string {
 	shname := "sh" + strconv.Itoa(seq)
 	return ", " + shname + "din, " + shname + "dout, " + shname + "addr, " + shname + "wren, " + shname + "en"
 }
 
-func (op Sharedmem) Get_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Sharedmem) GetArchParams(arch *Arch, shared_constraint string, seq int) string {
 	shname := "sh" + strconv.Itoa(seq)
 	result := ""
 	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + shname + "din;\n"
@@ -31,7 +31,7 @@ func (op Sharedmem) Get_params(arch *Arch, shared_constraint string, seq int) st
 	return result
 }
 
-func (op Sharedmem) Get_internal_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Sharedmem) GetCPParams(arch *Arch, shared_constraint string, seq int) string {
 
 	result := ""
 

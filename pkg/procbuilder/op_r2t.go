@@ -97,9 +97,11 @@ func (op R2t) Op_instruction_verilog_state_machine(arch *Arch, flavor string) st
 				result += "							" + strings.ToUpper(op.getStackName(j)) + " : begin\n"
 				result += "								case (stackqueueSM)\n"
 				result += "								   1'b0: begin\n"
+				result += "								     if (!" + strings.ToLower(op.getStackName((j))) + "senderAck) begin\n"
 				result += "								     " + strings.ToLower(op.getStackName(j)) + "senderData[" + strconv.Itoa(int(arch.Rsize)-1) + ":0] <= #1 _" + strings.ToLower(Get_register_name(i)) + "[" + strconv.Itoa(int(arch.Rsize)-1) + ":0];\n"
 				result += "								     " + strings.ToLower(op.getStackName(j)) + "senderWrite <= #1 1'b1;\n"
 				result += "								     stackqueueSM <= 1'b1;\n"
+				result += "								     end\n"
 				result += "								   end\n"
 				result += "								   1'b1: begin\n"
 				result += "								     if (" + strings.ToLower(op.getStackName((j))) + "senderAck) begin\n"
@@ -119,8 +121,8 @@ func (op R2t) Op_instruction_verilog_state_machine(arch *Arch, flavor string) st
 		result += "						endcase\n"
 	} else {
 		result += "						$display(\"NOP\");\n"
+		result += "						_pc <= #1 _pc + 1'b1 ;\n"
 	}
-	result += "						_pc <= #1 _pc + 1'b1 ;\n"
 	result += "					end\n"
 	return result
 

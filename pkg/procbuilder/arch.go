@@ -120,7 +120,7 @@ func (arch *Arch) Write_verilog(arch_module_name string, modules_names map[strin
 
 			for _, so := range Allshared {
 				if so.Shr_get_name() == soname {
-					header += so.Get_header(arch, constraint, seq[soname])
+					header += so.GetArchHeader(arch, constraint, seq[soname])
 				}
 			}
 		}
@@ -164,7 +164,7 @@ func (arch *Arch) Write_verilog(arch_module_name string, modules_names map[strin
 
 			for _, so := range Allshared {
 				if so.Shr_get_name() == soname {
-					params += so.Get_params(arch, constraint, seq[soname])
+					params += so.GetArchParams(arch, constraint, seq[soname])
 					params += "\n"
 				}
 			}

@@ -15,12 +15,12 @@ func (op Lfsr8) Shortname() string {
 	return "lfsr8"
 }
 
-func (op Lfsr8) Get_header(arch *Arch, shared_constraint string, seq int) string {
+func (op Lfsr8) GetArchHeader(arch *Arch, shared_constraint string, seq int) string {
 	brname := "lfsr8" + strconv.Itoa(seq)
 	return ", " + brname + "out"
 }
 
-func (op Lfsr8) Get_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Lfsr8) GetArchParams(arch *Arch, shared_constraint string, seq int) string {
 
 	brname := "lfsr8" + strconv.Itoa(seq)
 
@@ -30,7 +30,7 @@ func (op Lfsr8) Get_params(arch *Arch, shared_constraint string, seq int) string
 	return result
 }
 
-func (op Lfsr8) Get_internal_params(arch *Arch, shared_constraint string, seq int) string {
-	result := op.Get_params(arch, shared_constraint, seq)
+func (op Lfsr8) GetCPParams(arch *Arch, shared_constraint string, seq int) string {
+	result := op.GetArchParams(arch, shared_constraint, seq)
 	return result
 }

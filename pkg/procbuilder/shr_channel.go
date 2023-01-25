@@ -15,12 +15,12 @@ func (op Channel) Shortname() string {
 	return "ch"
 }
 
-func (op Channel) Get_header(arch *Arch, shared_constraint string, seq int) string {
+func (op Channel) GetArchHeader(arch *Arch, shared_constraint string, seq int) string {
 	chname := "ch" + strconv.Itoa(seq)
 	return ", " + chname + "in, " + chname + "wwr, " + chname + "wrd, " + chname + "ack_ch_ready, " + chname + "op_check_ready, " + chname + "finish_channel, " + chname + "out, " + chname + "ack_wwr, " + chname + "ack_wrd, " + chname + "ch_ready, " + chname + "ch_w_r_ready"
 }
 
-func (op Channel) Get_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Channel) GetArchParams(arch *Arch, shared_constraint string, seq int) string {
 
 	chname := "ch" + strconv.Itoa(seq)
 
@@ -40,7 +40,7 @@ func (op Channel) Get_params(arch *Arch, shared_constraint string, seq int) stri
 	return result
 }
 
-func (op Channel) Get_internal_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Channel) GetCPParams(arch *Arch, shared_constraint string, seq int) string {
 	channel_num := 0
 	if arch.Shared_constraints != "" {
 		constraints := strings.Split(arch.Shared_constraints, ",")

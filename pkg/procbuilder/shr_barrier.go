@@ -15,12 +15,12 @@ func (op Barrier) Shortname() string {
 	return "br"
 }
 
-func (op Barrier) Get_header(arch *Arch, shared_constraint string, seq int) string {
+func (op Barrier) GetArchHeader(arch *Arch, shared_constraint string, seq int) string {
 	brname := "br" + strconv.Itoa(seq)
 	return ", " + brname + "hit, " + brname + "ishitted, " + brname + "tout"
 }
 
-func (op Barrier) Get_params(arch *Arch, shared_constraint string, seq int) string {
+func (op Barrier) GetArchParams(arch *Arch, shared_constraint string, seq int) string {
 
 	brname := "br" + strconv.Itoa(seq)
 
@@ -32,7 +32,7 @@ func (op Barrier) Get_params(arch *Arch, shared_constraint string, seq int) stri
 	return result
 }
 
-func (op Barrier) Get_internal_params(arch *Arch, shared_constraint string, seq int) string {
-	result := op.Get_params(arch, shared_constraint, seq)
+func (op Barrier) GetCPParams(arch *Arch, shared_constraint string, seq int) string {
+	result := op.GetArchParams(arch, shared_constraint, seq)
 	return result
 }
