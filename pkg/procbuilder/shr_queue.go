@@ -16,18 +16,48 @@ func (op Queue) Shortname() string {
 }
 
 func (op Queue) GetArchHeader(arch *Arch, shared_constraint string, seq int) string {
-	qName := "q" + strconv.Itoa(seq)
-	return ", " + qName + "din, " + qName + "dout, " + qName + "addr, " + qName + "wren, " + qName + "en"
+	result := ""
+	queueName := "q" + strconv.Itoa(seq)
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "r2q" {
+			result += ", " + queueName + "senderData, " + queueName + "senderWrite, " + queueName + "senderAck"
+			break
+		}
+	}
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "q2r" {
+			result += ", " + queueName + "receiverData, " + queueName + "receiverRead, " + queueName + "receiverAck"
+			break
+		}
+	}
+	result += ", " + queueName + "empty, " + queueName + "full"
+	return result
 }
 
 func (op Queue) GetArchParams(arch *Arch, shared_constraint string, seq int) string {
-	qName := "q" + strconv.Itoa(seq)
+	queueName := "st" + strconv.Itoa(seq)
 	result := ""
-	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + qName + "din;\n"
-	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + qName + "addr;\n"
-	result += "	output " + qName + "wren;\n"
-	result += "	output " + qName + "en;\n"
-	result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + qName + "dout;\n"
+
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "r2q" {
+			result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + queueName + "senderData;\n"
+			result += "	output " + queueName + "senderWrite;\n"
+			result += "	input " + queueName + "senderAck;\n"
+			break
+		}
+	}
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "q2r" {
+			result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + queueName + "receiverData;\n"
+			result += "	output " + queueName + "receiverRead;\n"
+			result += "	input " + queueName + "receiverAck;\n"
+			break
+		}
+	}
+
+	result += "	input " + queueName + "empty;\n"
+	result += "	input " + queueName + "full;\n"
+
 	return result
 }
 
@@ -35,38 +65,39 @@ func (op Queue) GetCPParams(arch *Arch, shared_constraint string, seq int) strin
 
 	result := ""
 
-	qNum := 0
+	queueNum := 0
 	if arch.Shared_constraints != "" {
 		constraints := strings.Split(arch.Shared_constraints, ",")
 		for _, constraint := range constraints {
 			values := strings.Split(constraint, ":")
 			soname := values[0]
 			if soname == "queue" {
-				qNum++
+				queueNum++
 			}
 		}
 	}
 
-	qName := "q" + strconv.Itoa(seq)
+	queueName := "q" + strconv.Itoa(seq)
 
-	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + qName + "din;\n"
-	result += "	output [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + qName + "addr;\n"
-	result += "	output " + qName + "wren;\n"
-	result += "	output " + qName + "en;\n"
-	result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + qName + "dout;\n"
-
-	if seq == 0 {
-		result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] q_din_i[" + strconv.Itoa(qNum-1) + ":0];\n"
-		result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] q_addr_i [" + strconv.Itoa(qNum-1) + ":0];\n"
-		result += "\treg [" + strconv.Itoa(qNum-1) + ":0] q_wren_i;\n"
-		result += "\twire [" + strconv.Itoa(qNum-1) + ":0] q_en_i;\n"
-		result += "\twire [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] q_dout_i [" + strconv.Itoa(qNum-1) + ":0];\n"
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "r2q" {
+			result += "	output reg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + queueName + "senderData;\n"
+			result += "	output reg " + queueName + "senderWrite;\n"
+			result += "	input " + queueName + "senderAck;\n"
+			break
+		}
+	}
+	for _, op := range arch.Op {
+		if op.Op_get_name() == "q2r" {
+			result += "	input [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + queueName + "receiverData;\n"
+			result += "	output reg " + queueName + "receiverRead;\n"
+			result += "	input " + queueName + "receiverAck;\n"
+			break
+		}
 	}
 
-	result += "\tassign " + qName + "din = q_din_i[" + strconv.Itoa(seq) + "];\n"
-	result += "\tassign " + qName + "addr = q_addr_i[" + strconv.Itoa(seq) + "];\n"
-	result += "\tassign " + qName + "wren = q_wren_i[" + strconv.Itoa(seq) + "];\n"
-	result += "\tassign " + qName + "en = q_en_i[" + strconv.Itoa(seq) + "];\n"
-	result += "\tassign q_dout_i[" + strconv.Itoa(seq) + "] = " + qName + "dout;\n"
+	result += "	input " + queueName + "empty;\n"
+	result += "	input " + queueName + "full;\n"
+
 	return result
 }
