@@ -35,7 +35,7 @@ func (op Queue) GetArchHeader(arch *Arch, shared_constraint string, seq int) str
 }
 
 func (op Queue) GetArchParams(arch *Arch, shared_constraint string, seq int) string {
-	queueName := "st" + strconv.Itoa(seq)
+	queueName := "q" + strconv.Itoa(seq)
 	result := ""
 
 	for _, op := range arch.Op {

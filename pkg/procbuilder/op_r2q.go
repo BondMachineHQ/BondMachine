@@ -25,24 +25,24 @@ func (op R2q) Op_get_desc() string {
 }
 
 func (op R2q) Op_show_assembler(arch *Arch) string {
-	stSo := Queue{}
+	qSo := Queue{}
 	opBits := arch.Opcodes_bits()
-	queueBits := arch.Shared_bits(stSo.Shr_get_name())
+	queueBits := arch.Shared_bits(qSo.Shr_get_name())
 	result := "r2q [" + strconv.Itoa(int(arch.R)) + "(Reg)] [ " + strconv.Itoa(int(queueBits)) + " (Shared Queue)]	// " + op.Op_get_desc() + " [" + strconv.Itoa(opBits+int(arch.R)+queueBits) + "]\n"
 	return result
 }
 
 func (op R2q) Op_get_instruction_len(arch *Arch) int {
-	stSo := Queue{}
+	qSo := Queue{}
 	opBits := arch.Opcodes_bits()
-	queueBits := arch.Shared_bits(stSo.Shr_get_name())
+	queueBits := arch.Shared_bits(qSo.Shr_get_name())
 	return opBits + int(arch.R) + int(queueBits) // The bits for the opcode + bits for a register + bits queues
 }
 
 func (op R2q) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
-	stSo := Queue{}
-	queueBits := arch.Shared_bits(stSo.Shr_get_name())
-	queueNum := arch.Shared_num(stSo.Shr_get_name())
+	qSo := Queue{}
+	queueBits := arch.Shared_bits(qSo.Shr_get_name())
+	queueNum := arch.Shared_num(qSo.Shr_get_name())
 
 	result := ""
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q"}) {
@@ -68,9 +68,9 @@ func (Op R2q) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 }
 
 func (op R2q) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
-	stSo := Queue{}
-	queueBits := arch.Shared_bits(stSo.Shr_get_name())
-	queueNum := arch.Shared_num(stSo.Shr_get_name())
+	qSo := Queue{}
+	queueBits := arch.Shared_bits(qSo.Shr_get_name())
+	queueNum := arch.Shared_num(qSo.Shr_get_name())
 	rom_word := arch.Max_word()
 	opBits := arch.Opcodes_bits()
 
@@ -135,10 +135,10 @@ func (op R2q) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 
 func (op R2q) Assembler(arch *Arch, words []string) (string, error) {
 	opBits := arch.Opcodes_bits()
-	stSo := Queue{}
-	queueNum := arch.Shared_num(stSo.Shr_get_name())
-	queueBits := arch.Shared_bits(stSo.Shr_get_name())
-	shortName := stSo.Shortname()
+	qSo := Queue{}
+	queueNum := arch.Shared_num(qSo.Shr_get_name())
+	queueBits := arch.Shared_bits(qSo.Shr_get_name())
+	shortName := qSo.Shortname()
 	romWord := arch.Max_word()
 
 	regNum := 1 << arch.R
