@@ -39,15 +39,6 @@ type BmStack struct {
 	Pops         []Pop
 	Pushes       []Push
 	TestSequence []string // Pushes and pops in order
-
-	// Rsize       uint8
-	// Buswidth    string
-	// Inputs      []string
-	// InputsBins  []string
-	// Outputs     []string
-	// OutputsBins []string
-	// SendSM      stateMachine
-	// PackageName string
 }
 
 func CreateBasicStack() *BmStack {
