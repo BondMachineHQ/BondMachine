@@ -11,19 +11,7 @@ An example on how the library can be used this way can be seen in the go test fi
 
 The second part of the stuct can be filled with test data. These data are used to produce a test bench for the stack. Using the test bench the user can verify the correctness of the stack. The test bench is produced by calling the WriteTestBench function.
 
-```go
-func TestWriteHDL(t *testing.T) {
-	bmstack := BmStack{
-		ModuleName: "test",
-		DataSize:   32,
-		Depth:      4,
-		Senders:    []string{"sender1", "sender2"},
-		Receivers:  []string{"receiver1", "receiver2"},
-		MemType:    "LIFO",
-	}
-	bmstack.WriteTestBench()
-}
-```
+![WritetestBench](writetestbench.png)
 
 
 the library also came with a companion CLI executable called bmstack that provides the basic interface to the library. This is the second Possibile way to use it.
