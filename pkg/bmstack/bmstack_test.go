@@ -21,6 +21,9 @@ func TestStack(t *testing.T) {
 		Pop{"receiver1", 60},
 	}
 
+	// s.SaveJSON("stack.json")
+	// s.LoadJSON("stack.json")
+
 	f, err := os.Create("stack.v")
 	if err != nil {
 		t.Error(err)

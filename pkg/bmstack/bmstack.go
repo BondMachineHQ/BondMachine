@@ -2,18 +2,12 @@ package bmstack
 
 import (
 	"bytes"
+	"encoding/json"
+	"os"
 	"sort"
 	"strconv"
 	"text/template"
 )
-
-// type stateMachine struct {
-// 	Nums     int
-// 	Bits     int
-// 	Buswidth string
-// 	Names    []string
-// 	Binary   []string
-// }
 
 type Push struct {
 	Agent string
@@ -26,6 +20,12 @@ type Pop struct {
 	Tick  uint64
 }
 
+type TestBenchData struct {
+	Pops         []Pop
+	Pushes       []Push
+	TestSequence []string // Pushes and pops in order
+}
+
 type BmStack struct {
 	ModuleName string
 	DataSize   int
@@ -36,15 +36,11 @@ type BmStack struct {
 	funcMap    template.FuncMap
 
 	// TestBench data
-	Pops         []Pop
-	Pushes       []Push
-	TestSequence []string // Pushes and pops in order
+	TestBenchData
 }
 
 func CreateBasicStack() *BmStack {
 	result := new(BmStack)
-	//result.Rsize = bmach.Rsize
-	//result.Buswidth = "[" + strconv.Itoa(int(bmach.Rsize)-1) + ":0]"
 	funcMap := template.FuncMap{
 		"inc": func(i int) int {
 			return i + 1
@@ -209,4 +205,24 @@ func NeededBits(num int) int {
 		}
 	}
 	return 0
+}
+
+func (td *TestBenchData) SaveJSON(filename string) error {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	enc := json.NewEncoder(f)
+	return enc.Encode(td)
+}
+
+func (td *TestBenchData) LoadJSON(filename string) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	dec := json.NewDecoder(f)
+	return dec.Decode(td)
 }
