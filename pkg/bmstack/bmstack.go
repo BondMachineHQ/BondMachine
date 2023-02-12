@@ -118,7 +118,7 @@ func (s *BmStack) WriteTestBench() (string, error) {
 			tick := strconv.Itoa(int(absTick))
 			subSeq = append(subSeq, "// Pop agent "+agent+" at tick "+tick)
 			subSeq = append(subSeq, agent+"Impulse=1;")
-			subSeq = append(subSeq, "#5;")
+			subSeq = append(subSeq, "#2;")
 			subSeq = append(subSeq, agent+"Impulse=0;")
 			j++
 		} else if j == len(s.Pops) {
@@ -137,7 +137,7 @@ func (s *BmStack) WriteTestBench() (string, error) {
 			subSeq = append(subSeq, "// Push agent "+agent+" at tick "+tick+" with value "+value)
 			subSeq = append(subSeq, agent+"Data="+value+";")
 			subSeq = append(subSeq, agent+"Impulse=1;")
-			subSeq = append(subSeq, "#5;")
+			subSeq = append(subSeq, "#2;")
 			subSeq = append(subSeq, agent+"Impulse=0;")
 			i++
 		} else {
@@ -157,7 +157,7 @@ func (s *BmStack) WriteTestBench() (string, error) {
 				subSeq = append(subSeq, "// Push agent "+agent+" at tick "+tick+" with value "+value)
 				subSeq = append(subSeq, agent+"Data="+value+";")
 				subSeq = append(subSeq, agent+"Impulse=1;")
-				subSeq = append(subSeq, "#5;")
+				subSeq = append(subSeq, "#2;")
 				subSeq = append(subSeq, agent+"Impulse=0;")
 				i++
 			} else {
@@ -174,7 +174,7 @@ func (s *BmStack) WriteTestBench() (string, error) {
 				tick := strconv.Itoa(int(absTick))
 				subSeq = append(subSeq, "// Pop agent "+agent+" at tick "+tick)
 				subSeq = append(subSeq, agent+"Impulse=1;")
-				subSeq = append(subSeq, "#5;")
+				subSeq = append(subSeq, "#2;")
 				subSeq = append(subSeq, agent+"Impulse=0;")
 				j++
 			}

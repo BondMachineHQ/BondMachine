@@ -29,6 +29,9 @@ module request(clk, reset, req, ack, impulse);
                     end
                 end
                 1: begin
+                    if (impulse) begin
+                        $display("Warning: impulse while request is active, the impulse will be ignored");
+                    end
                     req <= 1;
                     if (ack) begin
                         state <= 0;

@@ -21,6 +21,8 @@ The second part of the struct can be filled with test data. These data are used 
 
 the library also came with a companion CLI executable called bmstack that provides the basic interface to the library. This is the second Possible way to use it.
 
+![CLI](cli.png)
+
 WIP
 
 To see how the library is used in the BondMachine project, please refer to the BondMachine examples directory that contains many examples of BondMachines using stacks and queues.
