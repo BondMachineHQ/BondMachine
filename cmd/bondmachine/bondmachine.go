@@ -132,6 +132,7 @@ var usebmapi = flag.Bool("use-bmapi", false, "Build a BMAPI interface")
 var bmapiLanguage = flag.String("bmapi-language", "go", "Choose BMAPI language (go,c,python)")
 var bmapiFramework = flag.String("bmapi-framework", "", "Choose BMAPI framework (pynq)")
 var bmapiFlavor = flag.String("bmapi-flavor", "", "Choose the BMAPI interconnect")
+var bmapiFlavorVersion = flag.String("bmapi-flavor-version", "", "Choose the BMAPI interconnect version")
 var bmapiMapfile = flag.String("bmapi-mapfile", "", "File mapping the bondmachine IO the BMAPI.")
 var bmapiLibOutDir = flag.String("bmapi-liboutdir", "", "Output directory for the BMAPI library.")
 var bmapiModOutDir = flag.String("bmapi-modoutdir", "", "Output directory for the BMAPI kernel module.")
@@ -470,6 +471,8 @@ func main() {
 				// TOTO Error checking
 				bmapi.Language = *bmapiLanguage
 				bmapi.Flavor = *bmapiFlavor
+				bmapi.FlavorVersion = *bmapiFlavorVersion
+				bmapi.Framework = *bmapiFramework
 				bmapi.LibOutDir = *bmapiLibOutDir
 				bmapi.ModOutDir = *bmapiModOutDir
 				bmapi.AuxOutDir = *bmapiAuxOutDir

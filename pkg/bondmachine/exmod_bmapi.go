@@ -7,15 +7,17 @@ import "strings"
 //	"strings"
 
 type BMAPIExtra struct {
-	Maps        *IOmap
-	Language    string
-	Flavor      string
-	LibOutDir   string
-	ModOutDir   string
-	AuxOutDir   string
-	PackageName string
-	ModuleName  string
-	Rsize       uint8
+	Maps          *IOmap
+	Language      string
+	Flavor        string // "uartusb" or "aximm" or "axist"
+	FlavorVersion string
+	Framework     string // "pynq" or ""
+	LibOutDir     string
+	ModOutDir     string
+	AuxOutDir     string
+	PackageName   string
+	ModuleName    string
+	Rsize         uint8
 }
 
 func (sl *BMAPIExtra) Get_Name() string {
@@ -28,6 +30,8 @@ func (sl *BMAPIExtra) Get_Params() *ExtraParams {
 
 	result.Params["bmapi_language"] = sl.Language
 	result.Params["bmapi_flavor"] = sl.Flavor
+	result.Params["bmapi_flavor_version"] = sl.FlavorVersion
+	result.Params["bmapi_framework"] = sl.Framework
 	result.Params["bmapi_liboutdir"] = sl.LibOutDir
 	result.Params["bmapi_auxoutdir"] = sl.AuxOutDir
 	result.Params["bmapi_modoutdir"] = sl.ModOutDir

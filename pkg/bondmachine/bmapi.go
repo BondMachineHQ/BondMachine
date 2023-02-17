@@ -15,7 +15,9 @@ import (
 func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap, extramods []ExtraModule, sbox *simbox.Simbox) error {
 
 	var bmapiFlavor string
+	var bmapiFlavorVersion string
 	var bmapiLanguage string
+	var bmapiFramework string
 	var bmapiLibOutDir string
 	var bmapiModOutDir string
 	var bmapiAuxOutDir string
@@ -35,10 +37,22 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 				return errors.New("Missing bmapi flavor")
 			}
 
+			if val, ok := bmapiParams["bmapi_flavor_version"]; ok {
+				bmapiFlavorVersion = val
+			} else {
+				return errors.New("Missing bmapi flavor version")
+			}
+
 			if val, ok := bmapiParams["bmapi_language"]; ok {
 				bmapiLanguage = val
 			} else {
 				return errors.New("Missing bmapi language")
+			}
+
+			if val, ok := bmapiParams["bmapi_framework"]; ok {
+				bmapiFramework = val
+			} else {
+				return errors.New("Missing bmapi framework")
 			}
 
 			if val, ok := bmapiParams["bmapi_liboutdir"]; ok {
@@ -76,6 +90,40 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 	}
 
 	switch bmapiFlavor {
+	case "axist":
+
+		// This is the generation of the AXI Stream interface
+
+		axiStData := bmach.createBasicTemplateData()
+
+		vFiles := make(map[string]string)
+		if bmapiFlavorVersion == "basic" {
+			vFiles["axistream.v"] = basicAXIStream
+		} else if bmapiFlavorVersion == "optimized" {
+			vFiles["axistream.v"] = optimizedAXIStream
+		} else {
+			return errors.New("unknown AXI Stream flavor version")
+		}
+
+		for file, temp := range vFiles {
+			t, err := template.New(file).Parse(temp)
+			if err != nil {
+				return err
+			}
+
+			f, err := os.Create(file)
+			if err != nil {
+				return err
+			}
+
+			err = t.Execute(f, axiStData)
+			if err != nil {
+				return err
+			}
+
+			f.Close()
+		}
+		fmt.Println(bmapiFramework)
 	case "aximm":
 
 		// This is the generation of the Linux kernel module
