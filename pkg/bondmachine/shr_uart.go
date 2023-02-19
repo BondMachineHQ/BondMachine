@@ -77,7 +77,7 @@ func (sm Uart_instance) Write_verilog(bmach *Bondmachine, soIndex int, uartName 
 
 	result := ""
 
-	// Compute the receivers and senders of the uart
+	// Compute the receivers and senders of the uart, senders will be the writers of the fifo, receivers will be the readers of the fifo
 	receivers := make([]string, 0)
 	senders := make([]string, 0)
 
@@ -86,10 +86,10 @@ func (sm Uart_instance) Write_verilog(bmach *Bondmachine, soIndex int, uartName 
 			if soId == soIndex {
 				for _, op := range bmach.Domains[bmach.Processors[numProcessor]].Op {
 					switch op.Op_get_name() {
-					case "t2r":
+					case "u2r":
 						receivers = append(receivers, "p"+strconv.Itoa(numProcessor)+"uart_recv")
 						continue
-					case "r2t":
+					case "r2u":
 						senders = append(senders, "p"+strconv.Itoa(numProcessor)+"uart_send")
 						continue
 					}
@@ -98,17 +98,33 @@ func (sm Uart_instance) Write_verilog(bmach *Bondmachine, soIndex int, uartName 
 		}
 	}
 
-	s := bmstack.CreateBasicStack()
-	s.ModuleName = uartName
-	s.DataSize = int(bmach.Rsize)
-	s.Depth = sm.Depth
-	s.MemType = "LIFO"
-	s.Senders = senders
-	s.Receivers = receivers
+	// Create the fifo where the CPs will write to
+	wFifo := bmstack.CreateBasicStack()
+	wFifo.ModuleName = uartName + "wfifo"
+	wFifo.DataSize = 8
+	wFifo.Depth = sm.Depth
+	wFifo.MemType = "FIFO"
+	wFifo.Senders = senders
+	wFifo.Receivers = []string{"uartwriter"}
 
-	r, _ := s.WriteHDL()
+	r, _ := wFifo.WriteHDL()
 
 	result += r
+
+	// Create the fifo where the CPs will read from
+	rFifo := bmstack.CreateBasicStack()
+	rFifo.ModuleName = uartName + "rfifo"
+	rFifo.DataSize = 8
+	rFifo.Depth = sm.Depth
+	rFifo.MemType = "FIFO"
+	rFifo.Senders = []string{"uartreader"}
+	rFifo.Receivers = receivers
+
+	r, _ = rFifo.WriteHDL()
+
+	result += r
+
+// TODO : add the uart module
 
 	return result
 
