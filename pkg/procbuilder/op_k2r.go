@@ -12,9 +12,8 @@ import (
 // The  opcode
 type K2r struct{}
 
-
-func (op K2r) getKbdName(queueId int) string {
-	return "k" + strconv.Itoa(queueId)
+func (op K2r) getKbdName(kbdId int) string {
+	return "k" + strconv.Itoa(kbdId)
 }
 
 func (op K2r) Op_get_name() string {
@@ -26,34 +25,34 @@ func (op K2r) Op_get_desc() string {
 }
 
 func (op K2r) Op_show_assembler(arch *Arch) string {
-	qSo := Kbd{}
+	kSo := Kbd{}
 	opBits := arch.Opcodes_bits()
-	queueBits := arch.Shared_bits(qSo.Shr_get_name())
-	result := "k2r [" + strconv.Itoa(int(arch.R)) + "(Reg)] [ " + strconv.Itoa(int(queueBits)) + " (Shared Kbd)]	// " + op.Op_get_desc() + " [" + strconv.Itoa(opBits+int(arch.R)+queueBits) + "]\n"
+	kbdBits := arch.Shared_bits(kSo.Shr_get_name())
+	result := "k2r [" + strconv.Itoa(int(arch.R)) + "(Reg)] [ " + strconv.Itoa(int(kbdBits)) + " (Kbd)]	// " + op.Op_get_desc() + " [" + strconv.Itoa(opBits+int(arch.R)+kbdBits) + "]\n"
 	return result
 }
 
 func (op K2r) Op_get_instruction_len(arch *Arch) int {
-	qSo := Kbd{}
+	kSo := Kbd{}
 	opBits := arch.Opcodes_bits()
-	queueBits := arch.Shared_bits(qSo.Shr_get_name())
-	return opBits + int(arch.R) + int(queueBits) // The bits for the opcode + bits for a register + bits queues
+	kbdBits := arch.Shared_bits(kSo.Shr_get_name())
+	return opBits + int(arch.R) + int(kbdBits) // The bits for the opcode + bits for a register + bits kbds
 }
 
 func (op K2r) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
-	qSo := Kbd{}
-	queueBits := arch.Shared_bits(qSo.Shr_get_name())
-	queueNum := arch.Shared_num(qSo.Shr_get_name())
+	kSo := Kbd{}
+	kbdBits := arch.Shared_bits(kSo.Shr_get_name())
+	kbdNum := arch.Shared_num(kSo.Shr_get_name())
 
 	result := ""
-	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "k2r", "r2q"}) {
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q", "k2r", "u2r", "r2u"}) {
 		result += "	reg stackqueueSM;\n"
 	}
-	if arch.OnlyOne(op.Op_get_name(), []string{"r2q", "k2r"}) {
+	if arch.OnlyOne(op.Op_get_name(), []string{"k2r"}) {
 		result += "	localparam "
-		for i := 0; i < queueNum; i++ {
-			result += strings.ToUpper(op.getKbdName(i)) + "=" + strconv.Itoa(int(queueBits)) + "'d" + strconv.Itoa(i)
-			if i < queueNum-1 {
+		for i := 0; i < kbdNum; i++ {
+			result += strings.ToUpper(op.getKbdName(i)) + "=" + strconv.Itoa(int(kbdBits)) + "'d" + strconv.Itoa(i)
+			if i < kbdNum-1 {
 				result += ",\n"
 			} else {
 				result += ";\n"
@@ -69,9 +68,9 @@ func (Op K2r) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 }
 
 func (op K2r) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
-	qSo := Kbd{}
-	queueBits := arch.Shared_bits(qSo.Shr_get_name())
-	queueNum := arch.Shared_num(qSo.Shr_get_name())
+	kSo := Kbd{}
+	kbdBits := arch.Shared_bits(kSo.Shr_get_name())
+	kbdNum := arch.Shared_num(kSo.Shr_get_name())
 	rom_word := arch.Max_word()
 	opBits := arch.Opcodes_bits()
 
@@ -79,7 +78,7 @@ func (op K2r) Op_instruction_verilog_state_machine(arch *Arch, flavor string) st
 
 	result := ""
 	result += "					K2R: begin\n"
-	if queueNum > 0 {
+	if kbdNum > 0 {
 		if arch.R == 1 {
 			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
 		} else {
@@ -88,13 +87,13 @@ func (op K2r) Op_instruction_verilog_state_machine(arch *Arch, flavor string) st
 		for i := 0; i < reg_num; i++ {
 			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
-			if queueBits == 1 {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-queueBits-1) + "])\n"
+			if kbdBits == 1 {
+				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-kbdBits-1) + "])\n"
 			} else {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-queueBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(queueBits)) + "])\n"
+				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-kbdBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(kbdBits)) + "])\n"
 			}
 
-			for j := 0; j < queueNum; j++ {
+			for j := 0; j < kbdNum; j++ {
 				result += "							" + strings.ToUpper(op.getKbdName(j)) + " : begin\n"
 				result += "								if (" + strings.ToLower(op.getKbdName((j))) + "receiverAck && " + strings.ToLower(op.getKbdName(j)) + "receiverRead) begin\n"
 				result += "								     " + strings.ToLower(op.getKbdName(j)) + "receiverRead <= #1 1'b0;\n"
@@ -128,10 +127,10 @@ func (op K2r) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 
 func (op K2r) Assembler(arch *Arch, words []string) (string, error) {
 	opBits := arch.Opcodes_bits()
-	qSo := Kbd{}
-	queueNum := arch.Shared_num(qSo.Shr_get_name())
-	queueBits := arch.Shared_bits(qSo.Shr_get_name())
-	shortName := qSo.Shortname()
+	kSo := Kbd{}
+	kbdNum := arch.Shared_num(kSo.Shr_get_name())
+	kbdBits := arch.Shared_bits(kSo.Shr_get_name())
+	shortName := kSo.Shortname()
 	romWord := arch.Max_word()
 
 	regNum := 1 << arch.R
@@ -152,13 +151,13 @@ func (op K2r) Assembler(arch *Arch, words []string) (string, error) {
 		return "", Prerror{"Unknown register name " + words[0]}
 	}
 
-	if partial, err := Process_shared(shortName, words[1], queueNum); err == nil {
-		result += zeros_prefix(queueBits, partial)
+	if partial, err := Process_shared(shortName, words[1], kbdNum); err == nil {
+		result += zeros_prefix(kbdBits, partial)
 	} else {
 		return "", Prerror{err.Error()}
 	}
 
-	for i := opBits + int(arch.R) + queueBits; i < romWord; i++ {
+	for i := opBits + int(arch.R) + kbdBits; i < romWord; i++ {
 		result += "0"
 	}
 
@@ -167,11 +166,11 @@ func (op K2r) Assembler(arch *Arch, words []string) (string, error) {
 
 func (op K2r) Disassembler(arch *Arch, instr string) (string, error) {
 	kSo := Kbd{}
-	queueBits := arch.Shared_bits(kSo.Shr_get_name())
+	kbdBits := arch.Shared_bits(kSo.Shr_get_name())
 	shortname := kSo.Shortname()
 	regId := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(regId)) + " "
-	stId := get_id(instr[arch.R : int(arch.R)+queueBits])
+	stId := get_id(instr[arch.R : int(arch.R)+kbdBits])
 	result += shortname + strconv.Itoa(stId)
 	return result, nil
 }
@@ -265,7 +264,7 @@ func (Op K2r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 	case "kbd":
 		regVal := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		soVal := "q0" // Pull implicitly uses queue 0
+		soVal := "kbd0" // Pull implicitly uses keyboard 0
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		if regVal != "" && soVal != "" {
 			newLine := new(bmline.BasmLine)
@@ -280,7 +279,7 @@ func (Op K2r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 			newArg1 := new(bmline.BasmElement)
 			newArg1.SetValue(soVal)
 			newArg1.BasmMeta = newArg1.SetMeta("type", "somov")
-			newArg1.BasmMeta = newArg1.SetMeta("sotype", "q")
+			newArg1.BasmMeta = newArg1.SetMeta("sotype", "k")
 			newArgs[1] = newArg1
 			newLine.Elements = newArgs
 			return newLine, nil
@@ -303,7 +302,7 @@ func (Op K2r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 			newArg1 := new(bmline.BasmElement)
 			newArg1.SetValue(soVal)
 			newArg1.BasmMeta = newArg1.SetMeta("type", "somov")
-			newArg1.BasmMeta = newArg1.SetMeta("sotype", "q")
+			newArg1.BasmMeta = newArg1.SetMeta("sotype", "k")
 			newArgs[1] = newArg1
 			newLine.Elements = newArgs
 			return newLine, nil
