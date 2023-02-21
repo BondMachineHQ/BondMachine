@@ -49,7 +49,7 @@ func (op Kbd) Instantiate(s string) (Shared_instance, bool) {
 		components := strings.Split(s, ":")
 		componentsN := len(components)
 		if componentsN == 2 {
-			if depth, ok := strconv.Atoi(components[2]); ok == nil {
+			if depth, ok := strconv.Atoi(components[1]); ok == nil {
 				result.Depth = depth
 			}
 			return result, true
