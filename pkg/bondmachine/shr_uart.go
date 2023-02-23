@@ -98,31 +98,37 @@ func (sm Uart_instance) Write_verilog(bmach *Bondmachine, soIndex int, uartName 
 		}
 	}
 
-	// Create the fifo where the CPs will write to
-	wFifo := bmstack.CreateBasicStack()
-	wFifo.ModuleName = uartName + "wfifo"
-	wFifo.DataSize = 8
-	wFifo.Depth = sm.Depth
-	wFifo.MemType = "FIFO"
-	wFifo.Senders = senders
-	wFifo.Receivers = []string{"uartwriter"}
+	// Create the fifo where the CPs will write to (if there are any)
 
-	r, _ := wFifo.WriteHDL()
+	if len(senders) != 0 {
+		wFifo := bmstack.CreateBasicStack()
+		wFifo.ModuleName = uartName + "wfifo"
+		wFifo.DataSize = 8
+		wFifo.Depth = sm.Depth
+		wFifo.MemType = "FIFO"
+		wFifo.Senders = senders
+		wFifo.Receivers = []string{"uartwriter"}
 
-	result += r
+		r, _ := wFifo.WriteHDL()
 
-	// Create the fifo where the CPs will read from
-	rFifo := bmstack.CreateBasicStack()
-	rFifo.ModuleName = uartName + "rfifo"
-	rFifo.DataSize = 8
-	rFifo.Depth = sm.Depth
-	rFifo.MemType = "FIFO"
-	rFifo.Senders = []string{"uartreader"}
-	rFifo.Receivers = receivers
+		result += r
+	}
 
-	r, _ = rFifo.WriteHDL()
+	// Create the fifo where the CPs will read from (if there are any)
 
-	result += r
+	if len(receivers) != 0 {
+		rFifo := bmstack.CreateBasicStack()
+		rFifo.ModuleName = uartName + "rfifo"
+		rFifo.DataSize = 8
+		rFifo.Depth = sm.Depth
+		rFifo.MemType = "FIFO"
+		rFifo.Senders = []string{"uartreader"}
+		rFifo.Receivers = receivers
+
+		r, _ := rFifo.WriteHDL()
+
+		result += r
+	}
 
 	// TODO : add the uart module
 
