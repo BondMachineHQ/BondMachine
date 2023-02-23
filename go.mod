@@ -1,10 +1,10 @@
 module github.com/BondMachineHQ/BondMachine
 
-go 1.18
+go 1.20
 
 require (
-	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220722194653-14703f21b580
-	github.com/golang/protobuf v1.5.0
+	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10
+	github.com/golang/protobuf v1.5.2
 	github.com/mdlayher/raw v0.1.0
 	github.com/mmirko/mel v0.0.0-20220919094508-e6077cb608e6
 	github.com/tfriedel6/canvas v0.12.1
