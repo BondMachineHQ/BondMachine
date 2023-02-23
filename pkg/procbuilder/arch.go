@@ -22,7 +22,7 @@ func (arch *Arch) Shared_num(soname string) int {
 	counted := 0
 	for _, sos := range so {
 		splitted := strings.Split(sos, ":")
-		if len(splitted) == 2 {
+		if len(splitted) > 1 {
 			if splitted[0] == soname {
 				counted++
 			}

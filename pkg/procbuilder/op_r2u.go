@@ -12,7 +12,7 @@ import (
 // The R2u opcode
 type R2u struct{}
 
-func (op R2u) getStackName(uartId int) string {
+func (op R2u) getUartName(uartId int) string {
 	return "u" + strconv.Itoa(uartId)
 }
 
@@ -50,10 +50,10 @@ func (op R2u) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2u", "t2r", "q2r", "r2q"}) {
 		result += "	reg stackqueueSM;\n"
 	}
-	if arch.OnlyOne(op.Op_get_name(), []string{"r2u", "t2r"}) {
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2u", "u2r"}) {
 		result += "	localparam "
 		for i := 0; i < uartNum; i++ {
-			result += strings.ToUpper(op.getStackName(i)) + "=" + strconv.Itoa(int(uartBits)) + "'d" + strconv.Itoa(i)
+			result += strings.ToUpper(op.getUartName(i)) + "=" + strconv.Itoa(int(uartBits)) + "'d" + strconv.Itoa(i)
 			if i < uartNum-1 {
 				result += ",\n"
 			} else {
@@ -70,50 +70,50 @@ func (Op R2u) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 }
 
 func (op R2u) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
-	stSo := Stack{}
-	stackBits := arch.Shared_bits(stSo.Shr_get_name())
-	stackNum := arch.Shared_num(stSo.Shr_get_name())
-	rom_word := arch.Max_word()
+	uSo := Uart{}
+	uartBits := arch.Shared_bits(uSo.Shr_get_name())
+	uartNum := arch.Shared_num(uSo.Shr_get_name())
+	romWord := arch.Max_word()
 	opBits := arch.Opcodes_bits()
 
-	reg_num := 1 << arch.R
+	regNum := 1 << arch.R
 
 	result := ""
 	result += "					R2U: begin\n"
-	if stackNum > 0 {
+	if uartNum > 0 {
 		if arch.R == 1 {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
+			result += "						case (rom_value[" + strconv.Itoa(romWord-opBits-1) + "])\n"
 		} else {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
+			result += "						case (rom_value[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)) + "])\n"
 		}
-		for i := 0; i < reg_num; i++ {
+		for i := 0; i < regNum; i++ {
 			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
-			if stackBits == 1 {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-stackBits-1) + "])\n"
+			if uartBits == 1 {
+				result += "							case (rom_value[" + strconv.Itoa(romWord-opBits-uartBits-1) + "])\n"
 			} else {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-stackBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(stackBits)) + "])\n"
+				result += "							case (rom_value[" + strconv.Itoa(romWord-opBits-uartBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(uartBits)) + "])\n"
 			}
 
-			for j := 0; j < stackNum; j++ {
-				result += "							" + strings.ToUpper(op.getStackName(j)) + " : begin\n"
+			for j := 0; j < uartNum; j++ {
+				result += "							" + strings.ToUpper(op.getUartName(j)) + " : begin\n"
 				result += "								case (stackqueueSM)\n"
 				result += "								   1'b0: begin\n"
-				result += "								     if (!" + strings.ToLower(op.getStackName((j))) + "senderAck) begin\n"
-				result += "								     " + strings.ToLower(op.getStackName(j)) + "senderData[" + strconv.Itoa(int(arch.Rsize)-1) + ":0] <= #1 _" + strings.ToLower(Get_register_name(i)) + "[" + strconv.Itoa(int(arch.Rsize)-1) + ":0];\n"
-				result += "								     " + strings.ToLower(op.getStackName(j)) + "senderWrite <= #1 1'b1;\n"
+				result += "								     if (!" + strings.ToLower(op.getUartName((j))) + "senderAck) begin\n"
+				result += "								     " + strings.ToLower(op.getUartName(j)) + "senderData[" + strconv.Itoa(int(arch.Rsize)-1) + ":0] <= #1 _" + strings.ToLower(Get_register_name(i)) + "[" + strconv.Itoa(int(arch.Rsize)-1) + ":0];\n"
+				result += "								     " + strings.ToLower(op.getUartName(j)) + "senderWrite <= #1 1'b1;\n"
 				result += "								     stackqueueSM <= 1'b1;\n"
 				result += "								     end\n"
 				result += "								   end\n"
 				result += "								   1'b1: begin\n"
-				result += "								     if (" + strings.ToLower(op.getStackName((j))) + "senderAck) begin\n"
-				result += "								       " + strings.ToLower(op.getStackName(j)) + "senderWrite <= #1 1'b0;\n"
+				result += "								     if (" + strings.ToLower(op.getUartName((j))) + "senderAck) begin\n"
+				result += "								       " + strings.ToLower(op.getUartName(j)) + "senderWrite <= #1 1'b0;\n"
 				result += "								       _pc <= #1 _pc + 1'b1 ;\n"
 				result += "								       stackqueueSM <= 1'b0;\n"
 				result += "								     end\n"
 				result += "								   end\n"
 				result += "								endcase\n"
-				result += "								$display(\"R2U " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(op.getStackName(j)) + "\");\n"
+				result += "								$display(\"R2U " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(op.getUartName(j)) + "\");\n"
 				result += "							end\n"
 
 			}
@@ -137,10 +137,10 @@ func (op R2u) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 
 func (op R2u) Assembler(arch *Arch, words []string) (string, error) {
 	opBits := arch.Opcodes_bits()
-	stSo := Stack{}
-	stackNum := arch.Shared_num(stSo.Shr_get_name())
-	stackBits := arch.Shared_bits(stSo.Shr_get_name())
-	shortName := stSo.Shortname()
+	uSo := Uart{}
+	uartNum := arch.Shared_num(uSo.Shr_get_name())
+	uartBits := arch.Shared_bits(uSo.Shr_get_name())
+	shortName := uSo.Shortname()
 	romWord := arch.Max_word()
 
 	regNum := 1 << arch.R
@@ -160,13 +160,13 @@ func (op R2u) Assembler(arch *Arch, words []string) (string, error) {
 	if result == "" {
 		return "", Prerror{"Unknown register name " + words[0]}
 	}
-	if partial, err := Process_shared(shortName, words[1], stackNum); err == nil {
-		result += zeros_prefix(stackBits, partial)
+	if partial, err := Process_shared(shortName, words[1], uartNum); err == nil {
+		result += zeros_prefix(uartBits, partial)
 	} else {
 		return "", Prerror{err.Error()}
 	}
 
-	for i := opBits + int(arch.R) + stackBits; i < romWord; i++ {
+	for i := opBits + int(arch.R) + uartBits; i < romWord; i++ {
 		result += "0"
 	}
 
@@ -174,13 +174,13 @@ func (op R2u) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op R2u) Disassembler(arch *Arch, instr string) (string, error) {
-	chso := Stack{}
-	stackBits := arch.Shared_bits(chso.Shr_get_name())
-	shortname := chso.Shortname()
+	uSo := Uart{}
+	uartBits := arch.Shared_bits(uSo.Shr_get_name())
+	shortname := uSo.Shortname()
 	regId := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(regId)) + " "
-	stId := get_id(instr[arch.R : int(arch.R)+stackBits])
-	result += shortname + strconv.Itoa(stId)
+	uId := get_id(instr[arch.R : int(arch.R)+uartBits])
+	result += shortname + strconv.Itoa(uId)
 	return result, nil
 }
 
@@ -188,9 +188,9 @@ func (op R2u) Disassembler(arch *Arch, instr string) (string, error) {
 func (op R2u) Simulate(vm *VM, instr string) error {
 	// TODO
 
-	reg_bits := vm.Mach.R
-	regPay := get_id(instr[:reg_bits])
-	posS := instr[reg_bits : reg_bits+8]
+	regBits := vm.Mach.R
+	regPay := get_id(instr[:regBits])
+	posS := instr[regBits : regBits+8]
 
 	pos := uint8(get_id(posS))
 	payload := vm.Registers[regPay].(uint8)
@@ -258,8 +258,8 @@ func (Op R2u) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 func (Op R2u) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
 	result = append(result, "push::*--type=reg")
-	result = append(result, "r2u::*--type=reg::*--type=somov--sotype=st")
-	result = append(result, "mov::*--type=somov--sotype=st::*--type=reg")
+	result = append(result, "r2u::*--type=reg::*--type=somov--sotype=u")
+	result = append(result, "mov::*--type=somov--sotype=u::*--type=reg")
 	return result
 }
 func (Op R2u) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
@@ -270,10 +270,10 @@ func (Op R2u) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 		soVal := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		return line, nil
-	case "push":
+	case "touart":
 		regVal := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		soVal := "st0" // Push implicitely uses the first stack
+		soVal := "u0" // Push implicitely uses the first stack
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		if regVal != "" && soVal != "" {
 			newLine := new(bmline.BasmLine)
@@ -288,7 +288,7 @@ func (Op R2u) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 			newArg1 := new(bmline.BasmElement)
 			newArg1.SetValue(soVal)
 			newArg1.BasmMeta = newArg1.SetMeta("type", "somov")
-			newArg1.BasmMeta = newArg1.SetMeta("sotype", "st")
+			newArg1.BasmMeta = newArg1.SetMeta("sotype", "u")
 			newArgs[1] = newArg1
 			newLine.Elements = newArgs
 			return newLine, nil
@@ -301,7 +301,7 @@ func (Op R2u) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 		if regVal != "" && soVal != "" {
 			newLine := new(bmline.BasmLine)
 			newOp := new(bmline.BasmElement)
-			newOp.SetValue("r2t")
+			newOp.SetValue("r2u")
 			newLine.Operation = newOp
 			newArgs := make([]*bmline.BasmElement, 2)
 			newArg0 := new(bmline.BasmElement)
@@ -311,7 +311,7 @@ func (Op R2u) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 			newArg1 := new(bmline.BasmElement)
 			newArg1.SetValue(soVal)
 			newArg1.BasmMeta = newArg1.SetMeta("type", "somov")
-			newArg1.BasmMeta = newArg1.SetMeta("sotype", "st")
+			newArg1.BasmMeta = newArg1.SetMeta("sotype", "u")
 			newArgs[1] = newArg1
 			newLine.Elements = newArgs
 			return newLine, nil

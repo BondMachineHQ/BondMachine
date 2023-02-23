@@ -55,7 +55,7 @@ func (op Uart) Instantiate(s string) (Shared_instance, bool) {
 			if depth, ok := strconv.Atoi(components[2]); ok == nil {
 				result.Depth = depth
 			}
-			return result, true
+			return *result, true
 		}
 	}
 	return nil, false
@@ -124,7 +124,7 @@ func (sm Uart_instance) Write_verilog(bmach *Bondmachine, soIndex int, uartName 
 
 	result += r
 
-// TODO : add the uart module
+	// TODO : add the uart module
 
 	return result
 

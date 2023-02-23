@@ -90,6 +90,7 @@ func init() {
 	Allopcodes = append(Allopcodes, R2v{})
 	Allopcodes = append(Allopcodes, R2vri{})
 	Allopcodes = append(Allopcodes, R2t{})
+	Allopcodes = append(Allopcodes, R2u{})
 	Allopcodes = append(Allopcodes, Ro2r{})
 	Allopcodes = append(Allopcodes, Ro2rri{})
 	Allopcodes = append(Allopcodes, Rsc{})
@@ -115,6 +116,8 @@ func init() {
 	Allshared = append(Allshared, Lfsr8{})
 	Allshared = append(Allshared, Queue{})
 	Allshared = append(Allshared, Stack{})
+	Allshared = append(Allshared, Uart{})
+	Allshared = append(Allshared, Kbd{})
 	Allshared = append(Allshared, Vtextmem{})
 }
 
