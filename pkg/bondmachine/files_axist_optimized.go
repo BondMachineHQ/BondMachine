@@ -170,23 +170,23 @@ always @(posedge s00_axis_aclk) begin
 	end
 end
 
-assign axis_tready = ((mst_exec_state == WRITE_FIFO) && (fifo2bm_batch_pointer <= BATCH_IN_ELEMENTS-1));
+assign axis_tready = (mst_exec_state == WRITE_FIFO);
 
+// AXI receiver to FIFO batch pointer
 always@(posedge s00_axis_aclk) begin
 	if(!s00_axis_aresetn) begin
 		fifo2bm_batch_pointer <= 0;
 		writes_done <= 1'b0;
 	end  
 	else begin
-		if (!writes_done && fifo2bm_batch_pointer <= BATCH_IN_ELEMENTS-1) begin
-			if (fifo_wren) begin
-				fifo2bm_batch_pointer <= fifo2bm_batch_pointer + 1;
-				writes_done <= 1'b0;
-			end
-
+		if (!writes_done && fifo_wren) begin
+			fifo2bm_batch_pointer <= fifo2bm_batch_pointer + 1;
 			if (fifo2bm_batch_pointer == BATCH_IN_ELEMENTS-1) begin
 				writes_done <= 1'b1;
 				fifo2bm_batch_pointer <= 1'b0;
+			end
+			else begin
+				writes_done <= 1'b0;
 			end
 		end
 		else begin
@@ -194,8 +194,7 @@ always@(posedge s00_axis_aclk) begin
 		end
 	end
 end 
-	       
-	       
+	         
 assign fifo_wren = s00_axis_tvalid && axis_tready;
 
 // old value of fifo_wren	
@@ -204,115 +203,101 @@ always @( posedge s00_axis_aclk ) begin
 end
 	
 
-    always @( posedge s00_axis_aclk )
-    begin
-      if (fifo_wren)
-        begin
-          stream_data_fifo[fifo2bm_write_pointer+fifo2bm_batch_pointer] <= s00_axis_tdata[31:0];
-        end  
-    end      
-	               
-    always @( posedge s00_axis_aclk )
-    begin
+// The actual FIFO write process
+always @( posedge s00_axis_aclk ) begin
+	if (fifo_wren) begin
+		stream_data_fifo[fifo2bm_write_pointer+fifo2bm_batch_pointer] <= s00_axis_tdata[31:0];
+	end  
+end      
+
+// Read,Write pointer update and element count update
+always @( posedge s00_axis_aclk ) begin
         if (!fifo_wren && fifo_wren_old) begin
-            fifo2bm_impulse <= 1'b0;
-            if (fifo2bm_write_pointer+BATCH_IN_ELEMENTS == TOT_IN_ELEMENTS) begin
-                fifo2bm_write_pointer <= 0;
-                fifo2bm_count <= TOT_IN_ELEMENTS - fifo2bm_read_pointer;
-            end
-            else begin
-                fifo2bm_write_pointer <= fifo2bm_write_pointer + BATCH_IN_ELEMENTS;
-                if (fifo2bm_write_pointer+BATCH_IN_ELEMENTS > fifo2bm_read_pointer) begin
-                    fifo2bm_count <= fifo2bm_write_pointer - fifo2bm_read_pointer + BATCH_IN_ELEMENTS;
-                end
-                else begin
-                    fifo2bm_count <= TOT_IN_ELEMENTS - fifo2bm_read_pointer + fifo2bm_write_pointer + BATCH_IN_ELEMENTS;
-                end
-            end
+        	fifo2bm_impulse <= 1'b0;
+		fifo2bm_count <= fifo2bm_count + BATCH_IN_ELEMENTS;
+        	if (fifo2bm_write_pointer+BATCH_IN_ELEMENTS == TOT_IN_ELEMENTS) begin
+         		fifo2bm_write_pointer <= 0;
+            	end
+        	else begin
+			fifo2bm_write_pointer <= fifo2bm_write_pointer + BATCH_IN_ELEMENTS;
+		end
         end
         else begin
-            if (fifo2bm_count > 0) begin
-                if (fifo2bm_ready && !fifo2bm_impulse) begin
-                    fifo2bm_impulse <= 1'b1;
-                    fifo2bm_data <= stream_data_fifo[fifo2bm_read_pointer];
-                    
-                    if (fifo2bm_read_pointer+1 == TOT_IN_ELEMENTS) begin
-                        fifo2bm_read_pointer <= 0;
-                        fifo2bm_count <= fifo2bm_write_pointer;
-                    end
-                    else begin
-                        fifo2bm_read_pointer <= fifo2bm_read_pointer +1;
-                        if (fifo2bm_write_pointer < fifo2bm_read_pointer + 1) begin
-                            fifo2bm_count <= TOT_IN_ELEMENTS - fifo2bm_read_pointer + fifo2bm_write_pointer - 1;
-                        end
-                        else begin
-                            fifo2bm_count <= fifo2bm_write_pointer - fifo2bm_read_pointer - 1;
-                        end
-                    end
-                end
-                else begin
-                    fifo2bm_impulse <= 1'b0;
-                end
-            end
-            else begin
-                fifo2bm_impulse <= 1'b0;
-            end
+        	if (fifo2bm_count > 0) begin
+			if (fifo2bm_ready && !fifo2bm_impulse) begin
+        			fifo2bm_impulse <= 1'b1;
+                		fifo2bm_data <= stream_data_fifo[fifo2bm_read_pointer];
+				fifo2bm_count <= fifo2bm_count - 1; 
+                		if (fifo2bm_read_pointer+1 == TOT_IN_ELEMENTS) begin
+                        		fifo2bm_read_pointer <= 0;
+                    		end
+                    		else begin
+                        		fifo2bm_read_pointer <= fifo2bm_read_pointer +1;
+                    		end
+                	end
+                	else begin
+                    		fifo2bm_impulse <= 1'b0;
+                	end
+            	end
+            	else begin
+                	fifo2bm_impulse <= 1'b0;
+            	end
         end
-    end
+end
    
     
 bmdeserialize fifo2bm(.clk(m00_axis_aclk),
 	.impulse(fifo2bm_impulse),
 	.data(fifo2bm_data[31:0]),
 	.ready(fifo2bm_ready),
-    .reset(!m00_axis_aresetn),
-    .i0(i0),
-    .i0_valid(i0_valid),
-    .i0_recv(i0_received),
-    .i1(i1[31:0]),
-    .i1_valid(i1_valid),
-    .i1_recv(i1_received),
-    .i2(i2[31:0]),
-    .i2_valid(i2_valid),
-    .i2_recv(i2_received),
-    .i3(i3[31:0]),
-    .i3_valid(i3_valid),
-    .i3_recv(i3_received)
+	.reset(!m00_axis_aresetn),
+	.i0(i0),
+	.i0_valid(i0_valid),
+	.i0_recv(i0_received),
+	.i1(i1[31:0]),
+	.i1_valid(i1_valid),
+	.i1_recv(i1_received),
+	.i2(i2[31:0]),
+	.i2_valid(i2_valid),
+	.i2_recv(i2_received),
+	.i3(i3[31:0]),
+	.i3_valid(i3_valid),
+	.i3_recv(i3_received)
 );
 
 bondmachine bm(.clk(m00_axis_aclk),
-    .reset(!m00_axis_aresetn),
-    .i0(i0[31:0]),
-    .i0_valid(i0_valid),
-    .i0_received(i0_received),
-    .i1(i1[31:0]),
-    .i1_valid(i1_valid),
-    .i1_received(i1_received),
-    .i2(i2[31:0]),
-    .i2_valid(i2_valid),
-    .i2_received(i2_received),
-    .i3(i3[31:0]),
-    .i3_valid(i3_valid),
-    .i3_received(i3_received),
-    .o0(o0[31:0]),
-    .o0_valid(o0_valid),
-    .o0_received(o0_received)
-    );
+	.reset(!m00_axis_aresetn),
+	.i0(i0[31:0]),
+	.i0_valid(i0_valid),
+	.i0_received(i0_received),
+	.i1(i1[31:0]),
+	.i1_valid(i1_valid),
+	.i1_received(i1_received),
+	.i2(i2[31:0]),
+	.i2_valid(i2_valid),
+	.i2_received(i2_received),
+	.i3(i3[31:0]),
+	.i3_valid(i3_valid),
+	.i3_received(i3_received),
+	.o0(o0[31:0]),
+	.o0_valid(o0_valid),
+	.o0_received(o0_received)
+	);
 
     
 bmserialize bm2fifo(.clk(m00_axis_aclk),
 	.ack(bm2fifo_ack),
 	.data(bm2fifo_data[31:0]),
 	.ready(bm2fifo_ready),
-    .reset(!m00_axis_aresetn),
-    .o0(o0[31:0]),
-    .o0_valid(o0_valid),
-    .o0_recv(o0_received)
+	.reset(!m00_axis_aresetn),
+	.o0(o0[31:0]),
+	.o0_valid(o0_valid),
+	.o0_recv(o0_received)
 );    
       	               
-    /*
-        NOW START THE MASTER AXIS SECTION corrponfing to BM outputs
-    */
+/*
+	NOW START THE MASTER AXIS SECTION corresponding to BM outputs
+*/
 
 
 	always @(posedge m00_axis_aclk)                                             
@@ -422,39 +407,30 @@ bmserialize bm2fifo(.clk(m00_axis_aclk),
 	end 
 	end
 
-    always@(posedge m00_axis_aclk)                                               
-	begin     
-	  
-	  if (tx_done) begin
-	       bm2fifo_batch_pointer <= 0;
-	       tx_done <= 1'b0;
-	  end
-	  else begin                                                      
-          if(!m00_axis_aresetn)                                                            
-          begin                                                                        
+
+	always@(posedge m00_axis_aclk)                                               
+	begin                                                        
+          if(!m00_axis_aresetn) begin                                                                        
               bm2fifo_batch_pointer <= 0;                                                         
               tx_done <= 1'b0;                                                           
           end                                                                          
-          else
-          begin                                                                           
-//            if (bm2fifo_batch_pointer <= BATCH_OUT_ELEMENTS-1)                                
-//            begin                                                                      
-            if (tx_en)                                                                
-              begin                                                                  
+          else begin                                                                                                                                               
+            if (tx_en && !tx_done) begin                                                                  
                 bm2fifo_batch_pointer <= bm2fifo_batch_pointer + 1;                                    
-                if (bm2fifo_batch_pointer + 1 == BATCH_OUT_ELEMENTS) 
-                begin
+                if (bm2fifo_batch_pointer == BATCH_OUT_ELEMENTS - 1) begin
                    tx_done <= 1'b1;
+                   bm2fifo_batch_pointer <= 0;
                 end
-//                else
-//                begin
-//                   tx_done <= 1'b0;
-//                end                             
-              end                                                                       
-//            end 
-         end
-       end
+                else begin
+                   tx_done <= 1'b0;
+                end
+             end
+             else begin
+                tx_done <= 1'b0;
+             end              
+         end                                                                       
     end
+       
        
     assign tx_en = m00_axis_tready && axis_tvalid;   
 	                                                     
