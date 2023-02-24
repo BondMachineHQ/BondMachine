@@ -20,7 +20,7 @@ func (sl *IcebreakerLeds) Get_Params() *ExtraParams {
 }
 func (sl *IcebreakerLeds) Import(inp string) error {
 	if err := json.Unmarshal([]byte(inp), sl); err != nil {
-		return errors.New("Unmarshalling failed")
+		return errors.New("unmarshalling failed")
 	}
 	return nil
 }
