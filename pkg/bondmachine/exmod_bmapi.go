@@ -1,10 +1,18 @@
 package bondmachine
 
-import "strings"
+import (
+	"os"
+	"strings"
+	"text/template"
+)
 
 //	"fmt"
 
-//	"strings"
+// "strings"
+type UartTemplate struct {
+	*templateData
+	BaudRate string
+}
 
 type BMAPIExtra struct {
 	Maps          *IOmap
@@ -80,8 +88,16 @@ func (sl *BMAPIExtra) StaticVerilog() string {
 
 	switch sl.Flavor {
 	case "uartusb":
-		result += verilogUART
+		uartData := new(UartTemplate)
+		uartData.templateData = new(templateData)
+		uartData.ModuleName = "uart"
+		uartData.BaudRate = "115200"
+		t, _ := template.New("uart").Parse(verilogUART)
+		f, _ := os.Create("uart.v")
+		t.Execute(f, uartData)
+		f.Close()
 	}
+
 	return result
 }
 

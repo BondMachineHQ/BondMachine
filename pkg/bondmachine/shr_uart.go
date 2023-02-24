@@ -3,8 +3,10 @@ package bondmachine
 import (
 	//"fmt"
 
+	"os"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmstack"
 )
@@ -130,7 +132,14 @@ func (sm Uart_instance) Write_verilog(bmach *Bondmachine, soIndex int, uartName 
 		result += r
 	}
 
-	// TODO : add the uart module
+	uartData := new(UartTemplate)
+	uartData.templateData = bmach.createBasicTemplateData()
+	uartData.ModuleName = uartName + "uart"
+	uartData.BaudRate = strconv.Itoa(sm.BaudRate)
+	t, _ := template.New("uart").Parse(verilogUART)
+	f, _ := os.Create(uartName + "uart.v")
+	t.Execute(f, uartData)
+	f.Close()
 
 	return result
 

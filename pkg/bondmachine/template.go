@@ -14,11 +14,13 @@ type stateMachine struct {
 }
 
 type templateData struct {
-	Rsize       uint8
+	Rsize       int
 	Buswidth    string
 	Inputs      []string
+	InputNum    int
 	InputsBins  []string
 	Outputs     []string
+	OutputNum   int
 	OutputsBins []string
 	SendSM      stateMachine
 	funcmap     template.FuncMap
@@ -28,7 +30,7 @@ type templateData struct {
 
 func (bmach *Bondmachine) createBasicTemplateData() *templateData {
 	result := new(templateData)
-	result.Rsize = bmach.Rsize
+	result.Rsize = int(bmach.Rsize)
 	result.Buswidth = "[" + strconv.Itoa(int(bmach.Rsize)-1) + ":0]"
 	funcMap := template.FuncMap{
 		"inc": func(i int) int {
@@ -43,6 +45,9 @@ func (bmach *Bondmachine) createBasicTemplateData() *templateData {
 			} else {
 				return 0
 			}
+		},
+		"bits": func(i int) int {
+			return Needed_bits(i)
 		},
 	}
 	result.funcmap = funcMap

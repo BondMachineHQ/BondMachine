@@ -12,6 +12,13 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/simbox"
 )
 
+type AXIsTemplateData struct {
+	*templateData
+	Samples      int
+	FifoDepth    int
+	CountersBits int
+}
+
 func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap, extramods []ExtraModule, sbox *simbox.Simbox) error {
 
 	var bmapiFlavor string
@@ -94,7 +101,63 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 
 		// This is the generation of the AXI Stream interface
 
-		axiStData := bmach.createBasicTemplateData()
+		axiStData := new(AXIsTemplateData)
+		axiStData.templateData = bmach.createBasicTemplateData()
+		axiStData.ModuleName = "bmaccelerator"
+		axiStData.InputNum = bmach.Inputs
+		axiStData.OutputNum = bmach.Outputs
+
+		// This fields are temporarely hardcoded, in the future could be get from the command line
+		axiStData.Samples = 16
+		axiStData.FifoDepth = 256
+
+		if axiStData.InputNum > axiStData.OutputNum {
+			axiStData.CountersBits = Needed_bits(axiStData.InputNum * axiStData.FifoDepth)
+		} else {
+			axiStData.CountersBits = Needed_bits(axiStData.OutputNum * axiStData.FifoDepth)
+		}
+
+		axiStData.Inputs = make([]string, 0)
+		axiStData.Outputs = make([]string, 0)
+
+		sortedKeys := make([]string, 0)
+		for param, _ := range bmapiParams {
+			sortedKeys = append(sortedKeys, param)
+		}
+
+		sort.Slice(sortedKeys, func(i, j int) bool {
+			first := sortedKeys[i]
+			second := sortedKeys[j]
+			for {
+				if len(first) == 0 || len(second) == 0 {
+					return first < second
+				} else {
+					if first[0] != second[0] {
+						return first < second
+					} else {
+						first = first[1:]
+						second = second[1:]
+
+						if numA, err := strconv.Atoi(first); err == nil {
+							if numB, err := strconv.Atoi(second); err == nil {
+								return numA < numB
+							}
+						}
+					}
+				}
+			}
+		})
+
+		for _, param := range sortedKeys {
+			if strings.HasPrefix(param, "assoc") {
+				bmport := strings.Split(param, "_")[1]
+				if strings.HasPrefix(bmport, "o") {
+					axiStData.Outputs = append(axiStData.Outputs, bmport)
+				} else if strings.HasPrefix(bmport, "i") {
+					axiStData.Inputs = append(axiStData.Inputs, bmport)
+				}
+			}
+		}
 
 		vFiles := make(map[string]string)
 		if bmapiFlavorVersion == "basic" {
@@ -106,7 +169,7 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 		}
 
 		for file, temp := range vFiles {
-			t, err := template.New(file).Parse(temp)
+			t, err := template.New(file).Funcs(axiStData.funcmap).Parse(temp)
 			if err != nil {
 				return err
 			}

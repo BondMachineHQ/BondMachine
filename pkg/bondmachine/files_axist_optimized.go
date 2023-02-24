@@ -3,7 +3,7 @@ package bondmachine
 const (
 	optimizedAXIStream = `
 
-module bmstream_v1_0 #
+module {{ .ModuleName }}_v1_0 #
 (
 	parameter integer C_S00_AXIS_TDATA_WIDTH	= 32,
 	parameter integer C_M00_AXIS_TDATA_WIDTH	= 32,
@@ -28,190 +28,180 @@ module bmstream_v1_0 #
 	input wire  m00_axis_tready
 );
 
-
     
-    localparam [31:0] samples = 16; // number of samples that I expect from the client
-    localparam [31:0] fifodepth = 256; // Should be multiple of samples
+localparam [{{ .CountersBits }}:0] samples = {{ .Samples }}; // number of samples that I expect from the client
+localparam [{{ .CountersBits }}:0] fifodepth = {{ .FifoDepth }}; // Should be multiple of samples
     
-    localparam [31:0] bminputs = 4;  // number of bminputs for each sample
-    localparam [31:0] BATCH_IN_ELEMENTS = samples*bminputs;
-	localparam [31:0] TOT_IN_ELEMENTS  = fifodepth*bminputs;                                     
+localparam [{{ .CountersBits }}:0] bminputs = {{ .InputNum }};  // number of bminputs for each sample
+localparam [{{ .CountersBits }}:0] BATCH_IN_ELEMENTS = samples*bminputs;
+localparam [{{ .CountersBits }}:0] TOT_IN_ELEMENTS = fifodepth*bminputs;                                     
 	
-	localparam [31:0] bmoutputs = 1;
-	localparam [31:0] BATCH_OUT_ELEMENTS = samples*bmoutputs;
-	localparam [31:0] TOT_OUT_ELEMENTS = fifodepth*bmoutputs;
+localparam [{{ .CountersBits }}:0] bmoutputs = {{ .OutputNum }};
+localparam [{{ .CountersBits }}:0] BATCH_OUT_ELEMENTS = samples*bmoutputs;
+localparam [{{ .CountersBits }}:0] TOT_OUT_ELEMENTS = fifodepth*bmoutputs;
 
-
-	// Receiver object
-	localparam [1:0] IDLE = 1'b0,
-	                 WRITE_FIFO  = 1'b1; 
+// Receiver object
+localparam [1:0] IDLE = 1'b0,
+                 WRITE_FIFO  = 1'b1; 
 	                                    
-	wire  	   axis_tready;
-	reg        mst_exec_state;     
-	wire       fifo_wren;
-	reg        fifo_full_flag;
-	reg [31:0] fifo2bm_write_pointer;
-	reg [31:0] fifo2bm_read_pointer;
-	reg [31:0] fifo2bm_batch_pointer;
-	reg [31:0] fifo2bm_count;
-	reg        writes_done;
+wire  	   axis_tready;
+reg        mst_exec_state;     
+wire       fifo_wren;
+reg        fifo_full_flag;
+reg [{{ .CountersBits }}:0] fifo2bm_write_pointer;
+reg [{{ .CountersBits }}:0] fifo2bm_read_pointer;
+reg [{{ .CountersBits }}:0] fifo2bm_batch_pointer;
+reg [{{ .CountersBits }}:0] fifo2bm_count;
+reg        writes_done;
 
-	reg fifo_wren_old;
-	reg  [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo [0 : TOT_IN_ELEMENTS-1];
+reg fifo_wren_old;
+reg  [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo [0 : TOT_IN_ELEMENTS-1];
 
-    
-    wire [31:0] i0;
-    wire [31:0] i1;
-    wire [31:0] i2;
-    wire [31:0] i3;
 
-    wire i0_valid;
-    wire i1_valid;
-    wire i2_valid;
-    wire i3_valid;
+{{- if .Inputs }}
+{{- range .Inputs }}
+wire [{{ dec $.Rsize }}:0] {{ . }};
+wire {{ . }}_valid;
+wire {{ . }}_received;
+{{- end }}
+{{- end }}
 
-    wire i0_received;
-    wire i1_received;
-    wire i2_received;
-    wire i3_received;
-
-    reg fifo2bm_impulse;
-    wire fifo2bm_ready;
-    reg [31:0] fifo2bm_data; 
+reg fifo2bm_impulse;
+wire fifo2bm_ready;
+reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] fifo2bm_data; 
 	
-    // Sender objects
-	localparam [1:0] IDLE_M = 2'b00,                                              
-	                 SEND_STREAM_M = 2'b01,
-	                 WAIT_M = 2'b10; 
+// Sender objects
+localparam [1:0] IDLE_M = 2'b00,                                              
+                 SEND_STREAM_M = 2'b01,
+                 WAIT_M = 2'b10; 
                                                           
-	reg [1:0]   mst_exec_state_M;
+reg [1:0]   mst_exec_state_M;
 
-    wire  	axis_tvalid;
-    reg  	axis_tvalid_delay;
-    wire  	axis_tlast;
-    reg  	axis_tlast_delay;
-    reg [C_M00_AXIS_TDATA_WIDTH-1 : 0] 	stream_data_out;
-    wire  	tx_en;
-    reg  	tx_done;
+wire  	axis_tvalid;
+reg  	axis_tvalid_delay;
+wire  	axis_tlast;
+reg  	axis_tlast_delay;
+reg [C_M00_AXIS_TDATA_WIDTH-1 : 0] 	stream_data_out;
+wire  	tx_en;
+reg  	tx_done;
 
-    wire [31:0] o0;
-    wire o0_valid;
-    wire o0_received;
+{{- if .Outputs }}
+{{- range .Outputs }}
+wire [{{ dec $.Rsize }}:0] {{ . }};
+wire {{ . }}_valid;
+wire {{ . }}_received;
+{{- end }}
+{{- end }}
 
-    reg bm2fifo_ack;
-    wire bm2fifo_ready;
-    wire [31:0] bm2fifo_data;
+reg bm2fifo_ack;
+wire bm2fifo_ready;
+wire [C_M00_AXIS_TDATA_WIDTH-1 : 0] bm2fifo_data;
 
-	reg [31:0] bm2fifo_write_pointer;
-	reg [31:0] bm2fifo_read_pointer;
-	reg [31:0] bm2fifo_batch_pointer;
-	reg [31:0] bm2fifo_count;
+reg [{ .CountersBits }}:0] bm2fifo_write_pointer;
+reg [{ .CountersBits }}:0] bm2fifo_read_pointer;
+reg [{ .CountersBits }}:0] bm2fifo_batch_pointer;
+reg [{ .CountersBits }}:0] bm2fifo_count;
 
-    reg  [(C_S00_AXIS_TDATA_WIDTH)-1:0] outstream_data_fifo [0 : TOT_OUT_ELEMENTS-1];
+reg  [(C_S00_AXIS_TDATA_WIDTH)-1:0] outstream_data_fifo [0 : TOT_OUT_ELEMENTS-1];
 
-    integer i,j;
-    initial begin
-         bm2fifo_write_pointer=0;
-         bm2fifo_read_pointer=0;
-         bm2fifo_batch_pointer=0;
-         bm2fifo_count=0;
-         bm2fifo_ack=0;
-         fifo2bm_data=0;
-         fifo2bm_write_pointer=0;
-	     fifo2bm_read_pointer=0;
-	     fifo2bm_batch_pointer=0;
-	     fifo2bm_count=0;
-         writes_done=0;
-         mst_exec_state=0;
-         fifo_wren_old=0;
-         fifo2bm_impulse=0;
-         fifo2bm_data=0;
-         tx_done=0;
-         bm2fifo_ack=0;
-         for (i=0;i<TOT_OUT_ELEMENTS;i=i+1) begin
-            outstream_data_fifo[i]<=0;
-         end
-         for (j=0;j<TOT_IN_ELEMENTS;j=j+1) begin
-            stream_data_fifo[j]<=0;
-         end
-    end
+integer i,j;
 
-                         
-    /*
-        NOW START THE AXIS SLAVE SECTION, corresponding to BM Inputs
-    */
-
-    assign m00_axis_tvalid	= axis_tvalid_delay;
-	assign m00_axis_tdata[31:0]	= stream_data_out[31:0];
-	assign m00_axis_tlast	= axis_tlast_delay;
-
-
-	assign s00_axis_tready	= axis_tready;
-	
-	always @(posedge s00_axis_aclk) 
-	begin  
-	  if (!s00_axis_aresetn) 
-	    begin
-	      mst_exec_state <= IDLE;
-	    end  
-	  else
-	    case (mst_exec_state)
-	      IDLE:
-	          if (s00_axis_tvalid && (fifo_wren == fifo_wren_old) && (fifo2bm_count + BATCH_IN_ELEMENTS <= TOT_IN_ELEMENTS))
-	            begin
-	              mst_exec_state <= WRITE_FIFO;
-	            end
-	          else
-	            begin
-	              mst_exec_state <= IDLE;
-	            end
-	      WRITE_FIFO:
-	        if (writes_done || !s00_axis_tvalid)
-	          begin
-	            mst_exec_state <= IDLE;
-	          end
-	        else
-	          begin
-	            mst_exec_state <= WRITE_FIFO;
-	          end
-
-	    endcase
+initial begin
+	bm2fifo_write_pointer=0;
+	bm2fifo_read_pointer=0;
+	bm2fifo_batch_pointer=0;
+	bm2fifo_count=0;
+	bm2fifo_ack=0;
+	fifo2bm_data=0;
+	fifo2bm_write_pointer=0;
+	fifo2bm_read_pointer=0;
+	fifo2bm_batch_pointer=0;
+	fifo2bm_count=0;
+	writes_done=0;
+	mst_exec_state=0;
+	fifo_wren_old=0;
+	fifo2bm_impulse=0;
+	fifo2bm_data=0;
+	tx_done=0;
+	bm2fifo_ack=0;
+	for (i=0;i<TOT_OUT_ELEMENTS;i=i+1) begin
+		outstream_data_fifo[i]<=0;
 	end
+	for (j=0;j<TOT_IN_ELEMENTS;j=j+1) begin
+		stream_data_fifo[j]<=0;
+	end
+end
 
-	assign axis_tready = ((mst_exec_state == WRITE_FIFO) && (fifo2bm_batch_pointer <= BATCH_IN_ELEMENTS-1));
+/*
+    NOW START THE AXIS SLAVE SECTION, corresponding to BM Inputs
+*/
 
-	always@(posedge s00_axis_aclk)
-	begin
-	  if(!s00_axis_aresetn)
-	    begin
-	      fifo2bm_batch_pointer <= 0;
-	      writes_done <= 1'b0;
-	    end  
-	  else
-	    if (!writes_done && fifo2bm_batch_pointer <= BATCH_IN_ELEMENTS-1)
-	      begin
-	        if (fifo_wren)
-	          begin
-	            fifo2bm_batch_pointer <= fifo2bm_batch_pointer + 1;
-	            writes_done <= 1'b0;
-	          end
-	          if (fifo2bm_batch_pointer == BATCH_IN_ELEMENTS-1)
-	            begin
-	              writes_done <= 1'b1;
-	              fifo2bm_batch_pointer <= 1'b0;
-	            end
-	      end
-	      else
-	        writes_done <= 1'b0;
-	end 
+assign m00_axis_tvalid	= axis_tvalid_delay;
+assign m00_axis_tdata[(C_S00_AXIS_TDATA_WIDTH)-1:0] = stream_data_out[(C_S00_AXIS_TDATA_WIDTH)-1:0];
+assign m00_axis_tlast	= axis_tlast_delay;
+
+
+assign s00_axis_tready	= axis_tready;
+
+// FSM for the AXI stream receiver
+always @(posedge s00_axis_aclk) begin  
+	if (!s00_axis_aresetn) begin
+		mst_exec_state <= IDLE;
+	end  
+	else begin
+		case (mst_exec_state)
+		IDLE: begin
+	        	if (s00_axis_tvalid && (fifo_wren == fifo_wren_old) && (fifo2bm_count + BATCH_IN_ELEMENTS <= TOT_IN_ELEMENTS)) begin
+	        		mst_exec_state <= WRITE_FIFO;
+	            	end
+	          	else begin
+	              		mst_exec_state <= IDLE;
+	            	end
+		end
+		WRITE_FIFO: begin
+			if (writes_done || !s00_axis_tvalid) begin
+				mst_exec_state <= IDLE;
+			end
+			else begin
+				mst_exec_state <= WRITE_FIFO;
+			end
+		end
+		endcase
+	end
+end
+
+assign axis_tready = ((mst_exec_state == WRITE_FIFO) && (fifo2bm_batch_pointer <= BATCH_IN_ELEMENTS-1));
+
+always@(posedge s00_axis_aclk) begin
+	if(!s00_axis_aresetn) begin
+		fifo2bm_batch_pointer <= 0;
+		writes_done <= 1'b0;
+	end  
+	else begin
+		if (!writes_done && fifo2bm_batch_pointer <= BATCH_IN_ELEMENTS-1) begin
+			if (fifo_wren) begin
+				fifo2bm_batch_pointer <= fifo2bm_batch_pointer + 1;
+				writes_done <= 1'b0;
+			end
+
+			if (fifo2bm_batch_pointer == BATCH_IN_ELEMENTS-1) begin
+				writes_done <= 1'b1;
+				fifo2bm_batch_pointer <= 1'b0;
+			end
+		end
+		else begin
+			writes_done <= 1'b0;
+		end
+	end
+end 
 	       
 	       
-	assign fifo_wren = s00_axis_tvalid && axis_tready;
+assign fifo_wren = s00_axis_tvalid && axis_tready;
 
-	
-	always @( posedge s00_axis_aclk ) begin
-	   fifo_wren_old <= fifo_wren;
-	end
+// old value of fifo_wren	
+always @( posedge s00_axis_aclk ) begin
+	fifo_wren_old <= fifo_wren;
+end
 	
 
     always @( posedge s00_axis_aclk )

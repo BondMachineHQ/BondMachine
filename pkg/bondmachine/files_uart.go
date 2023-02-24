@@ -29,7 +29,7 @@ const (
 //
 //  To instantiate this module copy this section to your main code...
 //
-//    uart #(
+//    {{ .ModuleName }} #(
 //        .baud_rate(baud_rate),            // default is 9600
 //        .sys_clk_freq(sys_clk_freq)       // default is 100000000
 //     )
@@ -50,7 +50,7 @@ const (
 //    );
 //
 
- module uart(
+ module {{ .ModuleName }}(
     input clk,                  // The master clock for this module
     input rst,                  // Synchronous reset
     input rx,                   // Incoming serial line
@@ -72,7 +72,7 @@ const (
 // For aditional information about instantiation please see:
 // http://www.sunburst-design.com/papers/CummingsHDLCON2002_Parameters_rev1_2.pdf
 
-    parameter baud_rate = 115200;
+    parameter baud_rate = {{ .BaudRate }};
     parameter sys_clk_freq = 100000000;
    
     localparam one_baud_cnt = sys_clk_freq / (baud_rate);
