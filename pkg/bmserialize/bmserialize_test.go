@@ -6,8 +6,8 @@ import (
 )
 
 func TestStack(t *testing.T) {
-	s := CreateBasicStack()
-	s.DataSize = 32
+	s := CreateBasicSerializer()
+	s.TerminalDataSize = 32
 	s.Depth = 8
 	s.MemType = "FIFO"
 	s.Senders = []string{"sender1", "sender2"}

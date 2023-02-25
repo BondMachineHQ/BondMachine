@@ -2,6 +2,7 @@ package bmserialize
 
 import (
 	"bytes"
+	"errors"
 	"sort"
 	"strconv"
 	"text/template"
@@ -18,14 +19,20 @@ type Pop struct {
 	Tick  uint64
 }
 
-type BmStack struct {
-	ModuleName string
-	DataSize   int
-	Depth      int
-	Senders    []string
-	Receivers  []string
-	MemType    string
-	funcMap    template.FuncMap
+type BmSerialize struct {
+	ModuleName       string
+	Direction        string // "serialize" or "deserialize"
+	Terminals        int    // Number of terminals (Input or Output)
+	Model            string // "ready-impulse" or "valid-ack"
+	TerminalDataSize int
+	SerialDataSize   int
+
+	Depth     int
+	Senders   []string
+	Receivers []string
+	MemType   string
+
+	funcMap template.FuncMap
 
 	// TestBench data
 	Pops         []Pop
@@ -33,8 +40,8 @@ type BmStack struct {
 	TestSequence []string // Pushes and pops in order
 }
 
-func CreateBasicStack() *BmStack {
-	result := new(BmStack)
+func CreateBasicSerializer() *BmSerialize {
+	result := new(BmSerialize)
 	//result.Rsize = bmach.Rsize
 	//result.Buswidth = "[" + strconv.Itoa(int(bmach.Rsize)-1) + ":0]"
 	funcMap := template.FuncMap{
@@ -58,16 +65,25 @@ func CreateBasicStack() *BmStack {
 	result.funcMap = funcMap
 
 	// Default values
-	result.ModuleName = "bmstack"
+	result.ModuleName = "bmserialize"
 
 	return result
 }
 
-func (s *BmStack) WriteHDL() (string, error) {
+func (s *BmSerialize) WriteHDL() (string, error) {
 
 	var f bytes.Buffer
+	var source string
 
-	t, err := template.New("stack").Funcs(s.funcMap).Parse(stack)
+	if s.Direction == "serialize" {
+		source = "serialize"
+	} else if s.Direction == "deserialize" {
+		source = "deserialize"
+	} else {
+		return "", errors.New("direction must be 'serialize' or 'deserialize'")
+	}
+
+	t, err := template.New("serializer").Funcs(s.funcMap).Parse(source)
 	if err != nil {
 		return "", err
 	}
@@ -81,7 +97,7 @@ func (s *BmStack) WriteHDL() (string, error) {
 
 }
 
-func (s *BmStack) WriteTestBench() (string, error) {
+func (s *BmSerialize) WriteTestBench() (string, error) {
 
 	var f bytes.Buffer
 
