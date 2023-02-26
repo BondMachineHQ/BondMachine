@@ -15,71 +15,69 @@ module {{ .ModuleName }}(
 	output reg ready,
 	);
 	
-	reg [1:0] output_index;
-	reg [1:0] SM;
+reg [{{ bits .Terminals }}:0] output_index;
+reg [1:0] SM;
     
-    reg [31:0] localdata;
+reg [{{ dec .SerialDataSize }}:0] localdata;
 
-    wire [1:0] valids;
-
-    reg [1:0] recvs;
+wire [{{ bits .Terminals }}:0] valids;
+reg [{{ bits .Terminals }}:0] recvs;
     
-    wire [31:0]outputs;
+wire [{{ dec .SerialDataSize }}:0] outputs;
     
-    localparam SMIDLE=2'b00,
-                SMRES=2'b01,
-                SMBM=2'b10;
+localparam SMIDLE=2'b00,
+        SMRES=2'b01,
+        SMBM=2'b10;
 	
-	always @( posedge clk) begin
-	   if (reset) begin
-	       ready <= 1'b0;
-	       output_index <= 2'b00;
-	       SM<=SMIDLE;
-	       recvs[1:0] <= 2'b00;
-	   end 
-	   else begin
-	       case (SM)
-	       SMIDLE: begin
-	               if (valids[output_index]) begin
-	                   ready <= 1'b1;
-	                   localdata[31:0] <= outputs[31:0];
-	                   SM<=SMRES;
-	               end
-	               else begin
-	                   ready <= 1'b0;
-	               end
-	           end
-	       SMRES: begin
-	           if (ack) begin
-	               ready <= 1'b0;
-	               SM<=SMBM;
-	           end   
-	       end
-	       SMBM: begin
-	           if (!valids[output_index]) begin
-	               if (output_index + 1 == 2'd1) begin
-	                   output_index <= 0;
-	               end
-	               else begin
-	                   output_index <= output_index + 1;
-	               end
-	               recvs[output_index] <= 1'b0;
-	               SM<=SMIDLE;           
-	           end
-	           else
-	           begin
-	               recvs[output_index] <= 1'b1;
-	           end
-	       end
-	       endcase
-	   end
+always @( posedge clk) begin
+	if (reset) begin
+		ready <= 1'b0;
+		output_index <= {{ inc bits .Terminals }}'b00;
+		SM<=SMIDLE;
+		recvs[{{ bits .Terminals }}:0] <= {{ inc bits .Terminals }}'b00;
+	end 
+	else begin
+		case (SM)
+		SMIDLE: begin
+			if (valids[output_index]) begin
+				ready <= 1'b1;
+				localdata[31:0] <= outputs[31:0];
+				SM<=SMRES;
+			end
+			else begin
+				ready <= 1'b0;
+			end
+		end
+		SMRES: begin
+	        	if (ack) begin
+	        		ready <= 1'b0;
+	        		SM<=SMBM;
+	        	end   
+	       	end
+		SMBM: begin
+			if (!valids[output_index]) begin
+				if (output_index + 1 == 2'd1) begin
+					output_index <= 0;
+				end
+				else begin
+					output_index <= output_index + 1;
+				end
+				recvs[output_index] <= 1'b0;
+				SM<=SMIDLE;           
+			end
+			else begin
+				recvs[output_index] <= 1'b1;
+	        	end
+		end
+		endcase
 	end
+end
 	
-	assign data[31:0] = localdata[31:0];
-	assign outputs={o0[31:0]};
-	assign o0_recv=recvs[0];
+assign data[31:0] = localdata[31:0];
+assign outputs={o0[31:0]};
+assign o0_recv=recvs[0];
 
-	assign valids[0] = o0_valid;	
+assign valids[0] = o0_valid;	
 	
 endmodule 
 `
