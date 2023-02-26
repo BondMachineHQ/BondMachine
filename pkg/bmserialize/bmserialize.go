@@ -61,6 +61,14 @@ func CreateBasicSerializer() *BmSerialize {
 		"bits": func(i int) int {
 			return NeededBits(i)
 		},
+		"intRange": func(start, end int) []int {
+			n := end - start
+			result := make([]int, n)
+			for i := 0; i < n; i++ {
+				result[i] = start + i
+			}
+			return result
+		},
 	}
 	result.funcMap = funcMap
 
@@ -76,9 +84,9 @@ func (s *BmSerialize) WriteHDL() (string, error) {
 	var source string
 
 	if s.Direction == "serialize" {
-		source = "serialize"
+		source = serializer
 	} else if s.Direction == "deserialize" {
-		source = "deserialize"
+		source = deserializer
 	} else {
 		return "", errors.New("direction must be 'serialize' or 'deserialize'")
 	}

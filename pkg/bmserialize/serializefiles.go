@@ -2,29 +2,181 @@ package bmserialize
 
 const (
 	serializer = `
-module {{ .ModuleName }}(clk,
-     reset,
+module {{ .ModuleName }}(
+	input clk,
+	input reset,
+	{{- range $y := intRange 0 .Terminals }}
+	input [{{ dec $.TerminalDataSize }}:0] o{{ $y }},
+	input o{{ $y }}_valid,
+	output o{{ $y }}_recv,
+	{{- end }}
+	input ack,
+	output [{{ dec .SerialDataSize }}:0] data,
+	output reg ready,
+	);
+	
+	reg [1:0] output_index;
+	reg [1:0] SM;
+    
+    reg [31:0] localdata;
+
+    wire [1:0] valids;
+
+    reg [1:0] recvs;
+    
+    wire [31:0]outputs;
+    
+    localparam SMIDLE=2'b00,
+                SMRES=2'b01,
+                SMBM=2'b10;
+	
+	always @( posedge clk) begin
+	   if (reset) begin
+	       ready <= 1'b0;
+	       output_index <= 2'b00;
+	       SM<=SMIDLE;
+	       recvs[1:0] <= 2'b00;
+	   end 
+	   else begin
+	       case (SM)
+	       SMIDLE: begin
+	               if (valids[output_index]) begin
+	                   ready <= 1'b1;
+	                   localdata[31:0] <= outputs[31:0];
+	                   SM<=SMRES;
+	               end
+	               else begin
+	                   ready <= 1'b0;
+	               end
+	           end
+	       SMRES: begin
+	           if (ack) begin
+	               ready <= 1'b0;
+	               SM<=SMBM;
+	           end   
+	       end
+	       SMBM: begin
+	           if (!valids[output_index]) begin
+	               if (output_index + 1 == 2'd1) begin
+	                   output_index <= 0;
+	               end
+	               else begin
+	                   output_index <= output_index + 1;
+	               end
+	               recvs[output_index] <= 1'b0;
+	               SM<=SMIDLE;           
+	           end
+	           else
+	           begin
+	               recvs[output_index] <= 1'b1;
+	           end
+	       end
+	       endcase
+	   end
+	end
+	
+	assign data[31:0] = localdata[31:0];
+	assign outputs={o0[31:0]};
+	assign o0_recv=recvs[0];
+
+	assign valids[0] = o0_valid;	
+	
+endmodule 
 `
 
 	deserializer = `
-module {{ .ModuleName }}(clk,
-        reset,
+module {{ .ModuleName }}(
+	   input clk,
+	   input reset,
+	   input impulse,
+	   input [31:0] data,
+	   output reg ready,
+	   
+	   output wire [31:0] i0,
+	   output i0_valid,
+	   input i0_recv,
+	   
+	   output wire [31:0] i1,
+	   output i1_valid,
+	   input i1_recv,
+	   
+	   output wire [31:0] i2,
+	   output i2_valid,
+	   input i2_recv,
+	   
+	   output wire [31:0] i3,
+	   output i3_valid,
+	   input i3_recv	   	   
+	);
+	
+	reg [2:0] input_index;
+    reg [0:0] SM;
+    
+    reg [31:0] localdata;
+
+    reg [3:0] valids;
+
+    wire [3:0] recvs;
+    
+    localparam SMIDLE=1'b0,
+                SMBM=1'b1;
+	
+	always @( posedge clk) begin
+	   if (reset) begin
+	       ready <= 1'b0;
+	       input_index <= 3'b000;
+	       SM<=SMIDLE;
+	       localdata[31:0] <= 32'b0;
+	       valids[3:0] <= 4'b0000;
+	   end 
+	   else begin
+	       case (SM)
+	       SMIDLE: begin
+	               if (impulse) begin
+	                   ready <= 1'b0;
+	                   localdata[31:0] <= data[31:0];
+	                   SM<=SMBM;
+	               end
+	               else begin
+	                   ready <= 1'b1;
+	               end
+	           end
+	       SMBM: begin
+	           if (recvs[input_index] == 1'b0) begin
+	               valids[input_index] <= 1'b1;
+	               ready <= 1'b0;
+	           end
+	           else begin
+	               valids[input_index] <= 1'b0;
+	               if (input_index + 1 == 4'd4) begin
+	                   input_index <= 0;
+	               end
+	               else begin
+	                   input_index <= input_index + 1;
+	               end
+	               SM<=SMIDLE;
+	               ready <= 1'b1;
+	           end
+	       end
+	       endcase
+	   end
+	end
+	
+	assign i0[31:0] = localdata[31:0];
+	assign i1[31:0] = localdata[31:0];
+	assign i2[31:0] = localdata[31:0];
+	assign i3[31:0] = localdata[31:0];
+	
+	assign i0_valid=valids[0];
+	assign i1_valid=valids[1];
+	assign i2_valid=valids[2];
+	assign i3_valid=valids[3];
+	
+	assign recvs[3:0] = {i3_recv, i2_recv, i1_recv, i0_recv};
+	
+	endmodule
 `
 
-//     {{- if .Senders }}
-//     {{- range .Senders }}
-//     {{ . }}Data,
-//     {{ . }}Write,
-//     {{ . }}Ack,
-//     {{- end }}
-//     {{- end }}
-//     {{- if .Receivers }}
-//     {{- range .Receivers }}
-//     {{ . }}Data,
-//     {{ . }}Read,
-//     {{ . }}Ack,
-//     {{- end }}
-//     {{- end }}
 //     empty,
 //     full
 // );
