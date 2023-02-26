@@ -8,7 +8,7 @@ The HDL code is build using golang templates that creates the code starting from
 ## API 
 
 The library can be used in two ways.
-The first one is from a go program. After creating a BmStack object, the user can call the WriteHDL method to produce the HDL code.
+The first one is from a go program. After creating a BmStack structure, the user can call the WriteHDL function to produce the HDL code.
 An example on how the library can be used this way can be seen in the go test file (bmstack_test.go).
 
 ![WriteHDL](writehdl.png)
@@ -17,11 +17,19 @@ The second part of the struct can be filled with test data. These data are used 
 
 ![WritetestBench](writetestbench.png)
 
+The two functions (WriteHDL and WriteTestBench) return a string that contains the HDL code or an error if something went wrong (string, error).
+The provided go test file (bmstack_test.go) shows how the library can be used in this way. When invoked (go test), it produces the two files (bmstack.v and bmstack_tb.v).
+
 ## CLI
 
 the library also came with a companion CLI executable called bmstack that provides the basic interface to the library. This is the second Possible way to use it.
 
 ![CLI](cli.png)
+
+Examples of usage:
+
+
+## Simulation
 
 WIP
 
