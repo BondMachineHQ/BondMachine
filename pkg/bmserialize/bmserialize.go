@@ -3,21 +3,19 @@ package bmserialize
 import (
 	"bytes"
 	"errors"
-	"sort"
-	"strconv"
 	"text/template"
 )
 
-type Push struct {
-	Agent string
-	Tick  uint64
-	Value string
-}
+// type Push struct {
+// 	Agent string
+// 	Tick  uint64
+// 	Value string
+// }
 
-type Pop struct {
-	Agent string
-	Tick  uint64
-}
+// type Pop struct {
+// 	Agent string
+// 	Tick  uint64
+// }
 
 type BmSerialize struct {
 	ModuleName       string
@@ -26,24 +24,16 @@ type BmSerialize struct {
 	Model            string // "ready-impulse" or "valid-ack"
 	TerminalDataSize int
 	SerialDataSize   int
-
-	Depth     int
-	Senders   []string
-	Receivers []string
-	MemType   string
-
-	funcMap template.FuncMap
+	funcMap          template.FuncMap
 
 	// TestBench data
-	Pops         []Pop
-	Pushes       []Push
-	TestSequence []string // Pushes and pops in order
+	// Pops         []Pop
+	// Pushes       []Push
+	// TestSequence []string // Pushes and pops in order
 }
 
 func CreateBasicSerializer() *BmSerialize {
 	result := new(BmSerialize)
-	//result.Rsize = bmach.Rsize
-	//result.Buswidth = "[" + strconv.Itoa(int(bmach.Rsize)-1) + ":0]"
 	funcMap := template.FuncMap{
 		"inc": func(i int) int {
 			return i + 1
@@ -105,116 +95,116 @@ func (s *BmSerialize) WriteHDL() (string, error) {
 
 }
 
-func (s *BmSerialize) WriteTestBench() (string, error) {
+// func (s *BmSerialize) WriteTestBench() (string, error) {
 
-	var f bytes.Buffer
+// var f bytes.Buffer
 
-	// Sort the pushes and pops by tick
-	sort.Slice(s.Pushes, func(i, j int) bool {
-		return s.Pushes[i].Tick < s.Pushes[j].Tick
-	})
-	sort.Slice(s.Pops, func(i, j int) bool {
-		return s.Pops[i].Tick < s.Pops[j].Tick
-	})
+// // Sort the pushes and pops by tick
+// sort.Slice(s.Pushes, func(i, j int) bool {
+// 	return s.Pushes[i].Tick < s.Pushes[j].Tick
+// })
+// sort.Slice(s.Pops, func(i, j int) bool {
+// 	return s.Pops[i].Tick < s.Pops[j].Tick
+// })
 
-	s.TestSequence = make([]string, 0)
+// s.TestSequence = make([]string, 0)
 
-	var subSeq []string
-	var absTick uint64
-	var oldAbsTick uint64
+// var subSeq []string
+// var absTick uint64
+// var oldAbsTick uint64
 
-	for i, j := 0, 0; i < len(s.Pushes) || j < len(s.Pops); {
-		if i == len(s.Pushes) {
-			absTick = s.Pops[j].Tick
-			if absTick != oldAbsTick {
-				relTick := absTick - oldAbsTick
-				s.TestSequence = append(s.TestSequence, subSeq...)
-				s.TestSequence = append(s.TestSequence, "")
-				s.TestSequence = append(s.TestSequence, "#"+strconv.Itoa(int(relTick))+";")
-				subSeq = make([]string, 0)
-				oldAbsTick += relTick
-			}
-			agent := s.Pops[j].Agent
-			tick := strconv.Itoa(int(absTick))
-			subSeq = append(subSeq, "// Pop agent "+agent+" at tick "+tick)
-			subSeq = append(subSeq, agent+"Impulse=1;")
-			subSeq = append(subSeq, "#5;")
-			subSeq = append(subSeq, agent+"Impulse=0;")
-			j++
-		} else if j == len(s.Pops) {
-			absTick = s.Pushes[i].Tick
-			if absTick != oldAbsTick {
-				relTick := absTick - oldAbsTick
-				s.TestSequence = append(s.TestSequence, subSeq...)
-				s.TestSequence = append(s.TestSequence, "")
-				s.TestSequence = append(s.TestSequence, "#"+strconv.Itoa(int(relTick))+";")
-				subSeq = make([]string, 0)
-				oldAbsTick += relTick
-			}
-			agent := s.Pushes[i].Agent
-			value := s.Pushes[i].Value
-			tick := strconv.Itoa(int(absTick))
-			subSeq = append(subSeq, "// Push agent "+agent+" at tick "+tick+" with value "+value)
-			subSeq = append(subSeq, agent+"Data="+value+";")
-			subSeq = append(subSeq, agent+"Impulse=1;")
-			subSeq = append(subSeq, "#5;")
-			subSeq = append(subSeq, agent+"Impulse=0;")
-			i++
-		} else {
-			if s.Pushes[i].Tick <= s.Pops[j].Tick {
-				absTick = s.Pushes[i].Tick
-				if absTick != oldAbsTick {
-					relTick := absTick - oldAbsTick
-					s.TestSequence = append(s.TestSequence, subSeq...)
-					s.TestSequence = append(s.TestSequence, "")
-					s.TestSequence = append(s.TestSequence, "#"+strconv.Itoa(int(relTick))+";")
-					subSeq = make([]string, 0)
-					oldAbsTick += relTick
-				}
-				agent := s.Pushes[i].Agent
-				value := s.Pushes[i].Value
-				tick := strconv.Itoa(int(absTick))
-				subSeq = append(subSeq, "// Push agent "+agent+" at tick "+tick+" with value "+value)
-				subSeq = append(subSeq, agent+"Data="+value+";")
-				subSeq = append(subSeq, agent+"Impulse=1;")
-				subSeq = append(subSeq, "#5;")
-				subSeq = append(subSeq, agent+"Impulse=0;")
-				i++
-			} else {
-				absTick = s.Pops[j].Tick
-				if absTick != oldAbsTick {
-					relTick := absTick - oldAbsTick
-					s.TestSequence = append(s.TestSequence, subSeq...)
-					s.TestSequence = append(s.TestSequence, "")
-					s.TestSequence = append(s.TestSequence, "#"+strconv.Itoa(int(relTick))+";")
-					subSeq = make([]string, 0)
-					oldAbsTick += relTick
-				}
-				agent := s.Pops[j].Agent
-				tick := strconv.Itoa(int(absTick))
-				subSeq = append(subSeq, "// Pop agent "+agent+" at tick "+tick)
-				subSeq = append(subSeq, agent+"Impulse=1;")
-				subSeq = append(subSeq, "#5;")
-				subSeq = append(subSeq, agent+"Impulse=0;")
-				j++
-			}
-		}
-	}
-	s.TestSequence = append(s.TestSequence, subSeq...)
+// for i, j := 0, 0; i < len(s.Pushes) || j < len(s.Pops); {
+// 	if i == len(s.Pushes) {
+// 		absTick = s.Pops[j].Tick
+// 		if absTick != oldAbsTick {
+// 			relTick := absTick - oldAbsTick
+// 			s.TestSequence = append(s.TestSequence, subSeq...)
+// 			s.TestSequence = append(s.TestSequence, "")
+// 			s.TestSequence = append(s.TestSequence, "#"+strconv.Itoa(int(relTick))+";")
+// 			subSeq = make([]string, 0)
+// 			oldAbsTick += relTick
+// 		}
+// 		agent := s.Pops[j].Agent
+// 		tick := strconv.Itoa(int(absTick))
+// 		subSeq = append(subSeq, "// Pop agent "+agent+" at tick "+tick)
+// 		subSeq = append(subSeq, agent+"Impulse=1;")
+// 		subSeq = append(subSeq, "#5;")
+// 		subSeq = append(subSeq, agent+"Impulse=0;")
+// 		j++
+// 	} else if j == len(s.Pops) {
+// 		absTick = s.Pushes[i].Tick
+// 		if absTick != oldAbsTick {
+// 			relTick := absTick - oldAbsTick
+// 			s.TestSequence = append(s.TestSequence, subSeq...)
+// 			s.TestSequence = append(s.TestSequence, "")
+// 			s.TestSequence = append(s.TestSequence, "#"+strconv.Itoa(int(relTick))+";")
+// 			subSeq = make([]string, 0)
+// 			oldAbsTick += relTick
+// 		}
+// 		agent := s.Pushes[i].Agent
+// 		value := s.Pushes[i].Value
+// 		tick := strconv.Itoa(int(absTick))
+// 		subSeq = append(subSeq, "// Push agent "+agent+" at tick "+tick+" with value "+value)
+// 		subSeq = append(subSeq, agent+"Data="+value+";")
+// 		subSeq = append(subSeq, agent+"Impulse=1;")
+// 		subSeq = append(subSeq, "#5;")
+// 		subSeq = append(subSeq, agent+"Impulse=0;")
+// 		i++
+// 	} else {
+// 		if s.Pushes[i].Tick <= s.Pops[j].Tick {
+// 			absTick = s.Pushes[i].Tick
+// 			if absTick != oldAbsTick {
+// 				relTick := absTick - oldAbsTick
+// 				s.TestSequence = append(s.TestSequence, subSeq...)
+// 				s.TestSequence = append(s.TestSequence, "")
+// 				s.TestSequence = append(s.TestSequence, "#"+strconv.Itoa(int(relTick))+";")
+// 				subSeq = make([]string, 0)
+// 				oldAbsTick += relTick
+// 			}
+// 			agent := s.Pushes[i].Agent
+// 			value := s.Pushes[i].Value
+// 			tick := strconv.Itoa(int(absTick))
+// 			subSeq = append(subSeq, "// Push agent "+agent+" at tick "+tick+" with value "+value)
+// 			subSeq = append(subSeq, agent+"Data="+value+";")
+// 			subSeq = append(subSeq, agent+"Impulse=1;")
+// 			subSeq = append(subSeq, "#5;")
+// 			subSeq = append(subSeq, agent+"Impulse=0;")
+// 			i++
+// 		} else {
+// 			absTick = s.Pops[j].Tick
+// 			if absTick != oldAbsTick {
+// 				relTick := absTick - oldAbsTick
+// 				s.TestSequence = append(s.TestSequence, subSeq...)
+// 				s.TestSequence = append(s.TestSequence, "")
+// 				s.TestSequence = append(s.TestSequence, "#"+strconv.Itoa(int(relTick))+";")
+// 				subSeq = make([]string, 0)
+// 				oldAbsTick += relTick
+// 			}
+// 			agent := s.Pops[j].Agent
+// 			tick := strconv.Itoa(int(absTick))
+// 			subSeq = append(subSeq, "// Pop agent "+agent+" at tick "+tick)
+// 			subSeq = append(subSeq, agent+"Impulse=1;")
+// 			subSeq = append(subSeq, "#5;")
+// 			subSeq = append(subSeq, agent+"Impulse=0;")
+// 			j++
+// 		}
+// 	}
+// }
+// s.TestSequence = append(s.TestSequence, subSeq...)
 
-	t, err := template.New("testbench").Funcs(s.funcMap).Parse(testbench)
-	if err != nil {
-		return "", err
-	}
+// t, err := template.New("testbench").Funcs(s.funcMap).Parse(testbench)
+// if err != nil {
+// 	return "", err
+// }
 
-	err = t.Execute(&f, *s)
-	if err != nil {
-		return "", err
-	}
+// err = t.Execute(&f, *s)
+// if err != nil {
+// 	return "", err
+// }
 
-	return f.String(), nil
+// return f.String(), nil
 
-}
+// }
 
 func NeededBits(num int) int {
 	if num > 0 {

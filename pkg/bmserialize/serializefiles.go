@@ -23,7 +23,7 @@ reg [{{ dec .SerialDataSize }}:0] localdata;
 wire [{{ bits .Terminals }}:0] valids;
 reg [{{ bits .Terminals }}:0] recvs;
     
-wire [{{ dec .SerialDataSize }}:0] outputs;
+wire [{{ dec .SerialDataSize }}:0] outputs[{{ bits .Terminals }}:0];
     
 localparam SMIDLE=2'b00,
         SMRES=2'b01,
@@ -32,16 +32,16 @@ localparam SMIDLE=2'b00,
 always @( posedge clk) begin
 	if (reset) begin
 		ready <= 1'b0;
-		output_index <= {{ inc bits .Terminals }}'b00;
+		output_index <= {{ inc (bits .Terminals) }}'d0;
 		SM<=SMIDLE;
-		recvs[{{ bits .Terminals }}:0] <= {{ inc bits .Terminals }}'b00;
+		recvs[{{ bits .Terminals }}:0] <= {{ inc (bits .Terminals) }}'d0;
 	end 
 	else begin
 		case (SM)
 		SMIDLE: begin
 			if (valids[output_index]) begin
 				ready <= 1'b1;
-				localdata[31:0] <= outputs[31:0];
+				localdata[{{ dec .SerialDataSize }}:0] <= outputs[output_index][{{ dec .SerialDataSize }}:0];
 				SM<=SMRES;
 			end
 			else begin
@@ -56,7 +56,7 @@ always @( posedge clk) begin
 	       	end
 		SMBM: begin
 			if (!valids[output_index]) begin
-				if (output_index + 1 == 2'd1) begin
+				if (output_index + 1 == {{ inc (bits .Terminals) }}'d{{ .Terminals }}) begin
 					output_index <= 0;
 				end
 				else begin
@@ -73,11 +73,12 @@ always @( posedge clk) begin
 	end
 end
 	
-assign data[31:0] = localdata[31:0];
-assign outputs={o0[31:0]};
-assign o0_recv=recvs[0];
-
-assign valids[0] = o0_valid;	
+assign data[{{ dec .SerialDataSize }}:0] = localdata[{{ dec .SerialDataSize }}:0];
+{{- range $y := intRange 0 .Terminals }}
+assign outputs[{{ $y }}]=o{{ $y }}[{{ dec $.SerialDataSize }}:0];
+assign o{{ $y }}_recv=recvs[{{ $y }}];
+assign valids[{{ $y }}] = o{{ $y }}_valid;
+{{- end }}
 	
 endmodule 
 `
