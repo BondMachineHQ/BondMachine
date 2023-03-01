@@ -39,6 +39,20 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 
 		pconf := conf.ProcbuilderConfig()
 
+		// Check if the bmapi module is present, needed for the exclusion of the bondmachine_main module from the accelerators
+		var bmapiModuleAXIStream bool
+		for _, mod := range extramods {
+			if mod.Get_Name() == "bmapi" {
+				bmapiParams := mod.Get_Params().Params
+				if bmapiFlavor, ok := bmapiParams["bmapi_flavor"]; ok {
+					switch bmapiFlavor {
+					case "axist":
+						bmapiModuleAXIStream = true
+					}
+				}
+			}
+		}
+
 		//Instatiation of the Processor
 		for i, dom_id := range bmach.Processors {
 
@@ -156,12 +170,15 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 				check(err)
 			}
 		case "basys3", "kc705", "zedboard", "ebaz4205", "zc702", "ice40lp1k", "icefun", "icebreaker", "de10nano", "max1000", "icesugarnano":
-			if _, err := os.Stat("bondmachine_main.v"); os.IsNotExist(err) {
-				f, err := os.Create("bondmachine_main.v")
-				check(err)
-				defer f.Close()
-				_, err = f.WriteString(bmach.Write_verilog_board(conf, "bondmachine", flavor, iomaps, extramods))
-				check(err)
+			// Create the board file only if it doesn't belong to an AXIStream accelerator
+			if !bmapiModuleAXIStream {
+				if _, err := os.Stat("bondmachine_main.v"); os.IsNotExist(err) {
+					f, err := os.Create("bondmachine_main.v")
+					check(err)
+					defer f.Close()
+					_, err = f.WriteString(bmach.Write_verilog_board(conf, "bondmachine", flavor, iomaps, extramods))
+					check(err)
+				}
 			}
 		default:
 			return Prerror{"Verilog flavor unknown"}
