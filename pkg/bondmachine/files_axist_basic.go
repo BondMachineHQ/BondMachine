@@ -3,7 +3,7 @@ package bondmachine
 const (
 	basicAXIStream = `
 
-	module test01_v1_0 #
+	module {{ .ModuleName }}_v1_0 #
 	(
 		parameter integer C_S00_AXIS_TDATA_WIDTH	= 32,
 		parameter integer C_M00_AXIS_TDATA_WIDTH	= 32,
