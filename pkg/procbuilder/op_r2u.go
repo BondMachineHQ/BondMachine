@@ -44,8 +44,6 @@ func (op R2u) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	uartBits := arch.Shared_bits(uSo.Shr_get_name())
 	uartNum := arch.Shared_num(uSo.Shr_get_name())
 
-	// TODO: from here
-
 	result := ""
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q", "r2u", "u2r", "k2r"}) {
 		result += "	reg stackqueueSM;\n"
@@ -257,7 +255,7 @@ func (Op R2u) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 }
 func (Op R2u) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
-	result = append(result, "push::*--type=reg")
+	result = append(result, "touart::*--type=reg")
 	result = append(result, "r2u::*--type=reg::*--type=somov--sotype=u")
 	result = append(result, "mov::*--type=somov--sotype=u::*--type=reg")
 	return result

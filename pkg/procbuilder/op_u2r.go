@@ -69,8 +69,8 @@ func (Op U2r) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 
 func (op U2r) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
 	uSo := Uart{}
-	queueBits := arch.Shared_bits(uSo.Shr_get_name())
-	queueNum := arch.Shared_num(uSo.Shr_get_name())
+	uartBits := arch.Shared_bits(uSo.Shr_get_name())
+	uartNum := arch.Shared_num(uSo.Shr_get_name())
 	rom_word := arch.Max_word()
 	opBits := arch.Opcodes_bits()
 
@@ -78,7 +78,7 @@ func (op U2r) Op_instruction_verilog_state_machine(arch *Arch, flavor string) st
 
 	result := ""
 	result += "					U2R: begin\n"
-	if queueNum > 0 {
+	if uartNum > 0 {
 		if arch.R == 1 {
 			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
 		} else {
@@ -87,13 +87,13 @@ func (op U2r) Op_instruction_verilog_state_machine(arch *Arch, flavor string) st
 		for i := 0; i < reg_num; i++ {
 			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
-			if queueBits == 1 {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-queueBits-1) + "])\n"
+			if uartBits == 1 {
+				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-uartBits-1) + "])\n"
 			} else {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-queueBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(queueBits)) + "])\n"
+				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-uartBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(uartBits)) + "])\n"
 			}
 
-			for j := 0; j < queueNum; j++ {
+			for j := 0; j < uartNum; j++ {
 				result += "							" + strings.ToUpper(op.getUartName(j)) + " : begin\n"
 				result += "								if (" + strings.ToLower(op.getUartName((j))) + "receiverAck && " + strings.ToLower(op.getUartName(j)) + "receiverRead) begin\n"
 				result += "								     " + strings.ToLower(op.getUartName(j)) + "receiverRead <= #1 1'b0;\n"
@@ -128,8 +128,8 @@ func (op U2r) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 func (op U2r) Assembler(arch *Arch, words []string) (string, error) {
 	opBits := arch.Opcodes_bits()
 	uSo := Uart{}
-	queueNum := arch.Shared_num(uSo.Shr_get_name())
-	queueBits := arch.Shared_bits(uSo.Shr_get_name())
+	uartNum := arch.Shared_num(uSo.Shr_get_name())
+	uartBits := arch.Shared_bits(uSo.Shr_get_name())
 	shortName := uSo.Shortname()
 	romWord := arch.Max_word()
 
@@ -151,13 +151,13 @@ func (op U2r) Assembler(arch *Arch, words []string) (string, error) {
 		return "", Prerror{"Unknown register name " + words[0]}
 	}
 
-	if partial, err := Process_shared(shortName, words[1], queueNum); err == nil {
-		result += zeros_prefix(queueBits, partial)
+	if partial, err := Process_shared(shortName, words[1], uartNum); err == nil {
+		result += zeros_prefix(uartBits, partial)
 	} else {
 		return "", Prerror{err.Error()}
 	}
 
-	for i := opBits + int(arch.R) + queueBits; i < romWord; i++ {
+	for i := opBits + int(arch.R) + uartBits; i < romWord; i++ {
 		result += "0"
 	}
 
@@ -165,13 +165,13 @@ func (op U2r) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op U2r) Disassembler(arch *Arch, instr string) (string, error) {
-	chso := Uart{}
-	queueBits := arch.Shared_bits(chso.Shr_get_name())
-	shortname := chso.Shortname()
+	uSo := Uart{}
+	uartBits := arch.Shared_bits(uSo.Shr_get_name())
+	shortname := uSo.Shortname()
 	regId := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(regId)) + " "
-	stId := get_id(instr[arch.R : int(arch.R)+queueBits])
-	result += shortname + strconv.Itoa(stId)
+	uId := get_id(instr[arch.R : int(arch.R)+uartBits])
+	result += shortname + strconv.Itoa(uId)
 	return result, nil
 }
 
@@ -248,7 +248,7 @@ func (Op U2r) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 }
 func (Op U2r) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
-	result = append(result, "deq::*--type=reg")
+	result = append(result, "fromuart::*--type=reg")
 	result = append(result, "u2r::*--type=reg::*--type=somov--sotype=u")
 	result = append(result, "mov::*--type=reg::*--type=somov--sotype=u")
 	return result
@@ -261,10 +261,10 @@ func (Op U2r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 		soVal := line.Elements[1].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		return line, nil
-	case "deq":
+	case "fromuart":
 		regVal := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		soVal := "q0" // Pull implicitly uses queue 0
+		soVal := "u0" // Fromuart is always u0
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		if regVal != "" && soVal != "" {
 			newLine := new(bmline.BasmLine)
