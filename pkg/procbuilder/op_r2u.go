@@ -47,7 +47,7 @@ func (op R2u) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	// TODO: from here
 
 	result := ""
-	if arch.OnlyOne(op.Op_get_name(), []string{"r2u", "t2r", "q2r", "r2q"}) {
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q", "r2u", "u2r", "k2r"}) {
 		result += "	reg stackqueueSM;\n"
 	}
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2u", "u2r"}) {

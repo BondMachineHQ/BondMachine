@@ -45,7 +45,7 @@ func (op K2r) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	kbdNum := arch.Shared_num(kSo.Shr_get_name())
 
 	result := ""
-	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q", "k2r", "u2r", "r2u"}) {
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q", "r2u", "u2r", "k2r"}) {
 		result += "	reg stackqueueSM;\n"
 	}
 	if arch.OnlyOne(op.Op_get_name(), []string{"k2r"}) {

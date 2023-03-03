@@ -45,7 +45,7 @@ func (op R2t) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	stackNum := arch.Shared_num(stSo.Shr_get_name())
 
 	result := ""
-	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q"}) {
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q", "r2u", "u2r", "k2r"}) {
 		result += "	reg stackqueueSM;\n"
 	}
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2t", "t2r"}) {
