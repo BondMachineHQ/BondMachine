@@ -277,6 +277,7 @@ const (
 	{{- end }}
 
     assign bm_done = (outputs_counter_incr == samples);
+	reg[1:0] send = 2'b00;
 
 	bondmachine bm(.clk(m00_axis_aclk),
 	.reset(!m00_axis_aresetn),
@@ -310,31 +311,41 @@ const (
 			outputs_counter_pointer <= 0;
 			{{- if .Outputs }}
 			{{- range .Outputs }}
-			{{ . }}_received_r = 1'b0;
-			{{ . }}_valid_r = 1'b0;
+			{{ . }}_received_r <= 1'b0;
+			{{ . }}_valid_r <= 1'b0;
 			{{- end }}
 			{{- end }}
         end
         else begin
             if (writes_done && !bm_done) begin
-                
-			{{- if .Inputs }}
-			{{- range $index, $element := .Inputs }}
-			{{ $element }}_r <= stream_data_fifo[outputs_counter+{{ $index }}];
-			{{- end }}
-			{{- end }}
+            
+			if (send == 2'b00) begin
+				send <= 2'b01;
+				{{- if .Inputs }}
+				{{- range $index, $element := .Inputs }}
+				{{ $element }}_r <= stream_data_fifo[outputs_counter+{{ $index }}];
+				{{- end }}
+				{{- end }}
 
-            {{- if .Inputs }}
-			{{- range .Inputs }}
-			{{ . }}_valid_r = 1'b1;
-			{{- end }}
-			{{- end }}
+				{{- if .Inputs }}
+				{{- range .Inputs }}
+				{{ . }}_valid_r <= 1'b1;
+				{{- end }}
+				{{- end }}
+			end
 
+			if (send == 2'b01) begin
+				{{- if .Inputs }}
+				{{- range .Inputs }}
+				{{ . }}_valid_r <= 1'b0;
+				{{- end }}
+				{{- end }}
+			end
 
 			{{- if .Outputs }}
 			{{- $outputsLen := len .Outputs }}
 			{{- range $i, $output := .Outputs }}
-			if ( {{ $output }}_valid && !{{ $output }}_received_r) begin
+			if ( {{ $output }}_valid && !{{ $output }}_received_r && send == 2'b10) begin
 				{{ $output }}_valid_r <= 1'b1;
 				{{ $output }}_received_r <= 1'b1;
 				output_stream_data_fifo[outputs_counter_pointer+{{ $i }}] <= {{ $output }};
@@ -359,19 +370,15 @@ const (
 
 				{{- if .Outputs }}
 				{{- range .Outputs }}
-				{{ . }}_valid_r = 1'b0;
+				{{ . }}_valid_r <= 1'b0;
 				{{- end }}
 				{{- end }}
 
 				outputs_counter_pointer <= outputs_counter_pointer + bmoutputs;
                 outputs_counter_incr <= outputs_counter_incr + 1;
                 outputs_counter <= bminputs*(outputs_counter_incr+1);
-
-				{{- if .Inputs }}
-				{{- range $index, $element := .Inputs }}
-				{{ $element }}_valid_r <= 1'b0;
-				{{- end }}
-				{{- end }}
+				
+				send <= 2'b00;
 
 			end
 			else if(
