@@ -340,6 +340,8 @@ const (
 				{{ . }}_valid_r <= 1'b0;
 				{{- end }}
 				{{- end }}
+
+				send <= 2'b10;
 			end
 
 			{{- if .Outputs }}
