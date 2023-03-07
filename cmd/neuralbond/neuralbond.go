@@ -23,6 +23,7 @@ var configFile = flag.String("config-file", "", "JSON description of the net con
 var bmInfoFile = flag.String("bminfo-file", "", "JSON description of the BondMachine abstraction")
 
 var operatingMode = flag.String("operating-mode", "romcode", "Operating mode: romcode, fragment")
+var iomode = flag.String("io-mode", "async", "IO mode: async, sync")
 
 func init() {
 	flag.Parse()
@@ -105,6 +106,15 @@ func main() {
 
 	if err := net.Init(config); err != nil {
 		panic(err)
+	}
+
+	switch *iomode {
+	case "async":
+		net.IOMode = neuralbond.ASYNC
+	case "sync":
+		net.IOMode = neuralbond.SYNC
+	default:
+		panic("Unknown IO mode")
 	}
 
 	net.Normalize()

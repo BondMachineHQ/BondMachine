@@ -206,7 +206,18 @@ func fragmentComposer(bi *BasmInstance) error {
 			newSection.sectionBody = new(bmline.BasmBody)
 
 			newSection.sectionBody.BasmMeta = newSection.sectionBody.BasmMeta.SetMeta("entry", "0")
-			newSection.sectionBody.BasmMeta = newSection.sectionBody.BasmMeta.SetMeta("iomode", "async")
+			switch bi.global.BasmMeta.GetMeta("iomode") {
+			case "sync":
+				newSection.sectionBody.BasmMeta = newSection.sectionBody.BasmMeta.SetMeta("iomode", "sync")
+			case "async":
+				newSection.sectionBody.BasmMeta = newSection.sectionBody.BasmMeta.SetMeta("iomode", "async")
+			default:
+				if bi.global.BasmMeta.GetMeta("iomode") == "" {
+					newSection.sectionBody.BasmMeta = newSection.sectionBody.BasmMeta.SetMeta("iomode", "async")
+				} else {
+					return fmt.Errorf("wrong iomode")
+				}
+			}
 			newSection.sectionBody.Lines = make([]*bmline.BasmLine, 0)
 
 			newLineE := new(bmline.BasmLine)

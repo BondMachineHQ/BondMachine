@@ -15,12 +15,18 @@ const (
 	FRAGMENT
 )
 
+const (
+	ASYNC = uint8(0) + iota
+	SYNC
+)
+
 type TrainedNet struct {
 	Nodes         []Node
 	Weights       []Weight
 	Neurons       map[string]*Neuron
 	NetConfig     *Config
 	RegisterSize  int
+	IOMode        uint8
 	OperatingMode uint8
 }
 
@@ -135,6 +141,12 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 	c := n.NetConfig
 	regSize := n.RegisterSize
 	result := fmt.Sprintf("%%meta bmdef     global registersize:%d\n", regSize)
+	switch n.IOMode {
+	case ASYNC:
+		result += fmt.Sprintf("%%meta bmdef     global iomode:async\n")
+	case SYNC:
+		result += fmt.Sprintf("%%meta bmdef     global iomode:sync\n")
+	}
 	switch n.OperatingMode {
 	case ROMCODE:
 		for _, node := range n.Nodes {
