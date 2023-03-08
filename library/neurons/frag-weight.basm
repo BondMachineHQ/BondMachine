@@ -1,4 +1,4 @@
 %fragment weight template:true resin:r0 resout:r0
 	rset r1,{{.Params.weight}}
-	multf	r0, r1
+	{{.Params.multop}}	r0, r1
 %endfragment

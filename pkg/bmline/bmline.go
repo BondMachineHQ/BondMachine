@@ -21,6 +21,18 @@ type BasmElement struct {
 	string
 }
 
+type ByName []*BasmElement
+
+func (s ByName) Len() int {
+	return len(s)
+}
+func (s ByName) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s ByName) Less(i, j int) bool {
+	return s[i].string < s[j].string
+}
+
 func (be *BasmElement) SetValue(val string) {
 	if be != nil {
 		be.string = val

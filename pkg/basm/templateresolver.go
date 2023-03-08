@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"text/template"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 )
 
 type templateData struct {
@@ -63,6 +66,8 @@ func createBasicTemplateData() *templateData {
 func templateResolver(bi *BasmInstance) error {
 
 	// Computing which CP needs a templated version of the code
+	sort.Sort(bmline.ByName(bi.cps))
+
 	for _, cp := range bi.cps {
 
 		if cp.GetMeta("templated") == "true" {

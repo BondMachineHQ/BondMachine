@@ -1603,6 +1603,9 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				result += "\toutput [31:0] A_DVDR_PL2PS,\n"
 				result += "\toutput [31:0] A_changes,\n"
 				result += "\tinput [31:0] A_states,\n"
+
+				sort.Strings(onames)
+
 				for _, oname := range onames {
 					for i := 0; i < bmach.Outputs; i++ {
 						ooname := Get_output_name(i)
@@ -1613,6 +1616,8 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 						}
 					}
 				}
+
+				sort.Strings(inames)
 
 				for _, iname := range inames {
 					for i := 0; i < bmach.Inputs; i++ {

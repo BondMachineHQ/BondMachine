@@ -247,7 +247,20 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 			weightFI := fmt.Sprintf("weightfi_%d_%d__%d_%d", weight.Layer-1, weight.PosPrevLayer, weight.Layer, weight.PosCurrLayer)
 			downNode := fmt.Sprintf("node_%d_%d", weight.Layer-1, weight.PosPrevLayer)
 			upNode := fmt.Sprintf("node_%d_%d", weight.Layer, weight.PosCurrLayer)
-			result += fmt.Sprintf("%%meta fidef %s fragment:weight, weight:0f%f\n", weightFI, weight.Value)
+			result += fmt.Sprintf("%%meta fidef %s fragment:weight", weightFI)
+			for _, param := range n.Neurons["weight"].Params {
+				switch param {
+				case "weight":
+					result += fmt.Sprintf(", weight:0f%f", weight.Value)
+				default:
+					if value, ok := c.Params[param]; ok {
+						result += fmt.Sprintf(", %s:%s", param, value)
+					} else {
+						return "", errors.New("Unknown parameter " + param)
+					}
+					result += "\n"
+				}
+			}
 			c.List[weightFI] = "weight"
 			result += fmt.Sprintf("%%meta filinkdef up%s type:fi\n", weightFI)
 			result += fmt.Sprintf("%%meta filinkdef down%s type:fi\n", weightFI)
