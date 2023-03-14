@@ -30,6 +30,7 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 	var bmapiAuxOutDir string
 	var bmapiPackageName string
 	var bmapiModuleName string
+	var bmapiGenerateExample string
 
 	var bmapiParams map[string]string
 
@@ -90,6 +91,12 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 				bmapiModuleName = val
 			} else {
 				return errors.New("Missing bmapi modulename")
+			}
+
+			if val, ok := bmapiParams["bmapi_generate_example"]; ok {
+				bmapiGenerateExample = val
+			} else {
+				return errors.New("Missing bmapi generate example")
 			}
 
 			break
@@ -186,7 +193,46 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 
 			f.Close()
 		}
-		fmt.Println(bmapiFramework)
+
+		switch bmapiLanguage {
+		case "python":
+			switch bmapiFramework {
+			case "pynq":
+				if bmapiGenerateExample != "" {
+					if _, err := os.Stat(bmapiLibOutDir); os.IsNotExist(err) {
+						os.Mkdir(bmapiLibOutDir, 0700)
+					} else {
+						return errors.New("BMAPI liboutdir already exists")
+					}
+
+					// Compiling the data for the templates
+					bmapiExample := bmach.createBasicTemplateData()
+
+					exFiles := make(map[string]string)
+					exFiles[bmapiGenerateExample] = axistPynqExample
+
+					for file, temp := range exFiles {
+						t, err := template.New(file).Parse(temp)
+						if err != nil {
+							return err
+						}
+
+						f, err := os.Create(bmapiLibOutDir + "/" + file)
+						if err != nil {
+							return err
+						}
+
+						err = t.Execute(f, bmapiExample)
+						if err != nil {
+							return err
+						}
+
+						f.Close()
+					}
+				}
+			}
+		}
+
 	case "aximm":
 
 		// This is the generation of the Linux kernel module

@@ -15,17 +15,18 @@ type UartTemplate struct {
 }
 
 type BMAPIExtra struct {
-	Maps          *IOmap
-	Language      string
-	Flavor        string // "uartusb" or "aximm" or "axist"
-	FlavorVersion string
-	Framework     string // "pynq" or ""
-	LibOutDir     string
-	ModOutDir     string
-	AuxOutDir     string
-	PackageName   string
-	ModuleName    string
-	Rsize         uint8
+	Maps            *IOmap
+	Language        string
+	Flavor          string // "uartusb" or "aximm" or "axist"
+	FlavorVersion   string
+	Framework       string // "pynq" or ""
+	LibOutDir       string
+	ModOutDir       string
+	AuxOutDir       string
+	PackageName     string
+	ModuleName      string
+	GenerateExample string
+	Rsize           uint8
 }
 
 func (sl *BMAPIExtra) Get_Name() string {
@@ -45,6 +46,7 @@ func (sl *BMAPIExtra) Get_Params() *ExtraParams {
 	result.Params["bmapi_modoutdir"] = sl.ModOutDir
 	result.Params["bmapi_packagename"] = sl.PackageName
 	result.Params["bmapi_modulename"] = sl.ModuleName
+	result.Params["bmapi_generate_example"] = sl.GenerateExample
 
 	result.Params["inputs"] = ""
 	result.Params["outputs"] = ""

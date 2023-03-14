@@ -1,0 +1,7 @@
+package bondmachine
+
+const (
+	aximmPynqExample = `
+
+`
+)

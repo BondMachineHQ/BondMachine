@@ -139,6 +139,7 @@ var bmapiModOutDir = flag.String("bmapi-modoutdir", "", "Output directory for th
 var bmapiAuxOutDir = flag.String("bmapi-auxoutdir", "", "Output directory for the BMAPI auxiliary material.")
 var bmapiPackageName = flag.String("bmapi-packagename", "", "GO package name.")
 var bmapiModuleName = flag.String("bmapi-modulename", "", "GO module name.")
+var bmapiGenerateExample = flag.String("bmapi-generate-example", "", "Generate an example program using the BMAPI.")
 
 var board_slow = flag.Bool("board-slow", false, "Board slow support")
 var board_slow_factor = flag.Int("board-slow-factor", 1, "Board slow factor")
@@ -478,6 +479,7 @@ func main() {
 				bmapi.AuxOutDir = *bmapiAuxOutDir
 				bmapi.ModuleName = *bmapiModuleName
 				bmapi.PackageName = *bmapiPackageName
+				bmapi.GenerateExample = *bmapiGenerateExample
 
 				bmAPIMap := new(bondmachine.IOmap)
 				if *bmapiMapfile != "" {
