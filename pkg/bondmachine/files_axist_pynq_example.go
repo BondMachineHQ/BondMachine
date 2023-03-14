@@ -148,7 +148,47 @@ const (
     "print(\"median:            \", ms_median, \" ms\")\n",
     "print(\"median time for a sample: \", statistics.median(inference_times)/BATCH_SIZE, \" ms\")"
    ]
-  }
+  },
+  {
+    "cell_type": "code",
+    "execution_count": 923,
+    "metadata": {},
+    "outputs": [],
+    "source": [
+     "import struct\n",
+     "results_to_dump = []\n",
+     "\n",
+     "for outcome in outputs:\n",
+     "    for out in outcome:\n",
+     "        \n",
+     "        bin_str = bin(out[0])[2:].zfill(32)\n",
+     "        byte_str = int(bin_str, 2).to_bytes(4, byteorder='big')\n",
+     "        prob_0_float_value = struct.unpack('>f', byte_str)[0]\n",
+     "        \n",
+     "        bin_str = bin(out[1])[2:].zfill(32)\n",
+     "        byte_str = int(bin_str, 2).to_bytes(4, byteorder='big')\n",
+     "        prob_1_float_value = struct.unpack('>f', byte_str)[0]\n",
+     "        \n",
+     "        classification = np.argmax([prob_0_float_value, prob_1_float_value])\n",
+     "        results_to_dump.append([prob_0_float_value, prob_1_float_value, classification, out[2]])"
+    ]
+   },
+   {
+    "cell_type": "code",
+    "execution_count": 924,
+    "metadata": {},
+    "outputs": [],
+    "source": [
+     "project_name  = \"proj_zedboard_axist_mlinfn_expanded20\"\n",
+     "import csv\n",
+     "fields = ['probability_0', 'probability_1', 'classification', 'clock_cycles'] \n",
+     "\n",
+     "with open(project_name+\".csv\", 'w') as f:\n",
+     "    write = csv.writer(f)\n",
+     "    write.writerow(fields)\n",
+     "    write.writerows(results_to_dump)"
+    ]
+   }
  ],
  "metadata": {
   "kernelspec": {
