@@ -333,21 +333,34 @@ const (
 				{{- end }}
 				{{- end }}
 			end
+			else if (send == 2'b01) begin
+			    if (
+					{{- if .Inputs }}
+					{{- $InputsLen := len .Inputs }}
+					{{- range $i, $input := .Inputs }}
+					{{- if eq (inc $i) $InputsLen }}
+					{{ $input }}_received
+					{{- else }}
+					{{ $input }}_received &&
+					{{- end }}
+					{{- end }}
+					{{- end }}
+				) begin
+					{{- if .Inputs }}
+					{{- range .Inputs }}
+					{{ . }}_valid_r <= 1'b0;
+					{{- end }}
+					{{- end }}
 
-			if (send == 2'b01) begin
-				{{- if .Inputs }}
-				{{- range .Inputs }}
-				{{ . }}_valid_r <= 1'b0;
-				{{- end }}
-				{{- end }}
-
-				send <= 2'b10;
+					send <= 2'b10;
+				end
 			end
+			else if (send == 2'b10) begin
 
 			{{- if .Outputs }}
 			{{- $outputsLen := len .Outputs }}
 			{{- range $i, $output := .Outputs }}
-			if ( {{ $output }}_valid && !{{ $output }}_received_r && send == 2'b10) begin
+			if ( {{ $output }}_valid && !{{ $output }}_received_r) begin
 				{{ $output }}_valid_r <= 1'b1;
 				{{ $output }}_received_r <= 1'b1;
 				output_stream_data_fifo[outputs_counter_pointer+{{ $i }}] <= {{ $output }};
@@ -401,6 +414,7 @@ const (
 					{{ . }}_received_r <= 1'b0;
 				{{- end }}
 				{{- end }}
+			end
 			end
 			end
 	    end
