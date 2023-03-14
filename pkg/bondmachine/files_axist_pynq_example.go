@@ -122,7 +122,7 @@ const (
     "inference_times = []\n",
     "for i in range(0, len(batches)):\n",
     "    input_buffer = allocate(shape=INPUT_SHAPE, dtype=np.float32)\n",
-    "    output_buffer = allocate(shape=OUTPUT_SHAPE, dtype=np.float32)\n",
+    "    output_buffer = allocate(shape=OUTPUT_SHAPE, dtype=np.int32)\n",
     "    input_buffer[:]=batches[i]\n",
     "    start_time = datetime.now()\n",
     "    sendchannel.transfer(input_buffer)\n",
@@ -179,7 +179,6 @@ const (
     "metadata": {},
     "outputs": [],
     "source": [
-     "project_name  = \"proj_zedboard_axist_mlinfn_expanded20\"\n",
      "import csv\n",
      "fields = ['probability_0', 'probability_1', 'classification', 'clock_cycles'] \n",
      "\n",
