@@ -1,0 +1,7 @@
+package bmanalysis
+
+const (
+	notebook = `
+
+`
+)
