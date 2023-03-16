@@ -5,23 +5,16 @@ import (
 	"testing"
 )
 
-func TestStack(t *testing.T) {
-	s := CreateBasicStack()
-	s.DataSize = 32
-	s.Depth = 8
-	s.MemType = "FIFO"
-	s.Senders = []string{"sender1", "sender2"}
-	s.Receivers = []string{"receiver1"}
+func TestNotebookGeneration(t *testing.T) {
+	s := CreateAnalysisTemplate()
+	s.ProjectLists = []string{"proj_zedboard_1", "proj_zedboard_2"}
 
-	// s.SaveJSON("stack.json")
-	// s.LoadJSON("stack.json")
-
-	f, err := os.Create("stack.v")
+	f, err := os.Create("test.ipynb")
 	if err != nil {
 		t.Error(err)
 	}
 	defer f.Close()
-	if r, err := s.WriteHDL(); err != nil {
+	if r, err := s.WritePython(); err != nil {
 		t.Error(err)
 	} else {
 		f.WriteString(r)
