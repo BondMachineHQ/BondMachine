@@ -72,9 +72,9 @@ const (
 			"outputs": [],
 			"source": [
 			 "def load_run(runname):\n",
-			 "    rundata=pd.read_csv(runname+'.csv')\n",
+			 "    rundata=pd.read_csv(runname+'_predictions.csv')\n",
 			 "    \n",
-			 "    with open(runname+'.json') as f:\n",
+			 "    with open(runname+'_report.json') as f:\n",
 			 "        runinfo=json.load(f)\n",
 			 "\n",
 			 "    if 'clock_freq' in runinfo:\n",
@@ -110,7 +110,7 @@ const (
 			 "\n",
 			 "        ax[2].set_title(\"BondMachine diagram\")\n",
 			 "        ax[2].set_axis_off()\n",
-			 "        img = mpimg.imread(runname+'.png')\n",
+			 "        img = mpimg.imread(runname+'_image.png')\n",
 			 "        ax[2].imshow(img)\n",
 			 "        \n",
 			 "    else:\n",
@@ -235,7 +235,7 @@ const (
 			"metadata": {},
 			"outputs": [],
 			"source": [
-			 "expanded_{{ . }}=load_run(\"expanded_{{ . }}\")"
+			 "{{ . }}=load_run(\"{{ . }}\")"
 			]
 		},
 		{{- end }}
@@ -247,7 +247,7 @@ const (
 			"metadata": {},
 			"outputs": [],
 			"source": [
-			 "analyze([{{- if .ProjectsList }} {{- $projectLen := len .ProjectsList }} {{- range $i, $project := .ProjectsList }} {{- if eq (inc $i) $projectLen }} expanded_{{ $project }} {{- else }} expanded_{{ $project }}, {{- end }} {{- end }} {{- end }}])"
+			 "analyze([{{- if .ProjectsList }} {{- $projectLen := len .ProjectsList }} {{- range $i, $project := .ProjectsList }} {{- if eq (inc $i) $projectLen }} {{ $project }} {{- else }} {{ $project }}, {{- end }} {{- end }} {{- end }}],{{ .PivotRun }})"
 			]
 		},
 		{

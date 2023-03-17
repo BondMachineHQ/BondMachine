@@ -122,7 +122,7 @@ const (
     "inference_times = []\n",
     "for i in range(0, len(batches)):\n",
     "    input_buffer = allocate(shape=INPUT_SHAPE, dtype=np.float32)\n",
-    "    output_buffer = allocate(shape=OUTPUT_SHAPE, dtype=np.int32)\n",
+    "    output_buffer = allocate(shape=OUTPUT_SHAPE, dtype=np.uint32)\n",
     "    input_buffer[:]=batches[i]\n",
     "    start_time = datetime.now()\n",
     "    sendchannel.transfer(input_buffer)\n",
