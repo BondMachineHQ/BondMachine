@@ -21,7 +21,10 @@ func main() {
 
 	if *projectsList != "" {
 		for _, project := range strings.Split(*projectsList, ",") {
-			bmanalysis.ProjectsList = append(bmanalysis.ProjectsList, project)
+			projectT := strings.TrimSpace(project)
+			if projectT != "" {
+				bmanalysis.ProjectsList = append(bmanalysis.ProjectsList, projectT)
+			}
 		}
 	} else {
 		log.Fatal("No project lists specified")
