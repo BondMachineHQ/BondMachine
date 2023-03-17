@@ -6,7 +6,7 @@ const (
 		"cells": [
 		 {
 		  "cell_type": "code",
-		  "execution_count": 9,
+		  "execution_count": null,
 		  "id": "6293e6e8-1433-4161-9e04-6c3d670b0e8c",
 		  "metadata": {},
 		  "outputs": [],
@@ -18,7 +18,7 @@ const (
 		 },
 		{
 			"cell_type": "code",
-			"execution_count": 17,
+			"execution_count": null,
 			"id": "ff7dc30b-f076-446f-977d-5534a4120f20",
 			"metadata": {},
 			"outputs": [],
@@ -33,7 +33,7 @@ const (
 		},
 		{
 			"cell_type": "code",
-			"execution_count": 18,
+			"execution_count": null,
 			"id": "1cf6e3c0-5f9f-48ac-99c5-a074ffc955a0",
 			"metadata": {},
 			"outputs": [],
@@ -66,7 +66,7 @@ const (
 		},
 		{
 			"cell_type": "code",
-			"execution_count": 122,
+			"execution_count": null,
 			"id": "c9269fa0-2479-47ee-a261-1981ab82ddf2",
 			"metadata": {},
 			"outputs": [],
@@ -130,7 +130,7 @@ const (
 		},
 		{
 			"cell_type": "code",
-			"execution_count": 216,
+			"execution_count": null,
 			"id": "5d8e2b9f-f5d0-41b7-9a44-e46f5e1462b8",
 			"metadata": {},
 			"outputs": [],
@@ -178,7 +178,7 @@ const (
 		},
 		   {
 			"cell_type": "code",
-			"execution_count": 217,
+			"execution_count": null,
 			"id": "ddcd0fd8-3352-437b-8560-aa4865c2aeeb",
 			"metadata": {},
 			"outputs": [],
@@ -204,7 +204,7 @@ const (
 		},
 		   {
 			"cell_type": "code",
-			"execution_count": 234,
+			"execution_count": null,
 			"id": "3fdf043c-fba9-41bf-ad47-11b2cbcb9454",
 			"metadata": {},
 			"outputs": [],
@@ -226,22 +226,11 @@ const (
 			 "#     runplot(runs, pivot_run, \"cps\", \"power\", \"Power consumption (cps vs power)\")"
 			]
 		   },
-		   {
-			"cell_type": "code",
-			"execution_count": 226,
-			"id": "a2f43b12-5cf2-4e63-b646-c525a573adc9",
-			"metadata": {},
-			"outputs": [],
-			"source": [
-			 "soft=load_run(\"sw\")\n",
-			 "sim=load_run(\"sim\")"
-			]
-		},
-		{{- if .ProjectLists }}
-    	{{- range .ProjectLists }}
+		{{- if .ProjectsList }}
+    	{{- range .ProjectsList }}
 		{
 			"cell_type": "code",
-			"execution_count": 232,
+			"execution_count": null,
 			"id": "976bd531-2a31-4a80-b1d9-0cc7f4cc9ce8",
 			"metadata": {},
 			"outputs": [],
@@ -253,12 +242,12 @@ const (
     	{{- end }}
 		{
 			"cell_type": "code",
-			"execution_count": 250,
+			"execution_count": null,
 			"id": "42a2b462-4534-4475-83d4-cb691c758894",
 			"metadata": {},
 			"outputs": [],
 			"source": [
-			 "analyze([soft, sim {{- if .ProjectLists }} {{- range .ProjectLists }},expanded_{{ . }} {{- end }} {{- end }}],0)"
+			 "analyze([{{- if .ProjectsList }} {{- $projectLen := len .ProjectsList }} {{- range $i, $project := .ProjectsList }} {{- if eq (inc $i) $projectLen }} expanded_{{ $project }} {{- else }} expanded_{{ $project }}, {{- end }} {{- end }} {{- end }}])"
 			]
 		},
 		{

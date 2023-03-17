@@ -7,7 +7,8 @@ import (
 
 func TestNotebookGeneration(t *testing.T) {
 	s := CreateAnalysisTemplate()
-	s.ProjectLists = []string{"proj_zedboard_1", "proj_zedboard_2"}
+	s.ProjectsList = []string{"proj_zedboard_1", "proj_zedboard_2"}
+	s.PivotRun = 0;
 
 	f, err := os.Create("test.ipynb")
 	if err != nil {
