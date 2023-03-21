@@ -16,7 +16,7 @@ type FloPoCo struct {
 	instructions map[string]string
 }
 
-func (d FloPoCo) getName() string {
+func (d FloPoCo) GetName() string {
 	return d.floPoCoName
 }
 
@@ -37,11 +37,11 @@ func (d FloPoCo) importMatchers() map[string]ImportFunc {
 }
 
 func (d FloPoCo) Convert(n *BMNumber) error {
-	convertFrom := n.nType.getName()
+	convertFrom := n.nType.GetName()
 
 	switch convertFrom {
 	default:
-		return errors.New("cannot convert from " + convertFrom + " to " + d.getName())
+		return errors.New("cannot convert from " + convertFrom + " to " + d.GetName())
 	}
 	return nil
 }
@@ -53,9 +53,9 @@ func floPoCoImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 	e, _ := strconv.Atoi(es)
 	f, _ := strconv.Atoi(fs)
 	i := make(map[string]string)
-	i["multop"] = "fplmulte" + es + "f" + fs
-	i["addop"] = "fpladdfe" + es + "f" + fs
-	i["divop"] = "fpldivfe" + es + "f" + fs
+	i["multop"] = "multflpe" + es + "f" + fs
+	i["addop"] = "addflpe" + es + "f" + fs
+	i["divop"] = "divflpe" + es + "f" + fs
 
 	EventuallyCreateType("flpe"+es+"f"+fs, nil)
 

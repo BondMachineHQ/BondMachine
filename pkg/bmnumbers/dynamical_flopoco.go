@@ -26,9 +26,9 @@ func (d DynFloPoCo) CreateType(name string, param interface{}) (BMNumberType, er
 		e, _ := strconv.Atoi(es)
 		f, _ := strconv.Atoi(fs)
 		i := make(map[string]string)
-		i["multop"] = "fplmulte" + es + "f" + fs
-		i["addop"] = "fpladdfe" + es + "f" + fs
-		i["divop"] = "fpldivfe" + es + "f" + fs
+		i["multop"] = "multflpe" + es + "f" + fs
+		i["addop"] = "addflpe" + es + "f" + fs
+		i["divop"] = "divflpe" + es + "f" + fs
 		return FloPoCo{floPoCoName: name, e: e, f: f, instructions: i}, nil
 	}
 

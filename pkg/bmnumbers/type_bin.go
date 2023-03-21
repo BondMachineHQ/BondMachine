@@ -8,7 +8,7 @@ import (
 
 type Bin struct{}
 
-func (d Bin) getName() string {
+func (d Bin) GetName() string {
 	return "bin"
 }
 
@@ -30,11 +30,11 @@ func (d Bin) importMatchers() map[string]ImportFunc {
 }
 
 func (d Bin) Convert(n *BMNumber) error {
-	convertFrom := n.nType.getName()
+	convertFrom := n.nType.GetName()
 
 	switch convertFrom {
 	default:
-		return errors.New("cannot convert from " + convertFrom + " to " + d.getName())
+		return errors.New("cannot convert from " + convertFrom + " to " + d.GetName())
 	}
 	return nil
 }

@@ -13,7 +13,7 @@ func EventuallyCreateType(name string, param interface{}) (bool, error) {
 	for _, dyn := range AllDynamicalTypes {
 		if dyn.MatchName(name) {
 			for _, op := range AllTypes {
-				if op.getName() == name {
+				if op.GetName() == name {
 					return false, nil
 				}
 			}

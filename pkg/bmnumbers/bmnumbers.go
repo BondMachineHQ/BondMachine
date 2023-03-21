@@ -9,7 +9,7 @@ import (
 type ImportFunc func(*regexp.Regexp, string) (*BMNumber, error)
 
 type BMNumberType interface {
-	getName() string
+	GetName() string
 	getInfo() string
 	getSize() int
 	importMatchers() map[string]ImportFunc
@@ -52,13 +52,13 @@ func init() {
 
 func ListTypes() {
 	for _, t := range AllTypes {
-		fmt.Println(t.getName())
+		fmt.Println(t.GetName())
 	}
 }
 
 func GetType(name string) BMNumberType {
 	for _, t := range AllTypes {
-		if t.getName() == name {
+		if t.GetName() == name {
 			return t
 		}
 	}
@@ -71,7 +71,7 @@ func OverrideType(n *BMNumber, t BMNumberType) error {
 	}
 
 	if t.getSize() != -1 && t.getSize() != n.bits {
-		return errors.New("Cannot override number of type " + n.nType.getName() + " with type " + t.getName() + " because they have different sizes")
+		return errors.New("Cannot override number of type " + n.nType.GetName() + " with type " + t.GetName() + " because they have different sizes")
 	}
 
 	n.nType = t

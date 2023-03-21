@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/neuralbond"
 )
 
@@ -13,6 +14,7 @@ var verbose = flag.Bool("v", false, "Verbose")
 var debug = flag.Bool("d", false, "Verbose")
 
 var registerSize = flag.Int("register-size", 32, "Number of bits per register (n-bit)")
+var dataType = flag.String("data-type", "float32", "bmnumbers data types")
 
 var saveBasm = flag.String("save-basm", "", "Create a basm file")
 
@@ -76,6 +78,7 @@ func main() {
 		config.Params = make(map[string]string)
 	}
 
+	// Load or create the Info file
 	config.BMinfo = new(bminfo.BMinfo)
 
 	if *bmInfoFile != "" {
@@ -119,6 +122,38 @@ func main() {
 
 	net.Normalize()
 
+	if *dataType != "" {
+		found := false
+		for _, tpy := range bmnumbers.AllTypes {
+			if tpy.GetName() == *dataType {
+				for opType, opName := range tpy.ShowInstructions() {
+					config.Params[opType] = opName
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			if created, err := bmnumbers.EventuallyCreateType(*dataType, nil); err == nil {
+				if created {
+					for _, tpy := range bmnumbers.AllTypes {
+						if tpy.GetName() == *dataType {
+							for opType, opName := range tpy.ShowInstructions() {
+								config.Params[opType] = opName
+							}
+							break
+						}
+					}
+				} else {
+					panic("Unknown data type")
+				}
+
+			} else {
+				panic(err)
+			}
+		}
+	}
+
 	if *saveBasm != "" {
 		if basmFile, err := net.WriteBasm(); err == nil {
 			ioutil.WriteFile(*saveBasm, []byte(basmFile), 0644)
@@ -128,11 +163,22 @@ func main() {
 	}
 
 	if *bmInfoFile != "" {
-		// Write the config file
+		// Write the info file
 		if bmInfoFileJSON, err := json.MarshalIndent(config.BMinfo, "", "  "); err == nil {
 			ioutil.WriteFile(*bmInfoFile, bmInfoFileJSON, 0644)
 		} else {
 			panic(err)
 		}
 	}
+
+	config.BMinfo = nil
+	if *configFile != "" {
+		// Write the eventually updated config file
+		if configFileJSON, err := json.MarshalIndent(config, "", "  "); err == nil {
+			ioutil.WriteFile(*configFile, configFileJSON, 0644)
+		} else {
+			panic(err)
+		}
+	}
+
 }

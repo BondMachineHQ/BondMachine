@@ -8,7 +8,7 @@ import (
 
 type Unsigned struct{}
 
-func (d Unsigned) getName() string {
+func (d Unsigned) GetName() string {
 	return "unsigned"
 }
 
@@ -31,11 +31,11 @@ func (d Unsigned) importMatchers() map[string]ImportFunc {
 }
 
 func (d Unsigned) Convert(n *BMNumber) error {
-	convertFrom := n.nType.getName()
+	convertFrom := n.nType.GetName()
 
 	switch convertFrom {
 	default:
-		return errors.New("cannot convert from " + convertFrom + " to " + d.getName())
+		return errors.New("cannot convert from " + convertFrom + " to " + d.GetName())
 	}
 	return nil
 }

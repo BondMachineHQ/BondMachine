@@ -9,7 +9,7 @@ import (
 
 type Float32 struct{}
 
-func (d Float32) getName() string {
+func (d Float32) GetName() string {
 	return "float32"
 }
 
@@ -30,11 +30,11 @@ func (d Float32) importMatchers() map[string]ImportFunc {
 }
 
 func (d Float32) Convert(n *BMNumber) error {
-	convertFrom := n.nType.getName()
+	convertFrom := n.nType.GetName()
 
 	switch convertFrom {
 	default:
-		return errors.New("cannot convert from " + convertFrom + " to " + d.getName())
+		return errors.New("cannot convert from " + convertFrom + " to " + d.GetName())
 	}
 	return nil
 }
