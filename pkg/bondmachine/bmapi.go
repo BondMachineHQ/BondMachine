@@ -529,7 +529,7 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 					}
 				}
 			}
-		}
+		
 		default:
 			return errors.New("unimplemented language")
 		}
