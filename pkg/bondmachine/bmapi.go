@@ -492,6 +492,44 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 
 				f.Close()
 			}
+
+		case "python":
+			switch bmapiFramework {
+			case "pynq":
+				if bmapiGenerateExample != "" {
+					if _, err := os.Stat(bmapiLibOutDir); os.IsNotExist(err) {
+						os.Mkdir(bmapiLibOutDir, 0700)
+					} else {
+						return errors.New("BMAPI liboutdir already exists")
+					}
+
+					// Compiling the data for the templates
+					bmapiExample := bmach.createBasicTemplateData()
+
+					exFiles := make(map[string]string)
+					exFiles[bmapiGenerateExample] = aximmPynqExample
+
+					for file, temp := range exFiles {
+						t, err := template.New(file).Parse(temp)
+						if err != nil {
+							return err
+						}
+
+						f, err := os.Create(bmapiLibOutDir + "/" + file)
+						if err != nil {
+							return err
+						}
+
+						err = t.Execute(f, bmapiExample)
+						if err != nil {
+							return err
+						}
+
+						f.Close()
+					}
+				}
+			}
+		}
 		default:
 			return errors.New("unimplemented language")
 		}
