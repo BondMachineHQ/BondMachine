@@ -126,3 +126,7 @@ func (d Bin) ShowInstructions() map[string]string {
 	result["addop"] = "add"
 	return result
 }
+
+func (d Bin) ShowPrefix() string {
+	return "0b"
+}

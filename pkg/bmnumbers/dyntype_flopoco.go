@@ -31,7 +31,7 @@ func (d FloPoCo) getSize() int {
 func (d FloPoCo) importMatchers() map[string]ImportFunc {
 	result := make(map[string]ImportFunc)
 
-	result["^0flp<(?P<e>[0-9]+),(?P<f>[0-9]+)>(?P<number>.+)$"] = floPoCoImport
+	result["^0flp<(?P<e>[0-9]+)\\.(?P<f>[0-9]+)>(?P<number>.+)$"] = floPoCoImport
 
 	return result
 }
@@ -119,4 +119,8 @@ func (d FloPoCo) ExportString(n *BMNumber) (string, error) {
 
 func (d FloPoCo) ShowInstructions() map[string]string {
 	return d.instructions
+}
+
+func (d FloPoCo) ShowPrefix() string {
+	return "0flp<" + strconv.Itoa(d.e) + "." + strconv.Itoa(d.f) + ">"
 }

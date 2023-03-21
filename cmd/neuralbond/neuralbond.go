@@ -129,6 +129,8 @@ func main() {
 				for opType, opName := range tpy.ShowInstructions() {
 					config.Params[opType] = opName
 				}
+				config.DataType = *dataType
+				config.TypePrefix = tpy.ShowPrefix()
 				found = true
 				break
 			}
@@ -141,6 +143,8 @@ func main() {
 							for opType, opName := range tpy.ShowInstructions() {
 								config.Params[opType] = opName
 							}
+							config.DataType = *dataType
+							config.TypePrefix = tpy.ShowPrefix()
 							break
 						}
 					}
@@ -151,6 +155,10 @@ func main() {
 			} else {
 				panic(err)
 			}
+		}
+	} else {
+		if config.DataType == "" {
+			panic("No data type specified")
 		}
 	}
 
@@ -171,6 +179,7 @@ func main() {
 		}
 	}
 
+	// Remove the info file from the config prior to saving it
 	config.BMinfo = nil
 	if *configFile != "" {
 		// Write the eventually updated config file

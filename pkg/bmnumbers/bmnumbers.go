@@ -16,6 +16,7 @@ type BMNumberType interface {
 	Convert(*BMNumber) error
 	ExportString(*BMNumber) (string, error)
 	ShowInstructions() map[string]string
+	ShowPrefix() string
 }
 
 // BMNumber is a binary representation of a number as a slice of bytes

@@ -22,6 +22,9 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 			if re.MatchString(arg.GetValue()) {
 				arg.BasmMeta = arg.SetMeta("type", "reg")
 			}
+
+			// TODO Use bmnumbers package
+
 			re = regexp.MustCompile("^[0-9]+$")
 			if re.MatchString(arg.GetValue()) {
 				arg.BasmMeta = arg.SetMeta("type", "number")

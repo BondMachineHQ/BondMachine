@@ -82,3 +82,7 @@ func (d Float32) ShowInstructions() map[string]string {
 	result["addop"] = "addf"
 	return result
 }
+
+func (d Float32) ShowPrefix() string {
+	return "0f"
+}

@@ -69,3 +69,7 @@ func (d Unsigned) ShowInstructions() map[string]string {
 	result["addop"] = "add"
 	return result
 }
+
+func (d Unsigned) ShowPrefix() string {
+	return "0u"
+}

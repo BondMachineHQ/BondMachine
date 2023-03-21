@@ -124,3 +124,7 @@ func (b Hex) ShowInstructions() map[string]string {
 	result["addop"] = "add"
 	return result
 }
+
+func (b Hex) ShowPrefix() string {
+	return "0x"
+}

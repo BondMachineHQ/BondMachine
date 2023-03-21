@@ -32,13 +32,15 @@ type TrainedNet struct {
 
 type Group []string
 type Config struct {
-	Params map[string]string
-	*bminfo.BMinfo
+	DataType      string
+	TypePrefix    string
+	Params        map[string]string
 	Pruned        []string
 	Collapsed     []Group
 	Debug         bool
 	Verbose       bool
 	NeuronLibPath string
+	*bminfo.BMinfo
 }
 
 type Neuron struct {
@@ -85,6 +87,7 @@ func (n *TrainedNet) Init(config *Config) error {
 			n.Neurons[f.Name()[0:len(f.Name())-3]] = neuron
 		}
 	}
+
 	return nil
 }
 
@@ -173,7 +176,7 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 						case "outputs":
 							result += fmt.Sprintf(", outputs:%d", node.Outputs)
 						case "bias":
-							result += fmt.Sprintf(", bias:0f%f", node.Bias)
+							result += fmt.Sprintf(", bias:"+c.TypePrefix+"%f", node.Bias)
 						case "pos":
 							result += fmt.Sprintf(", pos:%d", node.Pos)
 						default:
@@ -193,7 +196,7 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 			weightCP := fmt.Sprintf("weightcp_%d_%d__%d_%d", weight.Layer-1, weight.PosPrevLayer, weight.Layer, weight.PosCurrLayer)
 			downNode := fmt.Sprintf("node_%d_%d", weight.Layer-1, weight.PosPrevLayer)
 			upNode := fmt.Sprintf("node_%d_%d", weight.Layer, weight.PosCurrLayer)
-			result += fmt.Sprintf("%%meta cpdef %s romcode:weight, weight:0f%f\n", weightCP, weight.Value)
+			result += fmt.Sprintf("%%meta cpdef %s romcode:weight, weight:"+c.TypePrefix+"%f\n", weightCP, weight.Value)
 			c.List[weightCP] = "weight"
 			result += fmt.Sprintf("%%meta iodef up%s type:io\n", weightCP)
 			result += fmt.Sprintf("%%meta iodef down%s type:io\n", weightCP)
@@ -227,7 +230,7 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 						case "outputs":
 							result += fmt.Sprintf(", outputs:%d", node.Outputs)
 						case "bias":
-							result += fmt.Sprintf(", bias:0f%f", node.Bias)
+							result += fmt.Sprintf(", bias:"+c.TypePrefix+"%f", node.Bias)
 						case "pos":
 							result += fmt.Sprintf(", pos:%d", node.Pos)
 						default:
@@ -251,7 +254,7 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 			for _, param := range n.Neurons["weight"].Params {
 				switch param {
 				case "weight":
-					result += fmt.Sprintf(", weight:0f%f", weight.Value)
+					result += fmt.Sprintf(", weight:"+c.TypePrefix+"%f", weight.Value)
 				default:
 					if value, ok := c.Params[param]; ok {
 						result += fmt.Sprintf(", %s:%s", param, value)

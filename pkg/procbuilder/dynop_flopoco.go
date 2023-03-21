@@ -266,5 +266,5 @@ func (Op FloPoCo) ExtraFiles(arch *Arch) ([]string, []string) {
 			vHDL = strings.ReplaceAll(vHDL, ent, "cp"+arch.Tag+"_"+ent)
 		}
 	}
-	return []string{Op.floPoCoName + ".vhd"}, []string{vHDL}
+	return []string{"cp" + arch.Tag + "_" + Op.floPoCoName + ".vhd"}, []string{vHDL}
 }
