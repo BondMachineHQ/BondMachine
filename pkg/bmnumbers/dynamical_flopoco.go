@@ -25,7 +25,11 @@ func (d DynFloPoCo) CreateType(name string, param interface{}) (BMNumberType, er
 		fs := re.ReplaceAllString(name, "${f}")
 		e, _ := strconv.Atoi(es)
 		f, _ := strconv.Atoi(fs)
-		return FloPoCo{floPoCoName: name, e: e, f: f}, nil
+		i := make(map[string]string)
+		i["multop"] = "fplmulte" + es + "f" + fs
+		i["addop"] = "fpladdfe" + es + "f" + fs
+		i["divop"] = "fpldivfe" + es + "f" + fs
+		return FloPoCo{floPoCoName: name, e: e, f: f, instructions: i}, nil
 	}
 
 	return nil, errors.New("creation failed")

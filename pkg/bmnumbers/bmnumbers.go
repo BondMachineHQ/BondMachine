@@ -15,6 +15,7 @@ type BMNumberType interface {
 	importMatchers() map[string]ImportFunc
 	Convert(*BMNumber) error
 	ExportString(*BMNumber) (string, error)
+	ShowInstructions() map[string]string
 }
 
 // BMNumber is a binary representation of a number as a slice of bytes

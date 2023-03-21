@@ -63,3 +63,9 @@ func unsignedImportNoSize(re *regexp.Regexp, input string) (*BMNumber, error) {
 func (d Unsigned) ExportString(n *BMNumber) (string, error) {
 	return "", errors.New("not implemented")
 }
+
+func (d Unsigned) ShowInstructions() map[string]string {
+	result := make(map[string]string)
+	result["addop"] = "add"
+	return result
+}

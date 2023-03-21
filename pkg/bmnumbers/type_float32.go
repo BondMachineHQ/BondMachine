@@ -74,3 +74,11 @@ func (d Float32) ExportString(n *BMNumber) (string, error) {
 
 	return "0f<32>" + strconv.FormatFloat(float64(math.Float32frombits(s)), 'f', -1, 32), nil
 }
+
+func (d Float32) ShowInstructions() map[string]string {
+	result := make(map[string]string)
+	result["multop"] = "multf"
+	result["divop"] = "divf"
+	result["addop"] = "addf"
+	return result
+}

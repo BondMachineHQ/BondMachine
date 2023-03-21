@@ -118,3 +118,9 @@ func (b Hex) ExportString(n *BMNumber) (string, error) {
 
 	return "0x<" + bitS + ">" + result, nil
 }
+
+func (b Hex) ShowInstructions() map[string]string {
+	result := make(map[string]string)
+	result["addop"] = "add"
+	return result
+}

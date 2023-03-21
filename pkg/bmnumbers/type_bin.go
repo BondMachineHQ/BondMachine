@@ -120,3 +120,9 @@ func binImportWithSize(re *regexp.Regexp, input string) (*BMNumber, error) {
 func (d Bin) ExportString(n *BMNumber) (string, error) {
 	return n.ExportBinary(true)
 }
+
+func (d Bin) ShowInstructions() map[string]string {
+	result := make(map[string]string)
+	result["addop"] = "add"
+	return result
+}

@@ -10,9 +10,10 @@ import (
 )
 
 type FloPoCo struct {
-	floPoCoName string
-	e           int
-	f           int
+	floPoCoName  string
+	e            int
+	f            int
+	instructions map[string]string
 }
 
 func (d FloPoCo) getName() string {
@@ -51,6 +52,10 @@ func floPoCoImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 	fs := re.ReplaceAllString(input, "${f}")
 	e, _ := strconv.Atoi(es)
 	f, _ := strconv.Atoi(fs)
+	i := make(map[string]string)
+	i["multop"] = "fplmulte" + es + "f" + fs
+	i["addop"] = "fpladdfe" + es + "f" + fs
+	i["divop"] = "fpldivfe" + es + "f" + fs
 
 	EventuallyCreateType("flpe"+es+"f"+fs, nil)
 
@@ -79,7 +84,7 @@ func floPoCoImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 				newNumber := BMNumber{}
 				newNumber.number = make([]byte, (len(binNum)-1)/8+1)
 				newNumber.bits = len(binNum)
-				newNumber.nType = FloPoCo{floPoCoName: "flpe" + es + "f" + fs, e: e, f: f}
+				newNumber.nType = FloPoCo{floPoCoName: "flpe" + es + "f" + fs, e: e, f: f, instructions: i}
 
 				for i := 0; ; i++ {
 
@@ -110,4 +115,8 @@ func floPoCoImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 
 func (d FloPoCo) ExportString(n *BMNumber) (string, error) {
 	return "", errors.New("export not implemented")
+}
+
+func (d FloPoCo) ShowInstructions() map[string]string {
+	return d.instructions
 }
