@@ -160,7 +160,7 @@ const (
 		   "import csv\n",
 		   "fields = ['probability_0', 'probability_1', 'classification', 'clock_cycles'] \n",
 		   "\n",
-		   "with open(project_name+\".csv\", 'w') as f:\n",
+		   "with open(\"predictions.csv\", 'w') as f:\n",
 		   "    write = csv.writer(f)\n",
 		   "    write.writerow(fields)\n",
 		   "    write.writerows(results_to_dump)"
