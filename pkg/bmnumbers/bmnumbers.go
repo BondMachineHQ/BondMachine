@@ -66,6 +66,10 @@ func GetType(name string) BMNumberType {
 	return nil
 }
 
+func (n *BMNumber) GetTypeName() string {
+	return n.nType.GetName()
+}
+
 func OverrideType(n *BMNumber, t BMNumberType) error {
 	if n == nil || n.number == nil {
 		return errors.New("Cannot override type of nil number")

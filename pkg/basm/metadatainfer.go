@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 )
@@ -23,18 +24,17 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 				arg.BasmMeta = arg.SetMeta("type", "reg")
 			}
 
-			// TODO Use bmnumbers package
+			// re = regexp.MustCompile("^[0-9]+$")
+			// if re.MatchString(arg.GetValue()) {
+			// 	arg.BasmMeta = arg.SetMeta("type", "number")
+			// 	arg.BasmMeta = arg.SetMeta("numbertype", "decimal")
+			// }
+			// re = regexp.MustCompile("^0f[+-]?([0-9]*[.])?[0-9]+$")
+			// if re.MatchString(arg.GetValue()) {
+			// 	arg.BasmMeta = arg.SetMeta("type", "number")
+			// 	arg.BasmMeta = arg.SetMeta("numbertype", "float")
+			// }
 
-			re = regexp.MustCompile("^[0-9]+$")
-			if re.MatchString(arg.GetValue()) {
-				arg.BasmMeta = arg.SetMeta("type", "number")
-				arg.BasmMeta = arg.SetMeta("numbertype", "decimal")
-			}
-			re = regexp.MustCompile("^0f[+-]?([0-9]*[.])?[0-9]+$")
-			if re.MatchString(arg.GetValue()) {
-				arg.BasmMeta = arg.SetMeta("type", "number")
-				arg.BasmMeta = arg.SetMeta("numbertype", "float")
-			}
 			re = regexp.MustCompile("^rom:(?P<location>[0-9]+)$")
 			if re.MatchString(arg.GetValue()) {
 				arg.BasmMeta = arg.SetMeta("type", "rom")
@@ -101,6 +101,7 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 					}
 				}
 			}
+
 			for _, soname := range soShortNames {
 				re = regexp.MustCompile("^" + soname + "(?P<index>[0-9]+)$")
 				if re.MatchString(arg.GetValue()) {
@@ -142,8 +143,14 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 					arg.BasmMeta = arg.SetMeta("soaddr", addr)
 				}
 			}
+
+			if bmNumber, err := bmnumbers.ImportString(arg.GetValue()); err == nil {
+				arg.BasmMeta = arg.SetMeta("type", "number")
+				arg.BasmMeta = arg.SetMeta("numbertype", bmNumber.GetTypeName())
+			}
 		}
 	}
+
 	//TODO add more meta data
 	return nil
 }

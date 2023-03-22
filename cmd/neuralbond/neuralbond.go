@@ -131,6 +131,7 @@ func main() {
 				}
 				config.DataType = *dataType
 				config.TypePrefix = tpy.ShowPrefix()
+				config.Params["typeprefix"] = tpy.ShowPrefix()
 				found = true
 				break
 			}
@@ -145,6 +146,7 @@ func main() {
 							}
 							config.DataType = *dataType
 							config.TypePrefix = tpy.ShowPrefix()
+							config.Params["typeprefix"] = tpy.ShowPrefix()
 							break
 						}
 					}
