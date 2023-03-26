@@ -41,7 +41,7 @@ func (i *string_slice) Set(value string) error {
 
 var debug = flag.Bool("d", false, "Debug")
 var verbose = flag.Bool("v", false, "Verbose")
-var commentedverilog = flag.Bool("comment-verilog", false, "Comment generated verilog")
+var commentedVerilog = flag.Bool("comment-verilog", false, "Comment generated verilog")
 
 var register_size = flag.Int("register-size", 8, "Number of bits per register (n-bit)")
 
@@ -81,6 +81,8 @@ var list_bonds = flag.Bool("list-bonds", false, "Bonds list")
 var enumBonds = flag.Bool("enum-bonds", false, "Enumerate all the bonds")
 var add_bond string_slice
 var del_bonds string_slice
+
+var specs = flag.Bool("specs", false, "Show BondMachine specs")
 
 // TODO Shared objects
 var list_shared_objects = flag.Bool("list-shared-objects", false, "Shared object list")
@@ -197,7 +199,7 @@ func main() {
 	conf := new(bondmachine.Config)
 	conf.Debug = *debug
 	conf.Dotdetail = uint8(*dot_detail)
-	conf.CommentedVerilog = *commentedverilog
+	conf.CommentedVerilog = *commentedVerilog
 
 	var bmach *bondmachine.Bondmachine
 
@@ -604,7 +606,8 @@ func main() {
 				}
 			}
 			// TODO Include the check of unbounded processors
-
+		} else if *specs {
+			fmt.Printf (bmach.Specs())
 		} else if *list_inputs {
 			for i, inp := range bmach.List_inputs() {
 				fmt.Printf("%d %s\n", i, inp)
