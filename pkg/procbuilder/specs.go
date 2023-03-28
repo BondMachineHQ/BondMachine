@@ -3,6 +3,7 @@ package procbuilder
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 func (mach *Machine) Specs() string {
@@ -33,5 +34,13 @@ func (mach *Machine) Specs() string {
 		}
 	}
 	result += "    Modes: " + modes + "\n"
+	result += "    ROM Code:\n"
+	code, _ := mach.Disassembler()
+	for i, line := range strings.Split(code, "\n") {
+		if line != "" {
+			bins := mach.Program.Slocs[i]
+			result += "      " + fmt.Sprintf("%03d", i) + " - " + bins + " - " + line + "\n"
+		}
+	}
 	return result
 }
