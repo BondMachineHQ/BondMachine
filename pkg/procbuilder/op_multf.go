@@ -535,6 +535,9 @@ func (Op Multf) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string
 		regSrc := line.Elements[1].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regDst, Op: bmreqs.OpAdd})
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regSrc, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "multf", Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:multf", T: bmreqs.ObjectSet, Name: "destregs", Value: regDst, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:multf", T: bmreqs.ObjectSet, Name: "sourceregs", Value: regSrc, Op: bmreqs.OpAdd})
 		return line, nil
 	}
 	return nil, errors.New("HL Assembly normalize failed")
