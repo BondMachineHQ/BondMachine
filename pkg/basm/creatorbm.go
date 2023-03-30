@@ -60,6 +60,8 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 	cps := make([]*procbuilder.Machine, len(bi.cps))
 	cpIndexes := make(map[string]string)
 
+	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "bm", Value: "cps", Op: bmreqs.OpAdd})
+
 	for i, cp := range bi.cps {
 		if bi.debug {
 			fmt.Print("\t\t" + green("CP: ") + yellow(cp.GetValue()))
@@ -71,6 +73,8 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 		if bi.debug {
 			fmt.Println(" - " + green("rom code: ") + yellow(romCode))
 		}
+
+		bi.rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps", T: bmreqs.ObjectSet, Name: "id", Value: strconv.Itoa(i), Op: bmreqs.OpAdd})
 
 		if cpm, err := bi.CreateConnectingProcessor(rSize, i, romCode); err == nil {
 			cps[i] = cpm
@@ -473,6 +477,8 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
+
+	bi.rg.Clone("/code:romtexts/sections:"+romCode, "/bm:cps/id:"+strconv.Itoa(procid))
 
 	opCodesS := strings.Split(resp.Value, ",")
 

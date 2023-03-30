@@ -74,7 +74,10 @@ func (o *objectSet) getReqs() string {
 
 func (o *objectSet) importReqs(rg *ReqRoot, node string, name string, req string) error {
 	for _, r := range strings.Split(req, ",") {
-		rg.Requirement(ReqRequest{Node: node, T: ObjectSet, Name: name, Value: r, Op: OpAdd})
+		resp := rg.Requirement(ReqRequest{Node: node, T: ObjectSet, Name: name, Value: r, Op: OpAdd})
+		if resp.Error != nil {
+			return resp.Error
+		}
 	}
 	return nil
 }

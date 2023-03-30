@@ -40,12 +40,17 @@ func TestBMReq(t *testing.T) {
 	fmt.Println(rg.Requirement(ReqRequest{Node: "/", Op: OpDump}))
 	//fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", Op: OpDump}))
 
-	var r ExportedReqs
-	r = make([]ExportedReq, 0)
-	fmt.Println(rg.Export(&r, "/"), r)
+	//var r ExportedReqs
+	//r = make([]ExportedReq, 0)
+	//fmt.Println(rg.Export(&r, "/"), r)
 
-	newrg, _ := Import(&r)
-	fmt.Println(newrg.Requirement(ReqRequest{Node: "/", Op: OpDump}))
+	///newrg, _ := Import(&r)
+	//fmt.Println(newrg.Requirement(ReqRequest{Node: "/", Op: OpDump}))
+
+	fmt.Println(rg.Requirement(ReqRequest{Node: "/", T: ObjectSet, Name: "prova", Value: "ciao", Op: OpAdd}))
+	// fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", Name: "/prova:ciao", Op: OpClone}))
+	rg.Clone("/processors:cp0", "/prova:ciao")
+	fmt.Println(rg.Requirement(ReqRequest{Node: "/", Op: OpDump}))
 
 	rg.Close()
 

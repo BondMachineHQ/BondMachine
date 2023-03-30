@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 )
 
@@ -50,6 +51,7 @@ type Bond struct {
 
 type Config struct {
 	*bminfo.BMinfo
+	*bmreqs.ReqRoot
 	Debug            bool
 	Dotdetail        uint8
 	CommentedVerilog bool

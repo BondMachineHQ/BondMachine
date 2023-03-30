@@ -58,7 +58,10 @@ func (o *objectMax) getReqs() string {
 }
 
 func (o *objectMax) importReqs(rg *ReqRoot, node string, name string, req string) error {
-	rg.Requirement(ReqRequest{Node: node, T: ObjectMax, Name: name, Value: req, Op: OpAdd})
+	resp := rg.Requirement(ReqRequest{Node: node, T: ObjectMax, Name: name, Value: req, Op: OpAdd})
+	if resp.Error != nil {
+		return resp.Error
+	}
 	return nil
 }
 

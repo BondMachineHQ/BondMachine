@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondirect"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
 	"github.com/BondMachineHQ/BondMachine/pkg/etherbond"
@@ -163,6 +164,7 @@ var ps2keyboardMap = flag.String("ps2-keyboard-map", "", "PS2 Keyboard mappings"
 var attach_benchmark_core string_slice
 
 var bmInfoFile = flag.String("bminfo-file", "", "File containing the bondmachine extra info")
+var bmRequirementsFile = flag.String("bmrequirements-file", "", "File containing the bondmachine requirements")
 
 func check(e error) {
 	if e != nil {
@@ -209,6 +211,20 @@ func main() {
 			if err := json.Unmarshal(bmInfoJSON, conf.BMinfo); err != nil {
 				panic(err)
 			}
+		} else {
+			panic(err)
+		}
+	}
+
+	if *bmRequirementsFile != "" {
+		if bmRequirementsJSON, err := ioutil.ReadFile(*bmRequirementsFile); err == nil {
+			reqs := new(bmreqs.ExportedReqs)
+			if err := json.Unmarshal(bmRequirementsJSON, reqs); err != nil {
+				panic(err)
+			}
+			newRg, _ := bmreqs.Import(reqs)
+			conf.ReqRoot = newRg
+			fmt.Println(newRg.Requirement(bmreqs.ReqRequest{Node: "/", Op: bmreqs.OpDump}))
 		} else {
 			panic(err)
 		}
@@ -607,7 +623,7 @@ func main() {
 			}
 			// TODO Include the check of unbounded processors
 		} else if *specs {
-			fmt.Printf (bmach.Specs())
+			fmt.Printf(bmach.Specs())
 		} else if *list_inputs {
 			for i, inp := range bmach.List_inputs() {
 				fmt.Printf("%d %s\n", i, inp)

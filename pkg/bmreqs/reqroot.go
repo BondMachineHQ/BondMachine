@@ -16,6 +16,7 @@ const (
 	OpAdd = uint8(0) + iota
 	OpGet
 	OpDump
+	OpClone
 )
 
 type ReqRequest struct {

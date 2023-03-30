@@ -113,6 +113,9 @@ func (rg *ReqRoot) run() {
 				} else {
 					resp.Error = err
 				}
+			case OpClone:
+				go rg.Clone(req.Node, req.Name)
+				resp.Value = "Clone started"
 			default:
 				resp.Error = errors.New("unknown Operation")
 			}
@@ -183,4 +186,37 @@ func Import(r *ExportedReqs) (*ReqRoot, error) {
 		}
 	}
 	return rg, nil
+}
+
+func (rg *ReqRoot) Clone(node string, nodeDes string) error {
+	if n, err := rg.decodeNode(node); err == nil {
+		for name, set := range n.bmReqMap {
+			if node == "/" {
+				node = node[1:]
+			}
+			switch set.getType() {
+			case ObjectSet:
+				n := new(objectSet)
+				if err := n.importReqs(rg, nodeDes, name, set.getReqs()); err != nil {
+					return err
+				}
+			case ObjectMax:
+				n := new(objectMax)
+				if err := n.importReqs(rg, nodeDes, name, set.getReqs()); err != nil {
+					return err
+				}
+			}
+			if set.supportSub() {
+				subs := set.listSub()
+				for _, sub := range subs {
+					if err := rg.Clone(node+"/"+name+":"+sub, nodeDes+"/"+name+":"+sub); err != nil {
+						return err
+					}
+				}
+			}
+		}
+		return nil
+	} else {
+		return errors.New("node decoding failed: " + fmt.Sprint(err))
+	}
 }

@@ -26,6 +26,7 @@ var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parame
 
 // Optionals
 var bmInfoFile = flag.String("bminfo-file", "", "Load additional informations about the BondMachine")
+var dumpRequirements = flag.String("dump-requirements", "", "Dump the requirements of the BondMachine in a JSON file")
 
 func check(e error) {
 	if e != nil {
@@ -134,6 +135,15 @@ func main() {
 			// Write the config file
 			if bmInfoFileJSON, err := json.MarshalIndent(bi.BMinfo, "", "  "); err == nil {
 				ioutil.WriteFile(*bmInfoFile, bmInfoFileJSON, 0644)
+			} else {
+				panic(err)
+			}
+		}
+
+		if *dumpRequirements != "" {
+			// Write the requirements file
+			if requirementsJSON, err := json.MarshalIndent(bi.DumpRequirements(), "", "  "); err == nil {
+				ioutil.WriteFile(*dumpRequirements, requirementsJSON, 0644)
 			} else {
 				panic(err)
 			}

@@ -337,3 +337,12 @@ func (bi *BasmInstance) String() string {
 	}
 	return result
 }
+
+func (bi *BasmInstance) DumpRequirements() bmreqs.ExportedReqs {
+
+	var r bmreqs.ExportedReqs
+	r = make([]bmreqs.ExportedReq, 0)
+	bi.rg.Export(&r, "/")
+
+	return r
+}
