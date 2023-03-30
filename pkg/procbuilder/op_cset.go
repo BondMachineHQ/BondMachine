@@ -50,7 +50,7 @@ func (Op Cset) Op_instruction_verilog_default_state(arch *Arch, flavor string) s
 	return ""
 }
 
-func (op Cset) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op Cset) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	result := ""
 	result += "					CSET: begin\n"
 	result += "						carryflag <= #1 'b1;\n"

@@ -55,7 +55,7 @@ func (Op Jc) Op_instruction_verilog_default_state(arch *Arch, flavor string) str
 	return ""
 }
 
-func (op Jc) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op Jc) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 

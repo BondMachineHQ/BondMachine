@@ -83,7 +83,7 @@ func (Op S2r) Op_instruction_verilog_internal_state(arch *Arch, flavor string) s
 	return result
 }
 
-func (op S2r) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op S2r) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	result := ""
 	result += "					S2R: begin\n"
 	result += "						state_sh_read_mem <= #1 1'b1;\n"

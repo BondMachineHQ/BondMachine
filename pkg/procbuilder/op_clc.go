@@ -50,7 +50,7 @@ func (Op Clc) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 	return ""
 }
 
-func (op Clc) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op Clc) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	result := ""
 	result += "					CLC: begin\n"
 	result += "						carryflag <= #1 'b0;\n"

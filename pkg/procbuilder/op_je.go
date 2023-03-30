@@ -39,7 +39,7 @@ func (op Je) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string,
 	return ""
 }
 
-func (op Je) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op Je) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	// TODO
 	result := ""
 	result += "				JE: begin\n"

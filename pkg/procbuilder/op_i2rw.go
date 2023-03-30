@@ -102,7 +102,7 @@ func (op I2rw) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor strin
 	return result
 }
 
-func (op I2rw) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op I2rw) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 	inpbits := arch.Inputs_bits()

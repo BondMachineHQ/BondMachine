@@ -46,7 +46,7 @@ func (Op Nop) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 	return ""
 }
 
-func (op Nop) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op Nop) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	result := ""
 	result += "					NOP: begin\n"
 	result += "						$display(\"NOP\");\n"

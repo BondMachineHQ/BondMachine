@@ -104,7 +104,7 @@ func (op R2owa) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor stri
 	return result
 }
 
-func (op R2owa) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op R2owa) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 	outbits := arch.Outputs_bits()

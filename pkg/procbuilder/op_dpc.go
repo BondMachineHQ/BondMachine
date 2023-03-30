@@ -39,7 +39,7 @@ func (op Dpc) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	return ""
 }
 
-func (op Dpc) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op Dpc) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	// TODO
 	result := ""
 	result += "				DPC: begin\n"

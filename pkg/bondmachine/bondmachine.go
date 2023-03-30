@@ -141,6 +141,7 @@ type EmuDriver interface {
 
 func (c *Config) ProcbuilderConfig() *procbuilder.Config {
 	result := new(procbuilder.Config)
+	result.ReqRoot = c.ReqRoot
 	result.Commented_verilog = c.CommentedVerilog
 	return result
 }

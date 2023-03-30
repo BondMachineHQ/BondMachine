@@ -75,7 +75,7 @@ func (op Wrd) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	return result
 }
 
-func (op Wrd) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op Wrd) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	opbits := arch.Opcodes_bits()
 	chso := Channel{}
 	chanbits := arch.Shared_bits(chso.Shr_get_name())

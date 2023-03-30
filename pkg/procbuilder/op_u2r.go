@@ -67,7 +67,7 @@ func (Op U2r) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	return result
 }
 
-func (op U2r) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op U2r) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	uSo := Uart{}
 	uartBits := arch.Shared_bits(uSo.Shr_get_name())
 	uartNum := arch.Shared_num(uSo.Shr_get_name())

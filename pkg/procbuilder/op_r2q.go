@@ -67,7 +67,7 @@ func (Op R2q) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	return result
 }
 
-func (op R2q) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op R2q) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	qSo := Queue{}
 	queueBits := arch.Shared_bits(qSo.Shr_get_name())
 	queueNum := arch.Shared_num(qSo.Shr_get_name())

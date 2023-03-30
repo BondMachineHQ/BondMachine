@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
 const (
@@ -23,6 +25,7 @@ type Conproc struct {
 }
 
 type Config struct {
+	*bmreqs.ReqRoot
 	Debug             bool
 	Commented_verilog bool
 	Runinfo           *RuntimeInfo
@@ -372,7 +375,7 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 		if conf.Commented_verilog {
 			result += "\n// Start of the component of the \"state machine\" for the opcode " + op.Op_get_name() + "\n\n"
 		}
-		result += op.Op_instruction_verilog_state_machine(arch, flavor)
+		result += op.Op_instruction_verilog_state_machine(arch, conf.ReqRoot, flavor)
 	}
 
 	result += "					default : begin\n"

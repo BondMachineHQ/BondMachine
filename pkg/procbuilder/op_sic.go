@@ -52,7 +52,7 @@ func (op Sic) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	return result
 }
 
-func (op Sic) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op Sic) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 	inpbits := arch.Inputs_bits()

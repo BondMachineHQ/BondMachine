@@ -39,7 +39,7 @@ func (op Jgt0f) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor stri
 	return result
 }
 
-func (op Jgt0f) Op_instruction_verilog_state_machine(arch *Arch, flavor string) string {
+func (op Jgt0f) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	result := ""
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()

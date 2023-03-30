@@ -14,7 +14,7 @@ type Opcode interface {
 	Op_instruction_verilog_reset(*Arch, string) string
 	Op_instruction_verilog_internal_state(*Arch, string) string
 	Op_instruction_verilog_default_state(*Arch, string) string
-	Op_instruction_verilog_state_machine(*Arch, string) string
+	Op_instruction_verilog_state_machine(*Arch, *bmreqs.ReqRoot, string) string
 	Op_instruction_verilog_footer(*Arch, string) string
 	Op_instruction_verilog_extra_modules(*Arch, string) ([]string, []string)
 	Op_instruction_verilog_extra_block(*Arch, string, uint8, string, []string) string
