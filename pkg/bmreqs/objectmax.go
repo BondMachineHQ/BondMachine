@@ -57,6 +57,11 @@ func (o *objectMax) getReqs() string {
 	return fmt.Sprint(o.value)
 }
 
+func (o *objectMax) importReqs(rg *ReqRoot, node string, name string, req string) error {
+	rg.Requirement(ReqRequest{Node: node, T: ObjectMax, Name: name, Value: req, Op: OpAdd})
+	return nil
+}
+
 //
 
 func (o *objectMax) supportSub() bool {

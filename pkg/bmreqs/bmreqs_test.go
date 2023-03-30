@@ -30,10 +30,22 @@ func TestBMReq(t *testing.T) {
 	fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", T: ObjectMax, Name: "test3", Value: "52", Op: OpAdd}))
 	fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", Name: "test3", Op: OpGet}))
 
+	fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", T: ObjectSet, Name: "unaryops", Value: "clr-r0", Op: OpAdd}))
+	fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", T: ObjectSet, Name: "unaryops", Value: "clr-r2", Op: OpAdd}))
+
+	fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", T: ObjectSet, Name: "binaryops", Value: "multf-r2-r0", Op: OpAdd}))
+
 	fmt.Println("----")
 
 	fmt.Println(rg.Requirement(ReqRequest{Node: "/", Op: OpDump}))
 	//fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", Op: OpDump}))
+
+	var r ExportedReqs
+	r = make([]ExportedReq, 0)
+	fmt.Println(rg.Export(&r, "/"), r)
+
+	newrg, _ := Import(&r)
+	fmt.Println(newrg.Requirement(ReqRequest{Node: "/", Op: OpDump}))
 
 	rg.Close()
 

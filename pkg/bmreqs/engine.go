@@ -145,3 +145,42 @@ func (rg *ReqRoot) recursiveDump(node string) (string, error) {
 		return "", errors.New("node decoding failed: " + fmt.Sprint(err))
 	}
 }
+
+func (rg *ReqRoot) Export(r *ExportedReqs, node string) error {
+	if n, err := rg.decodeNode(node); err == nil {
+		for name, set := range n.bmReqMap {
+			*r = append(*r, ExportedReq{Node: node, Type: set.getType(), Req: set.getReqs(), Name: name})
+			if set.supportSub() {
+				subs := set.listSub()
+				for _, sub := range subs {
+					if node == "/" {
+						node = node[1:]
+					}
+					rg.Export(r, node+"/"+name+":"+sub)
+				}
+			}
+		}
+		return nil
+	} else {
+		return errors.New("node decoding failed: " + fmt.Sprint(err))
+	}
+}
+
+func Import(r *ExportedReqs) (*ReqRoot, error) {
+	rg := NewReqRoot()
+	for _, req := range *r {
+		switch req.Type {
+		case ObjectSet:
+			n := new(objectSet)
+			if err := n.importReqs(rg, req.Node, req.Name, req.Req); err != nil {
+				return nil, err
+			}
+		case ObjectMax:
+			n := new(objectMax)
+			if err := n.importReqs(rg, req.Node, req.Name, req.Req); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return rg, nil
+}

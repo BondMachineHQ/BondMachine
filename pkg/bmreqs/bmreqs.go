@@ -21,6 +21,7 @@ type bmReqSet interface {
 
 	// Exporting requirements for the current node
 	getReqs() string
+	importReqs(*ReqRoot, string, string, string) error
 
 	// SubRequirements
 	supportSub() bool
@@ -39,3 +40,12 @@ func (o *bmReqObj) init() {
 func (o *bmReqObj) getMap() bmReqMap {
 	return o.bmReqMap
 }
+
+type ExportedReq struct {
+	Node string
+	Type uint8
+	Name string
+	Req  string
+}
+
+type ExportedReqs []ExportedReq

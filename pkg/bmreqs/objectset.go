@@ -72,6 +72,13 @@ func (o *objectSet) getReqs() string {
 	return fmt.Sprint(strings.Join(keys, ","))
 }
 
+func (o *objectSet) importReqs(rg *ReqRoot, node string, name string, req string) error {
+	for _, r := range strings.Split(req, ",") {
+		rg.Requirement(ReqRequest{Node: node, T: ObjectSet, Name: name, Value: r, Op: OpAdd})
+	}
+	return nil
+}
+
 //
 
 func (o *objectSet) supportSub() bool {
