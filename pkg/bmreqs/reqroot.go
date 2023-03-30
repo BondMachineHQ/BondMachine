@@ -14,6 +14,7 @@ const (
 // Requirements operations
 const (
 	OpAdd = uint8(0) + iota
+	OpCheck
 	OpGet
 	OpDump
 	OpClone

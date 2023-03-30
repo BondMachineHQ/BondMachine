@@ -19,6 +19,9 @@ func TestBMReq(t *testing.T) {
 	fmt.Println(rg.Requirement(ReqRequest{Node: "/", T: ObjectSet, Name: "processors", Value: "cp4", Op: OpAdd}))
 	fmt.Println(rg.Requirement(ReqRequest{Node: "/", Name: "processors", Op: OpGet}))
 
+	fmt.Println(rg.Requirement(ReqRequest{Node: "/", T: ObjectSet, Name: "processors", Value: "cp4", Op: OpCheck}))
+	fmt.Println(rg.Requirement(ReqRequest{Node: "/", T: ObjectSet, Name: "processors", Value: "cp5", Op: OpCheck}))
+
 	fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", T: ObjectSet, Name: "opcodes", Value: "rset", Op: OpAdd}))
 	fmt.Println(rg.Requirement(ReqRequest{Node: "/processors:cp0", Name: "opcodes", Op: OpGet}))
 

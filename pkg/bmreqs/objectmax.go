@@ -53,6 +53,19 @@ func (o *objectMax) removeReq(req string) error {
 
 //
 
+func (o *objectMax) checkReq(req string) (string, error) {
+	if i, err := strconv.ParseInt(req, 10, 64); err == nil {
+		if i <= o.value {
+			return "true", nil
+		} else {
+			return "false", nil
+		}
+	}
+	return "", errors.New("Integer parse failed")
+}
+
+//
+
 func (o *objectMax) getReqs() string {
 	return fmt.Sprint(o.value)
 }

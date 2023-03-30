@@ -61,6 +61,19 @@ func (o *objectSet) removeReq(req string) error {
 
 //
 
+func (o *objectSet) checkReq(req string) (string, error) {
+	if o.set != nil {
+		if _, ok := o.set[req]; ok {
+			return "true", nil
+		} else {
+			return "false", nil
+		}
+	}
+	return "", errors.New("uninitialized Set")
+}
+
+//
+
 func (o *objectSet) getReqs() string {
 	if o.set == nil {
 		return ""

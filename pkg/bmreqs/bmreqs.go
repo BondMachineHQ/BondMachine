@@ -19,6 +19,9 @@ type bmReqSet interface {
 	insertReq(string) error
 	removeReq(string) error
 
+	// Check if the current node contains the given requirement
+	checkReq(string) (string, error)
+
 	// Exporting requirements for the current node
 	getReqs() string
 	importReqs(*ReqRoot, string, string, string) error

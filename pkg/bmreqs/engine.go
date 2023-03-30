@@ -97,6 +97,24 @@ func (rg *ReqRoot) run() {
 				} else {
 					resp.Error = errors.New("node decoding failed: " + fmt.Sprint(err))
 				}
+			case OpCheck:
+				if node, err := rg.decodeNode(req.Node); err == nil {
+					currMap := node.getMap()
+					if reqSet, ok := currMap[req.Name]; ok {
+						if reqSet.getType() != req.T {
+							resp.Error = errors.New("check failed: Mismatch types")
+						} else {
+							if present, err := reqSet.checkReq(req.Value); err != nil {
+								resp.Error = errors.New("check failed: " + fmt.Sprint(err))
+							} else {
+								resp.Value = present
+							}
+						}
+					} else {
+					}
+				} else {
+					resp.Error = errors.New("node decoding failed: " + fmt.Sprint(err))
+				}
 			case OpGet:
 				if node, err := rg.decodeNode(req.Node); err == nil {
 					if reqSet, ok := node.getMap()[req.Name]; ok {
