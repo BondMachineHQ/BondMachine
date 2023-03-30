@@ -52,6 +52,7 @@ type Bond struct {
 type Config struct {
 	*bminfo.BMinfo
 	*bmreqs.ReqRoot
+	procbuilder.HwOptimizations
 	Debug            bool
 	Dotdetail        uint8
 	CommentedVerilog bool
@@ -142,6 +143,7 @@ type EmuDriver interface {
 func (c *Config) ProcbuilderConfig() *procbuilder.Config {
 	result := new(procbuilder.Config)
 	result.ReqRoot = c.ReqRoot
+	result.HwOptimizations = c.HwOptimizations
 	result.Commented_verilog = c.CommentedVerilog
 	return result
 }

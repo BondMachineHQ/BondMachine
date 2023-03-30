@@ -47,7 +47,7 @@ func (Op R2m) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	return result
 }
 
-func (op R2m) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op R2m) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	//rom_word := arch.Max_word()
 	//opbits := arch.Opcodes_bits()
 

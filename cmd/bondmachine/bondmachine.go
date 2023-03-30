@@ -165,6 +165,7 @@ var attach_benchmark_core string_slice
 
 var bmInfoFile = flag.String("bminfo-file", "", "File containing the bondmachine extra info")
 var bmRequirementsFile = flag.String("bmrequirements-file", "", "File containing the bondmachine requirements")
+var hwOptimizations = flag.String("hwoptimizations", "", "comma separated hardware optimizations")
 
 func check(e error) {
 	if e != nil {
@@ -200,8 +201,17 @@ func lastAddr(n *net.IPNet) (net.IP, error) { // works when the n is a prefix, o
 func main() {
 	conf := new(bondmachine.Config)
 	conf.Debug = *debug
+	conf.HwOptimizations = 0
 	conf.Dotdetail = uint8(*dot_detail)
 	conf.CommentedVerilog = *commentedVerilog
+
+	if *hwOptimizations != "" {
+		for _, opt := range strings.Split(*hwOptimizations, ",") {
+			if id := procbuilder.HwOptimizationId(opt); id != 0 {
+				conf.HwOptimizations = procbuilder.SetHwOptimization(conf.HwOptimizations, id)
+			}
+		}
+	}
 
 	var bmach *bondmachine.Bondmachine
 

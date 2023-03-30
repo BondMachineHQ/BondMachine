@@ -35,7 +35,7 @@ func (op Cirn) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor strin
 	return ""
 }
 
-func (op Cirn) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op Cirn) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 

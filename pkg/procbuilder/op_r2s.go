@@ -71,7 +71,7 @@ func (Op R2s) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 	return result
 }
 
-func (op R2s) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op R2s) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 
 	result := ""
 

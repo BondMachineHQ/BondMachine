@@ -53,7 +53,7 @@ func (op Ro2rri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor str
 	return result
 }
 
-func (op Ro2rri) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op Ro2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	romWord := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 

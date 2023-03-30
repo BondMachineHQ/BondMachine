@@ -124,7 +124,7 @@ func (Op Wwr) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 	return result
 }
 
-func (op Wwr) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op Wwr) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	opbits := arch.Opcodes_bits()
 	chso := Channel{}
 	chanbits := arch.Shared_bits(chso.Shr_get_name())

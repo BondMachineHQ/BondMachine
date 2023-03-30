@@ -53,7 +53,7 @@ func (Op Hit) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 	return ""
 }
 
-func (op Hit) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op Hit) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 	bar_num := arch.Shared_num("barrier")

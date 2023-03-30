@@ -67,7 +67,7 @@ func (Op R2t) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	return result
 }
 
-func (op R2t) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op R2t) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	stSo := Stack{}
 	stackBits := arch.Shared_bits(stSo.Shr_get_name())
 	stackNum := arch.Shared_num(stSo.Shr_get_name())

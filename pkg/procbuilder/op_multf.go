@@ -54,7 +54,7 @@ func (op Multf) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor stri
 	return result
 }
 
-func (op Multf) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op Multf) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 

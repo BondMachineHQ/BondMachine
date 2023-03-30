@@ -67,7 +67,7 @@ func (Op K2r) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	return result
 }
 
-func (op K2r) Op_instruction_verilog_state_machine(arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op K2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	kSo := Kbd{}
 	kbdBits := arch.Shared_bits(kSo.Shr_get_name())
 	kbdNum := arch.Shared_num(kSo.Shr_get_name())
