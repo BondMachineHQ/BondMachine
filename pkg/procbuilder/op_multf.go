@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -68,6 +69,11 @@ func (op Multf) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 		result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
+
+		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(HwOptimize)) {
+			fmt.Println("Optimizing multf")
+		}
+
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 		if arch.R == 1 {

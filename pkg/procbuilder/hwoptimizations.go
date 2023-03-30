@@ -8,7 +8,7 @@ type HwOptimizations uint64
 
 func HwOptimizationId(name string) HwOptimizations {
 	switch name {
-	case "optimize":
+	case "hwoptimize":
 		return HwOptimizations(HwOptimize)
 	}
 	return 0

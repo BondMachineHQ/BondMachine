@@ -165,7 +165,7 @@ var attach_benchmark_core string_slice
 
 var bmInfoFile = flag.String("bminfo-file", "", "File containing the bondmachine extra info")
 var bmRequirementsFile = flag.String("bmrequirements-file", "", "File containing the bondmachine requirements")
-var hwOptimizations = flag.String("hwoptimizations", "", "comma separated hardware optimizations")
+var hwOptimizations = flag.String("hw-optimizations", "", "comma separated hardware optimizations")
 
 func check(e error) {
 	if e != nil {
@@ -209,6 +209,8 @@ func main() {
 		for _, opt := range strings.Split(*hwOptimizations, ",") {
 			if id := procbuilder.HwOptimizationId(opt); id != 0 {
 				conf.HwOptimizations = procbuilder.SetHwOptimization(conf.HwOptimizations, id)
+			} else {
+				panic("Unknown hardware optimization: " + opt)
 			}
 		}
 	}
@@ -234,7 +236,7 @@ func main() {
 			}
 			newRg, _ := bmreqs.Import(reqs)
 			conf.ReqRoot = newRg
-			fmt.Println(newRg.Requirement(bmreqs.ReqRequest{Node: "/", Op: bmreqs.OpDump}))
+			// fmt.Println(newRg.Requirement(bmreqs.ReqRequest{Node: "/", Op: bmreqs.OpDump}))
 		} else {
 			panic(err)
 		}
