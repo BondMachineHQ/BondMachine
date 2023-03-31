@@ -1,15 +1,18 @@
 package procbuilder
 
 const (
-	HwOptimize = uint64(1)
+	OnlyDestRegs = uint64(1)
+	OnlySrcRegs  = uint64(2)
 )
 
 type HwOptimizations uint64
 
 func HwOptimizationId(name string) HwOptimizations {
 	switch name {
-	case "hwoptimize":
-		return HwOptimizations(HwOptimize)
+	case "onlydestregs":
+		return HwOptimizations(OnlyDestRegs)
+	case "onlysrcregs":
+		return HwOptimizations(OnlySrcRegs)
 	}
 	return 0
 }

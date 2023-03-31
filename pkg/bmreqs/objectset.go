@@ -42,9 +42,11 @@ func (o *objectSet) insertReq(req string) error {
 	if o.set == nil {
 		return fmt.Errorf("uninitialized Set")
 	}
-	newObj := new(bmReqObj)
-	newObj.init()
-	o.set[req] = newObj
+	if _, ok := o.set[req]; !ok {
+		newObj := new(bmReqObj)
+		newObj.init()
+		o.set[req] = newObj
+	}
 	return nil
 }
 

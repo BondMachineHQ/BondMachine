@@ -69,8 +69,12 @@ func (op Multf) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 	}
 	for i := 0; i < reg_num; i++ {
 
-		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(HwOptimize)) {
-			req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + strconv.Itoa(1), T: bmreqs.ObjectSet, Name: "processors", Value: "cp5", Op: bmreqs.OpCheck})
+		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlyDestRegs)) {
+			cp := arch.Tag
+			req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:multf", T: bmreqs.ObjectSet, Name: "destregs", Value: Get_register_name(i), Op: bmreqs.OpCheck})
+			if req.Value == "false" {
+				continue
+			}
 		}
 
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
@@ -82,6 +86,15 @@ func (op Multf) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 		}
 
 		for j := 0; j < reg_num; j++ {
+
+			if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlySrcRegs)) {
+				cp := arch.Tag
+				req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:multf", T: bmreqs.ObjectSet, Name: "sourceregs", Value: Get_register_name(j), Op: bmreqs.OpCheck})
+				if req.Value == "false" {
+					continue
+				}
+			}
+
 			result += "							" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
 			result += "							case (multiplier_" + arch.Tag + "_state)\n"
 			result += "							multiplier_" + arch.Tag + "_put_a : begin\n"
