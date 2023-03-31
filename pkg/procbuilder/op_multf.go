@@ -2,7 +2,6 @@ package procbuilder
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -71,7 +70,7 @@ func (op Multf) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 	for i := 0; i < reg_num; i++ {
 
 		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(HwOptimize)) {
-			fmt.Println("Optimizing multf")
+			req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + strconv.Itoa(1), T: bmreqs.ObjectSet, Name: "processors", Value: "cp5", Op: bmreqs.OpCheck})
 		}
 
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
