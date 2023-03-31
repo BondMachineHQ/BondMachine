@@ -19,81 +19,88 @@ var withSize = flag.Bool("with-size", false, "With size")
 
 var useFiles = flag.Bool("use-files", false, "Load files instead of command line argument")
 
+var serve = flag.Bool("serve", false, "Serve as REST API")
+
 func init() {
 	flag.Parse()
 }
 
 func main() {
 
-	var newType bmnumbers.BMNumberType
-	if *overrideTo != "" && *convertTo != "" {
-		log.Fatal("Error: Cannot override and convert at the same time")
-	}
+	if *serve {
+		bmnumbers.Serve()
+	} else {
 
-	switch {
-	case *convertTo != "":
-		if _, err := bmnumbers.EventuallyCreateType(*convertTo, nil); err != nil {
-			log.Fatal(err)
+		var newType bmnumbers.BMNumberType
+		if *overrideTo != "" && *convertTo != "" {
+			log.Fatal("Error: Cannot override and convert at the same time")
 		}
-		if v := bmnumbers.GetType(*convertTo); v == nil {
-			log.Fatal("Error: Unknown type")
-		} else {
-			newType = v
-			fmt.Println(v)
-		}
-	case *overrideTo != "":
-		if _, err := bmnumbers.EventuallyCreateType(*overrideTo, nil); err != nil {
-			log.Fatal(err)
-		}
-		if v := bmnumbers.GetType(*overrideTo); v == nil {
-			log.Fatal("Error: Unknown type")
-		} else {
-			newType = v
-			fmt.Println(v)
-		}
-	}
 
-	for _, argTo := range flag.Args() {
-		if *useFiles {
-			fmt.Println("Load files")
-		} else {
-			if output, err := bmnumbers.ImportString(argTo); err != nil {
-				fmt.Println("Error: ", err)
+		switch {
+		case *convertTo != "":
+			if _, err := bmnumbers.EventuallyCreateType(*convertTo, nil); err != nil {
+				log.Fatal(err)
+			}
+			if v := bmnumbers.GetType(*convertTo); v == nil {
+				log.Fatal("Error: Unknown type")
 			} else {
+				newType = v
+				fmt.Println(v)
+			}
+		case *overrideTo != "":
+			if _, err := bmnumbers.EventuallyCreateType(*overrideTo, nil); err != nil {
+				log.Fatal(err)
+			}
+			if v := bmnumbers.GetType(*overrideTo); v == nil {
+				log.Fatal("Error: Unknown type")
+			} else {
+				newType = v
+				fmt.Println(v)
+			}
+		}
 
-				if *convertTo != "" {
-					if err := newType.Convert(output); err != nil {
-						fmt.Println("Error: ", err)
-					}
-				}
+		for _, argTo := range flag.Args() {
+			if *useFiles {
+				fmt.Println("Load files")
+			} else {
+				if output, err := bmnumbers.ImportString(argTo); err != nil {
+					fmt.Println("Error: ", err)
+				} else {
 
-				if *overrideTo != "" {
-					if err := bmnumbers.OverrideType(output, newType); err != nil {
-						fmt.Println("Error: ", err)
+					if *convertTo != "" {
+						if err := newType.Convert(output); err != nil {
+							fmt.Println("Error: ", err)
+						}
 					}
-				}
 
-				switch *dumpAs {
-				case "native":
-					if value, err := output.ExportString(); err != nil {
-						fmt.Println("Error: ", err)
-					} else {
-						fmt.Println(value)
+					if *overrideTo != "" {
+						if err := bmnumbers.OverrideType(output, newType); err != nil {
+							fmt.Println("Error: ", err)
+						}
 					}
-				case "bin":
-					if value, err := output.ExportBinary(*withSize); err != nil {
-						fmt.Println("Error: ", err)
-					} else {
-						fmt.Println(value)
+
+					switch *dumpAs {
+					case "native":
+						if value, err := output.ExportString(); err != nil {
+							fmt.Println("Error: ", err)
+						} else {
+							fmt.Println(value)
+						}
+					case "bin":
+						if value, err := output.ExportBinary(*withSize); err != nil {
+							fmt.Println("Error: ", err)
+						} else {
+							fmt.Println(value)
+						}
+					case "unsigned":
+						if value, err := output.ExportUint64(); err != nil {
+							fmt.Println("Error: ", err)
+						} else {
+							fmt.Println(value)
+						}
+					default:
+						fmt.Println("Error: Unknown dump format")
 					}
-				case "unsigned":
-					if value, err := output.ExportUint64(); err != nil {
-						fmt.Println("Error: ", err)
-					} else {
-						fmt.Println(value)
-					}
-				default:
-					fmt.Println("Error: Unknown dump format")
 				}
 			}
 		}
