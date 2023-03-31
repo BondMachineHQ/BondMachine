@@ -69,6 +69,15 @@ func (op Divf) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 		result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
+
+		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlyDestRegs)) {
+			cp := arch.Tag
+			req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:divf", T: bmreqs.ObjectSet, Name: "destregs", Value: Get_register_name(i), Op: bmreqs.OpCheck})
+			if req.Value == "false" {
+				continue
+			}
+		}
+
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 		if arch.R == 1 {
@@ -78,6 +87,15 @@ func (op Divf) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 		}
 
 		for j := 0; j < reg_num; j++ {
+
+			if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlySrcRegs)) {
+				cp := arch.Tag
+				req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:divf", T: bmreqs.ObjectSet, Name: "sourceregs", Value: Get_register_name(j), Op: bmreqs.OpCheck})
+				if req.Value == "false" {
+					continue
+				}
+			}
+
 			result += "							" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
 			result += "							case (divider_" + arch.Tag + "_state)\n"
 			result += "							divider_" + arch.Tag + "_put_a : begin\n"
@@ -583,6 +601,9 @@ func (Op Divf) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string,
 		regSrc := line.Elements[1].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regDst, Op: bmreqs.OpAdd})
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regSrc, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "divf", Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:divf", T: bmreqs.ObjectSet, Name: "destregs", Value: regDst, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:divf", T: bmreqs.ObjectSet, Name: "sourceregs", Value: regSrc, Op: bmreqs.OpAdd})
 		return line, nil
 	}
 	return nil, errors.New("HL Assembly normalize failed")
