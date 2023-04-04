@@ -46,7 +46,7 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 	implementation := ev.Implementation[iProg.LibraryID]
 
 	nodeCodeName := implementation.ImplName + "_" + implementation.ProgramNames[iProg.ProgramID]
-	fmt.Print("%meta fidef " + nodeName + " fragment:" + nodeCodeName)
+	ev.MelBondConfig.CodeChan <- fmt.Sprint("%meta fidef " + nodeName + " fragment:" + nodeCodeName)
 
 	isFunctional := true
 
@@ -55,9 +55,9 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 	}
 
 	if !isFunctional {
-		fmt.Println(", " + implementation.ProgramNames[iProg.ProgramID] + ":" + iProg.ProgramValue)
+		ev.MelBondConfig.CodeChan <- fmt.Sprintln(", " + implementation.ProgramNames[iProg.ProgramID] + ":" + iProg.ProgramValue)
 	} else {
-		fmt.Println()
+		ev.MelBondConfig.CodeChan <- fmt.Sprintln()
 	}
 
 	arg_num := len(iProg.NextPrograms)
@@ -67,8 +67,8 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 		evaluators[i] = mel3program.ProgMux(ev, prog)
 		names[i] = nodeName + string(byte(97+i))
 		evaluators[i].(*BasmEvaluator).index = ev.index + string(byte(97+i))
-		fmt.Println("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + nodeName + ", type:input, index:" + fmt.Sprint(i))
-		fmt.Println("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + names[i] + ", type:output, index:0")
+		ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + nodeName + ", type:input, index:" + fmt.Sprint(i))
+		ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + names[i] + ", type:output, index:0")
 		evaluators[i].Visit(prog)
 	}
 

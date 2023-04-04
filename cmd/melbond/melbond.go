@@ -9,7 +9,7 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/melbond"
 	"github.com/BondMachineHQ/BondMachine/pkg/neuralbond"
-	"github.com/mmirko/mel/pkg/m3number"
+	"github.com/mmirko/mel/pkg/m3melbond"
 	"github.com/mmirko/mel/pkg/mel"
 )
 
@@ -134,16 +134,16 @@ func main() {
 		}
 	}
 
-	a := new(m3number.M3numberMe3li)
+	a := new(m3melbond.M3MelBondMe3li)
 	var ep *mel.EvolutionParameters
 	c := new(mel.MelConfig)
 	a.Mel3Object.DefaultCreator = bc.BasmCreator
 	c.Debug = false
-	a.MelInit(c, ep)
+	a.Init(c, ep, []string{"m3uint", "m3uintcmp", "m3number", "m3bool", "m3boolcmp", "m3statements"})
 
 	prog := new(melbond.MelBondProgram)
 	prog.MelBondConfig = bc
-	prog.M3numberMe3li = a
+	prog.M3MelBondMe3li = a
 
 	if len(flag.Args()) != 1 {
 		panic("No mel file specified")
