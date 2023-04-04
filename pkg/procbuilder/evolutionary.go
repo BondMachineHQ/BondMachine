@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mmirko/mel"
+	"github.com/mmirko/mel/pkg/mel"
 )
 
-func (mach *Machine) MelInit(ep *mel.EvolutionParameters) {
+func (mach *Machine) MelInit(c *mel.MelConfig, ep *mel.EvolutionParameters) {
 
 	myarch := new(Arch)
 
@@ -107,7 +107,7 @@ func Machine_Program_Generate(ep *mel.EvolutionParameters) mel.Me3li {
 	var result mel.Me3li
 	var eobj *Machine
 	eobj = new(Machine)
-	eobj.MelInit(ep)
+	eobj.MelInit(nil, ep)
 	eobj.Program = eobj.Program_generate()
 	result = eobj
 	return result

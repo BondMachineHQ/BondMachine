@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mmirko/mel"
+	"github.com/mmirko/mel/pkg/mel"
 )
 
 func TestEvolutionaryMachine(t *testing.T) {

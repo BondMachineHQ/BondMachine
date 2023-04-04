@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/simbox"
-	"github.com/mmirko/mel"
+	"github.com/mmirko/mel/pkg/mel"
 )
 
-func (mach *Bondmachine) MelInit(ep *mel.EvolutionParameters) {
+func (mach *Bondmachine) MelInit(c *mel.MelConfig, ep *mel.EvolutionParameters) {
 }
 
 func (mach *Bondmachine) MelCopy() mel.Me3li {
