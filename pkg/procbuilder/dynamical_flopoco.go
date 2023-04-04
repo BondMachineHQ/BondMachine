@@ -46,7 +46,7 @@ func (d DynFloPoCo) CreateInstruction(name string) (Opcode, error) {
 		e, _ := strconv.Atoi(es)
 		f, _ := strconv.Atoi(fs)
 		runCommand = []string{"flopoco", "FPMult", "we=" + es, "wf=" + fs}
-		regSize = e + f
+		regSize = e + f + 3
 	}
 	re = regexp.MustCompile("addflpe(?P<e>[0-9]+)f(?P<f>[0-9]+)")
 	if re.MatchString(name) {
@@ -55,7 +55,7 @@ func (d DynFloPoCo) CreateInstruction(name string) (Opcode, error) {
 		e, _ := strconv.Atoi(es)
 		f, _ := strconv.Atoi(fs)
 		runCommand = []string{"flopoco", "FPAdd", "we=" + es, "wf=" + fs}
-		regSize = e + f
+		regSize = e + f + 3
 	}
 	re = regexp.MustCompile("divflpe(?P<e>[0-9]+)f(?P<f>[0-9]+)")
 	if re.MatchString(name) {
@@ -64,7 +64,7 @@ func (d DynFloPoCo) CreateInstruction(name string) (Opcode, error) {
 		e, _ := strconv.Atoi(es)
 		f, _ := strconv.Atoi(fs)
 		runCommand = []string{"flopoco", "FPDiv", "we=" + es, "wf=" + fs}
-		regSize = e + f
+		regSize = e + f + 3
 	}
 
 	cmd := exec.Command(runCommand[0], runCommand[1:]...)
