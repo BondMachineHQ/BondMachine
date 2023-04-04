@@ -134,11 +134,16 @@ func main() {
 		}
 	}
 
+	if err := bc.Init(); err != nil {
+		panic(err)
+	}
+
 	a := new(m3melbond.M3MelBondMe3li)
 	var ep *mel.EvolutionParameters
 	c := new(mel.MelConfig)
 	a.Mel3Object.DefaultCreator = bc.BasmCreator
 	c.Debug = false
+
 	a.Init(c, ep, []string{"m3uint", "m3uintcmp", "m3number", "m3bool", "m3boolcmp", "m3statements"})
 
 	prog := new(melbond.MelBondProgram)
