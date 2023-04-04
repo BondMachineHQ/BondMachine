@@ -145,6 +145,18 @@ func main() {
 	prog.MelBondConfig = bc
 	prog.M3numberMe3li = a
 
+	if len(flag.Args()) != 1 {
+		panic("No mel file specified")
+	}
+
+	for _, melFile := range flag.Args() {
+		if source, err := ioutil.ReadFile(melFile); err != nil {
+			panic(err)
+		} else {
+			prog.Source = string(source)
+		}
+	}
+
 	if *saveBasm != "" {
 		if basmFile, err := prog.WriteBasm(); err == nil {
 			ioutil.WriteFile(*saveBasm, []byte(basmFile), 0644)

@@ -1,0 +1,13 @@
+	add(
+		add(
+			m3numberconst(1),
+			m3numberconst(66)
+		),
+		add(
+			m3numberconst(1),
+			mult(
+				m3numberconst(2),
+				m3numberconst(4)
+			)
+		)
+	)
