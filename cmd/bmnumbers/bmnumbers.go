@@ -45,7 +45,7 @@ func main() {
 				log.Fatal("Error: Unknown type")
 			} else {
 				newType = v
-				fmt.Println(v)
+				// fmt.Println(v)
 			}
 		case *overrideTo != "":
 			if _, err := bmnumbers.EventuallyCreateType(*overrideTo, nil); err != nil {
@@ -55,7 +55,7 @@ func main() {
 				log.Fatal("Error: Unknown type")
 			} else {
 				newType = v
-				fmt.Println(v)
+				// fmt.Println(v)
 			}
 		}
 

@@ -114,7 +114,40 @@ func floPoCoImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 }
 
 func (d FloPoCo) ExportString(n *BMNumber) (string, error) {
-	return "", errors.New("export not implemented")
+	e := d.e
+	f := d.f
+	es := strconv.Itoa(e)
+	fs := strconv.Itoa(f)
+	number, _ := n.ExportBinary(false)
+
+	// Add leading zeros
+	for len(number) < e+f+3 {
+		number = "0" + number
+	}
+
+	runCommand := []string{"bin2fp", es, fs, number}
+	// fmt.Println(runCommand)
+	// Create a temporary directory for the FloPoCo files
+	dir, err := os.MkdirTemp("", "bin2fp")
+	if err != nil {
+		return "", err
+	}
+	defer os.RemoveAll(dir)
+
+	cmd := exec.Command(runCommand[0], runCommand[1:]...)
+	cmd.Dir = dir
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return "", err
+	} else {
+		resultReport := string(out)
+
+		// Parse every line of the report
+		for _, line := range strings.Split(resultReport, "\n") {
+			result := "0flp<" + es + "." + fs + ">" + line
+			return result, nil
+		}
+	}
+	return "", errors.New("invalid binary number" + number)
 }
 
 func (d FloPoCo) ShowInstructions() map[string]string {
