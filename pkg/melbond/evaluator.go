@@ -1,6 +1,7 @@
 package melbond
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/mmirko/mel/pkg/mel3program"
@@ -46,30 +47,48 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 	implementation := ev.Implementation[iProg.LibraryID]
 
 	nodeCodeName := implementation.ImplName + "_" + implementation.ProgramNames[iProg.ProgramID]
-	ev.MelBondConfig.CodeChan <- fmt.Sprint("%meta fidef " + nodeName + " fragment:" + nodeCodeName)
 
-	isFunctional := true
+	if neuron, ok := ev.MelBondConfig.Neurons[nodeCodeName]; ok {
 
-	if len(implementation.NonVariadicArgs[iProg.ProgramID]) == 0 && !implementation.IsVariadic[iProg.ProgramID] {
-		isFunctional = false
-	}
+		ev.MelBondConfig.CodeChan <- fmt.Sprint("%meta fidef " + nodeName + " fragment:" + nodeCodeName)
+		for _, param := range neuron.Params {
+			switch param {
+			default:
+				if value, ok := ev.MelBondConfig.Params[param]; ok {
+					ev.MelBondConfig.CodeChan <- fmt.Sprintf(", %s:%s", param, value)
+				} else {
+					ev.error = errors.New("Unknown parameter " + param)
+					return nil
+				}
+			}
+		}
+		ev.MelBondConfig.CodeChan <- "\n"
 
-	if !isFunctional {
-		ev.MelBondConfig.CodeChan <- fmt.Sprintln(", " + implementation.ProgramNames[iProg.ProgramID] + ":" + iProg.ProgramValue)
+		isFunctional := true
+
+		if len(implementation.NonVariadicArgs[iProg.ProgramID]) == 0 && !implementation.IsVariadic[iProg.ProgramID] {
+			isFunctional = false
+		}
+
+		if !isFunctional {
+			ev.MelBondConfig.CodeChan <- fmt.Sprintln(", " + implementation.ProgramNames[iProg.ProgramID] + ":" + iProg.ProgramValue)
+		} else {
+			ev.MelBondConfig.CodeChan <- fmt.Sprintln()
+		}
+
+		arg_num := len(iProg.NextPrograms)
+		evaluators := make([]mel3program.Mel3Visitor, arg_num)
+		names := make([]string, arg_num)
+		for i, prog := range iProg.NextPrograms {
+			evaluators[i] = mel3program.ProgMux(ev, prog)
+			names[i] = nodeName + string(byte(97+i))
+			evaluators[i].(*BasmEvaluator).index = ev.index + string(byte(97+i))
+			ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + nodeName + ", type:input, index:" + fmt.Sprint(i))
+			ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + names[i] + ", type:output, index:0")
+			evaluators[i].Visit(prog)
+		}
 	} else {
-		ev.MelBondConfig.CodeChan <- fmt.Sprintln()
-	}
-
-	arg_num := len(iProg.NextPrograms)
-	evaluators := make([]mel3program.Mel3Visitor, arg_num)
-	names := make([]string, arg_num)
-	for i, prog := range iProg.NextPrograms {
-		evaluators[i] = mel3program.ProgMux(ev, prog)
-		names[i] = nodeName + string(byte(97+i))
-		evaluators[i].(*BasmEvaluator).index = ev.index + string(byte(97+i))
-		ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + nodeName + ", type:input, index:" + fmt.Sprint(i))
-		ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + names[i] + ", type:output, index:0")
-		evaluators[i].Visit(prog)
+		ev.error = errors.New("Unknown neuron " + nodeCodeName)
 	}
 
 	return nil
