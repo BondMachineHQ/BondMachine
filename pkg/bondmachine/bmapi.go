@@ -31,6 +31,7 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 	var bmapiPackageName string
 	var bmapiModuleName string
 	var bmapiGenerateExample string
+	var bmapiDataType string
 
 	var bmapiParams map[string]string
 
@@ -97,6 +98,12 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 				bmapiGenerateExample = val
 			} else {
 				return errors.New("Missing bmapi generate example")
+			}
+
+			if val, ok := bmapiParams["bmapi_datatype"]; ok {
+				bmapiDataType = val
+			} else {
+				return errors.New("Missing bmapi datatype")
 			}
 
 			break
@@ -433,6 +440,7 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 
 					// Compiling the data for the templates
 					bmapiExample := bmach.createBasicTemplateData()
+					bmapiExample.DataType = bmapiDataType
 
 					exFiles := make(map[string]string)
 					exFiles[bmapiGenerateExample] = aximmPynqExample

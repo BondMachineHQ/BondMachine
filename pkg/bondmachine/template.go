@@ -26,6 +26,7 @@ type templateData struct {
 	funcmap     template.FuncMap
 	PackageName string
 	ModuleName  string
+	DataType    string
 }
 
 func (bmach *Bondmachine) createBasicTemplateData() *templateData {

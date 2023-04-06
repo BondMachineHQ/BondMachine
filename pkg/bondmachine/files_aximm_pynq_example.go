@@ -33,7 +33,7 @@ const (
 		   "n_output      = 2\n",
 		   "benchcore     = True\n",
 		   "precision_info = {\n",
-		   "    \"type\": \"flpe4f9\",\n",
+		   "    \"type\": \"{{ .DataType }}\",\n",
 		   "    \"e\": 0,\n",
 		   "    \"f\": 0,\n",
 		   "    \"host\": \"10.2.129.49\",\n",

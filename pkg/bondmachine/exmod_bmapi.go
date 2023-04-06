@@ -26,6 +26,7 @@ type BMAPIExtra struct {
 	PackageName     string
 	ModuleName      string
 	GenerateExample string
+	DataType        string
 	Rsize           uint8
 }
 
@@ -47,6 +48,7 @@ func (sl *BMAPIExtra) Get_Params() *ExtraParams {
 	result.Params["bmapi_packagename"] = sl.PackageName
 	result.Params["bmapi_modulename"] = sl.ModuleName
 	result.Params["bmapi_generate_example"] = sl.GenerateExample
+	result.Params["bmapi_datatype"] = sl.DataType
 
 	result.Params["inputs"] = ""
 	result.Params["outputs"] = ""
