@@ -44,57 +44,67 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 	}
 
 	nodeName := "node" + ev.index
-	implementation := ev.Implementation[iProg.LibraryID]
 
-	nodeCodeName := implementation.ImplName + "_" + implementation.ProgramNames[iProg.ProgramID]
-
-	if neuron, ok := ev.MelBondConfig.Neurons[nodeCodeName]; ok {
-
-		ev.MelBondConfig.CodeChan <- fmt.Sprint("%meta fidef " + nodeName + " fragment:" + nodeCodeName)
-
-		isFunctional := true
-
-		if len(implementation.NonVariadicArgs[iProg.ProgramID]) == 0 && !implementation.IsVariadic[iProg.ProgramID] {
-			isFunctional = false
+	if iProg.LibraryID == mel3program.BUILTINS {
+		switch iProg.ProgramID {
+		case mel3program.B_IN_INPUT:
+		case mel3program.B_IN_OUTPUTLIST:
+		case mel3program.B_IN_GROUP:
+		case mel3program.B_IN_UNGROUP:
+		default:
 		}
+	} else {
+		implementation := ev.Implementation[iProg.LibraryID]
 
-		for _, param := range neuron.Params {
-			if !isFunctional && param == implementation.ProgramNames[iProg.ProgramID] {
-				ev.MelBondConfig.CodeChan <- fmt.Sprintf(", %s:%s", implementation.ProgramNames[iProg.ProgramID], iProg.ProgramValue)
-				continue
+		nodeCodeName := implementation.ImplName + "_" + implementation.ProgramNames[iProg.ProgramID]
+
+		if neuron, ok := ev.MelBondConfig.Neurons[nodeCodeName]; ok {
+
+			ev.MelBondConfig.CodeChan <- fmt.Sprint("%meta fidef " + nodeName + " fragment:" + nodeCodeName)
+
+			isFunctional := true
+
+			if len(implementation.NonVariadicArgs[iProg.ProgramID]) == 0 && !implementation.IsVariadic[iProg.ProgramID] {
+				isFunctional = false
 			}
-			switch param {
-			default:
-				if value, ok := ev.MelBondConfig.Params[param]; ok {
-					ev.MelBondConfig.CodeChan <- fmt.Sprintf(", %s:%s", param, value)
-				} else {
-					ev.error = errors.New("Unknown parameter " + param)
+
+			for _, param := range neuron.Params {
+				if !isFunctional && param == implementation.ProgramNames[iProg.ProgramID] {
+					ev.MelBondConfig.CodeChan <- fmt.Sprintf(", %s:%s", implementation.ProgramNames[iProg.ProgramID], iProg.ProgramValue)
+					continue
+				}
+				switch param {
+				default:
+					if value, ok := ev.MelBondConfig.Params[param]; ok {
+						ev.MelBondConfig.CodeChan <- fmt.Sprintf(", %s:%s", param, value)
+					} else {
+						ev.error = errors.New("Unknown parameter " + param)
+						return nil
+					}
+				}
+			}
+
+			ev.MelBondConfig.CodeChan <- "\n"
+
+			arg_num := len(iProg.NextPrograms)
+			evaluators := make([]mel3program.Mel3Visitor, arg_num)
+			names := make([]string, arg_num)
+			for i, prog := range iProg.NextPrograms {
+				evaluators[i] = mel3program.ProgMux(ev, prog)
+				names[i] = nodeName + string(byte(97+i))
+				evaluators[i].(*BasmEvaluator).index = ev.index + string(byte(97+i))
+				ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + nodeName + ", type:input, index:" + fmt.Sprint(i))
+				ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + names[i] + ", type:output, index:0")
+				evaluators[i].Visit(prog)
+				if evaluators[i].GetError() != nil {
+					ev.error = evaluators[i].GetError()
 					return nil
 				}
 			}
+		} else {
+			ev.error = errors.New("Unknown neuron " + nodeCodeName)
 		}
-
-		ev.MelBondConfig.CodeChan <- "\n"
-
-		arg_num := len(iProg.NextPrograms)
-		evaluators := make([]mel3program.Mel3Visitor, arg_num)
-		names := make([]string, arg_num)
-		for i, prog := range iProg.NextPrograms {
-			evaluators[i] = mel3program.ProgMux(ev, prog)
-			names[i] = nodeName + string(byte(97+i))
-			evaluators[i].(*BasmEvaluator).index = ev.index + string(byte(97+i))
-			ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + nodeName + ", type:input, index:" + fmt.Sprint(i))
-			ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + names[i] + ", type:output, index:0")
-			evaluators[i].Visit(prog)
-			if evaluators[i].GetError() != nil {
-				ev.error = evaluators[i].GetError()
-				return nil
-			}
-		}
-	} else {
-		ev.error = errors.New("Unknown neuron " + nodeCodeName)
 	}
-
 	return nil
 }
 
