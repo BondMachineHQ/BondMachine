@@ -15,7 +15,9 @@ const (
 		   "import os\n",
 		   "import numpy as np\n",
 		   "import struct\n",
-		   "import time"
+		   "import time\n",
+		   "import requests\n",
+		   "import json"
 		  ]
 		 },
 		 {
@@ -25,11 +27,66 @@ const (
 		  "outputs": [],
 		  "source": [
 		   "# SETTINGS\n",
-		   "project_name  = os.getcwd()+\"firmware\"\n",
+		   "project_name  = \"firmware\"\n",
 		   "firmware_name = project_name+\".bit\"\n",
 		   "n_input       = 4\n",
 		   "n_output      = 2\n",
-		   "benchcore     = True"
+		   "benchcore     = True\n",
+		   "precision_info = {\n",
+		   "    \"type\": \"flpe4f9\",\n",
+		   "    \"e\": 0,\n",
+		   "    \"f\": 0,\n",
+		   "    \"host\": \"10.2.129.49\",\n",
+		   "    \"port\": \"8080\"\n",
+		   "}\n",
+		   "\n",
+		   "if (precision_info[\"type\"][:3] == \"flp\"):\n",
+		   "    exp = precision_info[\"type\"][4:precision_info[\"type\"].rindex(\"f\")]\n",
+		   "    mant = precision_info[\"type\"][precision_info[\"type\"].rindex(\"f\")+1:len(precision_info[\"type\"])]\n",
+		   "    precision_info[\"e\"] = exp\n",
+		   "    precision_info[\"f\"] = mant\n",
+		   "    \n",
+		   "print(precision_info)\n",
+		   "conversion_url ='http://'+precision_info[\"host\"]+':'+str(precision_info[\"port\"])+'/bmnumbers'"
+		  ]
+		 },
+		 {
+		  "cell_type": "code",
+		  "execution_count": null,
+		  "metadata": {},
+		  "outputs": [],
+		  "source": [
+		   "def convert_flopoco_float_to_binary(num, e, f):\n",
+		   "            \n",
+		   "    strNum = \"0flp<\"+str(e)+\".\"+str(f)+\">\"+str(num)\n",
+		   "    reqBody = {'action': 'override', 'numbers': [strNum], 'reqType': 'bin', 'dumpMode': 'native'}\n",
+		   "    xReq = requests.post(conversion_url, json = reqBody)\n",
+		   "    convertedNumber = json.loads(xReq.text)[\"numbers\"][0]\n",
+		   "    strNumber = convertedNumber[0]+convertedNumber[6:len(convertedNumber)]\n",
+		   "    \n",
+		   "    return strNumber"
+		  ]
+		 },
+		 {
+		  "cell_type": "code",
+		  "execution_count": null,
+		  "metadata": {},
+		  "outputs": [],
+		  "source": [
+		   "def convert_flopoco_binary_to_float(num, e, f):\n",
+		   "    \n",
+		   "    totLen = precision_info[\"e\"] + precision_info[\"f\"] + 3\n",
+		   "    strNum = \"0b<\"+str(totLen)+\">\"+str(num)\n",
+		   "    newType = \"flpe\"+str(e)+\"f\"+str(f)\n",
+		   "    reqBody = {'action': 'override', 'numbers': [strNum], 'reqType': newType, 'dumpMode': 'native'}\n",
+		   "    xReq = requests.post(conversion_url, json = reqBody)\n",
+		   "    print(xReq)\n",
+		   "    try:\n",
+		   "        convertedNumber = json.loads(xReq.text)[\"numbers\"][0]\n",
+		   "        strNumber = convertedNumber[convertedNumber.rindex(\">\")+1:len(convertedNumber)]\n",
+		   "        return float(strNumber)\n",
+		   "    except Exception as e:\n",
+		   "        print(e)"
 		  ]
 		 },
 		 {
@@ -68,7 +125,10 @@ const (
 		   "        \n",
 		   "        if benchcore == True:\n",
 		   "            if i != borderRange-1:\n",
-		   "                output = bin_to_float(str(bin_res).replace(\"b\", \"\"))\n",
+		   "                if precision_info[\"type\"][:3] == \"flp\":\n",
+		   "                    output = convert_flopoco_binary_to_float(str(bin_res).replace(\"b\", \"\"), precision_info[\"e\"], precision_info[\"f\"])\n",
+		   "                else:\n",
+		   "                    output = bin_to_float(str(bin_res).replace(\"b\", \"\"))\n",
 		   "            else:\n",
 		   "                output = int(str(bin_res), 2)\n",
 		   "        else:\n",
@@ -77,6 +137,7 @@ const (
 		   "        result_from_bm_ml.append(output) # APPEND THE OUTPUT\n",
 		   "        offset = offset + 4\n",
 		   "    \n",
+		   "    # print(result_from_bm_ml) # VECTOR OF PROBABIBILITES\n",
 		   "    return result_from_bm_ml"
 		  ]
 		 },
@@ -137,18 +198,26 @@ const (
 		   "for xSample in X_test:\n",
 		   "    offset = 0\n",
 		   "    for feature in list(xSample): #\n",
-		   "        binToSend = get_binary_from_float(feature)\n",
+		   "        if precision_info[\"type\"][:3] == \"flp\":\n",
+		   "            binToSend = convert_flopoco_float_to_binary(feature, precision_info[\"e\"], precision_info[\"f\"])\n",
+		   "        else:\n",
+		   "            binToSend = get_binary_from_float(feature)\n",
 		   "        decToSend = int(binToSend, 2)\n",
 		   "        spi0.write_mm(offset, decToSend) # WRITE THE FEATURE TO THE CORRESPONDING INPUT\n",
 		   "        offset = offset + 4 # 4 BYTE = 32 BIT\n",
 		   "    time.sleep(0.5)\n",
 		   "    out = np.asarray(read_output())\n",
+		   "    #print(\" #\",idx,\" -> classification: \", np.argmax(out[0:2]))\n",
 		   "    classification = np.argmax(out[0:2])\n",
 		   "    if (benchcore == True):\n",
 		   "        results_to_dump.append([out[0], out[1], classification, out[2]])\n",
 		   "    else: \n",
 		   "        results_to_dump.append([out[0], out[1], classification])\n",
-		   "    idx = idx + 1"
+		   "    idx = idx + 1\n",
+		   "    #break\n",
+		   "\n",
+		   "# 01001010100\n",
+		   "print(results_to_dump)"
 		  ]
 		 },
 		 {
@@ -160,11 +229,18 @@ const (
 		   "import csv\n",
 		   "fields = ['probability_0', 'probability_1', 'classification', 'clock_cycles'] \n",
 		   "\n",
-		   "with open(\"predictions.csv\", 'w') as f:\n",
+		   "with open(project_name+\".csv\", 'w') as f:\n",
 		   "    write = csv.writer(f)\n",
 		   "    write.writerow(fields)\n",
 		   "    write.writerows(results_to_dump)"
 		  ]
+		 },
+		 {
+		  "cell_type": "code",
+		  "execution_count": null,
+		  "metadata": {},
+		  "outputs": [],
+		  "source": []
 		 }
 		],
 		"metadata": {
