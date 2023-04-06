@@ -48,7 +48,7 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 	if iProg.LibraryID == mel3program.BUILTINS {
 		switch iProg.ProgramID {
 		case mel3program.B_IN_INPUT:
-		case mel3program.B_IN_OUTPUTLIST:
+		case mel3program.B_IN_OUTPUT:
 		case mel3program.B_IN_GROUP:
 		case mel3program.B_IN_UNGROUP:
 		default:
