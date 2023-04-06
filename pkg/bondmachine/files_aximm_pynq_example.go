@@ -43,8 +43,8 @@ const (
 		   "if (precision_info[\"type\"][:3] == \"flp\"):\n",
 		   "    exp = precision_info[\"type\"][4:precision_info[\"type\"].rindex(\"f\")]\n",
 		   "    mant = precision_info[\"type\"][precision_info[\"type\"].rindex(\"f\")+1:len(precision_info[\"type\"])]\n",
-		   "    precision_info[\"e\"] = exp\n",
-		   "    precision_info[\"f\"] = mant\n",
+		   "    precision_info[\"e\"] = int(exp)\n",
+		   "    precision_info[\"f\"] = int(mant)\n",
 		   "    \n",
 		   "print(precision_info)\n",
 		   "conversion_url ='http://'+precision_info[\"host\"]+':'+str(precision_info[\"port\"])+'/bmnumbers'"
