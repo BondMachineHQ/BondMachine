@@ -1,0 +1,25 @@
+%meta fidef node fragment:m3number_add, addop:addf
+%meta filinkatt node_nodea fi:node, type:input, index:0
+%meta filinkatt node_nodea fi:nodea, type:output, index:0
+%meta fidef nodea fragment:m3number_add, addop:addf
+%meta filinkatt nodea_nodeaa fi:nodea, type:input, index:0
+%meta filinkatt nodea_nodeaa fi:nodeaa, type:output, index:0
+%meta fidef nodeaa fragment:m3number_m3numberconst, m3numberconst:1
+%meta filinkatt nodea_nodeab fi:nodea, type:input, index:1
+%meta filinkatt nodea_nodeab fi:nodeab, type:output, index:0
+%meta fidef nodeab fragment:m3number_m3numberconst, m3numberconst:66
+%meta filinkatt node_nodeb fi:node, type:input, index:1
+%meta filinkatt node_nodeb fi:nodeb, type:output, index:0
+%meta fidef nodeb fragment:m3number_add, addop:addf
+%meta filinkatt nodeb_nodeba fi:nodeb, type:input, index:0
+%meta filinkatt nodeb_nodeba fi:nodeba, type:output, index:0
+%meta fidef nodeba fragment:m3number_m3numberconst, m3numberconst:1
+%meta filinkatt nodeb_nodebb fi:nodeb, type:input, index:1
+%meta filinkatt nodeb_nodebb fi:nodebb, type:output, index:0
+%meta fidef nodebb fragment:m3number_mult, multop:multf
+%meta filinkatt nodebb_nodebba fi:nodebb, type:input, index:0
+%meta filinkatt nodebb_nodebba fi:nodebba, type:output, index:0
+%meta fidef nodebba fragment:m3number_m3numberconst, m3numberconst:2
+%meta filinkatt nodebb_nodebbb fi:nodebb, type:input, index:1
+%meta filinkatt nodebb_nodebbb fi:nodebbb, type:output, index:0
+%meta fidef nodebbb fragment:m3number_m3numberconst, m3numberconst:4

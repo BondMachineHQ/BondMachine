@@ -1,0 +1,3 @@
+%fragment m3numben_m3numberconst template:true resout:r0
+	rset	r0, {{ .Params.m3numberconst }}
+%endfragment
