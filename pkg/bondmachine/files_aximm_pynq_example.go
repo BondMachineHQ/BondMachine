@@ -68,26 +68,29 @@ const (
 		  ]
 		 },
 		 {
-		  "cell_type": "code",
-		  "execution_count": null,
-		  "metadata": {},
-		  "outputs": [],
-		  "source": [
-		   "def convert_flopoco_binary_to_float(num, e, f):\n",
-		   "    \n",
-		   "    totLen = precision_info[\"e\"] + precision_info[\"f\"] + 3\n",
-		   "    strNum = \"0b<\"+str(totLen)+\">\"+str(num)\n",
-		   "    newType = \"flpe\"+str(e)+\"f\"+str(f)\n",
-		   "    reqBody = {'action': 'override', 'numbers': [strNum], 'reqType': newType, 'dumpMode': 'native'}\n",
-		   "    xReq = requests.post(conversion_url, json = reqBody)\n",
-		   "    print(xReq)\n",
-		   "    try:\n",
-		   "        convertedNumber = json.loads(xReq.text)[\"numbers\"][0]\n",
-		   "        strNumber = convertedNumber[convertedNumber.rindex(\">\")+1:len(convertedNumber)]\n",
-		   "        return float(strNumber)\n",
-		   "    except Exception as e:\n",
-		   "        print(e)"
-		  ]
+			"cell_type": "code",
+			"execution_count": null,
+			"metadata": {},
+			"outputs": [],
+			"source": [
+			 "def convert_flopoco_binary_to_float(num, e, f):\n",
+			 "    \n",
+			 "    totLen = precision_info[\"e\"] + precision_info[\"f\"] + 3\n",
+			 "    if len(num) > totLen:\n",
+			 "        num = num[1:]\n",
+			 "    \n",
+			 "    strNum = \"0b<\"+str(totLen)+\">\"+str(num)\n",
+			 "    newType = \"flpe\"+str(e)+\"f\"+str(f)\n",
+			 "    reqBody = {'action': 'override', 'numbers': [strNum], 'reqType': newType, 'dumpMode': 'native'}\n",
+			 "    xReq = requests.post(conversion_url, json = reqBody)\n",
+			 "    print(xReq)\n",
+			 "    try:\n",
+			 "        convertedNumber = json.loads(xReq.text)[\"numbers\"][0]\n",
+			 "        strNumber = convertedNumber[convertedNumber.rindex(\">\")+1:len(convertedNumber)]\n",
+			 "        return float(strNumber)\n",
+			 "    except Exception as e:\n",
+			 "        print(e)"
+			]
 		 },
 		 {
 		  "cell_type": "code",
