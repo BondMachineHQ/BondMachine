@@ -3,19 +3,29 @@ package melbond
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/mmirko/mel/pkg/m3melbond"
 )
 
+const (
+	ASYNC = uint8(0) + iota
+	SYNC
+)
+
 type Group []string
+
+type Groups map[string]Group
 
 type Neuron struct {
 	Params []string
 }
 
 type MelBondConfig struct {
+	*bminfo.BMinfo
 	RegisterSize  uint8
 	DataType      string
 	TypePrefix    string
@@ -27,9 +37,8 @@ type MelBondConfig struct {
 	Verbose       bool
 	NeuronLibPath string
 	IOMode        uint8
-	*bminfo.BMinfo
-	CodeChan  chan string
-	CancelCtx context.CancelFunc
+	CodeChan      chan string
+	CancelCtx     context.CancelFunc
 }
 
 type MelBondProgram struct {
@@ -70,6 +79,12 @@ func (p *MelBondProgram) WriteBasm() (string, error) {
 	p.CodeChan = make(chan string)
 	p.CancelCtx = cancel
 
+	//Create the groups map and copy it to the environment
+
+	var groups interface{}
+	groups = make(Groups)
+	p.Mel3Object.Environment = &groups
+
 	go func() {
 		for {
 			select {
@@ -86,9 +101,27 @@ func (p *MelBondProgram) WriteBasm() (string, error) {
 	if err := p.MelStringImport(p.Source); err != nil {
 		return "", err
 	} else {
+
+		regSize := p.RegisterSize
+		p.CodeChan <- fmt.Sprintf("%%meta bmdef     global registersize:%d\n", regSize)
+		switch p.IOMode {
+		case ASYNC:
+			p.CodeChan <- fmt.Sprintf("%%meta bmdef     global iomode:async\n")
+		case SYNC:
+			p.CodeChan <- fmt.Sprintf("%%meta bmdef     global iomode:sync\n")
+		}
+
 		if err := p.Compute(); err != nil {
 			return "", err
 		} else {
+			for gName, group := range groups.(Groups) {
+				nodeList := ""
+				for _, nName := range group {
+					nodeList += ":" + nName
+				}
+				p.CodeChan <- fmt.Sprintln("%meta cpdef  " + gName + " fragcollapse" + nodeList)
+			}
+			time.Sleep(1 * time.Second)
 			return p.BasmCode, nil
 		}
 	}

@@ -1,13 +1,13 @@
-	add(
+	output(0,add(
 		add(
 			m3numberconst(1),
 			m3numberconst(66)
 		),
-		add(
+		group(pippo,add(
 			m3numberconst(1),
 			mult(
 				m3numberconst(2),
 				input(0,m3numberconst(11))
 			)
-		)
-	)
+		))
+	))

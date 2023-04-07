@@ -305,6 +305,10 @@ func fragmentComposer(bi *BasmInstance) error {
 				for j, out := range newOutputs[i] {
 					if out != "" {
 						newLine := new(bmline.BasmLine)
+						if firstLine {
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							firstLine = false
+						}
 						newOperation := new(bmline.BasmElement)
 						newOperation.SetValue("mov")
 						newReg := new(bmline.BasmElement)
@@ -324,6 +328,10 @@ func fragmentComposer(bi *BasmInstance) error {
 				for j, out := range newRegAsOutputs[i] {
 					if out != "" {
 						newLine := new(bmline.BasmLine)
+						if firstLine {
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							firstLine = false
+						}
 						newOperation := new(bmline.BasmElement)
 						newOperation.SetValue("mov")
 						newReg := new(bmline.BasmElement)

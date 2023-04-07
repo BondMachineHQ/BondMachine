@@ -8,7 +8,6 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/melbond"
-	"github.com/BondMachineHQ/BondMachine/pkg/neuralbond"
 	"github.com/mmirko/mel/pkg/m3melbond"
 	"github.com/mmirko/mel/pkg/mel"
 )
@@ -85,9 +84,9 @@ func main() {
 
 	switch *iomode {
 	case "async":
-		bc.IOMode = neuralbond.ASYNC
+		bc.IOMode = melbond.ASYNC
 	case "sync":
-		bc.IOMode = neuralbond.SYNC
+		bc.IOMode = melbond.SYNC
 	default:
 		panic("Unknown IO mode")
 	}
@@ -142,7 +141,7 @@ func main() {
 	var ep *mel.EvolutionParameters
 	c := new(mel.MelConfig)
 	a.Mel3Object.DefaultCreator = bc.BasmCreator
-	c.Debug = false
+	c.Debug = *debug
 
 	a.Init(c, ep, []string{"m3uint", "m3uintcmp", "m3number", "m3bool", "m3boolcmp", "m3statements"})
 
