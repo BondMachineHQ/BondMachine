@@ -7,7 +7,7 @@
 			m3numberconst(1),
 			mult(
 				m3numberconst(2),
-				m3numberconst(4)
+				input(0,m3numberconst(11))
 			)
 		)
 	)

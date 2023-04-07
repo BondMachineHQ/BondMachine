@@ -48,6 +48,12 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 	if iProg.LibraryID == mel3program.BUILTINS {
 		switch iProg.ProgramID {
 		case mel3program.B_IN_INPUT:
+			result := new(mel3program.Mel3Program)
+			result.LibraryID = mel3program.BUILTINS
+			result.ProgramID = mel3program.B_IN_INPUT
+			result.ProgramValue = iProg.ProgramValue
+			ev.Result = result
+			return nil
 		case mel3program.B_IN_OUTPUT:
 		case mel3program.B_IN_GROUP:
 		case mel3program.B_IN_UNGROUP:
@@ -93,13 +99,26 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 				evaluators[i] = mel3program.ProgMux(ev, prog)
 				names[i] = nodeName + string(byte(97+i))
 				evaluators[i].(*BasmEvaluator).index = ev.index + string(byte(97+i))
-				ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + nodeName + ", type:input, index:" + fmt.Sprint(i))
-				ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + names[i] + ", type:output, index:0")
 				evaluators[i].Visit(prog)
 				if evaluators[i].GetError() != nil {
 					ev.error = evaluators[i].GetError()
 					return nil
 				}
+				result := evaluators[i].GetResult()
+				ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkdef " + nodeName + "_" + names[i] + " type:fl")
+				if result != nil {
+					if !(result.LibraryID == mel3program.BUILTINS && result.ProgramID == mel3program.B_IN_INPUT) {
+						ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + nodeName + ", type:input, index:" + fmt.Sprint(i))
+						ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + names[i] + ", type:output, index:0")
+					} else {
+						ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:" + nodeName + ", type:input, index:" + fmt.Sprint(i))
+						ev.MelBondConfig.CodeChan <- fmt.Sprintln("%meta filinkatt " + nodeName + "_" + names[i] + " fi:ext, type:input, index:" + result.ProgramValue)
+					}
+				} else {
+					// ev.error = errors.New("no result")
+					// return nil
+				}
+
 			}
 		} else {
 			ev.error = errors.New("Unknown neuron " + nodeCodeName)
