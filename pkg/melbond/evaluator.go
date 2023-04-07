@@ -102,11 +102,9 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 			ev.group = iProg.ProgramValue
 			arg_num := len(iProg.NextPrograms) // It will be 1
 			evaluators := make([]mel3program.Mel3Visitor, arg_num)
-			names := make([]string, arg_num)
 			for i, prog := range iProg.NextPrograms {
 				evaluators[i] = mel3program.ProgMux(ev, prog)
-				names[i] = nodeName + string(byte(97+i))
-				evaluators[i].(*BasmEvaluator).index = ev.index + string(byte(97+i))
+				evaluators[i].(*BasmEvaluator).index = ev.index
 				evaluators[i].(*BasmEvaluator).groups = ev.groups
 				evaluators[i].(*BasmEvaluator).group = ev.group
 				evaluators[i].Visit(prog)
@@ -131,11 +129,9 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 			ev.group = ""
 			arg_num := len(iProg.NextPrograms) // It will be 1
 			evaluators := make([]mel3program.Mel3Visitor, arg_num)
-			names := make([]string, arg_num)
 			for i, prog := range iProg.NextPrograms {
 				evaluators[i] = mel3program.ProgMux(ev, prog)
-				names[i] = nodeName + string(byte(97+i))
-				evaluators[i].(*BasmEvaluator).index = ev.index + string(byte(97+i))
+				evaluators[i].(*BasmEvaluator).index = ev.index
 				evaluators[i].(*BasmEvaluator).groups = ev.groups
 				evaluators[i].(*BasmEvaluator).group = ev.group
 				evaluators[i].Visit(prog)
