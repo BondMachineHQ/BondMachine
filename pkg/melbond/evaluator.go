@@ -159,7 +159,7 @@ func (ev *BasmEvaluator) Visit(iProg *mel3program.Mel3Program) mel3program.Mel3V
 		if neuron, ok := ev.MelBondConfig.Neurons[nodeCodeName]; ok {
 
 			ev.MelBondConfig.CodeChan <- fmt.Sprint("%meta fidef " + nodeName + " fragment:" + nodeCodeName)
-			fmt.Println(ev.groups)
+
 			// groups management
 			myGroup := nodeName
 			if ev.group != "" {
