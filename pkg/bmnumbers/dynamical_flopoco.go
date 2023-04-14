@@ -8,6 +8,10 @@ import (
 
 type DynFloPoCo struct{}
 
+func (d DynFloPoCo) GetName() string {
+	return "dyn_flopoco"
+}
+
 func (d DynFloPoCo) MatchName(name string) bool {
 	re := regexp.MustCompile("flpe(?P<e>[0-9]+)f(?P<f>[0-9]+)")
 	if re.MatchString(name) {

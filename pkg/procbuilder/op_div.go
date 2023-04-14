@@ -220,12 +220,23 @@ func (Op Div) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 	return result
 }
 func (Op Div) HLAssemblerMatch(arch *Arch) []string {
+
 	result := make([]string, 0)
+	result = append(result, "div::*--type=reg::*--type=reg")
 	return result
 }
 func (Op Div) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+	switch line.Operation.GetValue() {
+	case "div":
+		regDst := line.Elements[0].GetValue()
+		regSrc := line.Elements[1].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regDst, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regSrc, Op: bmreqs.OpAdd})
+		return line, nil
+	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
+
 func (Op Div) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
 }

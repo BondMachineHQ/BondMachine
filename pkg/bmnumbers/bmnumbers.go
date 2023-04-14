@@ -39,6 +39,10 @@ func init() {
 
 	AllDynamicalTypes = make([]DynamicalType, 0)
 	AllDynamicalTypes = append(AllDynamicalTypes, DynFloPoCo{})
+	dynLQ := DynLinearQuantizer{}
+	dynLQRages := make(map[int]LinearDataRange)
+	dynLQ.Ranges = &dynLQRages
+	AllDynamicalTypes = append(AllDynamicalTypes, dynLQ)
 
 	AllMatchers = make(map[string]ImportFunc)
 	for _, t := range AllTypes {
@@ -48,7 +52,7 @@ func init() {
 	}
 
 	EventuallyCreateType("flpe4f4", nil)
-
+	EventuallyCreateType("lqs8t0", nil)
 }
 
 func ListTypes() {

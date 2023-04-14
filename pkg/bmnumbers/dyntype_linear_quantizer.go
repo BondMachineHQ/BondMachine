@@ -2,15 +2,14 @@ package bmnumbers
 
 import (
 	"errors"
-	"os"
-	"os/exec"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 type LinearQuantizer struct {
 	linearQuantizerName string
+	s                   int
+	t                   int
 }
 
 func (d LinearQuantizer) GetName() string {
@@ -22,13 +21,13 @@ func (d LinearQuantizer) getInfo() string {
 }
 
 func (d LinearQuantizer) getSize() int {
-	return 1 // TODO
+	return d.s
 }
 
 func (d LinearQuantizer) importMatchers() map[string]ImportFunc {
 	result := make(map[string]ImportFunc)
 
-	result["^0lq<(?P<e>[0-9]+)>(?P<number>.+)$"] = floPoCoImport
+	result["^0lq<(?P<s>[0-9]+)\\.(?P<t>[0-9]+)>(?P<number>.+)$"] = linearQuantizerImport
 
 	return result
 }
@@ -45,17 +44,56 @@ func (d LinearQuantizer) Convert(n *BMNumber) error {
 
 func linearQuantizerImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 	number := re.ReplaceAllString(input, "${number}")
-	es := re.ReplaceAllString(input, "${e}")
-	e, _ := strconv.Atoi(es)
+	ss := re.ReplaceAllString(input, "${s}")
+	ts := re.ReplaceAllString(input, "${t}")
+	s, _ := strconv.Atoi(ss)
+	t, _ := strconv.Atoi(ts)
 
-	EventuallyCreateType("flpe"+es+"f"+fs, nil)
+	if s < 1 || s > 32 {
+		return nil, errors.New("invalid s value for linear quantizer")
+	}
 
-	binNum := line
+	// Get the linear quantizer ranges struct
+	var lqRanges *map[int]LinearDataRange
+	for _, t := range AllDynamicalTypes {
+		if t.GetName() == "dyn_linear_quantizer" {
+			lqRanges = t.(DynLinearQuantizer).Ranges
+		}
+	}
+
+	if lqRanges != nil {
+		if _, ok := (*lqRanges)[t]; !ok {
+			return nil, errors.New("invalid type value for linear quantizer")
+		}
+	} else {
+		return nil, errors.New("linear quantizer ranges not found")
+	}
+
+	EventuallyCreateType("lqs"+ss+"t"+ts, nil)
+
+	var binNum string
+
+	bandNum := float64(int(1) << uint(s))
+	bandSize := ((*lqRanges)[t].Max - (*lqRanges)[t].Min) / bandNum
+
+	if numberNum, err := strconv.ParseFloat(number, 64); err != nil {
+		return nil, errors.New("invalid number for linear quantizer")
+	} else {
+		band := int((numberNum - (*lqRanges)[t].Min) / bandSize)
+		if band < 0 {
+			band = 0
+		} else if band >= int(bandNum) {
+			band = int(bandNum) - 1
+		}
+		binNum = "00000000000000000000000000000000" + strconv.FormatInt(int64(band), 2)
+		binNum = binNum[len(binNum)-s:]
+	}
+
 	var nextByte string
 	newNumber := BMNumber{}
 	newNumber.number = make([]byte, (len(binNum)-1)/8+1)
 	newNumber.bits = len(binNum)
-	newNumber.nType = LinearQuantizer{linearQuantizerName: "flpe" + es + "f" + fs}
+	newNumber.nType = LinearQuantizer{linearQuantizerName: "lqs" + ss + "t" + ts, s: s, t: t}
 
 	for i := 0; ; i++ {
 
@@ -77,51 +115,40 @@ func linearQuantizerImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 		}
 	}
 	return &newNumber, nil
-
-	return nil, nil
 }
 
 func (d LinearQuantizer) ExportString(n *BMNumber) (string, error) {
-	e := d.e
-	f := d.f
-	es := strconv.Itoa(e)
-	fs := strconv.Itoa(f)
-	number, _ := n.ExportBinary(false)
+	s := d.s
+	t := d.t
+	ss := strconv.Itoa(s)
+	ts := strconv.Itoa(t)
+	number, _ := n.ExportUint64()
 
-	// Add leading zeros
-	for len(number) < e+f+3 {
-		number = "0" + number
-	}
-
-	runCommand := []string{"bin2fp", es, fs, number}
-	// fmt.Println(runCommand)
-	// Create a temporary directory for the LinearQuantizer files
-	dir, err := os.MkdirTemp("", "bin2fp")
-	if err != nil {
-		return "", err
-	}
-	defer os.RemoveAll(dir)
-
-	cmd := exec.Command(runCommand[0], runCommand[1:]...)
-	cmd.Dir = dir
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return "", err
-	} else {
-		resultReport := string(out)
-
-		// Parse every line of the report
-		for _, line := range strings.Split(resultReport, "\n") {
-			result := "0flp<" + es + "." + fs + ">" + line
-			return result, nil
+	// Get the linear quantizer ranges struct
+	var lqRanges *map[int]LinearDataRange
+	for _, t := range AllDynamicalTypes {
+		if t.GetName() == "dyn_linear_quantizer" {
+			lqRanges = t.(DynLinearQuantizer).Ranges
 		}
 	}
-	return "", errors.New("invalid binary number" + number)
+
+	bandNum := float64(int(1) << uint(s))
+	bandSize := ((*lqRanges)[t].Max - (*lqRanges)[t].Min) / bandNum
+
+	numberF := float64(number)*bandSize + (*lqRanges)[t].Min
+
+	result := "0lq<" + ss + "." + ts + ">" + strconv.FormatFloat(numberF, 'f', -1, 64)
+	return result, nil
 }
 
 func (d LinearQuantizer) ShowInstructions() map[string]string {
-	return d.instructions
+	result := make(map[string]string)
+	result["addop"] = "add"
+	result["multop"] = "mult"
+	result["divop"] = "div"
+	return result
 }
 
 func (d LinearQuantizer) ShowPrefix() string {
-	return "0flp<" + strconv.Itoa(d.e) + "." + strconv.Itoa(d.f) + ">"
+	return "0lq<" + strconv.Itoa(d.s) + "." + strconv.Itoa(d.t) + ">"
 }

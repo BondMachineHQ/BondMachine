@@ -216,10 +216,20 @@ func (Op Mult) Op_instruction_verilog_extra_block(arch *Arch, flavor string, lev
 	return result
 }
 func (Op Mult) HLAssemblerMatch(arch *Arch) []string {
+
 	result := make([]string, 0)
+	result = append(result, "mult::*--type=reg::*--type=reg")
 	return result
 }
 func (Op Mult) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+	switch line.Operation.GetValue() {
+	case "mult":
+		regDst := line.Elements[0].GetValue()
+		regSrc := line.Elements[1].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regDst, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regSrc, Op: bmreqs.OpAdd})
+		return line, nil
+	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
 func (Op Mult) ExtraFiles(arch *Arch) ([]string, []string) {

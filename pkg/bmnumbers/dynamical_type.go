@@ -3,6 +3,7 @@ package bmnumbers
 // TODO finish this
 
 type DynamicalType interface {
+	GetName() string
 	MatchName(string) bool
 	CreateType(string, interface{}) (BMNumberType, error)
 	// Save the type to a file

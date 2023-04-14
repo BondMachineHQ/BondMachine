@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -18,6 +19,7 @@ import (
 	"time"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondirect"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
@@ -168,6 +170,8 @@ var bmInfoFile = flag.String("bminfo-file", "", "File containing the bondmachine
 var bmRequirementsFile = flag.String("bmrequirements-file", "", "File containing the bondmachine requirements")
 var hwOptimizations = flag.String("hw-optimizations", "", "comma separated hardware optimizations")
 
+var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the sintax index,filename)")
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -190,7 +194,77 @@ func init() {
 	flag.Var(&attach_benchmark_core, "attach-benchmark-core", "Attach a benchmark core")
 
 	flag.Parse()
+
+	if *linearDataRange != "" {
+
+		// Get the linear quantizer ranges struct
+		var lqRanges *map[int]bmnumbers.LinearDataRange
+		for _, t := range bmnumbers.AllDynamicalTypes {
+			if t.GetName() == "dyn_linear_quantizer" {
+				lqRanges = t.(bmnumbers.DynLinearQuantizer).Ranges
+			}
+		}
+
+		splitted := strings.Split(*linearDataRange, ",")
+		if len(splitted)%2 != 0 {
+			log.Fatal("Error: Invalid linear data range files")
+		}
+
+		// Load a file for each index
+		for i := 0; i < len(splitted); i += 2 {
+			index, err := strconv.Atoi(splitted[i])
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			if index == 0 {
+				log.Fatal("Error: Index cannot be 0 (reserved)")
+			}
+
+			// Check if the index is already present
+			if _, ok := (*lqRanges)[index]; ok {
+				log.Fatal("Error: Index already present")
+			}
+
+			filename := splitted[i+1]
+
+			// Read all the lines of the file
+			f, err := os.Open(filename)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Read all the lines of the file
+			var min, max float64
+			scanner := bufio.NewScanner(f)
+			first := true
+			for scanner.Scan() {
+				line := scanner.Text()
+
+				// Parse the min and max values
+				if val, err := strconv.ParseFloat(line, 64); err == nil {
+					if first {
+						min = val
+						max = val
+						first = false
+					}
+
+					if val < min {
+						min = val
+					}
+					if val > max {
+						max = val
+					}
+				}
+			}
+
+			// Add the range to the map
+			(*lqRanges)[index] = bmnumbers.LinearDataRange{Min: min, Max: max}
+			f.Close()
+		}
+	}
 }
+
 func lastAddr(n *net.IPNet) (net.IP, error) { // works when the n is a prefix, otherwise...
 	if n.IP.To4() == nil {
 		return net.IP{}, errors.New("does not support IPv6 addresses.")
