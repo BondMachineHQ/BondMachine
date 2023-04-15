@@ -26,7 +26,7 @@ var useFiles = flag.Bool("use-files", false, "Load files instead of command line
 var serve = flag.Bool("serve", false, "Serve as REST API")
 
 // Custom types
-var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the sintax index,filename)")
+var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
 func init() {
 	flag.Parse()

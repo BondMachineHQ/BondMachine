@@ -258,7 +258,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 
 	if sc != nil {
 		if sc.Show_io_pre {
-			result += "\tPre-compute IO: " + vm.Dump_io() + "\n"
+			result += "\tPre-compute IO: " + vm.DumpIO() + "\n"
 		}
 	}
 
@@ -283,7 +283,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 
 	if sc != nil {
 		if sc.Show_io_post {
-			result += "\tPost-compute IO: " + vm.Dump_io() + "\n"
+			result += "\tPost-compute IO: " + vm.DumpIO() + "\n"
 		}
 	}
 
@@ -319,7 +319,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	return result, nil
 }
 
-func (vm *VM) Dump_io() string {
+func (vm *VM) DumpIO() string {
 	result := ""
 	for i, reg := range vm.Inputs_regs {
 		switch vm.Bmach.Rsize {
@@ -327,8 +327,12 @@ func (vm *VM) Dump_io() string {
 			result = result + Get_input_name(i) + ": " + zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint8)))) + " "
 		case 16:
 			result = result + Get_input_name(i) + ": " + zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint16)))) + " "
+		case 32:
+			result = result + Get_input_name(i) + ": " + zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint32)))) + " "
+		case 64:
+			result = result + Get_input_name(i) + ": " + zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint64)))) + " "
 		default:
-			// TODO Fix
+			result = result + "ERROR, Rsize not supported, only 8, 16, 32, 64\n"
 		}
 	}
 	for i, reg := range vm.Outputs_regs {
@@ -337,8 +341,12 @@ func (vm *VM) Dump_io() string {
 			result = result + Get_output_name(i) + ": " + zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint8)))) + " "
 		case 16:
 			result = result + Get_output_name(i) + ": " + zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint16)))) + " "
+		case 32:
+			result = result + Get_output_name(i) + ": " + zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint32)))) + " "
+		case 64:
+			result = result + Get_output_name(i) + ": " + zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint64)))) + " "
 		default:
-			// TODO Fix
+			result = result + "ERROR, Rsize not supported, only 8, 16, 32, 64"
 		}
 	}
 	return result
@@ -468,8 +476,12 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 							act_on_tick[ipos] = uint8(val)
 						case 16:
 							act_on_tick[ipos] = uint16(val)
+						case 32:
+							act_on_tick[ipos] = uint32(val)
+						case 64:
+							act_on_tick[ipos] = uint64(val)
 						default:
-							// TODO Fix
+							return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 						}
 					} else {
 						act_on_tick := make(map[int]interface{})
@@ -478,8 +490,12 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 							act_on_tick[ipos] = uint8(val)
 						case 16:
 							act_on_tick[ipos] = uint16(val)
+						case 32:
+							act_on_tick[ipos] = uint32(val)
+						case 64:
+							act_on_tick[ipos] = uint64(val)
 						default:
-							// TODO Fix
+							return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 						}
 						perset[rule.Tick] = act_on_tick
 					}
@@ -538,7 +554,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 					case 64:
 						str_on_tick[ipos] = uint64(0)
 					default:
-						return errors.New("unsupported register size")
+						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
 				} else {
 					str_on_tick := make(map[int]interface{})
@@ -556,7 +572,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 					case 64:
 						str_on_tick[ipos] = uint64(0)
 					default:
-						return errors.New("unsupported register size")
+						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
 					absget[rule.Tick] = str_on_tick
 				}
@@ -585,8 +601,12 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 						str_on_tick[ipos] = uint8(0)
 					case 16:
 						str_on_tick[ipos] = uint16(0)
+					case 32:
+						str_on_tick[ipos] = uint32(0)
+					case 64:
+						str_on_tick[ipos] = uint64(0)
 					default:
-						// TODO Fix
+						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
 				} else {
 					str_on_tick := make(map[int]interface{})
@@ -595,8 +615,12 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 						str_on_tick[ipos] = uint8(0)
 					case 16:
 						str_on_tick[ipos] = uint16(0)
+					case 32:
+						str_on_tick[ipos] = uint32(0)
+					case 64:
+						str_on_tick[ipos] = uint64(0)
 					default:
-						// TODO Fix
+						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
 					perget[rule.Tick] = str_on_tick
 				}
