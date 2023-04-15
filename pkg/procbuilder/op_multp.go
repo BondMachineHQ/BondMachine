@@ -2,7 +2,6 @@ package procbuilder
 
 import (
 	"errors"
-	"math"
 	"strconv"
 	"strings"
 
@@ -10,7 +9,9 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
-type Multp struct{}
+type Multp struct {
+	pipeline *bool
+}
 
 func (op Multp) Op_get_name() string {
 	return "multp"
@@ -168,28 +169,28 @@ func (op Multp) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Multp) Simulate(vm *VM, instr string) error {
-	reg_bits := vm.Mach.R
-	regDest := get_id(instr[:reg_bits])
-	regSrc := get_id(instr[reg_bits : reg_bits*2])
-	switch vm.Mach.Rsize {
-	case 32:
-		var floatDest float32
-		var floatSrc float32
-		if v, ok := vm.Registers[regDest].(uint32); ok {
-			floatDest = math.Float32frombits(v)
-		} else {
-			floatDest = float32(0.0)
+	regBits := vm.Mach.R
+	regDest := get_id(instr[:regBits])
+	regSrc := get_id(instr[regBits : regBits*2])
+
+	if *op.pipeline {
+		switch vm.Mach.Rsize {
+		case 8:
+			vm.Registers[regDest] = vm.Registers[regDest].(uint8) * vm.Registers[regSrc].(uint8)
+		case 16:
+			vm.Registers[regDest] = vm.Registers[regDest].(uint16) * vm.Registers[regSrc].(uint16)
+		case 32:
+			vm.Registers[regDest] = vm.Registers[regDest].(uint32) * vm.Registers[regSrc].(uint32)
+		case 64:
+			vm.Registers[regDest] = vm.Registers[regDest].(uint64) * vm.Registers[regSrc].(uint64)
+		default:
+			return errors.New("invalid register size")
 		}
-		if v, ok := vm.Registers[regSrc].(uint32); ok {
-			floatSrc = math.Float32frombits(v)
-		} else {
-			floatSrc = float32(0.0)
-		}
-		vm.Registers[regDest] = math.Float32bits(floatDest * floatSrc)
-	default:
-		return errors.New("invalid register size, for float registers has to be 32 bits")
+		vm.Pc = vm.Pc + 1
+		*op.pipeline = false
+	} else {
+		*op.pipeline = true
 	}
-	vm.Pc = vm.Pc + 1
 	return nil
 }
 
