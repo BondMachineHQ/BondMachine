@@ -143,9 +143,9 @@ func (d LinearQuantizer) ExportString(n *BMNumber) (string, error) {
 
 func (d LinearQuantizer) ShowInstructions() map[string]string {
 	result := make(map[string]string)
-	result["addop"] = "add"
-	result["multop"] = "mult"
-	result["divop"] = "div"
+	result["addop"] = "addp"
+	result["multop"] = "multp"
+	result["divop"] = "divp"
 	return result
 }
 
