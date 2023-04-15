@@ -94,7 +94,7 @@ func (op Addp) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 			result += "								addp_" + arch.Tag + "_input_b <= #1 _" + strings.ToLower(Get_register_name(j)) + ";\n"
 			result += "								addp_" + arch.Tag + "_state <= #1 addp_" + arch.Tag + "_get;\n"
 			result += "							end\n"
-			result += "							addp" + arch.Tag + "_get : begin\n"
+			result += "							addp_" + arch.Tag + "_get : begin\n"
 			result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 addp_" + arch.Tag + "_output_z;\n"
 			result += "								addp_" + arch.Tag + "_state <= #1 addp_" + arch.Tag + "_put;\n"
 			result += "								_pc <= #1 _pc + 1'b1 ;\n"

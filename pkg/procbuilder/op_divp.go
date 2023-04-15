@@ -94,7 +94,7 @@ func (op Divp) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 			result += "								divp_" + arch.Tag + "_input_b <= #1 _" + strings.ToLower(Get_register_name(j)) + ";\n"
 			result += "								divp_" + arch.Tag + "_state <= #1 divp_" + arch.Tag + "_get;\n"
 			result += "							end\n"
-			result += "							divp" + arch.Tag + "_get : begin\n"
+			result += "							divp_" + arch.Tag + "_get : begin\n"
 			result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 divp_" + arch.Tag + "_output_z;\n"
 			result += "								divp_" + arch.Tag + "_state <= #1 divp_" + arch.Tag + "_put;\n"
 			result += "								_pc <= #1 _pc + 1'b1 ;\n"
