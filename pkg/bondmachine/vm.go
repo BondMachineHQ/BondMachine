@@ -148,8 +148,34 @@ func (vm *VM) Init() error {
 		for i := 0; i < len(vm.Bmach.Internal_outputs); i++ {
 			vm.Internal_outputs_regs[i] = uint16(0)
 		}
+	case 32:
+		for i := 0; i < vm.Bmach.Inputs; i++ {
+			vm.Inputs_regs[i] = uint32(0)
+		}
+		for i := 0; i < vm.Bmach.Outputs; i++ {
+			vm.Outputs_regs[i] = uint32(0)
+		}
+		for i := 0; i < len(vm.Bmach.Internal_inputs); i++ {
+			vm.Internal_inputs_regs[i] = uint32(0)
+		}
+		for i := 0; i < len(vm.Bmach.Internal_outputs); i++ {
+			vm.Internal_outputs_regs[i] = uint32(0)
+		}
+	case 64:
+		for i := 0; i < vm.Bmach.Inputs; i++ {
+			vm.Inputs_regs[i] = uint64(0)
+		}
+		for i := 0; i < vm.Bmach.Outputs; i++ {
+			vm.Outputs_regs[i] = uint64(0)
+		}
+		for i := 0; i < len(vm.Bmach.Internal_inputs); i++ {
+			vm.Internal_inputs_regs[i] = uint64(0)
+		}
+		for i := 0; i < len(vm.Bmach.Internal_outputs); i++ {
+			vm.Internal_outputs_regs[i] = uint64(0)
+		}
 	default:
-		// TODO Fix
+		return errors.New("invalid register size, must be 8, 16, 32 or 64")
 	}
 	//	// Set the initial state of the internal outputs registers
 	//	for i, bond := range vm.Bmach.Internal_outputs {

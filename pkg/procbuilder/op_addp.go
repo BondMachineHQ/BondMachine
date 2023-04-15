@@ -2,7 +2,6 @@ package procbuilder
 
 import (
 	"errors"
-	"math"
 	"strconv"
 	"strings"
 
@@ -10,28 +9,30 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
-type Addp struct{}
+type Addp struct {
+	pipeline *bool
+}
 
 func (op Addp) Op_get_name() string {
 	return "addp"
 }
 
 func (op Addp) Op_get_desc() string {
-	return "Register pipelined multiplcation"
+	return "Register pipelined addition"
 }
 
 func (op Addp) Op_show_assembler(arch *Arch) string {
-	opbits := arch.Opcodes_bits()
-	result := "addp [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(int(arch.R)) + "(Reg)]	// Set a register to the product of its value with another register [" + strconv.Itoa(opbits+int(arch.R)+int(arch.R)) + "]\n"
+	opBits := arch.Opcodes_bits()
+	result := "addp [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(int(arch.R)) + "(Reg)]	// Set a register to the sum of its value with another register [" + strconv.Itoa(opBits+int(arch.R)+int(arch.R)) + "]\n"
 	return result
 }
 
 func (op Addp) Op_get_instruction_len(arch *Arch) int {
-	opbits := arch.Opcodes_bits()
-	return opbits + int(arch.R) + int(arch.R) // The bits for the opcode + bits for a register + bits for another register
+	opBits := arch.Opcodes_bits()
+	return opBits + int(arch.R) + int(arch.R) // The bits for the opcode + bits for a register + bits for another register
 }
 
-func (op Addp) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
+func (op Addp) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
 	result := ""
 	result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] addp_" + arch.Tag + "_input_a;\n"
 	result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] addp_" + arch.Tag + "_input_b;\n"
@@ -48,16 +49,16 @@ func (op Addp) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor strin
 
 func (op Addp) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
-	opbits := arch.Opcodes_bits()
+	opBits := arch.Opcodes_bits()
 
 	reg_num := 1 << arch.R
 
 	result := ""
 	result += "					ADDP: begin\n"
 	if arch.R == 1 {
-		result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
 	} else {
-		result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 
@@ -72,9 +73,9 @@ func (op Addp) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 		if arch.R == 1 {
-			result += "							case (rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + "])\n"
+			result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + "])\n"
 		} else {
-			result += "							case (rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.R)) + "])\n"
+			result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(arch.R)) + "])\n"
 		}
 
 		for j := 0; j < reg_num; j++ {
@@ -112,12 +113,11 @@ func (op Addp) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 }
 
 func (op Addp) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
-	// TODO
 	return ""
 }
 
 func (op Addp) Assembler(arch *Arch, words []string) (string, error) {
-	opbits := arch.Opcodes_bits()
+	opBits := arch.Opcodes_bits()
 	rom_word := arch.Max_word()
 
 	reg_num := 1 << arch.R
@@ -152,7 +152,7 @@ func (op Addp) Assembler(arch *Arch, words []string) (string, error) {
 
 	result += partial
 
-	for i := opbits + 2*int(arch.R); i < rom_word; i++ {
+	for i := opBits + 2*int(arch.R); i < rom_word; i++ {
 		result += "0"
 	}
 
@@ -168,39 +168,38 @@ func (op Addp) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Addp) Simulate(vm *VM, instr string) error {
-	reg_bits := vm.Mach.R
-	regDest := get_id(instr[:reg_bits])
-	regSrc := get_id(instr[reg_bits : reg_bits*2])
-	switch vm.Mach.Rsize {
-	case 32:
-		var floatDest float32
-		var floatSrc float32
-		if v, ok := vm.Registers[regDest].(uint32); ok {
-			floatDest = math.Float32frombits(v)
-		} else {
-			floatDest = float32(0.0)
+	regBits := vm.Mach.R
+	regDest := get_id(instr[:regBits])
+	regSrc := get_id(instr[regBits : regBits*2])
+
+	if *op.pipeline {
+		switch vm.Mach.Rsize {
+		case 8:
+			vm.Registers[regDest] = vm.Registers[regDest].(uint8) + vm.Registers[regSrc].(uint8)
+		case 16:
+			vm.Registers[regDest] = vm.Registers[regDest].(uint16) + vm.Registers[regSrc].(uint16)
+		case 32:
+			vm.Registers[regDest] = vm.Registers[regDest].(uint32) + vm.Registers[regSrc].(uint32)
+		case 64:
+			vm.Registers[regDest] = vm.Registers[regDest].(uint64) + vm.Registers[regSrc].(uint64)
+		default:
+			return errors.New("invalid register size")
 		}
-		if v, ok := vm.Registers[regSrc].(uint32); ok {
-			floatSrc = math.Float32frombits(v)
-		} else {
-			floatSrc = float32(0.0)
-		}
-		vm.Registers[regDest] = math.Float32bits(floatDest * floatSrc)
-	default:
-		return errors.New("invalid register size, for float registers has to be 32 bits")
+		vm.Pc = vm.Pc + 1
+		*op.pipeline = false
+	} else {
+		*op.pipeline = true
 	}
-	vm.Pc = vm.Pc + 1
 	return nil
 }
 
-// The random genaration does nothing
+// The random generation does nothing
 func (op Addp) Generate(arch *Arch) string {
 	// TODO
 	return ""
 }
 
 func (op Addp) Required_shared() (bool, []string) {
-	// TODO
 	return false, []string{}
 }
 

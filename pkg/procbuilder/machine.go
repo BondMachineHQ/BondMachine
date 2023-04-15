@@ -38,7 +38,7 @@ func init() {
 	Allopcodes = append(Allopcodes, Add{})
 	Allopcodes = append(Allopcodes, Addf{})
 	Allopcodes = append(Allopcodes, Addi{})
-	Allopcodes = append(Allopcodes, Addp{})
+	Allopcodes = append(Allopcodes, Addp{pipeline: new(bool)})
 	Allopcodes = append(Allopcodes, And{})
 	Allopcodes = append(Allopcodes, Chc{})
 	Allopcodes = append(Allopcodes, Chw{})

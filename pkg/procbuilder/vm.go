@@ -1,6 +1,7 @@
 package procbuilder
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -108,8 +109,34 @@ func (vm *VM) Init() error {
 		for i := 0; i < int(vm.Mach.M); i++ {
 			vm.Outputs[i] = uint16(0)
 		}
+	case 32:
+		for i := 0; i < reg_num; i++ {
+			vm.Registers[i] = uint32(0)
+		}
+		for i := 0; i < mem_num; i++ {
+			vm.Memory[i] = uint32(0)
+		}
+		for i := 0; i < int(vm.Mach.N); i++ {
+			vm.Inputs[i] = uint32(0)
+		}
+		for i := 0; i < int(vm.Mach.M); i++ {
+			vm.Outputs[i] = uint32(0)
+		}
+	case 64:
+		for i := 0; i < reg_num; i++ {
+			vm.Registers[i] = uint64(0)
+		}
+		for i := 0; i < mem_num; i++ {
+			vm.Memory[i] = uint64(0)
+		}
+		for i := 0; i < int(vm.Mach.N); i++ {
+			vm.Inputs[i] = uint64(0)
+		}
+		for i := 0; i < int(vm.Mach.M); i++ {
+			vm.Outputs[i] = uint64(0)
+		}
 	default:
-		// TODO Fix
+		return errors.New("invalid register size for simulation, must be 8, 16, 32 or 64")
 	}
 
 	vm.Extra_states = make(map[string]interface{})
@@ -128,7 +155,7 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 
 	//	reg_num := 1 << vm.Mach.R
 	num_instr := len(vm.Mach.Program.Slocs)
-	opbits := vm.Mach.Opcodes_bits()
+	opBits := vm.Mach.Opcodes_bits()
 
 	if int(vm.Pc) > num_instr {
 		return "", Prerror{"Program counter outside limits"}
@@ -152,7 +179,7 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 			if psc != nil {
 				if psc.Show_disasm {
 					curline := "\t\tDisasm: " + op.Op_get_name() + " "
-					if disas, err := op.Disassembler(&vm.Mach.Arch, instr[opbits:]); err != nil {
+					if disas, err := op.Disassembler(&vm.Mach.Arch, instr[opBits:]); err != nil {
 						return "", Prerror{"Disassembling falied"}
 					} else {
 						result += curline + disas + "\n"
@@ -168,7 +195,7 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 				}
 			}
 
-			if err := op.Simulate(vm, instr[opbits:]); err != nil {
+			if err := op.Simulate(vm, instr[opBits:]); err != nil {
 				return "", Prerror{"Simulation failed"}
 			}
 
@@ -182,7 +209,7 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 			}
 
 		} else {
-			return "", Prerror{"Unknown opecode"}
+			return "", Prerror{"Unknown opcode"}
 		}
 	}
 
