@@ -41,6 +41,7 @@ func (d Unsigned) Convert(n *BMNumber) error {
 }
 
 func unsignedImportNoSize(re *regexp.Regexp, input string) (*BMNumber, error) {
+	// TODO and with size
 	uintDec := re.ReplaceAllString(input, "${uint}")
 	if s, err := strconv.ParseUint(uintDec, 10, 0); err == nil {
 		newNumber := BMNumber{}
@@ -67,6 +68,8 @@ func (d Unsigned) ExportString(n *BMNumber) (string, error) {
 func (d Unsigned) ShowInstructions() map[string]string {
 	result := make(map[string]string)
 	result["addop"] = "add"
+	result["multop"] = "mult"
+	result["divop"] = "div"
 	return result
 }
 
