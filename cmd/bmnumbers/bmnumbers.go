@@ -17,7 +17,7 @@ var debug = flag.Bool("d", false, "Verbose")
 
 var convertTo = flag.String("convert", "", "Convert to type")
 var castTo = flag.String("cast", "", "Cast to type")
-var dumpAs = flag.String("dump-as", "native", "Dump as (native, hex, bin)")
+var showAs = flag.String("show", "native", "Show as (native, hex, bin)")
 
 var withSize = flag.Bool("with-size", false, "With size")
 
@@ -155,7 +155,7 @@ func main() {
 						}
 					}
 
-					switch *dumpAs {
+					switch *showAs {
 					case "native":
 						if value, err := output.ExportString(); err != nil {
 							fmt.Println("Error: ", err)
@@ -175,7 +175,7 @@ func main() {
 							fmt.Println(value)
 						}
 					default:
-						fmt.Println("Error: Unknown dump format")
+						fmt.Println("Error: Unknown visualization format (native, bin, unsigned)")
 					}
 				}
 			}

@@ -1,5 +1,5 @@
 // TRY WITH CURL
-// curl -X POST -d '{"action": "cast", "numbers": ["0f0.45", "0f0.30"], "reqType": "bin", "dumpMode": "native"}' http://127.0.0.1:8080/bmnumbers
+// curl -X POST -d '{"action": "cast", "numbers": ["0f0.45", "0f0.30"], "reqType": "bin", "viewMode": "native"}' http://127.0.0.1:8080/bmnumbers
 
 package bmnumbers
 
@@ -16,7 +16,7 @@ type BMNumbersRequest struct {
 	Action   string   `json:"action"`
 	Numbers  []string `json:"numbers"`
 	ReqType  string   `json:"reqType"`
-	DumpMode string   `json:"dumpMode"`
+	DumpMode string   `json:"viewMode"`
 }
 
 type BMNumbersResponse struct {
@@ -27,7 +27,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the BM Numbers server!\n")
 	fmt.Fprintf(w, "There is one endpoint available: \n")
 	fmt.Fprintf(w, "[POST] bmnumbers \n")
-	fmt.Fprintf(w, "[POST] body example: {'action': 'cast', 'numbers': ['0f0.45', '0f0.30'], 'reqType': 'bin', 'dumpMode': 'native'} \n")
+	fmt.Fprintf(w, "[POST] body example: {'action': 'cast', 'numbers': ['0f0.45', '0f0.30'], 'reqType': 'bin', 'viewMode': 'native'} \n")
 }
 
 func ExecRequest(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func ExecRequest(w http.ResponseWriter, r *http.Request) {
 					results = append(results, strconv.FormatUint(value, 10)) // add a string to the slice
 				}
 			default:
-				http.Error(w, "Unknown dump format", http.StatusInternalServerError)
+				http.Error(w, "Unknown visualization format", http.StatusInternalServerError)
 				return
 			}
 		}
