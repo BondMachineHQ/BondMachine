@@ -15,8 +15,8 @@ import (
 var verbose = flag.Bool("v", false, "Verbose")
 var debug = flag.Bool("d", false, "Verbose")
 
-var convertTo = flag.String("convert-to", "", "Convert to type")
-var overrideTo = flag.String("override-to", "", "Override type")
+var convertTo = flag.String("convert", "", "Convert to type")
+var castTo = flag.String("cast", "", "Cast to type")
 var dumpAs = flag.String("dump-as", "native", "Dump as (native, hex, bin)")
 
 var withSize = flag.Bool("with-size", false, "With size")
@@ -108,8 +108,8 @@ func main() {
 	} else {
 
 		var newType bmnumbers.BMNumberType
-		if *overrideTo != "" && *convertTo != "" {
-			log.Fatal("Error: Cannot override and convert at the same time")
+		if *castTo != "" && *convertTo != "" {
+			log.Fatal("Error: Cannot cast and convert at the same time")
 		}
 
 		switch {
@@ -123,11 +123,11 @@ func main() {
 				newType = v
 				// fmt.Println(v)
 			}
-		case *overrideTo != "":
-			if _, err := bmnumbers.EventuallyCreateType(*overrideTo, nil); err != nil {
+		case *castTo != "":
+			if _, err := bmnumbers.EventuallyCreateType(*castTo, nil); err != nil {
 				log.Fatal(err)
 			}
-			if v := bmnumbers.GetType(*overrideTo); v == nil {
+			if v := bmnumbers.GetType(*castTo); v == nil {
 				log.Fatal("Error: Unknown type")
 			} else {
 				newType = v
@@ -149,8 +149,8 @@ func main() {
 						}
 					}
 
-					if *overrideTo != "" {
-						if err := bmnumbers.OverrideType(output, newType); err != nil {
+					if *castTo != "" {
+						if err := bmnumbers.CastType(output, newType); err != nil {
 							fmt.Println("Error: ", err)
 						}
 					}

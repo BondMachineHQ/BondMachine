@@ -1,7 +1,5 @@
-
-
-// TRY WITH CURL 
-// curl -X POST -d '{"action": "override", "numbers": ["0f0.45", "0f0.30"], "reqType": "bin", "dumpMode": "native"}' http://127.0.0.1:8080/bmnumbers
+// TRY WITH CURL
+// curl -X POST -d '{"action": "cast", "numbers": ["0f0.45", "0f0.30"], "reqType": "bin", "dumpMode": "native"}' http://127.0.0.1:8080/bmnumbers
 
 package bmnumbers
 
@@ -29,7 +27,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the BM Numbers server!\n")
 	fmt.Fprintf(w, "There is one endpoint available: \n")
 	fmt.Fprintf(w, "[POST] bmnumbers \n")
-	fmt.Fprintf(w, "[POST] body example: {'action': 'override', 'numbers': ['0f0.45', '0f0.30'], 'reqType': 'bin', 'dumpMode': 'native'} \n")
+	fmt.Fprintf(w, "[POST] body example: {'action': 'cast', 'numbers': ['0f0.45', '0f0.30'], 'reqType': 'bin', 'dumpMode': 'native'} \n")
 }
 
 func ExecRequest(w http.ResponseWriter, r *http.Request) {
@@ -68,8 +66,8 @@ func ExecRequest(w http.ResponseWriter, r *http.Request) {
 					http.Error(w, fmt.Sprintf("Error: %v", err), http.StatusInternalServerError)
 					return
 				}
-			} else if bmNumbersRequest.Action == "override" {
-				if err := OverrideType(output, newType); err != nil {
+			} else if bmNumbersRequest.Action == "cast" {
+				if err := CastType(output, newType); err != nil {
 					http.Error(w, fmt.Sprintf("Error: %v", err), http.StatusInternalServerError)
 					return
 				}
@@ -116,5 +114,5 @@ func Serve() {
 
 	fmt.Println("Server started on localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
-	
+
 }

@@ -75,13 +75,13 @@ func (n *BMNumber) GetTypeName() string {
 	return n.nType.GetName()
 }
 
-func OverrideType(n *BMNumber, t BMNumberType) error {
+func CastType(n *BMNumber, t BMNumberType) error {
 	if n == nil || n.number == nil {
-		return errors.New("Cannot override type of nil number")
+		return errors.New("Cannot cast type of nil number")
 	}
 
 	if t.getSize() != -1 && t.getSize() != n.bits {
-		return errors.New("Cannot override number of type " + n.nType.GetName() + " with type " + t.GetName() + " because they have different sizes")
+		return errors.New("Cannot cast number of type " + n.nType.GetName() + " with type " + t.GetName() + " because they have different sizes")
 	}
 
 	n.nType = t
