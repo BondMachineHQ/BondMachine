@@ -12,6 +12,7 @@ type LinearQuantizer struct {
 	linearQuantizerName string
 	s                   int
 	t                   int
+	instructions        map[string]string
 }
 
 func (d LinearQuantizer) GetName() string {
@@ -159,11 +160,7 @@ func (d LinearQuantizer) ExportString(n *BMNumber) (string, error) {
 }
 
 func (d LinearQuantizer) ShowInstructions() map[string]string {
-	result := make(map[string]string)
-	result["addop"] = "addp"
-	result["multop"] = "multp"
-	result["divop"] = "divp"
-	return result
+	return d.instructions
 }
 
 func (d LinearQuantizer) ShowPrefix() string {

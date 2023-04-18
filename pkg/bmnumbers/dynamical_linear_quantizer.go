@@ -35,7 +35,11 @@ func (d DynLinearQuantizer) CreateType(name string, param interface{}) (BMNumber
 		ts := re.ReplaceAllString(name, "${t}")
 		s, _ := strconv.Atoi(ss)
 		t, _ := strconv.Atoi(ts)
-		return LinearQuantizer{linearQuantizerName: name, s: s, t: t}, nil
+		i := make(map[string]string)
+		i["multop"] = "multlqs" + ss + "t" + ts
+		i["addop"] = "addlqs" + ss + "t" + ts
+		i["divop"] = "divlqs" + ss + "t" + ts
+		return LinearQuantizer{linearQuantizerName: name, s: s, t: t, instructions: i}, nil
 	}
 
 	return nil, errors.New("creation failed")
