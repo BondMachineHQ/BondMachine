@@ -1,7 +1,10 @@
 package bmnumbers
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 )
@@ -71,50 +74,38 @@ func linearQuantizerImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 
 	EventuallyCreateType("lqs"+ss+"t"+ts, nil)
 
-	var binNum string
-
-	bandNum := float64(int(1) << uint(s))
-	bandSize := ((*lqRanges)[t].Max - (*lqRanges)[t].Min) / bandNum
+	bandNum := float64(int(1) << uint(s-1))
+	bandSize := ((*lqRanges)[t].Max) / bandNum
 
 	if numberNum, err := strconv.ParseFloat(number, 64); err != nil {
 		return nil, errors.New("invalid number for linear quantizer")
 	} else {
-		band := int((numberNum - (*lqRanges)[t].Min) / bandSize)
-		if band < 0 {
-			band = 0
-		} else if band >= int(bandNum) {
-			band = int(bandNum) - 1
+		band := int64(numberNum / bandSize)
+		if band >= int64(bandNum) || band <= -int64(bandNum) {
+			return nil, errors.New("number out of range for linear quantizer")
 		}
-		binNum = "00000000000000000000000000000000" + strconv.FormatInt(int64(band), 2)
-		binNum = binNum[len(binNum)-s:]
+
+		fmt.Println(band)
+
+		// Create a temporary buffer to write the number to
+		buf := new(bytes.Buffer)
+		binary.Write(buf, binary.LittleEndian, band)
+
+		// Compute how many bytes we need to copy according to the number of bits (s)
+		toCopy := (s-1)/8 + 1
+
+		newNumber := BMNumber{}
+		newNumber.nType = LinearQuantizer{linearQuantizerName: "lqs" + ss + "t" + ts, s: s, t: t}
+		newNumber.number = make([]byte, toCopy)
+		copy(newNumber.number, buf.Bytes()[0:toCopy])
+		newNumber.bits = s
+
+		// Use a mask to clear the eventually unused bits on the last byte
+		mask := byte(0xFF >> uint(8-(s-1)%8-1))
+		newNumber.number[toCopy-1] = newNumber.number[toCopy-1] & mask
+
+		return &newNumber, nil
 	}
-
-	var nextByte string
-	newNumber := BMNumber{}
-	newNumber.number = make([]byte, (len(binNum)-1)/8+1)
-	newNumber.bits = len(binNum)
-	newNumber.nType = LinearQuantizer{linearQuantizerName: "lqs" + ss + "t" + ts, s: s, t: t}
-
-	for i := 0; ; i++ {
-
-		if len(binNum) > 8 {
-			nextByte = binNum[len(binNum)-8:]
-			binNum = binNum[:len(binNum)-8]
-		} else if len(binNum) > 0 {
-			nextByte = binNum
-			binNum = ""
-		} else {
-			break
-		}
-
-		if val, err := strconv.ParseUint(nextByte, 2, 8); err == nil {
-			decoded := byte(val)
-			newNumber.number[i] = decoded
-		} else {
-			return nil, errors.New("invalid binary number" + input)
-		}
-	}
-	return &newNumber, nil
 }
 
 func (d LinearQuantizer) ExportString(n *BMNumber) (string, error) {
@@ -122,7 +113,36 @@ func (d LinearQuantizer) ExportString(n *BMNumber) (string, error) {
 	t := d.t
 	ss := strconv.Itoa(s)
 	ts := strconv.Itoa(t)
-	number, _ := n.ExportUint64()
+
+	// Find out if the number is negative
+	var isNegative bool
+	if n.number[len(n.number)-1]&(uint8(128)>>uint(8-(s-1)%8-1)) != 0 {
+		isNegative = true
+	}
+
+	copied := make([]byte, len(n.number))
+	copy(copied, n.number)
+
+	if isNegative {
+		// Use a mask to clear the eventually unused bits on the last byte
+		lastByte := (s-1)/8 + 1
+		mask := byte(0xFF >> uint(8-(s-1)%8-1))
+		copied[lastByte-1] = copied[lastByte-1] | ^mask
+
+		for i := len(copied); i < 8; i++ {
+			copied = append(copied, 0xFF)
+		}
+	} else {
+		for i := len(copied); i < 8; i++ {
+			copied = append(copied, 0x00)
+		}
+	}
+
+	var number int64
+	buf := bytes.NewReader(copied)
+	if err := binary.Read(buf, binary.LittleEndian, &number); err != nil {
+		return "", err
+	}
 
 	// Get the linear quantizer ranges struct
 	var lqRanges *map[int]LinearDataRange
@@ -132,10 +152,10 @@ func (d LinearQuantizer) ExportString(n *BMNumber) (string, error) {
 		}
 	}
 
-	bandNum := float64(int(1) << uint(s))
-	bandSize := ((*lqRanges)[t].Max - (*lqRanges)[t].Min) / bandNum
+	bandNum := float64(int(1) << uint(s-1))
+	bandSize := (*lqRanges)[t].Max / bandNum
 
-	numberF := float64(number)*bandSize + (*lqRanges)[t].Min
+	numberF := float64(number) * bandSize
 
 	result := "0lq<" + ss + "." + ts + ">" + strconv.FormatFloat(numberF, 'f', -1, 64)
 	return result, nil

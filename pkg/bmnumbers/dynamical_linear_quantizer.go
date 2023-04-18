@@ -7,7 +7,6 @@ import (
 )
 
 type LinearDataRange struct {
-	Min float64
 	Max float64
 }
 
