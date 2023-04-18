@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 )
@@ -84,8 +83,6 @@ func linearQuantizerImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 		if band >= int64(bandNum) || band <= -int64(bandNum) {
 			return nil, errors.New("number out of range for linear quantizer")
 		}
-
-		fmt.Println(band)
 
 		// Create a temporary buffer to write the number to
 		buf := new(bytes.Buffer)
