@@ -31,7 +31,7 @@ func (d DynLinearQuantizer) MatchName(name string) bool {
 	if re.MatchString(name) {
 		return true
 	}
-	re = regexp.MustCompile("divflqs(?P<s>[0-9]+)t(?P<t>[0-9]+)")
+	re = regexp.MustCompile("divlqs(?P<s>[0-9]+)t(?P<t>[0-9]+)")
 	return re.MatchString(name)
 }
 
