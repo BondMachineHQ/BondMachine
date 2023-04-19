@@ -268,6 +268,7 @@ func (op LinearQuantizer) Op_instruction_verilog_extra_modules(arch *Arch, flavo
 	moduleCodes := []string{result}
 
 	if op.opType == LQDIV || op.opType == LQMULT {
+		var correctionName string
 		correction := "\n\n"
 		correction += "module " + op.lqName + "_correction_" + arch.Tag + "(\n"
 		correction += "        input_corr,\n"
@@ -283,12 +284,14 @@ func (op LinearQuantizer) Op_instruction_verilog_extra_modules(arch *Arch, flavo
 		switch op.opType {
 		case LQMULT:
 			correction += "  assign output_corr = input_corr / CORRECTION;\n"
+			correctionName = "multiplier_correction"
 		case LQDIV:
 			correction += "  assign output_corr = input_corr * CORRECTION;\n"
+			correctionName = "divider_correction"
 		}
 		correction += "\n"
 		correction += "endmodule\n"
-		moduleNames = append(moduleNames, "correction")
+		moduleNames = append(moduleNames, correctionName)
 		moduleCodes = append(moduleCodes, correction)
 	}
 
