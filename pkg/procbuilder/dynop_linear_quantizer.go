@@ -270,11 +270,11 @@ func (op LinearQuantizer) Op_instruction_verilog_extra_modules(arch *Arch, flavo
 	if op.opType == LQDIV || op.opType == LQMULT {
 		correction := "\n\n"
 		correction += "module " + op.lqName + "_correction_" + arch.Tag + "(\n"
-		correction += "        input,\n"
-		correction += "        output);\n"
+		correction += "        input_corr,\n"
+		correction += "        output_corr);\n"
 		correction += "\n"
-		correction += "  input signed    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input;\n"
-		correction += "  output signed   [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] output;\n"
+		correction += "  input signed    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input_corr;\n"
+		correction += "  output signed   [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] output_corr;\n"
 		sd := float64(uint64(1) << (arch.Rsize - 1))
 		sn := float64(op.max)
 		s := sd / sn
@@ -282,9 +282,9 @@ func (op LinearQuantizer) Op_instruction_verilog_extra_modules(arch *Arch, flavo
 		correction += "  parameter signed [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] CORRECTION = " + strconv.Itoa(int(arch.Rsize)) + "'d" + corr + ";\n"
 		switch op.opType {
 		case LQMULT:
-			correction += "  assign output = input / CORRECTION;\n"
+			correction += "  assign output_corr = input_corr / CORRECTION;\n"
 		case LQDIV:
-			correction += "  assign output = input * CORRECTION;\n"
+			correction += "  assign output_corr = input_corr * CORRECTION;\n"
 		}
 		correction += "\n"
 		correction += "endmodule\n"
