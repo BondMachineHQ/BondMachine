@@ -57,7 +57,7 @@ func (op LinearQuantizer) OpInstructionVerilogHeader(conf *Config, arch *Arch, f
 	result += "\t" + op.lqName + "_" + arch.Tag + " " + op.lqName + "_" + arch.Tag + "_inst (" + op.lqName + "_" + arch.Tag + "_input_a, " + op.lqName + "_" + arch.Tag + "_input_b,  " + op.lqName + "_" + arch.Tag + "_output_z);\n\n"
 
 	if op.opType == LQMULT || op.opType == LQDIV {
-		result += "\t" + op.lqName + "_" + arch.Tag + "_corr " + op.lqName + "_" + arch.Tag + "_corr_inst (" + op.lqName + "_" + arch.Tag + "_input_corr, " + op.lqName + "_" + arch.Tag + "_output_corr);\n\n"
+		result += "\t" + op.lqName + "_correction_" + arch.Tag + " " + op.lqName + "_correction_" + arch.Tag + "_inst (" + op.lqName + "_" + arch.Tag + "_input_corr, " + op.lqName + "_" + arch.Tag + "_output_corr);\n\n"
 	}
 
 	return result
