@@ -10,13 +10,20 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
+const (
+	LQPUT = uint8(0) + iota
+	LQCORR
+	LQGET
+)
+
 // The LinearQuantizer opcode is both a basic instruction and a template for other instructions.
 type LinearQuantizer struct {
-	lqName string
-	max    float64
-	s      int
-	t      int
-	opType uint8
+	lqName   string
+	max      float64
+	s        int
+	t        int
+	opType   uint8
+	pipeline *uint8
 }
 
 func (op LinearQuantizer) Op_get_name() string {
@@ -200,7 +207,69 @@ func (op LinearQuantizer) Disassembler(arch *Arch, instr string) (string, error)
 }
 
 func (op LinearQuantizer) Simulate(vm *VM, instr string) error {
-	return errors.New("unimplemented LinearQuantizer simulation")
+	regBits := vm.Mach.R
+	regDest := get_id(instr[:regBits])
+	regSrc := get_id(instr[regBits : regBits*2])
+
+	sd := float64(uint64(1) << (vm.Mach.Rsize - 1))
+	sn := float64(op.max)
+	s := sd / sn
+
+	switch *op.pipeline {
+	case LQPUT:
+		if op.opType == LQMULT || op.opType == LQDIV {
+			*op.pipeline = LQCORR
+		} else {
+			*op.pipeline = LQGET
+		}
+	case LQCORR:
+		*op.pipeline = LQGET
+	case LQGET:
+		switch op.opType {
+		case LQADD:
+			switch vm.Mach.Rsize {
+			case 8:
+				vm.Registers[regDest] = vm.Registers[regDest].(int8) + vm.Registers[regSrc].(int8)
+			case 16:
+				vm.Registers[regDest] = vm.Registers[regDest].(int16) + vm.Registers[regSrc].(int16)
+			case 32:
+				vm.Registers[regDest] = vm.Registers[regDest].(int32) + vm.Registers[regSrc].(int32)
+			case 64:
+				vm.Registers[regDest] = vm.Registers[regDest].(int64) + vm.Registers[regSrc].(int64)
+			default:
+				return errors.New("invalid register size")
+			}
+		case LQMULT:
+			switch vm.Mach.Rsize {
+			case 8:
+				vm.Registers[regDest] = vm.Registers[regDest].(int8) * vm.Registers[regSrc].(int8) / int8(s)
+			case 16:
+				vm.Registers[regDest] = vm.Registers[regDest].(int16) * vm.Registers[regSrc].(int16) / int16(s)
+			case 32:
+				vm.Registers[regDest] = vm.Registers[regDest].(int32) * vm.Registers[regSrc].(int32) / int32(s)
+			case 64:
+				vm.Registers[regDest] = vm.Registers[regDest].(int64) * vm.Registers[regSrc].(int64) / int64(s)
+			default:
+				return errors.New("invalid register size")
+			}
+		case LQDIV:
+			switch vm.Mach.Rsize {
+			case 8:
+				vm.Registers[regDest] = vm.Registers[regDest].(int8) / vm.Registers[regSrc].(int8) * int8(s)
+			case 16:
+				vm.Registers[regDest] = vm.Registers[regDest].(int16) / vm.Registers[regSrc].(int16) * int16(s)
+			case 32:
+				vm.Registers[regDest] = vm.Registers[regDest].(int32) / vm.Registers[regSrc].(int32) * int32(s)
+			case 64:
+				vm.Registers[regDest] = vm.Registers[regDest].(int64) / vm.Registers[regSrc].(int64) * int64(s)
+			default:
+				return errors.New("invalid register size")
+			}
+		}
+		vm.Pc = vm.Pc + 1
+		*op.pipeline = LQPUT
+	}
+	return nil
 }
 
 // The random genaration does nothing

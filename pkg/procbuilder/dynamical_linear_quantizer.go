@@ -36,6 +36,9 @@ func (d DynLinearQuantizer) MatchName(name string) bool {
 }
 
 func (d DynLinearQuantizer) CreateInstruction(name string) (Opcode, error) {
+	if d.Ranges == nil {
+		return nil, errors.New("Ranges not initialized")
+	}
 	var t, s int
 	var opType uint8
 	var max float64
@@ -79,6 +82,6 @@ func (d DynLinearQuantizer) CreateInstruction(name string) (Opcode, error) {
 		}
 	}
 
-	return LinearQuantizer{lqName: name, s: s, t: t, opType: opType, max: max}, nil
+	return LinearQuantizer{lqName: name, s: s, t: t, opType: opType, max: max, pipeline: new(uint8)}, nil
 
 }
