@@ -12,6 +12,7 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
+	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 )
 
 var verbose = flag.Bool("v", false, "Verbose")
@@ -27,10 +28,10 @@ var target = flag.String("target", "bondmachine", "Choose the assembler target a
 var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parameter of the BondMachine")
 
 // Optionals
-var bmInfoFile = flag.String("bminfo-file", "", "Load additional informations about the BondMachine")
+var bmInfoFile = flag.String("bminfo-file", "", "Load additional information about the BondMachine")
 var dumpRequirements = flag.String("dump-requirements", "", "Dump the requirements of the BondMachine in a JSON file")
 
-var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the sintax index,filename)")
+var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
 func check(e error) {
 	if e != nil {
@@ -41,9 +42,28 @@ func check(e error) {
 func init() {
 	flag.Parse()
 
+	// if *debug {
+	// 	fmt.Println("basm init")
+	// }
+
 	if *linearDataRange != "" {
 		if err := bmnumbers.LoadLinearDataRangesFromFile(*linearDataRange); err != nil {
 			log.Fatal(err)
+		}
+
+		var lqRanges *map[int]bmnumbers.LinearDataRange
+		for _, t := range bmnumbers.AllDynamicalTypes {
+			if t.GetName() == "dyn_linear_quantizer" {
+				lqRanges = t.(bmnumbers.DynLinearQuantizer).Ranges
+			}
+		}
+
+		for i, t := range procbuilder.AllDynamicalInstructions {
+			if t.GetName() == "dyn_linear_quantizer" {
+				dynIst := t.(procbuilder.DynLinearQuantizer)
+				dynIst.Ranges = lqRanges
+				procbuilder.AllDynamicalInstructions[i] = dynIst
+			}
 		}
 	}
 }

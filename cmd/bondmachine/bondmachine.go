@@ -198,6 +198,22 @@ func init() {
 		if err := bmnumbers.LoadLinearDataRangesFromFile(*linearDataRange); err != nil {
 			log.Fatal(err)
 		}
+
+		var lqRanges *map[int]bmnumbers.LinearDataRange
+		for _, t := range bmnumbers.AllDynamicalTypes {
+			if t.GetName() == "dyn_linear_quantizer" {
+				lqRanges = t.(bmnumbers.DynLinearQuantizer).Ranges
+			}
+		}
+
+		for i, t := range procbuilder.AllDynamicalInstructions {
+			if t.GetName() == "dyn_linear_quantizer" {
+				dynIst := t.(procbuilder.DynLinearQuantizer)
+				dynIst.Ranges = lqRanges
+				procbuilder.AllDynamicalInstructions[i] = dynIst
+			}
+		}
+
 	}
 }
 

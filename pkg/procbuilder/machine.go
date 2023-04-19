@@ -29,6 +29,8 @@ var Allshared []Sharedel
 var AllDynamicalInstructions []DynamicInstruction
 
 func init() {
+	// fmt.Println("procbuilder init")
+
 	rand.Seed(int64(time.Now().Unix()))
 
 	// Keep in mind the lists og opcodes has to be kept ordered by name
@@ -112,7 +114,7 @@ func init() {
 
 	AllDynamicalInstructions = make([]DynamicInstruction, 0)
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynFloPoCo{})
-	AllDynamicalInstructions = append(AllDynamicalInstructions, DynLinearQuantizer{})
+	AllDynamicalInstructions = append(AllDynamicalInstructions, DynLinearQuantizer{Ranges: nil})
 
 	Allshared = make([]Sharedel, 0)
 	Allshared = append(Allshared, Sharedmem{})

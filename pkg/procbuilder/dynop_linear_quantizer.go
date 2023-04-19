@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -12,8 +13,10 @@ import (
 // The LinearQuantizer opcode is both a basic instruction and a template for other instructions.
 type LinearQuantizer struct {
 	lqName string
+	max    float64
 	s      int
 	t      int
+	opType uint8
 }
 
 func (op LinearQuantizer) Op_get_name() string {
@@ -41,12 +44,21 @@ func (op LinearQuantizer) OpInstructionVerilogHeader(conf *Config, arch *Arch, f
 	result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + op.lqName + "_" + arch.Tag + "_input_b;\n"
 	result += "\twire [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + op.lqName + "_" + arch.Tag + "_output_z;\n"
 
+	if op.opType == LQMULT || op.opType == LQDIV {
+		result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + op.lqName + "_" + arch.Tag + "_input_corr;\n"
+		result += "\twire [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + op.lqName + "_" + arch.Tag + "_output_corr;\n"
+	}
+
 	result += "\treg	[1:0] " + op.lqName + "_" + arch.Tag + "_state;\n"
 	result += "parameter " + op.lqName + "_" + arch.Tag + "_put         = 2'd0,\n"
 	result += "          " + op.lqName + "_" + arch.Tag + "_corr        = 2'd1,\n"
 	result += "          " + op.lqName + "_" + arch.Tag + "_get         = 2'd2;\n"
 
 	result += "\t" + op.lqName + "_" + arch.Tag + " " + op.lqName + "_" + arch.Tag + "_inst (" + op.lqName + "_" + arch.Tag + "_input_a, " + op.lqName + "_" + arch.Tag + "_input_b,  " + op.lqName + "_" + arch.Tag + "_output_z);\n\n"
+
+	if op.opType == LQMULT || op.opType == LQDIV {
+		result += "\t" + op.lqName + "_" + arch.Tag + "_corr " + op.lqName + "_" + arch.Tag + "_corr_inst (" + op.lqName + "_" + arch.Tag + "_input_corr, " + op.lqName + "_" + arch.Tag + "_output_corr);\n\n"
+	}
 
 	return result
 }
@@ -97,10 +109,25 @@ func (op LinearQuantizer) Op_instruction_verilog_state_machine(conf *Config, arc
 			result += "							" + op.lqName + "_" + arch.Tag + "_put : begin\n"
 			result += "								" + op.lqName + "_" + arch.Tag + "_input_a <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
 			result += "								" + op.lqName + "_" + arch.Tag + "_input_b <= #1 _" + strings.ToLower(Get_register_name(j)) + ";\n"
-			result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_get;\n"
+			switch op.opType {
+			case LQADD:
+				result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_get;\n"
+			case LQMULT, LQDIV:
+				result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_corr;\n"
+			}
 			result += "							end\n"
+			if op.opType == LQMULT || op.opType == LQDIV {
+				result += "							" + op.lqName + "_" + arch.Tag + "_corr : begin\n"
+				result += "								" + op.lqName + "_" + arch.Tag + "_input_corr <= #1 " + op.lqName + "_" + arch.Tag + "_output_z;\n"
+				result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_get;\n"
+				result += "							end\n"
+			}
 			result += "							" + op.lqName + "_" + arch.Tag + "_get : begin\n"
-			result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + op.lqName + "_" + arch.Tag + "_output_z;\n"
+			if op.opType == LQADD {
+				result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + op.lqName + "_" + arch.Tag + "_output_z;\n"
+			} else {
+				result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + op.lqName + "_" + arch.Tag + "_output_corr;\n"
+			}
 			result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_put;\n"
 			result += "								_pc <= #1 _pc + 1'b1 ;\n"
 			result += "							end\n"
@@ -213,20 +240,59 @@ func (Op LinearQuantizer) Op_instruction_verilog_internal_state(arch *Arch, flav
 
 func (op LinearQuantizer) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
 	result := "\n\n"
+	var moduleName string
 
 	result += "module " + op.lqName + "_" + arch.Tag + "(\n"
 	result += "        input_a,\n"
 	result += "        input_b,\n"
 	result += "        output_z);\n"
 	result += "\n"
-	result += "  input     [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input_a;\n"
-	result += "  input     [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input_b;\n"
-	result += "  output    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] output_z;\n"
-	result += "  assign output_z = input_a + input_b;\n"
+	result += "  input signed    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input_a;\n"
+	result += "  input signed    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input_b;\n"
+	result += "  output signed   [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] output_z;\n"
+	switch op.opType {
+	case LQADD:
+		result += "  assign output_z = input_a + input_b;\n"
+		moduleName = "adder"
+	case LQMULT:
+		result += "  assign output_z = input_a * input_b;\n"
+		moduleName = "multiplier"
+	case LQDIV:
+		result += "  assign output_z = input_a / input_b;\n"
+		moduleName = "divider"
+	}
 	result += "\n"
 	result += "endmodule\n"
 
-	return []string{"multiplier"}, []string{result}
+	moduleNames := []string{moduleName}
+	moduleCodes := []string{result}
+
+	if op.opType == LQDIV || op.opType == LQMULT {
+		correction := "\n\n"
+		correction += "module " + op.lqName + "_correction_" + arch.Tag + "(\n"
+		correction += "        input,\n"
+		correction += "        output);\n"
+		correction += "\n"
+		correction += "  input signed    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input;\n"
+		correction += "  output signed   [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] output;\n"
+		sd := float64(uint64(1) << (arch.Rsize - 1))
+		sn := float64(op.max)
+		s := sd / sn
+		corr := fmt.Sprint(uint(s))
+		correction += "  parameter signed [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] CORRECTION = " + strconv.Itoa(int(arch.Rsize)) + "'d" + corr + ";\n"
+		switch op.opType {
+		case LQMULT:
+			correction += "  assign output = input / CORRECTION;\n"
+		case LQDIV:
+			correction += "  assign output = input * CORRECTION;\n"
+		}
+		correction += "\n"
+		correction += "endmodule\n"
+		moduleNames = append(moduleNames, "correction")
+		moduleCodes = append(moduleCodes, correction)
+	}
+
+	return moduleNames, moduleCodes
 }
 
 func (Op LinearQuantizer) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {

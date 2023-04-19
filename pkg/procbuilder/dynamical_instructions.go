@@ -1,6 +1,7 @@
 package procbuilder
 
 type DynamicInstruction interface {
+	GetName() string
 	MatchName(string) bool
 	CreateInstruction(string) (Opcode, error)
 }
