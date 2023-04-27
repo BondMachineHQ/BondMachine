@@ -34,6 +34,7 @@ func init() {
 	AllTypes = make([]BMNumberType, 0)
 	AllTypes = append(AllTypes, Unsigned{})
 	AllTypes = append(AllTypes, Signed{})
+	AllTypes = append(AllTypes, Float16{})
 	AllTypes = append(AllTypes, Float32{})
 	AllTypes = append(AllTypes, Hex{})
 	AllTypes = append(AllTypes, Bin{})

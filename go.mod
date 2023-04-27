@@ -18,6 +18,7 @@ require (
 	github.com/mdlayher/packet v1.1.1 // indirect
 	github.com/mdlayher/socket v0.4.0 // indirect
 	github.com/veandco/go-sdl2 v0.4.33 // indirect
+	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/image v0.6.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
