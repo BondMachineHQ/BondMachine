@@ -257,17 +257,12 @@ func (Op Multf16) Op_instruction_verilog_internal_state(arch *Arch, flavor strin
 }
 
 func (Op Multf16) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
-
 	tmpl := arch.createBasicTemplateData()
 	tmpl.ModuleName = "multiplier_" + arch.Tag
 	var f bytes.Buffer
-
 	t, _ := template.New("multiplier").Funcs(tmpl.funcmap).Parse(multf16)
-
 	t.Execute(&f, *tmpl)
-
 	result := f.String()
-
 	return []string{"multiplier"}, []string{result}
 }
 
