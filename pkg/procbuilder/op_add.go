@@ -145,7 +145,7 @@ func (op Add) Simulate(vm *VM, instr string) error {
 	case 64:
 		vm.Registers[regDest] = vm.Registers[regDest].(uint64) + vm.Registers[regSrc].(uint64)
 	default:
-		return errors.New("invalid register size")
+		return errors.New("invalid register size, 8, 16, 32 and 64 bits are supported")
 	}
 	vm.Pc = vm.Pc + 1
 	return nil

@@ -418,34 +418,34 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 						inj = append(inj, loc)
 					}
 
-					if act_on_tick, ok := absset[rule.Tick]; ok {
+					if actOnTick, ok := absset[rule.Tick]; ok {
 						switch vm.Bmach.Rsize {
 						case 8:
-							act_on_tick[ipos] = uint8(val)
+							actOnTick[ipos] = uint8(val)
 						case 16:
-							act_on_tick[ipos] = uint16(val)
+							actOnTick[ipos] = uint16(val)
 						case 32:
-							act_on_tick[ipos] = uint32(val)
+							actOnTick[ipos] = uint32(val)
 						case 64:
-							act_on_tick[ipos] = uint64(val)
+							actOnTick[ipos] = uint64(val)
 						default:
-							return errors.New("unsupported register size")
+							return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 						}
 					} else {
-						act_on_tick := make(map[int]interface{})
+						actOnTick := make(map[int]interface{})
 						switch vm.Bmach.Rsize {
 						case 8:
-							act_on_tick[ipos] = uint8(val)
+							actOnTick[ipos] = uint8(val)
 						case 16:
-							act_on_tick[ipos] = uint16(val)
+							actOnTick[ipos] = uint16(val)
 						case 32:
-							act_on_tick[ipos] = uint32(val)
+							actOnTick[ipos] = uint32(val)
 						case 64:
-							act_on_tick[ipos] = uint64(val)
+							actOnTick[ipos] = uint64(val)
 						default:
-							return errors.New("unsupported register size")
+							return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 						}
-						absset[rule.Tick] = act_on_tick
+						absset[rule.Tick] = actOnTick
 					}
 				} else {
 					return err
@@ -457,7 +457,7 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 		// Intercept the periodic set rules
 		if rule.Timec == simbox.TIMEC_REL && rule.Action == simbox.ACTION_SET {
 			if loc, err := vm.Get_element_location(rule.Object); err == nil {
-				if val, err := strconv.Atoi(rule.Extra); err == nil {
+				if val, err := ImportNumber(c, rule.Extra); err == nil {
 					ipos := -1
 					for i, iloc := range inj {
 						if iloc == loc {
@@ -470,34 +470,34 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 						inj = append(inj, loc)
 					}
 
-					if act_on_tick, ok := perset[rule.Tick]; ok {
+					if actOnTick, ok := perset[rule.Tick]; ok {
 						switch vm.Bmach.Rsize {
 						case 8:
-							act_on_tick[ipos] = uint8(val)
+							actOnTick[ipos] = uint8(val)
 						case 16:
-							act_on_tick[ipos] = uint16(val)
+							actOnTick[ipos] = uint16(val)
 						case 32:
-							act_on_tick[ipos] = uint32(val)
+							actOnTick[ipos] = uint32(val)
 						case 64:
-							act_on_tick[ipos] = uint64(val)
+							actOnTick[ipos] = uint64(val)
 						default:
 							return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 						}
 					} else {
-						act_on_tick := make(map[int]interface{})
+						actOnTick := make(map[int]interface{})
 						switch vm.Bmach.Rsize {
 						case 8:
-							act_on_tick[ipos] = uint8(val)
+							actOnTick[ipos] = uint8(val)
 						case 16:
-							act_on_tick[ipos] = uint16(val)
+							actOnTick[ipos] = uint16(val)
 						case 32:
-							act_on_tick[ipos] = uint32(val)
+							actOnTick[ipos] = uint32(val)
 						case 64:
-							act_on_tick[ipos] = uint64(val)
+							actOnTick[ipos] = uint64(val)
 						default:
 							return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 						}
-						perset[rule.Tick] = act_on_tick
+						perset[rule.Tick] = actOnTick
 					}
 				} else {
 					return err
@@ -539,42 +539,50 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 					rep = append(rep, loc)
 				}
 
-				if str_on_tick, ok := absget[rule.Tick]; ok {
+				if strOnTick, ok := absget[rule.Tick]; ok {
 					switch vm.Bmach.Rsize {
 					case 8:
-						str_on_tick[ipos] = uint8(0)
+						strOnTick[ipos] = uint8(0)
 					case 16:
-						str_on_tick[ipos] = uint16(0)
+						strOnTick[ipos] = uint16(0)
 					case 32:
 						if rule.Extra == "float32" {
-							str_on_tick[ipos] = float32(0)
+							strOnTick[ipos] = float32(0)
 						} else {
-							str_on_tick[ipos] = uint32(0)
+							strOnTick[ipos] = uint32(0)
 						}
 					case 64:
-						str_on_tick[ipos] = uint64(0)
+						if rule.Extra == "float64" {
+							strOnTick[ipos] = float64(0)
+						} else {
+							strOnTick[ipos] = uint64(0)
+						}
 					default:
 						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
 				} else {
-					str_on_tick := make(map[int]interface{})
+					strOnTick := make(map[int]interface{})
 					switch vm.Bmach.Rsize {
 					case 8:
-						str_on_tick[ipos] = uint8(0)
+						strOnTick[ipos] = uint8(0)
 					case 16:
-						str_on_tick[ipos] = uint16(0)
+						strOnTick[ipos] = uint16(0)
 					case 32:
 						if rule.Extra == "float32" {
-							str_on_tick[ipos] = float32(0)
+							strOnTick[ipos] = float32(0)
 						} else {
-							str_on_tick[ipos] = uint32(0)
+							strOnTick[ipos] = uint32(0)
 						}
 					case 64:
-						str_on_tick[ipos] = uint64(0)
+						if rule.Extra == "float64" {
+							strOnTick[ipos] = float64(0)
+						} else {
+							strOnTick[ipos] = uint64(0)
+						}
 					default:
 						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
-					absget[rule.Tick] = str_on_tick
+					absget[rule.Tick] = strOnTick
 				}
 			} else {
 				return err
@@ -595,34 +603,50 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 					rep = append(rep, loc)
 				}
 
-				if str_on_tick, ok := perget[rule.Tick]; ok {
+				if strOnTick, ok := perget[rule.Tick]; ok {
 					switch vm.Bmach.Rsize {
 					case 8:
-						str_on_tick[ipos] = uint8(0)
+						strOnTick[ipos] = uint8(0)
 					case 16:
-						str_on_tick[ipos] = uint16(0)
+						strOnTick[ipos] = uint16(0)
 					case 32:
-						str_on_tick[ipos] = uint32(0)
+						if rule.Extra == "float32" {
+							strOnTick[ipos] = float32(0)
+						} else {
+							strOnTick[ipos] = uint32(0)
+						}
 					case 64:
-						str_on_tick[ipos] = uint64(0)
+						if rule.Extra == "float64" {
+							strOnTick[ipos] = float64(0)
+						} else {
+							strOnTick[ipos] = uint64(0)
+						}
 					default:
 						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
 				} else {
-					str_on_tick := make(map[int]interface{})
+					strOnTick := make(map[int]interface{})
 					switch vm.Bmach.Rsize {
 					case 8:
-						str_on_tick[ipos] = uint8(0)
+						strOnTick[ipos] = uint8(0)
 					case 16:
-						str_on_tick[ipos] = uint16(0)
+						strOnTick[ipos] = uint16(0)
 					case 32:
-						str_on_tick[ipos] = uint32(0)
+						if rule.Extra == "float32" {
+							strOnTick[ipos] = float32(0)
+						} else {
+							strOnTick[ipos] = uint32(0)
+						}
 					case 64:
-						str_on_tick[ipos] = uint64(0)
+						if rule.Extra == "float64" {
+							strOnTick[ipos] = float64(0)
+						} else {
+							strOnTick[ipos] = uint64(0)
+						}
 					default:
 						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
-					perget[rule.Tick] = str_on_tick
+					perget[rule.Tick] = strOnTick
 				}
 			} else {
 				return err
