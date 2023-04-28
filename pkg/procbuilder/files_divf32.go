@@ -2,7 +2,9 @@ package procbuilder
 
 const (
 	divf32 = `
-
+//IEEE Floating Point Multiplier (Single Precision)
+//Copyright (C) Jonathan P Dawson 2013
+//2013-12-12
 module {{.ModuleName}} (
 	input_a,
         input_b,
