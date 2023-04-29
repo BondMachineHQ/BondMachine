@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"unsafe"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 )
@@ -246,4 +247,36 @@ func (arch *Arch) OnlyOne(curOp string, ops []string) bool {
 		}
 	}
 	return false
+}
+
+func Int8bits(f int8) uint8 {
+	return *(*uint8)(unsafe.Pointer(&f))
+}
+
+func Int16bits(f int16) uint16 {
+	return *(*uint16)(unsafe.Pointer(&f))
+}
+
+func Int32bits(f int32) uint32 {
+	return *(*uint32)(unsafe.Pointer(&f))
+}
+
+func Int64bits(f int64) uint64 {
+	return *(*uint64)(unsafe.Pointer(&f))
+}
+
+func Int8FromBits(f uint8) int8 {
+	return *(*int8)(unsafe.Pointer(&f))
+}
+
+func Int16FromBits(f uint16) int16 {
+	return *(*int16)(unsafe.Pointer(&f))
+}
+
+func Int32FromBits(f uint32) int32 {
+	return *(*int32)(unsafe.Pointer(&f))
+}
+
+func Int64FromBits(f uint64) int64 {
+	return *(*int64)(unsafe.Pointer(&f))
 }

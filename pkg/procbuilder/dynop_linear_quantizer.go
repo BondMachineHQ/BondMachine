@@ -229,41 +229,41 @@ func (op LinearQuantizer) Simulate(vm *VM, instr string) error {
 		case LQADD:
 			switch vm.Mach.Rsize {
 			case 8:
-				vm.Registers[regDest] = vm.Registers[regDest].(int8) + vm.Registers[regSrc].(int8)
+				vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) + Int8FromBits(vm.Registers[regSrc].(uint8)))
 			case 16:
-				vm.Registers[regDest] = vm.Registers[regDest].(int16) + vm.Registers[regSrc].(int16)
+				vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) + Int16FromBits(vm.Registers[regSrc].(uint16)))
 			case 32:
-				vm.Registers[regDest] = vm.Registers[regDest].(int32) + vm.Registers[regSrc].(int32)
+				vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) + Int32FromBits(vm.Registers[regSrc].(uint32)))
 			case 64:
-				vm.Registers[regDest] = vm.Registers[regDest].(int64) + vm.Registers[regSrc].(int64)
+				vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) + Int64FromBits(vm.Registers[regSrc].(uint64)))
 			default:
-				return errors.New("invalid register size")
+				return errors.New("invalid register size, 8, 16, 32 and 64 bits are allowed")
 			}
 		case LQMULT:
 			switch vm.Mach.Rsize {
 			case 8:
-				vm.Registers[regDest] = vm.Registers[regDest].(int8) * vm.Registers[regSrc].(int8) / int8(s)
+				vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) * Int8FromBits(vm.Registers[regSrc].(uint8)) / int8(s))
 			case 16:
-				vm.Registers[regDest] = vm.Registers[regDest].(int16) * vm.Registers[regSrc].(int16) / int16(s)
+				vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) * Int16FromBits(vm.Registers[regSrc].(uint16)) / int16(s))
 			case 32:
-				vm.Registers[regDest] = vm.Registers[regDest].(int32) * vm.Registers[regSrc].(int32) / int32(s)
+				vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) * Int32FromBits(vm.Registers[regSrc].(uint32)) / int32(s))
 			case 64:
-				vm.Registers[regDest] = vm.Registers[regDest].(int64) * vm.Registers[regSrc].(int64) / int64(s)
+				vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) * Int64FromBits(vm.Registers[regSrc].(uint64)) / int64(s))
 			default:
-				return errors.New("invalid register size")
+				return errors.New("invalid register size, 8, 16, 32 and 64 bits are allowed")
 			}
 		case LQDIV:
 			switch vm.Mach.Rsize {
 			case 8:
-				vm.Registers[regDest] = vm.Registers[regDest].(int8) / vm.Registers[regSrc].(int8) * int8(s)
+				vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) * int8(s) / Int8FromBits(vm.Registers[regSrc].(uint8)))
 			case 16:
-				vm.Registers[regDest] = vm.Registers[regDest].(int16) / vm.Registers[regSrc].(int16) * int16(s)
+				vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) * int16(s) / Int16FromBits(vm.Registers[regSrc].(uint16)))
 			case 32:
-				vm.Registers[regDest] = vm.Registers[regDest].(int32) / vm.Registers[regSrc].(int32) * int32(s)
+				vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) * int32(s) / Int32FromBits(vm.Registers[regSrc].(uint32)))
 			case 64:
-				vm.Registers[regDest] = vm.Registers[regDest].(int64) / vm.Registers[regSrc].(int64) * int64(s)
+				vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) * int64(s) / Int64FromBits(vm.Registers[regSrc].(uint64)))
 			default:
-				return errors.New("invalid register size")
+				return errors.New("invalid register size, 8, 16, 32 and 64 bits are allowed")
 			}
 		}
 		vm.Pc = vm.Pc + 1
