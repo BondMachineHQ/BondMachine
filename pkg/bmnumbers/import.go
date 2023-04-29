@@ -23,6 +23,43 @@ func ImportString(input string) (*BMNumber, error) {
 	return nil, errors.New("unknown number format " + input)
 }
 
+func ImportUint(input interface{}) (*BMNumber, error) {
+	result := new(BMNumber)
+	result.nType = Unsigned{}
+	switch input.(type) {
+	case uint8:
+		result.bits = 8
+		result.number = make([]byte, 1)
+		result.number[0] = input.(uint8)
+	case uint16:
+		result.bits = 16
+		result.number = make([]byte, 2)
+		result.number[1] = uint8(input.(uint16) >> 8 & 0xFF)
+		result.number[0] = uint8(input.(uint16) & 0xFF)
+	case uint32:
+		result.bits = 32
+		result.number = make([]byte, 4)
+		result.number[3] = uint8(input.(uint32) >> 24 & 0xFF)
+		result.number[2] = uint8(input.(uint32) >> 16 & 0xFF)
+		result.number[1] = uint8(input.(uint32) >> 8 & 0xFF)
+		result.number[0] = uint8(input.(uint32) & 0xFF)
+	case uint64:
+		result.bits = 64
+		result.number = make([]byte, 8)
+		result.number[7] = uint8(input.(uint64) >> 56 & 0xFF)
+		result.number[6] = uint8(input.(uint64) >> 48 & 0xFF)
+		result.number[5] = uint8(input.(uint64) >> 40 & 0xFF)
+		result.number[4] = uint8(input.(uint64) >> 32 & 0xFF)
+		result.number[3] = uint8(input.(uint64) >> 24 & 0xFF)
+		result.number[2] = uint8(input.(uint64) >> 16 & 0xFF)
+		result.number[1] = uint8(input.(uint64) >> 8 & 0xFF)
+		result.number[0] = uint8(input.(uint64) & 0xFF)
+	default:
+		return nil, errors.New("unknown uint type")
+	}
+	return result, nil
+}
+
 func LoadLinearDataRangesFromFile(filename string) error {
 
 	// Get the linear quantizer ranges struct

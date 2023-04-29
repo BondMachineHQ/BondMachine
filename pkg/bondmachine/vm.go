@@ -54,12 +54,14 @@ type Sim_drive struct {
 type Sim_tick_get map[int]interface{}
 type Sim_tick_show map[int]bool
 type Sim_report struct {
-	Reportables []*interface{}
-	Showables   []*interface{}
-	AbsGet      map[uint64]Sim_tick_get
-	PerGet      map[uint64]Sim_tick_get
-	AbsShow     map[uint64]Sim_tick_show
-	PerShow     map[uint64]Sim_tick_show
+	Reportables      []*interface{}
+	Showables        []*interface{}
+	ReportablesTypes []string
+	ShowablesTypes   []string
+	AbsGet           map[uint64]Sim_tick_get
+	PerGet           map[uint64]Sim_tick_get
+	AbsShow          map[uint64]Sim_tick_show
+	PerShow          map[uint64]Sim_tick_show
 }
 
 func (vm *VM) Processor_execute(psc *procbuilder.Sim_config, instruct <-chan int, resp chan<- int, result_chan chan<- string, proc_id int) {
@@ -518,6 +520,8 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 
 	rep := make([]*interface{}, 0)
 	sho := make([]*interface{}, 0)
+	repTypes := make([]string, 0)
+	shoTypes := make([]string, 0)
 	absget := make(map[uint64]Sim_tick_get)
 	perget := make(map[uint64]Sim_tick_get)
 	absshow := make(map[uint64]Sim_tick_show)
@@ -537,6 +541,11 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(rep)
 					rep = append(rep, loc)
+					if rule.Extra == "" {
+						repTypes = append(repTypes, "unsigned")
+					} else {
+						repTypes = append(repTypes, rule.Extra)
+					}
 				}
 
 				if strOnTick, ok := absget[rule.Tick]; ok {
@@ -546,17 +555,9 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 					case 16:
 						strOnTick[ipos] = uint16(0)
 					case 32:
-						if rule.Extra == "float32" {
-							strOnTick[ipos] = float32(0)
-						} else {
-							strOnTick[ipos] = uint32(0)
-						}
+						strOnTick[ipos] = uint32(0)
 					case 64:
-						if rule.Extra == "float64" {
-							strOnTick[ipos] = float64(0)
-						} else {
-							strOnTick[ipos] = uint64(0)
-						}
+						strOnTick[ipos] = uint64(0)
 					default:
 						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
@@ -568,17 +569,9 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 					case 16:
 						strOnTick[ipos] = uint16(0)
 					case 32:
-						if rule.Extra == "float32" {
-							strOnTick[ipos] = float32(0)
-						} else {
-							strOnTick[ipos] = uint32(0)
-						}
+						strOnTick[ipos] = uint32(0)
 					case 64:
-						if rule.Extra == "float64" {
-							strOnTick[ipos] = float64(0)
-						} else {
-							strOnTick[ipos] = uint64(0)
-						}
+						strOnTick[ipos] = uint64(0)
 					default:
 						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
@@ -601,6 +594,11 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(rep)
 					rep = append(rep, loc)
+					if rule.Extra == "" {
+						repTypes = append(repTypes, "unsigned")
+					} else {
+						repTypes = append(repTypes, rule.Extra)
+					}
 				}
 
 				if strOnTick, ok := perget[rule.Tick]; ok {
@@ -610,17 +608,9 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 					case 16:
 						strOnTick[ipos] = uint16(0)
 					case 32:
-						if rule.Extra == "float32" {
-							strOnTick[ipos] = float32(0)
-						} else {
-							strOnTick[ipos] = uint32(0)
-						}
+						strOnTick[ipos] = uint32(0)
 					case 64:
-						if rule.Extra == "float64" {
-							strOnTick[ipos] = float64(0)
-						} else {
-							strOnTick[ipos] = uint64(0)
-						}
+						strOnTick[ipos] = uint64(0)
 					default:
 						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
@@ -632,17 +622,9 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 					case 16:
 						strOnTick[ipos] = uint16(0)
 					case 32:
-						if rule.Extra == "float32" {
-							strOnTick[ipos] = float32(0)
-						} else {
-							strOnTick[ipos] = uint32(0)
-						}
+						strOnTick[ipos] = uint32(0)
 					case 64:
-						if rule.Extra == "float64" {
-							strOnTick[ipos] = float64(0)
-						} else {
-							strOnTick[ipos] = uint64(0)
-						}
+						strOnTick[ipos] = uint64(0)
 					default:
 						return errors.New("unsupported register size, only 8, 16, 32 and 64 are supported")
 					}
@@ -665,10 +647,15 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(sho)
 					sho = append(sho, loc)
+					if rule.Extra == "" {
+						shoTypes = append(shoTypes, "unsigned")
+					} else {
+						shoTypes = append(shoTypes, rule.Extra)
+					}
 				}
 
-				if str_on_tick, ok := absshow[rule.Tick]; ok {
-					str_on_tick[ipos] = true
+				if strOnTick, ok := absshow[rule.Tick]; ok {
+					strOnTick[ipos] = true
 				} else {
 					str_on_tick := make(map[int]bool)
 					str_on_tick[ipos] = true
@@ -691,14 +678,19 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(sho)
 					sho = append(sho, loc)
+					if rule.Extra == "" {
+						shoTypes = append(shoTypes, "unsigned")
+					} else {
+						shoTypes = append(shoTypes, rule.Extra)
+					}
 				}
 
-				if str_on_tick, ok := pershow[rule.Tick]; ok {
-					str_on_tick[ipos] = true
+				if strOnTick, ok := pershow[rule.Tick]; ok {
+					strOnTick[ipos] = true
 				} else {
-					str_on_tick := make(map[int]bool)
-					str_on_tick[ipos] = true
-					pershow[rule.Tick] = str_on_tick
+					strOnTick := make(map[int]bool)
+					strOnTick[ipos] = true
+					pershow[rule.Tick] = strOnTick
 				}
 			} else {
 				return err
@@ -708,6 +700,8 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 
 	sd.Reportables = rep
 	sd.Showables = sho
+	sd.ReportablesTypes = repTypes
+	sd.ShowablesTypes = shoTypes
 	sd.AbsGet = absget
 	sd.PerGet = perget
 	sd.AbsShow = absshow

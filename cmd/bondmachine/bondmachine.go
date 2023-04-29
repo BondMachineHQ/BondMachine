@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"math/rand"
 	"net"
 	"os"
@@ -906,12 +905,7 @@ func main() {
 
 				// This will get value to report on this tick
 				if rep, exist_reports := srep.AbsGet[i]; exist_reports {
-					types := make([]string, len(rep))
 					for k := range rep {
-						if _, ok := rep[k].(float32); ok {
-							types[k] = "float32"
-						}
-
 						rep[k] = *srep.Reportables[k]
 					}
 					keys := make([]int, 0, len(rep))
@@ -920,11 +914,26 @@ func main() {
 					}
 					sort.Ints(keys)
 					for _, k := range keys {
-						if types[k] == "float32" {
-							floatFromUint := math.Float32frombits(rep[k].(uint32))
-							fmt.Print(floatFromUint, ",")
+						nType := srep.ReportablesTypes[k]
+						if _, err := bmnumbers.EventuallyCreateType(nType, nil); err != nil {
+							log.Fatal(err)
+						}
+						if v := bmnumbers.GetType(nType); v == nil {
+							log.Fatal("Error: Unknown type")
 						} else {
-							fmt.Print(rep[k], ",,")
+							if number, err := bmnumbers.ImportUint(rep[k]); err != nil {
+								log.Fatal(err)
+							} else {
+								if err := bmnumbers.CastType(number, v); err != nil {
+									log.Fatal(err)
+								} else {
+									if numberS, err := number.ExportString(); err != nil {
+										log.Fatal(err)
+									} else {
+										fmt.Println(numberS)
+									}
+								}
+							}
 						}
 					}
 				}
