@@ -930,7 +930,8 @@ func main() {
 									if numberS, err := number.ExportString(); err != nil {
 										log.Fatal(err)
 									} else {
-										fmt.Println(numberS)
+										// TODO better formatting
+										fmt.Print(numberS)
 									}
 								}
 							}
