@@ -476,8 +476,8 @@ func main() {
 					fmt.Println("Program Counter:", vm.Pc)
 				}
 				fmt.Println("Instruction: ", vm.Mach.Slocs[vm.Pc])
-				fmt.Println("Registers before: ", vm.Dump_registers())
-				fmt.Println("IO before: ", vm.Dump_io())
+				fmt.Println("Registers before: ", vm.DumpRegisters())
+				fmt.Println("IO before: ", vm.DumpIO())
 
 				// This will get actions eventually to do on this tick
 				if act, exist_actions := sdrive.AbsSet[i]; exist_actions {
@@ -496,8 +496,8 @@ func main() {
 					}
 					fmt.Println(rep)
 				}
-				fmt.Println("Registers after: ", vm.Dump_registers())
-				fmt.Println("IO after: ", vm.Dump_io(), "\n")
+				fmt.Println("Registers after: ", vm.DumpRegisters())
+				fmt.Println("IO after: ", vm.DumpIO(), "\n")
 			}
 		} else if *run {
 			// TODO The sdrive and report goes also here

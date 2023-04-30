@@ -188,10 +188,10 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 			}
 			if psc != nil {
 				if psc.Show_io_pre {
-					result += "\t\tPre-compute IO: " + vm.Dump_io() + "\n"
+					result += "\t\tPre-compute IO: " + vm.DumpIO() + "\n"
 				}
 				if psc.Show_regs_pre {
-					result += "\t\tPre-compute Regs: " + vm.Dump_registers() + "\n"
+					result += "\t\tPre-compute Regs: " + vm.DumpRegisters() + "\n"
 				}
 			}
 
@@ -201,10 +201,10 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 
 			if psc != nil {
 				if psc.Show_io_pre {
-					result += "\t\tPost-compute IO: " + vm.Dump_io() + "\n"
+					result += "\t\tPost-compute IO: " + vm.DumpIO() + "\n"
 				}
 				if psc.Show_regs_pre {
-					result += "\t\tPost-compute Regs: " + vm.Dump_registers() + "\n"
+					result += "\t\tPost-compute Regs: " + vm.DumpRegisters() + "\n"
 				}
 			}
 
@@ -216,7 +216,7 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 	return result, nil
 }
 
-func (vm *VM) Dump_registers() string {
+func (vm *VM) DumpRegisters() string {
 	result := ""
 	for i, reg := range vm.Registers {
 		switch vm.Mach.Rsize {
@@ -224,14 +224,18 @@ func (vm *VM) Dump_registers() string {
 			result = result + Get_register_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint8)))) + " "
 		case 16:
 			result = result + Get_register_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint16)))) + " "
+		case 32:
+			result = result + Get_register_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint32)))) + " "
+		case 64:
+			result = result + Get_register_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint64)))) + " "
 		default:
-			// TODO Fix
+			result = "unsupported register size"
 		}
 	}
 	return result
 }
 
-func (vm *VM) Dump_io() string {
+func (vm *VM) DumpIO() string {
 	result := ""
 	for i, reg := range vm.Inputs {
 		switch vm.Mach.Rsize {
@@ -239,8 +243,12 @@ func (vm *VM) Dump_io() string {
 			result = result + Get_input_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint8)))) + " "
 		case 16:
 			result = result + Get_input_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint16)))) + " "
+		case 32:
+			result = result + Get_input_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint32)))) + " "
+		case 64:
+			result = result + Get_input_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint64)))) + " "
 		default:
-			// TODO Fix
+			result = "unsupported register size"
 		}
 	}
 	for i, reg := range vm.Outputs {
@@ -249,14 +257,18 @@ func (vm *VM) Dump_io() string {
 			result = result + Get_output_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint8)))) + " "
 		case 16:
 			result = result + Get_output_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint16)))) + " "
+		case 32:
+			result = result + Get_output_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint32)))) + " "
+		case 64:
+			result = result + Get_output_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint64)))) + " "
 		default:
-			// TODO Fix
+			result = "unsupported register size"
 		}
 	}
 	return result
 }
 
-func (vm *VM) Get_element_location(mnemonic string) (*interface{}, error) {
+func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 	// TODO include others
 	if len(mnemonic) > 1 && mnemonic[0] == 'i' {
 		if i, err := strconv.Atoi(mnemonic[1:]); err == nil {
@@ -308,7 +320,7 @@ func (sd *Sim_drive) Init(s *simbox.Simbox, vm *VM) error {
 			fmt.Println(rule)
 			// Intercept the set rules
 			if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_SET {
-				if loc, err := vm.Get_element_location(rule.Object); err == nil {
+				if loc, err := vm.GetElementLocation(rule.Object); err == nil {
 					if val, err := strconv.Atoi(rule.Extra); err == nil {
 						ipos := -1
 						for i, iloc := range inj {
@@ -328,8 +340,12 @@ func (sd *Sim_drive) Init(s *simbox.Simbox, vm *VM) error {
 								act_on_tick[ipos] = uint8(val)
 							case 16:
 								act_on_tick[ipos] = uint16(val)
+							case 32:
+								act_on_tick[ipos] = uint32(val)
+							case 64:
+								act_on_tick[ipos] = uint64(val)
 							default:
-								// TODO Fix
+								return errors.New("unsupported register size")
 							}
 						} else {
 							act_on_tick := make(map[int]interface{})
@@ -338,8 +354,13 @@ func (sd *Sim_drive) Init(s *simbox.Simbox, vm *VM) error {
 								act_on_tick[ipos] = uint8(val)
 							case 16:
 								act_on_tick[ipos] = uint16(val)
+							case 32:
+								act_on_tick[ipos] = uint32(val)
+							case 64:
+								act_on_tick[ipos] = uint64(val)
 							default:
-								// TODO Fix
+								return errors.New("unsupported register size")
+
 							}
 							act[rule.Tick] = act_on_tick
 						}
@@ -370,7 +391,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 			fmt.Println(rule)
 			// Intercept the set rules
 			if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_GET {
-				if loc, err := vm.Get_element_location(rule.Object); err == nil {
+				if loc, err := vm.GetElementLocation(rule.Object); err == nil {
 					ipos := -1
 					for i, iloc := range rep {
 						if iloc == loc {
@@ -389,8 +410,12 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 							str_on_tick[ipos] = uint8(0)
 						case 16:
 							str_on_tick[ipos] = uint16(0)
+						case 32:
+							str_on_tick[ipos] = uint32(0)
+						case 64:
+							str_on_tick[ipos] = uint64(0)
 						default:
-							// TODO Fix
+							return errors.New("unsupported register size")
 						}
 					} else {
 						str_on_tick := make(map[int]interface{})
@@ -399,8 +424,12 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 							str_on_tick[ipos] = uint8(0)
 						case 16:
 							str_on_tick[ipos] = uint16(0)
+						case 32:
+							str_on_tick[ipos] = uint32(0)
+						case 64:
+							str_on_tick[ipos] = uint64(0)
 						default:
-							// TODO Fix
+							return errors.New("unsupported register size")
 						}
 						str[rule.Tick] = str_on_tick
 					}

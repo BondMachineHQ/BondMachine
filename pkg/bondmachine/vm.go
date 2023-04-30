@@ -354,7 +354,7 @@ func (vm *VM) DumpIO() string {
 	return result
 }
 
-func (vm *VM) Get_element_location(mnemonic string) (*interface{}, error) {
+func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 	// TODO include others
 	if len(mnemonic) > 1 && mnemonic[0] == 'i' {
 		if i, err := strconv.Atoi(mnemonic[1:]); err == nil {
@@ -370,7 +370,7 @@ func (vm *VM) Get_element_location(mnemonic string) (*interface{}, error) {
 			}
 		}
 	}
-	return nil, Prerror{mnemonic + " unknown"}
+	return nil, errors.New("unknown mnemonic " + mnemonic)
 }
 
 func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM, conf *Config) error {
@@ -406,7 +406,7 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 	for _, rule := range s.Rules {
 		// Intercept the set rules
 		if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_SET {
-			if loc, err := vm.Get_element_location(rule.Object); err == nil {
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
 				if val, err := ImportNumber(c, rule.Extra); err == nil {
 					ipos := -1
 					for i, iloc := range inj {
@@ -458,7 +458,7 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 		}
 		// Intercept the periodic set rules
 		if rule.Timec == simbox.TIMEC_REL && rule.Action == simbox.ACTION_SET {
-			if loc, err := vm.Get_element_location(rule.Object); err == nil {
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
 				if val, err := ImportNumber(c, rule.Extra); err == nil {
 					ipos := -1
 					for i, iloc := range inj {
@@ -530,7 +530,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 	for _, rule := range s.Rules {
 		// Intercept the get rules in absolute time
 		if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_GET {
-			if loc, err := vm.Get_element_location(rule.Object); err == nil {
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
 				ipos := -1
 				for i, iloc := range rep {
 					if iloc == loc {
@@ -583,7 +583,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 		}
 		// Intercept the get rules in relative time
 		if rule.Timec == simbox.TIMEC_REL && rule.Action == simbox.ACTION_GET {
-			if loc, err := vm.Get_element_location(rule.Object); err == nil {
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
 				ipos := -1
 				for i, iloc := range rep {
 					if iloc == loc {
@@ -636,7 +636,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 		}
 		// Intercept the show rules in absolute time
 		if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_SHOW {
-			if loc, err := vm.Get_element_location(rule.Object); err == nil {
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
 				ipos := -1
 				for i, iloc := range sho {
 					if iloc == loc {
@@ -667,7 +667,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 		}
 		// Intercept the show rules in relative time
 		if rule.Timec == simbox.TIMEC_REL && rule.Action == simbox.ACTION_SHOW {
-			if loc, err := vm.Get_element_location(rule.Object); err == nil {
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
 				ipos := -1
 				for i, iloc := range sho {
 					if iloc == loc {
