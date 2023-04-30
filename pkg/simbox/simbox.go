@@ -132,6 +132,13 @@ func (r *Simbox) Add(adds string) error {
 			}
 		}
 	} else if len(words) == 3 {
+		if words[0] == "config" {
+			switch words[1] {
+			case "get_all":
+				r.Rules = append(r.Rules, Rule{TIMEC_NONE, uint64(0), ACTION_CONFIG, "get_all", words[2]})
+				return nil
+			}
+		}
 	} else if len(words) == 2 {
 		if words[0] == "config" {
 			switch words[1] {

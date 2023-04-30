@@ -3,6 +3,7 @@ package bondmachine
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
@@ -356,20 +357,54 @@ func (vm *VM) DumpIO() string {
 
 func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 	// TODO include others
-	if len(mnemonic) > 1 && mnemonic[0] == 'i' {
-		if i, err := strconv.Atoi(mnemonic[1:]); err == nil {
+
+	re := regexp.MustCompile("^i(?P<input>[0-9]+)$")
+	if re.MatchString(mnemonic) {
+		inputNum := re.ReplaceAllString(mnemonic, "${input}")
+		if i, err := strconv.Atoi(inputNum); err == nil {
 			if i < len(vm.Inputs_regs) {
 				return &vm.Inputs_regs[i], nil
 			}
 		}
 	}
-	if len(mnemonic) > 1 && mnemonic[0] == 'o' {
-		if i, err := strconv.Atoi(mnemonic[1:]); err == nil {
+	re = regexp.MustCompile("^o(?P<output>[0-9]+)$")
+	if re.MatchString(mnemonic) {
+		outputNum := re.ReplaceAllString(mnemonic, "${output}")
+		if i, err := strconv.Atoi(outputNum); err == nil {
 			if i < len(vm.Outputs_regs) {
 				return &vm.Outputs_regs[i], nil
 			}
 		}
 	}
+	re = regexp.MustCompile("^p(?P<proc>[0-9]+)i(?P<input>[0-9]+)$")
+	if re.MatchString(mnemonic) {
+		procNum := re.ReplaceAllString(mnemonic, "${proc}")
+		inputNum := re.ReplaceAllString(mnemonic, "${input}")
+		if i, err := strconv.Atoi(procNum); err == nil {
+			if i < len(vm.Processors) {
+				if j, err := strconv.Atoi(inputNum); err == nil {
+					if j < len(vm.Processors[i].Inputs) {
+						return &vm.Processors[i].Inputs[j], nil
+					}
+				}
+			}
+		}
+	}
+	re = regexp.MustCompile("^p(?P<proc>[0-9]+)o(?P<output>[0-9]+)$")
+	if re.MatchString(mnemonic) {
+		procNum := re.ReplaceAllString(mnemonic, "${proc}")
+		outputNum := re.ReplaceAllString(mnemonic, "${output}")
+		if i, err := strconv.Atoi(procNum); err == nil {
+			if i < len(vm.Processors) {
+				if j, err := strconv.Atoi(outputNum); err == nil {
+					if j < len(vm.Processors[i].Outputs) {
+						return &vm.Processors[i].Outputs[j], nil
+					}
+				}
+			}
+		}
+	}
+
 	return nil, errors.New("unknown mnemonic " + mnemonic)
 }
 
