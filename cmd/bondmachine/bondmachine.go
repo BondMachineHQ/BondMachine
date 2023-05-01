@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -107,7 +108,8 @@ var multi_abstract_assembly_file = flag.String("multi-abstract-assembly-file", "
 var simbox_file = flag.String("simbox-file", "", "Filename of the simulation data file")
 
 var sim = flag.Bool("sim", false, "Simulate bond machine")
-var sim_interactions = flag.Int("sim-interactions", 10, "Simulation interaction")
+var simInteractions = flag.Int("sim-interactions", 10, "Simulation interaction")
+var simReport = flag.String("sim-report", "", "Simulation report file")
 
 var emu = flag.Bool("emu", false, "Emulate bond machine")
 var emu_interactions = flag.Int("emu-interactions", 10, "Emulation interaction (0 means forever)")
@@ -853,12 +855,31 @@ func main() {
 				err := pstatevm.Init()
 				check(err)
 
-				sim_int_s := strconv.Itoa(*sim_interactions)
+				sim_int_s := strconv.Itoa(*simInteractions)
 				intlen := len(sim_int_s)
 				intlen_s = strconv.Itoa(intlen)
 			}
 
-			for i := uint64(0); i < uint64(*sim_interactions); i++ {
+			var reportData *csv.Writer
+			if *simReport != "" {
+				rf, err := os.Create(*simReport)
+				check(err)
+				defer rf.Close()
+				reportData = csv.NewWriter(rf)
+
+				if err := reportData.Write(srep.ReportablesNames); err != nil {
+					log.Fatalln("error writing record to csv:", err)
+				}
+
+				reportData.Flush()
+
+				if err := reportData.Error(); err != nil {
+					log.Fatal(err)
+				}
+
+			}
+
+			for i := uint64(0); i < uint64(*simInteractions); i++ {
 
 				// This will get actions eventually to do on this tick
 				if act, exist_actions := sdrive.AbsSet[i]; exist_actions {
@@ -903,45 +924,45 @@ func main() {
 					}
 				}
 
-				// This will get value to report on this tick
-				if rep, exist_reports := srep.AbsGet[i]; exist_reports {
-					for k := range rep {
-						rep[k] = *srep.Reportables[k]
-					}
-					keys := make([]int, 0, len(rep))
-					for k := range rep {
-						keys = append(keys, k)
-					}
-					sort.Ints(keys)
-					for _, k := range keys {
-						nType := srep.ReportablesTypes[k]
-						if _, err := bmnumbers.EventuallyCreateType(nType, nil); err != nil {
-							log.Fatal(err)
+				if *simReport != "" {
+					if rep, exist_reports := srep.AbsGet[i]; exist_reports {
+						for k := range rep {
+							rep[k] = *srep.Reportables[k]
 						}
-						if v := bmnumbers.GetType(nType); v == nil {
-							log.Fatal("Error: Unknown type")
-						} else {
-							if number, err := bmnumbers.ImportUint(rep[k]); err != nil {
+						keys := make([]int, 0, len(rep))
+						for k := range rep {
+							keys = append(keys, k)
+						}
+						sort.Ints(keys)
+						for _, k := range keys {
+							nType := srep.ReportablesTypes[k]
+							if _, err := bmnumbers.EventuallyCreateType(nType, nil); err != nil {
 								log.Fatal(err)
+							}
+							if v := bmnumbers.GetType(nType); v == nil {
+								log.Fatal("Error: Unknown type")
 							} else {
-								if err := bmnumbers.CastType(number, v); err != nil {
+								if number, err := bmnumbers.ImportUint(rep[k]); err != nil {
 									log.Fatal(err)
 								} else {
-									if numberS, err := number.ExportString(); err != nil {
+									if err := bmnumbers.CastType(number, v); err != nil {
 										log.Fatal(err)
 									} else {
-										// TODO better formatting
-										fmt.Print(numberS)
+										if numberS, err := number.ExportString(); err != nil {
+											log.Fatal(err)
+										} else {
+											// TODO better formatting
+											fmt.Print(numberS)
+										}
 									}
 								}
 							}
 						}
 					}
+
+					// TODO Periodic get
+					// TODO Write to a yet to be created report data structure
 				}
-
-				// TODO Periodic get
-				// TODO Write to a yet to be created report data structure
-
 			}
 		} else if *emu {
 

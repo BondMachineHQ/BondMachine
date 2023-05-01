@@ -59,6 +59,7 @@ type Sim_report struct {
 	Showables        []*interface{}
 	ReportablesTypes []string
 	ShowablesTypes   []string
+	ReportablesNames []string
 	AbsGet           map[uint64]Sim_tick_get
 	PerGet           map[uint64]Sim_tick_get
 	AbsShow          map[uint64]Sim_tick_show
@@ -405,6 +406,8 @@ func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 		}
 	}
 
+	// TODO registers
+
 	return nil, errors.New("unknown mnemonic " + mnemonic)
 }
 
@@ -557,6 +560,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 	sho := make([]*interface{}, 0)
 	repTypes := make([]string, 0)
 	shoTypes := make([]string, 0)
+	repNames := make([]string, 0)
 	absget := make(map[uint64]Sim_tick_get)
 	perget := make(map[uint64]Sim_tick_get)
 	absshow := make(map[uint64]Sim_tick_show)
@@ -576,6 +580,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(rep)
 					rep = append(rep, loc)
+					repNames = append(repNames, rule.Object)
 					if rule.Extra == "" {
 						repTypes = append(repTypes, "unsigned")
 					} else {
@@ -629,6 +634,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(rep)
 					rep = append(rep, loc)
+					repNames = append(repNames, rule.Object)
 					if rule.Extra == "" {
 						repTypes = append(repTypes, "unsigned")
 					} else {
@@ -737,6 +743,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 	sd.Showables = sho
 	sd.ReportablesTypes = repTypes
 	sd.ShowablesTypes = shoTypes
+	sd.ReportablesNames = repNames
 	sd.AbsGet = absget
 	sd.PerGet = perget
 	sd.AbsShow = absshow
