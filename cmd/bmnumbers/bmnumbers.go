@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"fmt"
+	"io"
 	"log"
+	"os"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 )
@@ -70,7 +73,63 @@ func main() {
 
 		for _, argTo := range flag.Args() {
 			if *useFiles {
-				fmt.Println("Load files")
+				// open the file
+				f, err := os.Open(argTo)
+				if err != nil {
+					log.Fatal(err)
+				}
+				of, err := os.Create(argTo + ".out")
+				if err != nil {
+					log.Fatal(err)
+				}
+				r := csv.NewReader(f)
+				w := csv.NewWriter(of)
+				for {
+					record, err := r.Read()
+					if err == io.EOF {
+						break
+					}
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					recordC := make([]string, len(record))
+					for i, v := range record {
+						if output, err := bmnumbers.ImportString(v); err != nil {
+							fmt.Println("Error: ", err)
+						} else {
+
+							if *convertTo != "" {
+								if err := newType.Convert(output); err != nil {
+									fmt.Println("Error: ", err)
+								}
+							}
+
+							if *castTo != "" {
+								if err := bmnumbers.CastType(output, newType); err != nil {
+									fmt.Println("Error: ", err)
+								}
+							}
+							if value, err := output.ExportString(); err != nil {
+								fmt.Println("Error: ", err)
+							} else {
+								recordC[i] = value
+							}
+						}
+					}
+
+					if err := w.Write(recordC); err != nil {
+						log.Fatalln("error writing record to csv:", err)
+					}
+
+					w.Flush()
+
+					if err := w.Error(); err != nil {
+						log.Fatal(err)
+					}
+				}
+				f.Close()
+				of.Close()
 			} else {
 				if output, err := bmnumbers.ImportString(argTo); err != nil {
 					fmt.Println("Error: ", err)
