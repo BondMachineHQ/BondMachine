@@ -867,8 +867,14 @@ func main() {
 				defer rf.Close()
 				reportData = csv.NewWriter(rf)
 
-				if err := reportData.Write(srep.ReportablesNames); err != nil {
-					log.Fatalln("error writing record to csv:", err)
+				if sconfig.GetTicks {
+					if err := reportData.Write(append([]string{"tick"}, srep.ReportablesNames...)); err != nil {
+						log.Fatalln("error writing record to csv:", err)
+					}
+				} else {
+					if err := reportData.Write(srep.ReportablesNames); err != nil {
+						log.Fatalln("error writing record to csv:", err)
+					}
 				}
 
 				reportData.Flush()
@@ -907,10 +913,12 @@ func main() {
 
 				fmt.Print(result)
 
+				showList := make([]int, 0, len(srep.Showables))
+
 				// This will get value to show on this tick
 				if slist, exist_shows := srep.AbsShow[i]; exist_shows {
 					for k, _ := range slist {
-						fmt.Println(*srep.Showables[k])
+						showList = append(showList, k)
 					}
 				}
 
@@ -918,41 +926,115 @@ func main() {
 				for j, slist := range srep.PerShow {
 					if i%j == 0 {
 						for k, _ := range slist {
-							fmt.Print(*srep.Showables[k], " ")
+							alredtIn := false
+							for _, v := range showList {
+								if v == k {
+									alredtIn = true
+									break
+								}
+							}
+							if !alredtIn {
+								showList = append(showList, k)
+							}
 						}
-						fmt.Println("")
 					}
 				}
 
-				if *simReport != "" {
-					if rep, exist_reports := srep.AbsGet[i]; exist_reports {
-						for k := range rep {
-							rep[k] = *srep.Reportables[k]
-						}
-						keys := make([]int, 0, len(rep))
-						for k := range rep {
-							keys = append(keys, k)
-						}
-						sort.Ints(keys)
-						for _, k := range keys {
-							nType := srep.ReportablesTypes[k]
-							if _, err := bmnumbers.EventuallyCreateType(nType, nil); err != nil {
+				sort.Ints(showList)
+
+				// Show the tick values
+				for _, k := range showList {
+					nType := srep.ShowablesTypes[k]
+					if _, err := bmnumbers.EventuallyCreateType(nType, nil); err != nil {
+						log.Fatal(err)
+					}
+					if v := bmnumbers.GetType(nType); v == nil {
+						log.Fatal("Error: Unknown type")
+					} else {
+						if number, err := bmnumbers.ImportUint(*srep.Showables[k]); err != nil {
+							log.Fatal(err)
+						} else {
+							if err := bmnumbers.CastType(number, v); err != nil {
 								log.Fatal(err)
-							}
-							if v := bmnumbers.GetType(nType); v == nil {
-								log.Fatal("Error: Unknown type")
 							} else {
-								if number, err := bmnumbers.ImportUint(rep[k]); err != nil {
+								if numberS, err := number.ExportString(); err != nil {
 									log.Fatal(err)
 								} else {
-									if err := bmnumbers.CastType(number, v); err != nil {
+									fmt.Print(numberS + " ")
+								}
+							}
+						}
+					}
+				}
+				if len(showList) > 0 {
+					fmt.Println()
+				}
+
+				if *simReport != "" {
+
+					repList := make([]int, 0, len(srep.Reportables))
+					recordC := make([]string, len(srep.Reportables))
+
+					if sconfig.GetTicks {
+						recordC = append(recordC, "")
+						recordC[0] = strconv.FormatUint(i, 10)
+					}
+
+					if sconfig.GetAll || sconfig.GetAllInternal {
+						for j := range srep.Reportables {
+							repList = append(repList, j)
+						}
+					} else {
+						if rep, exist_reports := srep.AbsGet[i]; exist_reports {
+							for k := range rep {
+								repList = append(repList, k)
+							}
+						}
+
+						// This will get value to show on periodic ticks
+						for j, rep := range srep.PerGet {
+							if i%j == 0 {
+								for k, _ := range rep {
+									alredtIn := false
+									for _, v := range repList {
+										if v == k {
+											alredtIn = true
+											break
+										}
+									}
+									if !alredtIn {
+										repList = append(repList, k)
+									}
+								}
+							}
+						}
+					}
+
+					// sort.Ints(repList)
+
+					someToReport := false
+					for _, k := range repList {
+						nType := srep.ReportablesTypes[k]
+						if _, err := bmnumbers.EventuallyCreateType(nType, nil); err != nil {
+							log.Fatal(err)
+						}
+						if v := bmnumbers.GetType(nType); v == nil {
+							log.Fatal("Error: Unknown type")
+						} else {
+							if number, err := bmnumbers.ImportUint(*srep.Reportables[k]); err != nil {
+								log.Fatal(err)
+							} else {
+								if err := bmnumbers.CastType(number, v); err != nil {
+									log.Fatal(err)
+								} else {
+									if numberS, err := number.ExportString(); err != nil {
 										log.Fatal(err)
 									} else {
-										if numberS, err := number.ExportString(); err != nil {
-											log.Fatal(err)
+										someToReport = true
+										if sconfig.GetTicks {
+											recordC[k+1] = numberS
 										} else {
-											// TODO better formatting
-											fmt.Print(numberS)
+											recordC[k] = numberS
 										}
 									}
 								}
@@ -960,8 +1042,18 @@ func main() {
 						}
 					}
 
-					// TODO Periodic get
-					// TODO Write to a yet to be created report data structure
+					if sconfig.GetTicks || someToReport {
+
+						if err := reportData.Write(recordC); err != nil {
+							log.Fatalln("error writing record to csv:", err)
+						}
+
+						reportData.Flush()
+
+						if err := reportData.Error(); err != nil {
+							log.Fatal(err)
+						}
+					}
 				}
 			}
 		} else if *emu {
@@ -974,7 +1066,7 @@ func main() {
 					vga := new(bondmachine.Vga800x600Emu)
 					emuDrivers = append(emuDrivers, vga)
 				} else {
-					panic(errors.New("Unsopported VGA flavor"))
+					panic(errors.New("unsopported VGA flavor"))
 				}
 			}
 

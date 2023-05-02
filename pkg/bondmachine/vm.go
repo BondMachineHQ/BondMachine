@@ -38,9 +38,12 @@ func (vm *VM) CopyState(vmsource *VM) {
 }
 
 type Sim_config struct {
-	Show_ticks   bool
-	Show_io_pre  bool
-	Show_io_post bool
+	Show_ticks     bool
+	Show_io_pre    bool
+	Show_io_post   bool
+	GetTicks       bool
+	GetAll         bool
+	GetAllInternal bool
 }
 
 // Simbox rules are converted in a sim drive when the simulation starts and applied during the simulation
@@ -406,7 +409,20 @@ func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 		}
 	}
 
-	// TODO registers
+	re = regexp.MustCompile("^p(?P<proc>[0-9]+)r(?P<reg>[0-9]+)$")
+	if re.MatchString(mnemonic) {
+		procNum := re.ReplaceAllString(mnemonic, "${proc}")
+		regNum := re.ReplaceAllString(mnemonic, "${reg}")
+		if i, err := strconv.Atoi(procNum); err == nil {
+			if i < len(vm.Processors) {
+				if j, err := strconv.Atoi(regNum); err == nil {
+					if j < len(vm.Processors[i].Registers) {
+						return &vm.Processors[i].Registers[j], nil
+					}
+				}
+			}
+		}
+	}
 
 	return nil, errors.New("unknown mnemonic " + mnemonic)
 }
@@ -428,6 +444,12 @@ func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM, conf *Config) error {
 					sc.Show_io_pre = true
 				case "show_io_post":
 					sc.Show_io_post = true
+				case "get_ticks":
+					sc.GetTicks = true
+				case "get_all":
+					sc.GetAll = true
+				case "get_all_internal":
+					sc.GetAllInternal = true
 				}
 			}
 		}
@@ -567,6 +589,53 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 	pershow := make(map[uint64]Sim_tick_show)
 
 	for _, rule := range s.Rules {
+		// Intercept the get_all rules
+		if rule.Timec == simbox.TIMEC_NONE && rule.Action == simbox.ACTION_CONFIG {
+			objects := make([]string, 0)
+			switch rule.Object {
+			case "get_all":
+				for i, _ := range vm.Bmach.Internal_inputs {
+					objects = append(objects, vm.Bmach.Internal_inputs[i].String())
+				}
+				for i, _ := range vm.Bmach.Internal_outputs {
+					objects = append(objects, vm.Bmach.Internal_outputs[i].String())
+				}
+			case "get_all_internal":
+				for i, _ := range vm.Bmach.Internal_inputs {
+					objects = append(objects, vm.Bmach.Internal_inputs[i].String())
+				}
+				for i, _ := range vm.Bmach.Internal_outputs {
+					objects = append(objects, vm.Bmach.Internal_outputs[i].String())
+				}
+				for i, procVm := range vm.Processors {
+					for j, _ := range procVm.Registers {
+						objects = append(objects, fmt.Sprintf("p%dr%d", i, j))
+					}
+				}
+
+			}
+			for _, obj := range objects {
+				if loc, err := vm.GetElementLocation(obj); err == nil {
+					ipos := -1
+					for i, iloc := range rep {
+						if iloc == loc {
+							ipos = i
+							break
+						}
+					}
+					if ipos == -1 {
+						rep = append(rep, loc)
+						repNames = append(repNames, obj)
+						if rule.Extra == "" {
+							repTypes = append(repTypes, "unsigned")
+						} else {
+							repTypes = append(repTypes, rule.Extra)
+						}
+					}
+				}
+			}
+		}
+
 		// Intercept the get rules in absolute time
 		if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_GET {
 			if loc, err := vm.GetElementLocation(rule.Object); err == nil {

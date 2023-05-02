@@ -62,7 +62,11 @@ func unsignedImportNoSize(re *regexp.Regexp, input string) (*BMNumber, error) {
 }
 
 func (d Unsigned) ExportString(n *BMNumber) (string, error) {
-	return "", errors.New("not implemented")
+	if result, err := n.ExportUint64(); err == nil {
+		return strconv.FormatUint(result, 10), nil
+	} else {
+		return "", err
+	}
 }
 
 func (d Unsigned) ShowInstructions() map[string]string {

@@ -51,12 +51,19 @@ func (rule Rule) String() string {
 		case ACTION_GET:
 			return "absolute:" + strconv.Itoa(int(rule.Tick)) + ":get:" + rule.Object + ":" + rule.Extra
 		case ACTION_SHOW:
-			return "absolute:" + strconv.Itoa(int(rule.Tick)) + ":show:" + rule.Object
+			return "absolute:" + strconv.Itoa(int(rule.Tick)) + ":show:" + rule.Object + ":" + rule.Extra
 		}
 	case TIMEC_NONE:
 		switch rule.Action {
 		case ACTION_CONFIG:
-			return "config:" + rule.Object
+			switch rule.Object {
+			case "get_all":
+				return "config:get_all:" + rule.Extra
+			case "get_all_internal":
+				return "config:get_all_internal:" + rule.Extra
+			default:
+				return "config:" + rule.Object
+			}
 		}
 	case TIMEC_REL:
 		switch rule.Action {
@@ -65,7 +72,7 @@ func (rule Rule) String() string {
 		case ACTION_GET:
 			return "relative:" + strconv.Itoa(int(rule.Tick)) + ":get:" + rule.Object + ":" + rule.Extra
 		case ACTION_SHOW:
-			return "relative:" + strconv.Itoa(int(rule.Tick)) + ":show:" + rule.Object
+			return "relative:" + strconv.Itoa(int(rule.Tick)) + ":show:" + rule.Object + ":" + rule.Extra
 		}
 	}
 	return ""
@@ -108,26 +115,32 @@ func (r *Simbox) Add(adds string) error {
 				return nil
 			}
 		}
+		if words[0] == "relative" && words[2] == "get" {
+			if every, err := strconv.Atoi(words[1]); err == nil {
+				r.Rules = append(r.Rules, Rule{TIMEC_REL, uint64(every), ACTION_GET, words[3], words[4]})
+				return nil
+			}
+		}
 	} else if len(words) == 4 {
 		if words[0] == "absolute" && words[2] == "get" {
 			if tick, err := strconv.Atoi(words[1]); err == nil {
-				r.Rules = append(r.Rules, Rule{TIMEC_ABS, uint64(tick), ACTION_GET, words[3], ""})
+				r.Rules = append(r.Rules, Rule{TIMEC_ABS, uint64(tick), ACTION_GET, words[3], "unsigned"})
 				return nil
 			}
 		} else if words[0] == "absolute" && words[2] == "show" {
 			if tick, err := strconv.Atoi(words[1]); err == nil {
-				r.Rules = append(r.Rules, Rule{TIMEC_ABS, uint64(tick), ACTION_SHOW, words[3], ""})
+				r.Rules = append(r.Rules, Rule{TIMEC_ABS, uint64(tick), ACTION_SHOW, words[3], "unsigned"})
 				return nil
 			}
 		}
 		if words[0] == "relative" && words[2] == "get" {
 			if every, err := strconv.Atoi(words[1]); err == nil {
-				r.Rules = append(r.Rules, Rule{TIMEC_REL, uint64(every), ACTION_GET, words[3], ""})
+				r.Rules = append(r.Rules, Rule{TIMEC_REL, uint64(every), ACTION_GET, words[3], "unsigned"})
 				return nil
 			}
 		} else if words[0] == "relative" && words[2] == "show" {
 			if every, err := strconv.Atoi(words[1]); err == nil {
-				r.Rules = append(r.Rules, Rule{TIMEC_REL, uint64(every), ACTION_SHOW, words[3], ""})
+				r.Rules = append(r.Rules, Rule{TIMEC_REL, uint64(every), ACTION_SHOW, words[3], "unsigned"})
 				return nil
 			}
 		}
@@ -136,6 +149,9 @@ func (r *Simbox) Add(adds string) error {
 			switch words[1] {
 			case "get_all":
 				r.Rules = append(r.Rules, Rule{TIMEC_NONE, uint64(0), ACTION_CONFIG, "get_all", words[2]})
+				return nil
+			case "get_all_internal":
+				r.Rules = append(r.Rules, Rule{TIMEC_NONE, uint64(0), ACTION_CONFIG, "get_all_internal", words[2]})
 				return nil
 			}
 		}
@@ -153,6 +169,9 @@ func (r *Simbox) Add(adds string) error {
 				return nil
 			case "show_ticks":
 				r.Rules = append(r.Rules, Rule{TIMEC_NONE, uint64(0), ACTION_CONFIG, "show_ticks", ""})
+				return nil
+			case "get_ticks":
+				r.Rules = append(r.Rules, Rule{TIMEC_NONE, uint64(0), ACTION_CONFIG, "get_ticks", ""})
 				return nil
 			case "show_proc_regs_pre":
 				r.Rules = append(r.Rules, Rule{TIMEC_NONE, uint64(0), ACTION_CONFIG, "show_proc_regs_pre", ""})
