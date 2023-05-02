@@ -35,7 +35,9 @@ const (
     localparam bminputs = {{ .InputNum }};  // number of bminputs for each sample (or bminputs)
     localparam bmoutputs = {{ .OutputNum }}; // number of output for the classification
 	localparam NUMBER_OF_INPUTS  = samples*bminputs;                                     
-    localparam NUMBER_OF_OUTPUTS = samples*bmoutputs;  
+    localparam NUMBER_OF_OUTPUTS = samples*bmoutputs;
+	localparam precision = {{ $.Rsize }}; // precision bit
+	localparam maxfifoloop = (C_S00_AXIS_TDATA_WIDTH / precision) - 1;
     
 	// Machine state for the slave stream part
 	parameter [1:0] IDLE = 1'b0,
@@ -81,7 +83,7 @@ const (
 	    endcase
 	end
 
-	assign axis_tready = ((mst_exec_state == WRITE_FIFO) && (write_pointer <= NUMBER_OF_INPUTS-1));
+	assign axis_tready = ((mst_exec_state == WRITE_FIFO) && (write_pointer <= (NUMBER_OF_INPUTS/(maxfifoloop+1))-1));
 
 	always@(posedge s00_axis_aclk)
 	begin
@@ -97,14 +99,14 @@ const (
 	      writes_done <= 1'b0;
 	    end  
 	  else
-	    if (write_pointer <= NUMBER_OF_INPUTS-1)
+	    if (write_pointer <= (NUMBER_OF_INPUTS/(maxfifoloop+1))-1)
 	      begin
 	        if (fifo_wren)
 	          begin
 	            write_pointer <= write_pointer + 1;
 	            writes_done <= 1'b0;
 	          end
-	          if ((write_pointer == NUMBER_OF_INPUTS-1)|| s00_axis_tlast)
+	          if ((write_pointer == (NUMBER_OF_INPUTS/(maxfifoloop+1))-1)|| s00_axis_tlast)
 	            begin
 	              writes_done <= 1'b1;
 	            end
@@ -115,13 +117,27 @@ const (
 
 	assign fifo_wren = s00_axis_tvalid && axis_tready;
 
+	reg  [{{ .CountersBits }}:0] maxfifoloopcounter = 0;
+	reg  [(precision)-1:0] stream_data_fifo [0 : NUMBER_OF_INPUTS-1];
+
 	reg  [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo [0 : NUMBER_OF_INPUTS-1];
     always @( posedge s00_axis_aclk )
     begin
+		if (tx_done) begin
+	       maxfifoloopcounter <= 0;
+	  end
       if (fifo_wren)
         begin
-          stream_data_fifo[write_pointer] <= s00_axis_tdata;
-        end  
+          if (precision == 32) begin
+            stream_data_fifo[write_pointer+maxfifoloopcounter] <= s00_axis_tdata;
+            maxfifoloopcounter <= maxfifoloopcounter + 0;
+          end
+          else if (precision == 16) begin
+              stream_data_fifo[write_pointer+maxfifoloopcounter+0] <= s00_axis_tdata[15:0];
+              stream_data_fifo[write_pointer+maxfifoloopcounter+1] <= s00_axis_tdata[31:16];
+              maxfifoloopcounter <= maxfifoloopcounter + 1;
+          end
+        end   
      end      
 
     /*
@@ -201,7 +217,7 @@ const (
 	end
 
 	assign axis_tvalid = ((mst_exec_state_M == SEND_STREAM_M) && (writes_done) && (bm_done));
-    assign axis_tlast = (stream_output_counter == NUMBER_OF_OUTPUTS - 1);
+    assign axis_tlast = (stream_output_counter == (NUMBER_OF_OUTPUTS/(maxfifoloop+1)) - 1);
 
     always @(posedge m00_axis_aclk)                                                                  
 	begin        
@@ -422,9 +438,12 @@ const (
 
     assign tx_en = m00_axis_tready && axis_tvalid;   
 
+	reg [{{ .CountersBits }}:0] maxfifoloopcounteroutput = 0;
+
     always @( posedge m00_axis_aclk )                  
     begin        
        if (tx_done) begin
+		maxfifoloopcounteroutput <= 0;
         stream_output_counter <= 0;
         tx_done <= 1'b0;
        end
@@ -435,10 +454,18 @@ const (
         end                                          
       else if (tx_en)
         begin
-          if (stream_output_counter <= NUMBER_OF_OUTPUTS - 1) begin
-              stream_data_out <= output_stream_data_fifo[stream_output_counter];
+           if (stream_output_counter <= (NUMBER_OF_OUTPUTS/(maxfifoloop+1)) - 1) begin
+              if (precision == 32) begin
+                    stream_data_out <= output_stream_data_fifo[stream_output_counter+maxfifoloopcounteroutput];
+              end
+              else if (precision == 16) begin
+                    //stream_data_out <= output_stream_data_fifo[stream_output_counter+maxfifoloopcounteroutput];
+                    stream_data_out[15:0] <= output_stream_data_fifo[stream_output_counter+maxfifoloopcounteroutput+0];
+                    stream_data_out[31:16] <= output_stream_data_fifo[stream_output_counter+maxfifoloopcounteroutput+1];
+                    maxfifoloopcounteroutput <= maxfifoloopcounteroutput + 1;
+              end
               stream_output_counter <= stream_output_counter + 1;
-              if (stream_output_counter == NUMBER_OF_OUTPUTS - 1) begin
+              if (stream_output_counter == (NUMBER_OF_OUTPUTS/(maxfifoloop+1)) - 1) begin
                     tx_done <= 1'b1;
               end
           end
