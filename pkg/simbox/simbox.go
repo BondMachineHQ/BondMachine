@@ -121,6 +121,18 @@ func (r *Simbox) Add(adds string) error {
 				return nil
 			}
 		}
+		if words[0] == "absolute" && words[2] == "show" {
+			if tick, err := strconv.Atoi(words[1]); err == nil {
+				r.Rules = append(r.Rules, Rule{TIMEC_ABS, uint64(tick), ACTION_SHOW, words[3], words[4]})
+				return nil
+			}
+		}
+		if words[0] == "relative" && words[2] == "show" {
+			if every, err := strconv.Atoi(words[1]); err == nil {
+				r.Rules = append(r.Rules, Rule{TIMEC_REL, uint64(every), ACTION_SHOW, words[3], words[4]})
+				return nil
+			}
+		}
 	} else if len(words) == 4 {
 		if words[0] == "absolute" && words[2] == "get" {
 			if tick, err := strconv.Atoi(words[1]); err == nil {

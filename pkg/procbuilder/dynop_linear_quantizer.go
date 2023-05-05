@@ -114,8 +114,13 @@ func (op LinearQuantizer) Op_instruction_verilog_state_machine(conf *Config, arc
 			result += "							" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
 			result += "							case (" + op.lqName + "_" + arch.Tag + "_state)\n"
 			result += "							" + op.lqName + "_" + arch.Tag + "_put : begin\n"
-			result += "								" + op.lqName + "_" + arch.Tag + "_input_a <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
-			result += "								" + op.lqName + "_" + arch.Tag + "_input_b <= #1 _" + strings.ToLower(Get_register_name(j)) + ";\n"
+			switch op.opType {
+			case LQADD, LQMULT:
+				result += "								" + op.lqName + "_" + arch.Tag + "_input_a <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
+				result += "								" + op.lqName + "_" + arch.Tag + "_input_b <= #1 _" + strings.ToLower(Get_register_name(j)) + ";\n"
+			case LQDIV:
+				result += "								" + op.lqName + "_" + arch.Tag + "_input_corr <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
+			}
 			switch op.opType {
 			case LQADD:
 				result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_get;\n"
@@ -123,16 +128,24 @@ func (op LinearQuantizer) Op_instruction_verilog_state_machine(conf *Config, arc
 				result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_corr;\n"
 			}
 			result += "							end\n"
-			if op.opType == LQMULT || op.opType == LQDIV {
+			switch op.opType {
+			case LQMULT:
 				result += "							" + op.lqName + "_" + arch.Tag + "_corr : begin\n"
 				result += "								" + op.lqName + "_" + arch.Tag + "_input_corr <= #1 " + op.lqName + "_" + arch.Tag + "_output_z;\n"
 				result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_get;\n"
 				result += "							end\n"
+			case LQDIV:
+				result += "							" + op.lqName + "_" + arch.Tag + "_corr : begin\n"
+				result += "								" + op.lqName + "_" + arch.Tag + "_input_a <= #1 " + op.lqName + "_" + arch.Tag + "_output_corr;\n"
+				result += "								" + op.lqName + "_" + arch.Tag + "_input_b <= #1 _" + strings.ToLower(Get_register_name(j)) + ";\n"
+				result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_get;\n"
+				result += "							end\n"
 			}
 			result += "							" + op.lqName + "_" + arch.Tag + "_get : begin\n"
-			if op.opType == LQADD {
+			switch op.opType {
+			case LQADD, LQDIV:
 				result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + op.lqName + "_" + arch.Tag + "_output_z;\n"
-			} else {
+			case LQMULT:
 				result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + op.lqName + "_" + arch.Tag + "_output_corr;\n"
 			}
 			result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_put;\n"
