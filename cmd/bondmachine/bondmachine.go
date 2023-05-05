@@ -885,6 +885,8 @@ func main() {
 
 			}
 
+			var oldRecordC *[]string
+
 			for i := uint64(0); i < uint64(*simInteractions); i++ {
 
 				// This will get actions eventually to do on this tick
@@ -1044,7 +1046,25 @@ func main() {
 
 					if sconfig.GetTicks || someToReport {
 
-						if err := reportData.Write(recordC); err != nil {
+						reportWrite := make([]string, len(recordC))
+
+						for recI, recV := range recordC {
+							if sconfig.GetTicks {
+								if oldRecordC == nil || ((recI != 0) && (*oldRecordC)[recI] != recV) {
+									reportWrite[recI] = "\033[31m" + fmt.Sprintf("%-25s", recV) + "\033[0m"
+								} else {
+									reportWrite[recI] = fmt.Sprintf("%-25s", recV)
+								}
+							} else {
+								if oldRecordC == nil || (*oldRecordC)[recI] != recV {
+									reportWrite[recI] = "\033[31m" + recV + "\033[0m"
+								} else {
+									reportWrite[recI] = recV
+								}
+							}
+						}
+
+						if err := reportData.Write(reportWrite); err != nil {
 							log.Fatalln("error writing record to csv:", err)
 						}
 
@@ -1053,6 +1073,7 @@ func main() {
 						if err := reportData.Error(); err != nil {
 							log.Fatal(err)
 						}
+						oldRecordC = &recordC
 					}
 				}
 			}
