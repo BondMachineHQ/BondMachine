@@ -1,0 +1,26 @@
+%fragment softmaxq iomode:sync template:true resout:r3
+%meta literal resin {{ with $last := adds "4" .Params.inputs }}{{range $y := intRange "4" $last }}{{printf "r%d:" $y}}{{end}}{{end}}
+{{ with $last := adds "4" .Params.inputs }}
+{{range $y := intRange "4" $last}}
+{{printf "mov r1,r%d\n" $y}}
+        mov     r0, {{$.Params.typeprefix}}6.0
+        mov     r2, {{$.Params.typeprefix}}6.0
+        {{$.Params.multop}}   r2, r1
+	{{$.Params.addop}}    r0, r2
+	mov     r2, {{$.Params.typeprefix}}3.0
+	{{$.Params.multop}}   r2, r1
+	{{$.Params.multop}}   r2, r1
+	{{$.Params.addop}}    r0, r2
+	mov     r2, {{$.Params.typeprefix}}1.0
+	{{$.Params.multop}}   r2, r1
+	{{$.Params.multop}}   r2, r1
+	{{$.Params.multop}}   r2, r1
+	{{$.Params.addop}}    r0, r2
+{{$zs := adds "4" $.Params.pos}}
+{{$z := atoi $zs}}
+{{if eq $y $z}} 
+	mov	r3, r0
+{{end}}
+{{end}}
+{{end}}
+%endfragment
