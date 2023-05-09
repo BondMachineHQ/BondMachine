@@ -24,6 +24,8 @@ var useFiles = flag.Bool("use-files", false, "Load files instead of command line
 
 var serve = flag.Bool("serve", false, "Serve as REST API")
 
+var getPrefix = flag.String("get-prefix", "", "Get prefix from type")
+
 // Custom types
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
@@ -39,7 +41,16 @@ func init() {
 
 func main() {
 
-	if *serve {
+	if *getPrefix != "" {
+		if _, err := bmnumbers.EventuallyCreateType(*getPrefix, nil); err != nil {
+			log.Fatal(err)
+		}
+		if v := bmnumbers.GetType(*getPrefix); v == nil {
+			log.Fatal("Error: Unknown type")
+		} else {
+			fmt.Println(v.ShowPrefix())
+		}
+	} else if *serve {
 		bmnumbers.Serve()
 	} else {
 
