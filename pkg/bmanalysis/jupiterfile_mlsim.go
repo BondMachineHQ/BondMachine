@@ -1,7 +1,7 @@
 package bmanalysis
 
 const (
-	notebook = `
+	notebookMLSim = `
 	{
 		"cells": [
 		 {

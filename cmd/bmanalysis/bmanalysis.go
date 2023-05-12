@@ -5,12 +5,14 @@ import (
 	"log"
 	"os"
 	"strings"
+
 	"github.com/BondMachineHQ/BondMachine/pkg/bmanalysis"
 )
 
 var projectsList = flag.String("projects-list", "", "Comma separeted lists of projects")
 var pythonFile = flag.String("ipynb-file", "analysis.ipynb", "Name of the file to write the Python")
 var pivotRun = flag.Int("pivot-run", 0, "Index of run to use as pivot to compare with other results")
+var analysisType = flag.String("analysis-type", "ml", "Type of analysis to perform: ml, mlsim")
 
 func init() {
 	flag.Parse()
@@ -34,6 +36,7 @@ func main() {
 		log.Fatal("Invalid data width")
 	}
 	bmanalysis.PivotRun = *pivotRun
+	bmanalysis.BmAnalysisType = *analysisType
 
 	if *pythonFile != "" {
 		python, err := bmanalysis.WritePython()
@@ -52,5 +55,4 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-
 }

@@ -2,13 +2,15 @@ package bmanalysis
 
 import (
 	"bytes"
+	"errors"
 	"text/template"
 )
 
 type BmAnalysis struct {
-	ProjectsList    []string
-	PivotRun		int
-	funcMap template.FuncMap
+	ProjectsList   []string
+	PivotRun       int
+	funcMap        template.FuncMap
+	BmAnalysisType string
 }
 
 func CreateAnalysisTemplate() *BmAnalysis {
@@ -25,13 +27,21 @@ func CreateAnalysisTemplate() *BmAnalysis {
 func (s *BmAnalysis) WritePython() (string, error) {
 
 	var f bytes.Buffer
+	var t *template.Template
+	var err error
 
-	t, err := template.New("analysis").Funcs(s.funcMap).Parse(notebook)
-	
+	switch s.BmAnalysisType {
+	case "ml":
+		t, err = template.New("analysis").Funcs(s.funcMap).Parse(notebookML)
+	case "mlsim":
+		t, err = template.New("analysis").Funcs(s.funcMap).Parse(notebookMLSim)
+	default:
+		return "", errors.New("invalid analysis type")
+	}
+
 	if err != nil {
 		return "", err
 	}
-
 	err = t.Execute(&f, *s)
 	if err != nil {
 		return "", err
