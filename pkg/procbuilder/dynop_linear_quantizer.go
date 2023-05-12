@@ -240,43 +240,40 @@ func (op LinearQuantizer) Simulate(vm *VM, instr string) error {
 	case LQGET:
 		switch op.opType {
 		case LQADD:
-			switch vm.Mach.Rsize {
-			case 8:
+			if vm.Mach.Rsize <= 8 {
 				vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) + Int8FromBits(vm.Registers[regSrc].(uint8)))
-			case 16:
+			} else if vm.Mach.Rsize <= 16 {
 				vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) + Int16FromBits(vm.Registers[regSrc].(uint16)))
-			case 32:
+			} else if vm.Mach.Rsize <= 32 {
 				vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) + Int32FromBits(vm.Registers[regSrc].(uint32)))
-			case 64:
+			} else if vm.Mach.Rsize <= 64 {
 				vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) + Int64FromBits(vm.Registers[regSrc].(uint64)))
-			default:
-				return errors.New("invalid register size, 8, 16, 32 and 64 bits are allowed")
+			} else {
+				return errors.New("invalid register size, must be <= 64")
 			}
 		case LQMULT:
-			switch vm.Mach.Rsize {
-			case 8:
+			if vm.Mach.Rsize <= 8 {
 				vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) * Int8FromBits(vm.Registers[regSrc].(uint8)) / int8(s))
-			case 16:
+			} else if vm.Mach.Rsize <= 16 {
 				vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) * Int16FromBits(vm.Registers[regSrc].(uint16)) / int16(s))
-			case 32:
+			} else if vm.Mach.Rsize <= 32 {
 				vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) * Int32FromBits(vm.Registers[regSrc].(uint32)) / int32(s))
-			case 64:
+			} else if vm.Mach.Rsize <= 64 {
 				vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) * Int64FromBits(vm.Registers[regSrc].(uint64)) / int64(s))
-			default:
-				return errors.New("invalid register size, 8, 16, 32 and 64 bits are allowed")
+			} else {
+				return errors.New("invalid register size, must be <= 64")
 			}
 		case LQDIV:
-			switch vm.Mach.Rsize {
-			case 8:
+			if vm.Mach.Rsize <= 8 {
 				vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) * int8(s) / Int8FromBits(vm.Registers[regSrc].(uint8)))
-			case 16:
+			} else if vm.Mach.Rsize <= 16 {
 				vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) * int16(s) / Int16FromBits(vm.Registers[regSrc].(uint16)))
-			case 32:
+			} else if vm.Mach.Rsize <= 32 {
 				vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) * int32(s) / Int32FromBits(vm.Registers[regSrc].(uint32)))
-			case 64:
+			} else if vm.Mach.Rsize <= 64 {
 				vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) * int64(s) / Int64FromBits(vm.Registers[regSrc].(uint64)))
-			default:
-				return errors.New("invalid register size, 8, 16, 32 and 64 bits are allowed")
+			} else {
+				return errors.New("invalid register size, must be <= 64")
 			}
 		}
 		vm.Pc = vm.Pc + 1

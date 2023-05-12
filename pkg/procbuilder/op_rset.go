@@ -118,17 +118,16 @@ func (op Rset) Simulate(vm *VM, instr string) error {
 	reg_bits := vm.Mach.R
 	reg := get_id(instr[:reg_bits])
 	memVal := get_id(instr[reg_bits : reg_bits+vm.Mach.Rsize])
-	switch vm.Mach.Rsize {
-	case 8:
+	if vm.Mach.Rsize <= 8 {
 		vm.Registers[reg] = uint8(memVal)
-	case 16:
+	} else if vm.Mach.Rsize <= 16 {
 		vm.Registers[reg] = uint16(memVal)
-	case 32:
+	} else if vm.Mach.Rsize <= 32 {
 		vm.Registers[reg] = uint32(memVal)
-	case 64:
+	} else if vm.Mach.Rsize <= 64 {
 		vm.Registers[reg] = uint64(memVal)
-	default:
-		return errors.New("go simulation only works on 8,16,32 or 64 bits registers")
+	} else {
+		return errors.New("go simulation only works for Rsize <= 64")
 	}
 	vm.Pc = vm.Pc + 1
 	return nil

@@ -16,7 +16,7 @@ func (d Signed) getInfo() string {
 	return ""
 }
 
-func (d Signed) getSize() int {
+func (d Signed) GetSize() int {
 	return -1 // Any size
 }
 

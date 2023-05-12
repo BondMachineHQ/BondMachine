@@ -82,8 +82,7 @@ func (vm *VM) Init() error {
 	vm.Outputs = make([]interface{}, vm.Mach.M)
 	vm.Pc = 0
 
-	switch vm.Mach.Rsize {
-	case 8:
+	if vm.Mach.Rsize <= 8 {
 		for i := 0; i < reg_num; i++ {
 			vm.Registers[i] = uint8(0)
 		}
@@ -96,7 +95,7 @@ func (vm *VM) Init() error {
 		for i := 0; i < int(vm.Mach.M); i++ {
 			vm.Outputs[i] = uint8(0)
 		}
-	case 16:
+	} else if vm.Mach.Rsize <= 16 {
 		for i := 0; i < reg_num; i++ {
 			vm.Registers[i] = uint16(0)
 		}
@@ -109,7 +108,7 @@ func (vm *VM) Init() error {
 		for i := 0; i < int(vm.Mach.M); i++ {
 			vm.Outputs[i] = uint16(0)
 		}
-	case 32:
+	} else if vm.Mach.Rsize <= 32 {
 		for i := 0; i < reg_num; i++ {
 			vm.Registers[i] = uint32(0)
 		}
@@ -122,7 +121,7 @@ func (vm *VM) Init() error {
 		for i := 0; i < int(vm.Mach.M); i++ {
 			vm.Outputs[i] = uint32(0)
 		}
-	case 64:
+	} else if vm.Mach.Rsize <= 64 {
 		for i := 0; i < reg_num; i++ {
 			vm.Registers[i] = uint64(0)
 		}
@@ -135,8 +134,8 @@ func (vm *VM) Init() error {
 		for i := 0; i < int(vm.Mach.M); i++ {
 			vm.Outputs[i] = uint64(0)
 		}
-	default:
-		return errors.New("invalid register size for simulation, must be 8, 16, 32 or 64")
+	} else {
+		return Prerror{"Cannot initialize a machine with a register size greater than 64"}
 	}
 
 	vm.Extra_states = make(map[string]interface{})
@@ -219,17 +218,16 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 func (vm *VM) DumpRegisters() string {
 	result := ""
 	for i, reg := range vm.Registers {
-		switch vm.Mach.Rsize {
-		case 8:
+		if vm.Mach.Rsize <= 8 {
 			result = result + Get_register_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint8)))) + " "
-		case 16:
+		} else if vm.Mach.Rsize <= 16 {
 			result = result + Get_register_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint16)))) + " "
-		case 32:
+		} else if vm.Mach.Rsize <= 32 {
 			result = result + Get_register_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint32)))) + " "
-		case 64:
+		} else if vm.Mach.Rsize <= 64 {
 			result = result + Get_register_name(i) + ": " + zeros_prefix(int(vm.Mach.Rsize), get_binary(int(reg.(uint64)))) + " "
-		default:
-			result = "unsupported register size"
+		} else {
+			result = "Cannot dump registers for a machine with a register size greater than 64"
 		}
 	}
 	return result
@@ -335,30 +333,28 @@ func (sd *Sim_drive) Init(s *simbox.Simbox, vm *VM) error {
 						}
 
 						if act_on_tick, ok := act[rule.Tick]; ok {
-							switch vm.Mach.Rsize {
-							case 8:
+							if vm.Mach.Rsize <= 8 {
 								act_on_tick[ipos] = uint8(val)
-							case 16:
+							} else if vm.Mach.Rsize <= 16 {
 								act_on_tick[ipos] = uint16(val)
-							case 32:
+							} else if vm.Mach.Rsize <= 32 {
 								act_on_tick[ipos] = uint32(val)
-							case 64:
+							} else if vm.Mach.Rsize <= 64 {
 								act_on_tick[ipos] = uint64(val)
-							default:
+							} else {
 								return errors.New("unsupported register size")
 							}
 						} else {
 							act_on_tick := make(map[int]interface{})
-							switch vm.Mach.Rsize {
-							case 8:
+							if vm.Mach.Rsize <= 8 {
 								act_on_tick[ipos] = uint8(val)
-							case 16:
+							} else if vm.Mach.Rsize <= 16 {
 								act_on_tick[ipos] = uint16(val)
-							case 32:
+							} else if vm.Mach.Rsize <= 32 {
 								act_on_tick[ipos] = uint32(val)
-							case 64:
+							} else if vm.Mach.Rsize <= 64 {
 								act_on_tick[ipos] = uint64(val)
-							default:
+							} else {
 								return errors.New("unsupported register size")
 
 							}
@@ -405,30 +401,28 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 					}
 
 					if str_on_tick, ok := str[rule.Tick]; ok {
-						switch vm.Mach.Rsize {
-						case 8:
+						if vm.Mach.Rsize <= 8 {
 							str_on_tick[ipos] = uint8(0)
-						case 16:
+						} else if vm.Mach.Rsize <= 16 {
 							str_on_tick[ipos] = uint16(0)
-						case 32:
+						} else if vm.Mach.Rsize <= 32 {
 							str_on_tick[ipos] = uint32(0)
-						case 64:
+						} else if vm.Mach.Rsize <= 64 {
 							str_on_tick[ipos] = uint64(0)
-						default:
+						} else {
 							return errors.New("unsupported register size")
 						}
 					} else {
 						str_on_tick := make(map[int]interface{})
-						switch vm.Mach.Rsize {
-						case 8:
+						if vm.Mach.Rsize <= 8 {
 							str_on_tick[ipos] = uint8(0)
-						case 16:
+						} else if vm.Mach.Rsize <= 16 {
 							str_on_tick[ipos] = uint16(0)
-						case 32:
+						} else if vm.Mach.Rsize <= 32 {
 							str_on_tick[ipos] = uint32(0)
-						case 64:
+						} else if vm.Mach.Rsize <= 64 {
 							str_on_tick[ipos] = uint64(0)
-						default:
+						} else {
 							return errors.New("unsupported register size")
 						}
 						str[rule.Tick] = str_on_tick

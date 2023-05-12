@@ -17,7 +17,7 @@ func (d Hex) getInfo() string {
 	return ""
 }
 
-func (d Hex) getSize() int {
+func (d Hex) GetSize() int {
 	return -1 // Any size
 }
 

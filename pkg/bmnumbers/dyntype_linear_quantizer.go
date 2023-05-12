@@ -23,7 +23,7 @@ func (d LinearQuantizer) getInfo() string {
 	return ""
 }
 
-func (d LinearQuantizer) getSize() int {
+func (d LinearQuantizer) GetSize() int {
 	return d.s
 }
 

@@ -953,7 +953,8 @@ func main() {
 					if v := bmnumbers.GetType(nType); v == nil {
 						log.Fatal("Error: Unknown type")
 					} else {
-						if number, err := bmnumbers.ImportUint(*srep.Showables[k]); err != nil {
+						bits := v.GetSize()
+						if number, err := bmnumbers.ImportUint(*srep.Showables[k], bits); err != nil {
 							log.Fatal(err)
 						} else {
 							if err := bmnumbers.CastType(number, v); err != nil {
@@ -1023,7 +1024,8 @@ func main() {
 						if v := bmnumbers.GetType(nType); v == nil {
 							log.Fatal("Error: Unknown type")
 						} else {
-							if number, err := bmnumbers.ImportUint(*srep.Reportables[k]); err != nil {
+							bits := v.GetSize()
+							if number, err := bmnumbers.ImportUint(*srep.Reportables[k], bits); err != nil {
 								log.Fatal(err)
 							} else {
 								if err := bmnumbers.CastType(number, v); err != nil {

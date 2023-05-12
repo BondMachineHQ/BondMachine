@@ -11,7 +11,7 @@ type ImportFunc func(*regexp.Regexp, string) (*BMNumber, error)
 type BMNumberType interface {
 	GetName() string
 	getInfo() string
-	getSize() int
+	GetSize() int
 	importMatchers() map[string]ImportFunc
 	Convert(*BMNumber) error
 	ExportString(*BMNumber) (string, error)
@@ -81,7 +81,7 @@ func CastType(n *BMNumber, t BMNumberType) error {
 		return errors.New("Cannot cast type of nil number")
 	}
 
-	if t.getSize() != -1 && t.getSize() != n.bits {
+	if t.GetSize() != -1 && t.GetSize() != n.bits {
 		return errors.New("Cannot cast number of type " + n.nType.GetName() + " with type " + t.GetName() + " because they have different sizes")
 	}
 

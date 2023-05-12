@@ -16,7 +16,7 @@ func (d Bin) getInfo() string {
 	return ""
 }
 
-func (d Bin) getSize() int {
+func (d Bin) GetSize() int {
 	return -1 // Any size
 }
 

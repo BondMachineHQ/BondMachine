@@ -18,7 +18,7 @@ func (d Float16) getInfo() string {
 	return ""
 }
 
-func (d Float16) getSize() int {
+func (d Float16) GetSize() int {
 	return 16
 }
 

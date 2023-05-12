@@ -23,7 +23,7 @@ func ImportString(input string) (*BMNumber, error) {
 	return nil, errors.New("unknown number format " + input)
 }
 
-func ImportUint(input interface{}) (*BMNumber, error) {
+func ImportUint(input interface{}, optionalBits int) (*BMNumber, error) {
 	result := new(BMNumber)
 	result.nType = Unsigned{}
 	switch input.(type) {
@@ -56,6 +56,10 @@ func ImportUint(input interface{}) (*BMNumber, error) {
 		result.number[0] = uint8(input.(uint64) & 0xFF)
 	default:
 		return nil, errors.New("unknown uint type")
+	}
+	if optionalBits > 0 {
+		// TODO: Finish this
+		result.bits = optionalBits
 	}
 	return result, nil
 }

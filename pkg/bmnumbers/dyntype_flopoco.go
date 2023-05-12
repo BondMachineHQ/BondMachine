@@ -24,7 +24,7 @@ func (d FloPoCo) getInfo() string {
 	return ""
 }
 
-func (d FloPoCo) getSize() int {
+func (d FloPoCo) GetSize() int {
 	return d.e + d.f + 3
 }
 
