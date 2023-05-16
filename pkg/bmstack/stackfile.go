@@ -179,7 +179,7 @@ module {{ .ModuleName }}(clk,
 
             // Write ack process
             {{- range $key, $value := .Senders }}
-            if ({{ $value }}Write && !{{ $value }}Ack && sendSM=={{ bits (len $.Receivers) }}'d{{ $key }} && !full) begin
+            if (!(readneed && !empty) && {{ $value }}Write && !{{ $value }}Ack && sendSM=={{ bits (len $.Receivers) }}'d{{ $key }} && !full) begin
                 {{ $value }}Ack <= 1'b1;
             end
             else begin
