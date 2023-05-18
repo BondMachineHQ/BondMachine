@@ -1408,6 +1408,9 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	var ps2KeyboardParams map[string]string
 	ps2KeyboardMapped := ""
 
+	uartModule := false
+	var uartParams map[string]string
+
 	vgatext800x600Module := false
 	var vgatext800x600Params map[string]string
 
@@ -1479,6 +1482,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			} else {
 				// TODO proper error handling
 			}
+		}
+		if mod.Get_Name() == "uart" {
+			uartModule = true
+			uartParams = mod.Get_Params().Params
 		}
 		if mod.Get_Name() == "vga800x600" {
 			vgatext800x600Module = true
@@ -1589,6 +1596,18 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		result += "\toutput wifi_enable,\n"
 		result += "\tinput wifi_rx,\n"
 		result += "\toutput wifi_tx,\n"
+	}
+
+	if uartModule {
+		for name, value := range uartParams {
+			fmt.Println(name[len(name)-3:])
+			if name[len(name)-3:] == "_rx" {
+				result += "\tinput " + value + ",\n"
+			}
+			if name[len(name)-3:] == "_tx" {
+				result += "\toutput " + value + ",\n"
+			}
+		}
 	}
 
 	if bmapiModule {

@@ -150,6 +150,9 @@ var bmapiDataType = flag.String("bmapi-data-type", "float32", "Data type for the
 var board_slow = flag.Bool("board-slow", false, "Board slow support")
 var board_slow_factor = flag.Int("board-slow-factor", 1, "Board slow factor")
 
+var uart = flag.Bool("uart", false, "UART support")
+var uartMapFile = flag.String("uart-mapfile", "", "UART mappings")
+
 var basys3_7segment = flag.Bool("basys3-7segment", false, "Basys3 7 segments display support")
 var basys3_7segment_map = flag.String("basys3-7segment-map", "", "Basys3 7 segments display mappings")
 
@@ -558,6 +561,23 @@ func main() {
 
 				extramodules = append(extramodules, bmapi)
 
+			}
+
+			if *uart {
+				uart := new(bondmachine.UartExtra)
+				uartMap := new(bondmachine.IOmap)
+				if *uartMapFile != "" {
+					if mapfileJSON, err := ioutil.ReadFile(*uartMapFile); err == nil {
+						if err := json.Unmarshal([]byte(mapfileJSON), uartMap); err != nil {
+							panic(err)
+						} else {
+							uart.Maps = uartMap
+						}
+					} else {
+						panic(err)
+					}
+				}
+				extramodules = append(extramodules, uart)
 			}
 
 			if *basys3_7segment {

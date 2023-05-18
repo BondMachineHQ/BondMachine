@@ -195,6 +195,12 @@ func (sm Uart_instance) GetPerProcPortsHeader(bmach *Bondmachine, proc_id int, s
 
 func (sm Uart_instance) GetExternalPortsHeader(bmach *Bondmachine, proc_id int, so_id int, flavor string) string {
 	result := ""
+
+	if soname, ok := bmach.Get_so_name(so_id); ok {
+		result += ", " + soname + "_rx"
+		result += ", " + soname + "_tx"
+	}
+	// TODO: Correct this (multiple processors)
 	return result
 }
 
