@@ -226,6 +226,22 @@ func (sm Uart_instance) GetExternalPortsHeader(bmach *Bondmachine, proc_id int, 
 
 func (sm Uart_instance) GetExternalPortsWires(bmach *Bondmachine, proc_id int, so_id int, flavor string) string {
 	result := ""
+
+	first := true
+	for procID, soList := range bmach.Shared_links {
+		for _, soID := range soList {
+			if soID == so_id && first {
+				first = false
+				if procID == proc_id {
+					if soname, ok := bmach.Get_so_name(so_id); ok {
+						result += "\tinput " + soname + "_rx;\n"
+						result += "\toutput " + soname + "_tx;\n"
+					}
+				}
+			}
+		}
+	}
+
 	return result
 }
 

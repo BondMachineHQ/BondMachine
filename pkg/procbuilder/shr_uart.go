@@ -30,7 +30,7 @@ func (op Uart) GetArchHeader(arch *Arch, shared_constraint string, seq int) stri
 			break
 		}
 	}
-	result += ", " + uartName + "empty, " + uartName + "full"
+	result += ", " + uartName + "rempty, " + uartName + "rfull, " + uartName + "wempty, " + uartName + "wfull"
 	return result
 }
 
@@ -55,8 +55,10 @@ func (op Uart) GetArchParams(arch *Arch, shared_constraint string, seq int) stri
 		}
 	}
 
-	result += "	input " + uartName + "empty;\n"
-	result += "	input " + uartName + "full;\n"
+	result += "	input " + uartName + "rempty;\n"
+	result += "	input " + uartName + "rfull;\n"
+	result += "	input " + uartName + "wempty;\n"
+	result += "	input " + uartName + "wfull;\n"
 
 	return result
 }
@@ -96,8 +98,10 @@ func (op Uart) GetCPParams(arch *Arch, shared_constraint string, seq int) string
 		}
 	}
 
-	result += "	input " + uartName + "empty;\n"
-	result += "	input " + uartName + "full;\n"
+	result += "	input " + uartName + "rempty;\n"
+	result += "	input " + uartName + "rfull;\n"
+	result += "	input " + uartName + "wempty;\n"
+	result += "	input " + uartName + "wfull;\n"
 
 	return result
 }

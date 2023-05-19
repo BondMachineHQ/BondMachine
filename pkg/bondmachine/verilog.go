@@ -409,7 +409,7 @@ func (bmach *Bondmachine) Write_verilog_main(conf *Config, module_name string, f
 					}
 				}
 			}
-			// Inlcude SO ports eventually shared with CORES (not core dependent)
+			// Include SO ports eventually shared with CORES (not core dependent)
 		sharedLoop:
 			for _, soList := range bmach.Shared_links {
 				for _, soId := range soList {
@@ -1811,20 +1811,6 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		clockString = "divider[" + slow_params["slow_factor"] + "]"
 	}
 
-	if uartModule {
-		for name, value := range uartParams {
-			fmt.Println(name[len(name)-3:])
-			if name[len(name)-3:] == "_rx" {
-				result += "\twire " + name + ";\n"
-				result += "\tassign " + name + "=" + value + ";\n"
-			}
-			if name[len(name)-3:] == "_tx" {
-				result += "\twire " + name + ";\n"
-				result += "\tassign " + value + "=" + name + ";\n"
-			}
-		}
-	}
-
 	if vgatext800x600Module {
 		result += `
 	reg [7:0]   hcount;
@@ -1847,6 +1833,18 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		for proc_id, solist := range bmach.Shared_links {
 			for _, so_id := range solist {
 				result += strings.ReplaceAll(strings.ReplaceAll(bmach.Shared_objects[so_id].GetExternalPortsWires(bmach, proc_id, so_id, flavor), "output", "wire"), "input", "wire")
+			}
+		}
+	}
+
+	if uartModule {
+		for name, value := range uartParams {
+			fmt.Println(name[len(name)-3:])
+			if name[len(name)-3:] == "_rx" {
+				result += "\tassign " + name + "=" + value + ";\n"
+			}
+			if name[len(name)-3:] == "_tx" {
+				result += "\tassign " + value + "=" + name + ";\n"
 			}
 		}
 	}

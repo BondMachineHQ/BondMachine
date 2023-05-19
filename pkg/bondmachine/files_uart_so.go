@@ -10,18 +10,23 @@ module {{.ModuleName}}(
     input {{ $e }}Write,
     output {{ $e }}Ack,
     {{ end }}
-    input [7:0] p0u0senderData,
-    input p0u0senderWrite,
-    output p0u0senderAck,
-    output [7:0] p1u0receiverData,
-    input p1u0receiverRead,
-    output p1u0receiverAck,
-    output wempty,
-    output wfull,
+    {{ range $i, $e := .Senders }}
+    output [7:0] {{ $e }}Data,
+    output {{ $e }}Read,
+    input {{ $e }}Ack,
+    {{ end }}
+    //input [7:0] p0u0senderData,
+    //input p0u0senderWrite,
+    //output p0u0senderAck,
+    //output [7:0] p1u0receiverData,
+    //input p1u0receiverRead,
+    //output p1u0receiverAck,
+    input {{.ModuleName}}_rx,
+    output {{.ModuleName}}_tx,     
     output rempty,
     output rfull,
-    output TxD,     
-    input RxD
+    output wempty,
+    output wfull
     );
 
     reg transmit;
@@ -50,15 +55,20 @@ module {{.ModuleName}}(
     reg uartreaderWrite;
     wire uartreaderAck;
 
-    wire [7:0] p1uart_recvData;
-    reg p1uart_recvRead;
-    wire p1uart_recvAck;
+    // wire [7:0] p1uart_recvData;
+    // reg p1uart_recvRead;
+    // wire p1uart_recvAck;
     
-u0rfifo u0rfifo_inst(.clk(clk),
+{{.ModuleName}}rfifo {{.ModuleName}}rfifo_inst(.clk(clk),
     .reset(reset),
-    .p1uart_recvData(p1u0receiverData),
-    .p1uart_recvRead(p1u0receiverRead),
-    .p1uart_recvAck(p1u0receiverAck),
+    {{ range $i, $e := .Senders }}
+    .{{ $e }}Data({{ $e }}Data),
+    .{{ $e }}Read({{ $e }}Read),
+    .{{ $e }}Ack({{ $e }}Ack),
+    {{ end }}
+    // .p1uart_recvData(p1u0receiverData),
+    // .p1uart_recvRead(p1u0receiverRead),
+    // .p1uart_recvAck(p1u0receiverAck),
     .uartreaderData(uartreaderData),
     .uartreaderWrite(uartreaderWrite),
     .uartreaderAck(uartreaderAck),
@@ -67,11 +77,16 @@ u0rfifo u0rfifo_inst(.clk(clk),
 );    
 
 
-u0wfifo u0wfifo_inst(.clk(clk),
+{{.ModuleName}}wfifo {{.ModuleName}}wfifo_inst(.clk(clk),
     .reset(reset),
-    .p0uart_sendData(p0u0senderData),
-    .p0uart_sendWrite(p0u0senderWrite),
-    .p0uart_sendAck(p0u0senderAck),
+    {{ range $i, $e := .Receivers }}
+    .{{ $e }}Data({{ $e }}Data),
+    .{{ $e }}Write({{ $e }}Write),
+    .{{ $e }}Ack({{ $e }}Ack),
+    {{ end }}
+    // .p0uart_sendData(p0u0senderData),
+    // .p0uart_sendWrite(p0u0senderWrite),
+    // .p0uart_sendAck(p0u0senderAck),
     .uartwriterData(uartwriterData),
     .uartwriterRead(uartwriterRead),
     .uartwriterAck(uartwriterAck),
@@ -79,10 +94,10 @@ u0wfifo u0wfifo_inst(.clk(clk),
     .full(wfull)
 );
 
-u0uart u0uart_inst(.clk(clk),
+{{.ModuleName}}uart {{.ModuleName}}uart_inst(.clk(clk),
     .rst(reset),
-    .rx(RxD),
-    .tx(TxD),
+    .rx({{.ModuleName}}_rx),
+    .tx({{.ModuleName}}_tx),
     .transmit(transmit),
     .tx_byte(tx_byte),
     .received(received),
@@ -141,10 +156,10 @@ end
 
 reg [1:0] inSM;
  
-    localparam [1:0]     
-        IN_IDLE             = 2'd0,
-        IN_WAIT             = 2'd1,
-        IN_DONE             = 2'd2;
+localparam [1:0]     
+    IN_IDLE             = 2'd0,
+    IN_WAIT             = 2'd1,
+    IN_DONE             = 2'd2;
 
 // Reading the UART and pushing to the read FIFO
 always @(posedge clk) begin
