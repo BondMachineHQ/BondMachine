@@ -15,12 +15,6 @@ module {{.ModuleName}}(
     output {{ $e }}Read,
     input {{ $e }}Ack,
     {{ end }}
-    //input [7:0] p0u0senderData,
-    //input p0u0senderWrite,
-    //output p0u0senderAck,
-    //output [7:0] p1u0receiverData,
-    //input p1u0receiverRead,
-    //output p1u0receiverAck,
     input {{.ModuleName}}_rx,
     output {{.ModuleName}}_tx,     
     output rempty,
@@ -55,10 +49,6 @@ module {{.ModuleName}}(
     reg uartreaderWrite;
     wire uartreaderAck;
 
-    // wire [7:0] p1uart_recvData;
-    // reg p1uart_recvRead;
-    // wire p1uart_recvAck;
-    
 {{.ModuleName}}rfifo {{.ModuleName}}rfifo_inst(.clk(clk),
     .reset(reset),
     {{ range $i, $e := .Senders }}
@@ -66,9 +56,6 @@ module {{.ModuleName}}(
     .{{ $e }}Read({{ $e }}Read),
     .{{ $e }}Ack({{ $e }}Ack),
     {{ end }}
-    // .p1uart_recvData(p1u0receiverData),
-    // .p1uart_recvRead(p1u0receiverRead),
-    // .p1uart_recvAck(p1u0receiverAck),
     .uartreaderData(uartreaderData),
     .uartreaderWrite(uartreaderWrite),
     .uartreaderAck(uartreaderAck),
@@ -84,9 +71,6 @@ module {{.ModuleName}}(
     .{{ $e }}Write({{ $e }}Write),
     .{{ $e }}Ack({{ $e }}Ack),
     {{ end }}
-    // .p0uart_sendData(p0u0senderData),
-    // .p0uart_sendWrite(p0u0senderWrite),
-    // .p0uart_sendAck(p0u0senderAck),
     .uartwriterData(uartwriterData),
     .uartwriterRead(uartwriterRead),
     .uartwriterAck(uartwriterAck),
