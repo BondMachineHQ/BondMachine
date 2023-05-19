@@ -11,7 +11,9 @@ import (
 // "strings"
 type UartTemplate struct {
 	*templateData
-	BaudRate string
+	BaudRate  string
+	Receivers []string
+	Senders   []string
 }
 
 type BMAPIExtra struct {

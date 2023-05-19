@@ -141,6 +141,15 @@ func (sm Uart_instance) Write_verilog(bmach *Bondmachine, soIndex int, uartName 
 	t.Execute(f, uartData)
 	f.Close()
 
+	uartData.ModuleName = uartName
+	// The receivers and senders are inverted because is a cp write to the fifo the uart reads from and viceversa
+	uartData.Receivers = senders
+	uartData.Senders = receivers
+	u, _ := template.New("uartso").Parse(uartSO)
+	s, _ := os.Create(uartName + "uartso.v")
+	u.Execute(s, uartData)
+	s.Close()
+
 	return result
 
 }
@@ -196,11 +205,22 @@ func (sm Uart_instance) GetPerProcPortsHeader(bmach *Bondmachine, proc_id int, s
 func (sm Uart_instance) GetExternalPortsHeader(bmach *Bondmachine, proc_id int, so_id int, flavor string) string {
 	result := ""
 
-	if soname, ok := bmach.Get_so_name(so_id); ok {
-		result += ", " + soname + "_rx"
-		result += ", " + soname + "_tx"
+	first := true
+	for procID, soList := range bmach.Shared_links {
+		for _, soID := range soList {
+			if soID == so_id && first {
+				first = false
+				if procID == proc_id {
+					if soname, ok := bmach.Get_so_name(so_id); ok {
+						result += ", " + soname + "_rx"
+						result += ", " + soname + "_tx"
+					}
+				}
+			}
+		}
 	}
-	// TODO: Correct this (multiple processors)
+
+	// TODO: Suboptimal, but works for now
 	return result
 }
 
@@ -212,9 +232,12 @@ func (sm Uart_instance) GetExternalPortsWires(bmach *Bondmachine, proc_id int, s
 func (sm Uart_instance) GetCPSharedPortsHeader(bmach *Bondmachine, soId int, flavor string) string {
 	result := ""
 	if soName, ok := bmach.Get_so_name(soId); ok {
-		result += ", " + soName + "empty"
-		result += ", " + soName + "full"
+		result += ", " + soName + "rempty"
+		result += ", " + soName + "rfull"
+		result += ", " + soName + "wempty"
+		result += ", " + soName + "wfull"
 	}
+
 	return result
 }
 
@@ -222,8 +245,11 @@ func (sm Uart_instance) GetCPSharedPortsWires(bmach *Bondmachine, soId int, flav
 	result := ""
 	if soName, ok := bmach.Get_so_name(soId); ok {
 		result += "\n"
-		result += "	wire " + soName + "empty;\n"
-		result += "	wire " + soName + "full\n;"
+		result += "	wire " + soName + "rempty;\n"
+		result += "	wire " + soName + "rfull;\n"
+		result += "\n"
+		result += "	wire " + soName + "wempty;\n"
+		result += "	wire " + soName + "wfull;\n"
 		result += "\n"
 	}
 	return result

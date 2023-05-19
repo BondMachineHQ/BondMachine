@@ -1,7 +1,7 @@
 package bondmachine
 
 const (
-	verilogUART = "`timescale 1ns / 1ps\n" + `
+	verilogUART = "`timescale 1ns / 1ps" + `
 // Documented Verilog UART
 // Copyright (C) 2010 Timothy Goddard (tim@goddard.net.nz)
 //               2013 Aaron Dahlen
