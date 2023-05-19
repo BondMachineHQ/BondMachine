@@ -128,13 +128,29 @@ func (sm Vtextmem_instance) Write_verilog(bmach *Bondmachine, so_index int, vtex
 				subresult += ", p" + strconv.Itoa(num_processors) + "wren"
 				subresult += ", p" + strconv.Itoa(num_processors) + "en"
 				// From/To External
+				// subresult += ", p" + strconv.Itoa(num_processors) + "dout"
+				// subresult += ", p" + strconv.Itoa(num_processors) + "addrfromext"
+				num_processors++
+			}
+		}
+	}
+
+	num_processors = 0
+	for _, solist := range bmach.Shared_links {
+		for _, so_id := range solist {
+			if so_id == so_index {
+				// From/To CP
+				// subresult += ", p" + strconv.Itoa(num_processors) + "din"
+				// subresult += ", p" + strconv.Itoa(num_processors) + "addrfromcp"
+				// subresult += ", p" + strconv.Itoa(num_processors) + "wren"
+				// subresult += ", p" + strconv.Itoa(num_processors) + "en"
+				// From/To External
 				subresult += ", p" + strconv.Itoa(num_processors) + "dout"
 				subresult += ", p" + strconv.Itoa(num_processors) + "addrfromext"
 				num_processors++
 			}
 		}
 	}
-
 	// Parametric Video RAM, it will be instanced once for every CP exporting to Video outputs
 	result += `
 module cptextvideoram #(parameter ADDR_WIDTH=8, DATA_WIDTH=8, DEPTH=256) (
