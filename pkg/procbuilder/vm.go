@@ -9,12 +9,19 @@ import (
 )
 
 type VM struct {
-	CpID         uint32
-	Mach         *Machine
-	Registers    []interface{}
-	Memory       []interface{}
-	Inputs       []interface{}
-	Outputs      []interface{}
+	CpID      uint32
+	Mach      *Machine
+	Registers []interface{}
+	Memory    []interface{}
+	Inputs    []interface{}
+	Outputs   []interface{}
+
+	InputsValid  []bool
+	OutputsValid []bool
+
+	InputsRecv  []bool
+	OutputsRecv []bool
+
 	Pc           uint64
 	Extra_states map[string]interface{}
 	CmdChan      chan []byte
@@ -80,6 +87,12 @@ func (vm *VM) Init() error {
 	vm.Memory = make([]interface{}, mem_num)
 	vm.Inputs = make([]interface{}, vm.Mach.N)
 	vm.Outputs = make([]interface{}, vm.Mach.M)
+
+	vm.InputsValid = make([]bool, vm.Mach.N)
+	vm.OutputsValid = make([]bool, vm.Mach.M)
+	vm.InputsRecv = make([]bool, vm.Mach.N)
+	vm.OutputsRecv = make([]bool, vm.Mach.M)
+
 	vm.Pc = 0
 
 	if vm.Mach.Rsize <= 8 {

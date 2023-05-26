@@ -13,6 +13,13 @@ import (
 
 //reorg {"name": "Init", "descr": "Initialization functions"}
 
+const (
+	BMINPUT  = uint8(0)
+	BMOUTPUT = uint8(1)
+	CPINPUT  = uint8(2)
+	CPOUTPUT = uint8(3)
+)
+
 type Prerror struct {
 	string
 }
@@ -150,13 +157,13 @@ func (c *Config) ProcbuilderConfig() *procbuilder.Config {
 
 func (b *Bond) String() string {
 	result := ""
-	if b.Map_to == 0 {
+	if b.Map_to == BMINPUT {
 		result += "i" + strconv.Itoa(b.Res_id)
-	} else if b.Map_to == 1 {
+	} else if b.Map_to == BMOUTPUT {
 		result += "o" + strconv.Itoa(b.Res_id)
-	} else if b.Map_to == 2 {
+	} else if b.Map_to == CPINPUT {
 		result += "p" + strconv.Itoa(b.Res_id) + "i" + strconv.Itoa(b.Ext_id)
-	} else if b.Map_to == 3 {
+	} else if b.Map_to == CPOUTPUT {
 		result += "p" + strconv.Itoa(b.Res_id) + "o" + strconv.Itoa(b.Ext_id)
 	}
 	return result

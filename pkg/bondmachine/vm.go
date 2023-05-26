@@ -18,6 +18,16 @@ type VM struct {
 	Internal_inputs_regs  []interface{}
 	Internal_outputs_regs []interface{}
 
+	InputsValid          []bool
+	OutputsValid         []bool
+	InternalInputsValid  []bool
+	InternalOutputsValid []bool
+
+	InputsRecv          []bool
+	OutputsRecv         []bool
+	InternalInputsRecv  []bool
+	InternalOutputsRecv []bool
+
 	EmuDrivers []EmuDriver
 	cmdChan    chan []byte
 
@@ -93,6 +103,13 @@ func (vm *VM) Init() error {
 	vm.Outputs_regs = make([]interface{}, vm.Bmach.Outputs)
 	vm.Internal_inputs_regs = make([]interface{}, len(vm.Bmach.Internal_inputs))
 	vm.Internal_outputs_regs = make([]interface{}, len(vm.Bmach.Internal_outputs))
+
+	vm.InputsValid = make([]bool, vm.Bmach.Inputs)
+	vm.OutputsValid = make([]bool, vm.Bmach.Outputs)
+
+	vm.InternalInputsValid = make([]bool, len(vm.Bmach.Internal_inputs))
+	vm.InternalOutputsValid = make([]bool, len(vm.Bmach.Internal_outputs))
+
 	vm.abs_tick = uint64(0)
 
 	if vm.EmuDrivers == nil {
@@ -238,10 +255,8 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	// Set the internal outputs registers
 	for i, bond := range vm.Bmach.Internal_outputs {
 		switch bond.Map_to {
-		case 0:
+		case BMINPUT:
 			vm.Internal_outputs_regs[i] = vm.Inputs_regs[bond.Res_id]
-			//		case 3:
-			//			vm.Internal_outputs_regs[i] = vm.Processors[bond.Res_id].Outputs[bond.Ext_id]
 		}
 	}
 
@@ -255,9 +270,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	// Transfer internal inputs registers to their destination
 	for i, bond := range vm.Bmach.Internal_inputs {
 		switch bond.Map_to {
-		//		case 1:
-		//			vm.Outputs_regs[bond.Res_id] = vm.Internal_inputs_regs[i]
-		case 2:
+		case CPINPUT:
 			vm.Processors[bond.Res_id].Inputs[bond.Ext_id] = vm.Internal_inputs_regs[i]
 		}
 	}
@@ -296,9 +309,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	// Set the internal outputs registers
 	for i, bond := range vm.Bmach.Internal_outputs {
 		switch bond.Map_to {
-		//		case 0:
-		//			vm.Internal_outputs_regs[i] = vm.Inputs_regs[bond.Res_id]
-		case 3:
+		case CPOUTPUT:
 			vm.Internal_outputs_regs[i] = vm.Processors[bond.Res_id].Outputs[bond.Ext_id]
 		}
 	}
@@ -313,10 +324,8 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	// Transfer internal inputs registers to their destination
 	for i, bond := range vm.Bmach.Internal_inputs {
 		switch bond.Map_to {
-		case 1:
+		case BMOUTPUT:
 			vm.Outputs_regs[bond.Res_id] = vm.Internal_inputs_regs[i]
-			//		case 2:
-			//			vm.Processors[bond.Res_id].Inputs[bond.Ext_id] = vm.Internal_inputs_regs[i]
 		}
 	}
 
