@@ -207,8 +207,13 @@ func (op I2rw) Simulate(vm *VM, instr string) error {
 	reg_bits := vm.Mach.R
 	reg := get_id(instr[:reg_bits])
 	inp := get_id(instr[reg_bits : int(reg_bits)+inpbits])
-	vm.Registers[reg] = vm.Inputs[inp]
-	vm.Pc = vm.Pc + 1
+	if vm.InputsValid[inp] {
+		vm.Registers[reg] = vm.Inputs[inp]
+		vm.InputsRecv[inp] = true
+		vm.Pc = vm.Pc + 1
+	} else {
+		vm.InputsRecv[inp] = false
+	}
 	return nil
 }
 

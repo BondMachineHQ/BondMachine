@@ -106,9 +106,13 @@ func (vm *VM) Init() error {
 
 	vm.InputsValid = make([]bool, vm.Bmach.Inputs)
 	vm.OutputsValid = make([]bool, vm.Bmach.Outputs)
+	vm.InputsRecv = make([]bool, vm.Bmach.Inputs)
+	vm.OutputsRecv = make([]bool, vm.Bmach.Outputs)
 
 	vm.InternalInputsValid = make([]bool, len(vm.Bmach.Internal_inputs))
 	vm.InternalOutputsValid = make([]bool, len(vm.Bmach.Internal_outputs))
+	vm.InternalInputsRecv = make([]bool, len(vm.Bmach.Internal_inputs))
+	vm.InternalOutputsRecv = make([]bool, len(vm.Bmach.Internal_outputs))
 
 	vm.abs_tick = uint64(0)
 
@@ -252,32 +256,70 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		}
 	}
 
-	// Set the internal outputs registers
+	// Set the internal outputs registers and the relative data valid signals
 	for i, bond := range vm.Bmach.Internal_outputs {
 		switch bond.Map_to {
 		case BMINPUT:
 			vm.Internal_outputs_regs[i] = vm.Inputs_regs[bond.Res_id]
+			vm.InternalOutputsValid[i] = vm.InputsValid[bond.Res_id]
 		}
 	}
 
-	// Transfer to the internal inputs registers the previous outputs according the links
+	// Transfer to the internal inputs registers and the relative data valids the previous outputs according the links
 	for i, j := range vm.Bmach.Links {
 		if j != -1 {
 			vm.Internal_inputs_regs[i] = vm.Internal_outputs_regs[j]
+			vm.InternalInputsValid[i] = vm.InternalOutputsValid[j]
 		}
 	}
 
-	// Transfer internal inputs registers to their destination
+	// Transfer internal inputs registers and the relative data valids to their destination in the processors
 	for i, bond := range vm.Bmach.Internal_inputs {
 		switch bond.Map_to {
 		case CPINPUT:
 			vm.Processors[bond.Res_id].Inputs[bond.Ext_id] = vm.Internal_inputs_regs[i]
+			vm.Processors[bond.Res_id].InputsValid[bond.Ext_id] = vm.InternalInputsValid[i]
+		}
+	}
+
+	// Set the internal input data received signals
+	for i, bond := range vm.Bmach.Internal_inputs {
+		switch bond.Map_to {
+		case BMOUTPUT:
+			vm.InternalInputsRecv[i] = vm.OutputsRecv[bond.Res_id]
+		}
+	}
+
+	// Set the internal output data received signals
+	dataRecv := make(map[int]bool)
+	for i, j := range vm.Bmach.Links {
+		if j != -1 {
+			if val, ok := dataRecv[j]; !ok {
+				dataRecv[j] = vm.InternalInputsRecv[i]
+			} else {
+				dataRecv[j] = val && vm.InternalInputsRecv[i]
+			}
+		}
+	}
+	for i, _ := range vm.Bmach.Internal_outputs {
+		if val, ok := dataRecv[i]; !ok {
+			vm.InternalOutputsRecv[i] = false
+		} else {
+			vm.InternalOutputsRecv[i] = val
 		}
 	}
 
 	if sc != nil {
 		if sc.Show_io_pre {
 			result += "\tPre-compute IO: " + vm.DumpIO() + "\n"
+		}
+	}
+
+	// Transfer internal outputd data received to their destination in the processors
+	for i, bond := range vm.Bmach.Internal_outputs {
+		switch bond.Map_to {
+		case CPOUTPUT:
+			vm.Processors[bond.Res_id].OutputsRecv[bond.Ext_id] = vm.InternalOutputsRecv[i]
 		}
 	}
 
@@ -311,6 +353,15 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		switch bond.Map_to {
 		case CPOUTPUT:
 			vm.Internal_outputs_regs[i] = vm.Processors[bond.Res_id].Outputs[bond.Ext_id]
+			vm.InternalOutputsValid[i] = vm.Processors[bond.Res_id].OutputsValid[bond.Ext_id]
+		}
+	}
+
+	// Set the internal inputs registers data received signals
+	for i, bond := range vm.Bmach.Internal_inputs {
+		switch bond.Map_to {
+		case CPINPUT:
+			vm.InternalInputsRecv[i] = vm.Processors[bond.Res_id].InputsRecv[bond.Ext_id]
 		}
 	}
 
@@ -318,6 +369,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	for i, j := range vm.Bmach.Links {
 		if j != -1 {
 			vm.Internal_inputs_regs[i] = vm.Internal_outputs_regs[j]
+			vm.InternalInputsValid[i] = vm.InternalOutputsValid[j]
 		}
 	}
 
@@ -326,6 +378,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		switch bond.Map_to {
 		case BMOUTPUT:
 			vm.Outputs_regs[bond.Res_id] = vm.Internal_inputs_regs[i]
+			vm.OutputsValid[bond.Res_id] = vm.InternalInputsValid[i]
 		}
 	}
 
