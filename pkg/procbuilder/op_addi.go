@@ -255,9 +255,18 @@ func (Op Addi) Op_instruction_verilog_extra_block(arch *Arch, flavor string, lev
 }
 func (Op Addi) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
+	result = append(result, "addi::*--type=reg")
 	return result
 }
 func (Op Addi) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+	switch line.Operation.GetValue() {
+	case "addi":
+		regDst := line.Elements[0].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regDst, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "addi", Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:addi", T: bmreqs.ObjectSet, Name: "destregs", Value: regDst, Op: bmreqs.OpAdd})
+		return line, nil
+	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
 func (Op Addi) ExtraFiles(arch *Arch) ([]string, []string) {
