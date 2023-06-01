@@ -132,12 +132,32 @@ func main() {
 								}
 							}
 
-							if value, err := output.ExportString(conf); err != nil {
-								fmt.Println("Error: ", err)
-								log.Fatal(err)
-							} else {
-								recordC[i] = value
+							switch *showAs {
+							case "native":
+								if value, err := output.ExportString(conf); err != nil {
+									fmt.Println("Error: ", err)
+									log.Fatal(err)
+								} else {
+									recordC[i] = value
+								}
+							case "bin":
+								if value, err := output.ExportBinary(*withSize); err != nil {
+									fmt.Println("Error: ", err)
+									log.Fatal(err)
+								} else {
+									recordC[i] = value
+								}
+							case "unsigned":
+								if value, err := output.ExportUint64(); err != nil {
+									fmt.Println("Error: ", err)
+									log.Fatal(err)
+								} else {
+									recordC[i] = fmt.Sprintf("%d", value)
+								}
+							default:
+								log.Fatal("Error: Unknown visualization format (native, bin, unsigned)")
 							}
+
 						}
 					}
 
