@@ -63,6 +63,7 @@ type Config struct {
 	Debug            bool
 	Dotdetail        uint8
 	CommentedVerilog bool
+	FormatSimReports bool
 }
 
 //reorg {"name": "BondMachine typedefs", "descr": "Definition of BondMachine and BondMachine JSON data structures"}

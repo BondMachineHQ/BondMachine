@@ -12,6 +12,10 @@ import (
 	"strconv"
 )
 
+type BMNumberServer struct {
+	conf *BMNumberConfig
+}
+
 type BMNumbersRequest struct {
 	Action   string   `json:"action"`
 	Numbers  []string `json:"numbers"`
@@ -23,14 +27,14 @@ type BMNumbersResponse struct {
 	Numbers []string `json:"numbers"`
 }
 
-func HomePage(w http.ResponseWriter, r *http.Request) {
+func (s *BMNumberServer) HomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the BM Numbers server!\n")
 	fmt.Fprintf(w, "There is one endpoint available: \n")
 	fmt.Fprintf(w, "[POST] bmnumbers \n")
 	fmt.Fprintf(w, "[POST] body example: {'action': 'cast', 'numbers': ['0f0.45', '0f0.30'], 'reqType': 'bin', 'viewMode': 'native'} \n")
 }
 
-func ExecRequest(w http.ResponseWriter, r *http.Request) {
+func (s *BMNumberServer) ExecRequest(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
@@ -75,7 +79,7 @@ func ExecRequest(w http.ResponseWriter, r *http.Request) {
 
 			switch bmNumbersRequest.DumpMode {
 			case "native":
-				if value, err := output.ExportString(); err != nil {
+				if value, err := output.ExportString(s.conf); err != nil {
 					http.Error(w, fmt.Sprintf("Error: %v", err), http.StatusInternalServerError)
 					return
 				} else {
@@ -107,10 +111,13 @@ func ExecRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 // REST API to convert numbers
-func Serve() {
+func Serve(conf *BMNumberConfig) {
 
-	http.HandleFunc("/", HomePage)
-	http.HandleFunc("/bmnumbers", ExecRequest)
+	server := new(BMNumberServer)
+	server.conf = conf
+
+	http.HandleFunc("/", server.HomePage)
+	http.HandleFunc("/bmnumbers", server.ExecRequest)
 
 	fmt.Println("Server started on localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

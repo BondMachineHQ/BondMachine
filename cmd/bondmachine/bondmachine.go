@@ -980,7 +980,7 @@ func main() {
 							if err := bmnumbers.CastType(number, v); err != nil {
 								log.Fatal(err)
 							} else {
-								if numberS, err := number.ExportString(); err != nil {
+								if numberS, err := number.ExportString(nil); err != nil {
 									log.Fatal(err)
 								} else {
 									fmt.Print(numberS + " ")
@@ -1051,7 +1051,7 @@ func main() {
 								if err := bmnumbers.CastType(number, v); err != nil {
 									log.Fatal(err)
 								} else {
-									if numberS, err := number.ExportString(); err != nil {
+									if numberS, err := number.ExportString(nil); err != nil {
 										log.Fatal(err)
 									} else {
 										someToReport = true
@@ -1072,13 +1072,15 @@ func main() {
 
 						for recI, recV := range recordC {
 							if sconfig.GetTicks {
-								if oldRecordC == nil || ((recI != 0) && (*oldRecordC)[recI] != recV) {
+								if conf.FormatSimReports && (oldRecordC == nil || ((recI != 0) && (*oldRecordC)[recI] != recV)) {
 									reportWrite[recI] = "\033[31m" + fmt.Sprintf("%-25s", recV) + "\033[0m"
-								} else {
+								} else if conf.FormatSimReports {
 									reportWrite[recI] = fmt.Sprintf("%-25s", recV)
+								} else {
+									reportWrite[recI] = recV
 								}
 							} else {
-								if oldRecordC == nil || (*oldRecordC)[recI] != recV {
+								if conf.FormatSimReports && (oldRecordC == nil || (*oldRecordC)[recI] != recV) {
 									reportWrite[recI] = "\033[31m" + recV + "\033[0m"
 								} else {
 									reportWrite[recI] = recV

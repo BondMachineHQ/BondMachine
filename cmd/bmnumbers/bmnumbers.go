@@ -25,6 +25,7 @@ var useFiles = flag.Bool("use-files", false, "Load files instead of command line
 var serve = flag.Bool("serve", false, "Serve as REST API")
 
 var getPrefix = flag.String("get-prefix", "", "Get prefix from type")
+var OmitPrefix = flag.Bool("omit-prefix", false, "Omit prefix")
 
 // Custom types
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
@@ -41,6 +42,9 @@ func init() {
 
 func main() {
 
+	conf := new(bmnumbers.BMNumberConfig)
+	conf.OmitPrefix = *OmitPrefix
+
 	if *getPrefix != "" {
 		if _, err := bmnumbers.EventuallyCreateType(*getPrefix, nil); err != nil {
 			log.Fatal(err)
@@ -51,7 +55,7 @@ func main() {
 			fmt.Println(v.ShowPrefix())
 		}
 	} else if *serve {
-		bmnumbers.Serve()
+		bmnumbers.Serve(conf)
 	} else {
 
 		var newType bmnumbers.BMNumberType
@@ -108,21 +112,29 @@ func main() {
 					for i, v := range record {
 						if output, err := bmnumbers.ImportString(v); err != nil {
 							fmt.Println("Error: ", err)
+							recordC[i] = v
+							continue
 						} else {
 
 							if *convertTo != "" {
 								if err := newType.Convert(output); err != nil {
 									fmt.Println("Error: ", err)
+									recordC[i] = v
+									continue
 								}
 							}
 
 							if *castTo != "" {
 								if err := bmnumbers.CastType(output, newType); err != nil {
 									fmt.Println("Error: ", err)
+									recordC[i] = v
+									continue
 								}
 							}
-							if value, err := output.ExportString(); err != nil {
+
+							if value, err := output.ExportString(conf); err != nil {
 								fmt.Println("Error: ", err)
+								log.Fatal(err)
 							} else {
 								recordC[i] = value
 							}
@@ -160,7 +172,7 @@ func main() {
 
 					switch *showAs {
 					case "native":
-						if value, err := output.ExportString(); err != nil {
+						if value, err := output.ExportString(conf); err != nil {
 							fmt.Println("Error: ", err)
 						} else {
 							fmt.Println(value)

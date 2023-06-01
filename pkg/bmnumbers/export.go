@@ -3,11 +3,20 @@ package bmnumbers
 import (
 	"errors"
 	"strconv"
+	"strings"
 )
 
-func (n *BMNumber) ExportString() (string, error) {
+func (n *BMNumber) ExportString(c *BMNumberConfig) (string, error) {
 	if n == nil || n.number == nil {
 		return "", errors.New("undefined number")
+	}
+
+	if c != nil && c.OmitPrefix {
+		if value, err := n.nType.ExportString(n); err != nil {
+			return "", err
+		} else {
+			return strings.ReplaceAll(value, n.nType.ShowPrefix(), ""), nil
+		}
 	}
 
 	return n.nType.ExportString(n)

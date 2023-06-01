@@ -8,6 +8,10 @@ import (
 
 type ImportFunc func(*regexp.Regexp, string) (*BMNumber, error)
 
+type BMNumberConfig struct {
+	OmitPrefix bool
+}
+
 type BMNumberType interface {
 	GetName() string
 	getInfo() string
