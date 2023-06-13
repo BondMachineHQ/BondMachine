@@ -85,5 +85,5 @@ func (d Float32) ShowInstructions() map[string]string {
 }
 
 func (d Float32) ShowPrefix() string {
-	return "0f"
+	return "0f<32>"
 }
