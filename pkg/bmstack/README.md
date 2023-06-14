@@ -5,7 +5,7 @@ The HDL code is build using golang templates that creates the code starting from
 
 ![BmStack](bmstack.png)
 
-```
+```go
 type Push struct {
 	Agent string
 	Tick  uint64
