@@ -42,5 +42,11 @@ func (mach *Machine) Specs() string {
 			result += "      " + fmt.Sprintf("%03d", i) + " - " + bins + " - " + line + "\n"
 		}
 	}
+	result += "    ROM Data:\n"
+	for i, bins := range mach.Data.Vars {
+		result += "      " + fmt.Sprintf("%03d", i) + " - " + bins + "\n"
+	}
+
 	return result
+
 }

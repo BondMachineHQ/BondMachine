@@ -9,6 +9,7 @@ import (
 type Machine struct {
 	Arch
 	Program
+	Data
 }
 
 type Machine_json struct {
