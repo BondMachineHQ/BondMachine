@@ -5,6 +5,38 @@ The HDL code is build using golang templates that creates the code starting from
 
 ![BmStack](bmstack.png)
 
+```
+type Push struct {
+	Agent string
+	Tick  uint64
+	Value string
+}
+
+type Pop struct {
+	Agent string
+	Tick  uint64
+}
+
+type TestBenchData struct {
+	Pops         []Pop
+	Pushes       []Push
+	TestSequence []string // Pushes and pops in order
+}
+
+type BmStack struct {
+	ModuleName string
+	DataSize   int
+	Depth      int
+	Senders    []string
+	Receivers  []string
+	MemType    string
+	funcMap    template.FuncMap
+
+	// TestBench data
+	TestBenchData
+}
+```
+
 ## API 
 
 The library can be used in two ways.
