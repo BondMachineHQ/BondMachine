@@ -17,6 +17,7 @@ func dataSections2Bytes(bi *BasmInstance) error {
 			varCheck := make(map[string]struct{})
 
 			body := section.sectionBody
+			offset := 0
 			for _, line := range body.Lines {
 				varName := line.Operation.GetValue()
 
@@ -36,6 +37,7 @@ func dataSections2Bytes(bi *BasmInstance) error {
 
 				dataOperator := line.Elements[0].GetValue()
 				dataValue := line.Elements[1].GetValue()
+				line.Operation.BasmMeta = line.Operation.BasmMeta.SetMeta("offset", fmt.Sprintf("%d", offset))
 
 				switch dataOperator {
 				case "db":
@@ -49,8 +51,10 @@ func dataSections2Bytes(bi *BasmInstance) error {
 							newElements[i] = newArg
 						}
 						line.Elements = newElements
+						offset += len(decodedBytes)
 					}
 				case "equ":
+					// TODO: finish this and the other data operators
 				default:
 					return errors.New("Unknown data operator " + dataOperator)
 				}

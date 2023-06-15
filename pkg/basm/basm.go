@@ -87,7 +87,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 	bi.sections = make(map[string]*BasmSection)
 	bi.fragments = make(map[string]*BasmFragment)
 	bi.chunks = make(map[string]*BasmChunk)
-	bi.passes = uint64(4095)
+	bi.passes = uint64(8191)
 	bi.matchers = make([]*bmline.BasmLine, 0)
 	bi.matchersOps = make([]procbuilder.Opcode, 0)
 

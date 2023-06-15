@@ -12,7 +12,8 @@ const (
 	passDataSections2Bytes    = uint64(256)
 	passEntryPoints           = uint64(512)
 	passLabelsResolver        = uint64(1024)
-	passMatcherResolver       = uint64(2048)
+	passRomComposer           = uint64(2048)
+	passMatcherResolver       = uint64(4096)
 	LAST_PASS                 = uint64(2048)
 )
 
@@ -30,6 +31,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passFragmentAnalyzer:      fragmentAnalyzer,
 		passFragmentPruner:        fragmentPruner,
 		passFragmentComposer:      fragmentComposer,
+		passRomComposer:           romComposer,
 	}
 }
 
@@ -47,6 +49,7 @@ func getPassFunctionName() map[uint64]string {
 		passFragmentAnalyzer:      "fragmentAnalyzer",
 		passFragmentPruner:        "fragmentPruner",
 		passFragmentComposer:      "fragmentComposer",
+		passRomComposer:           "romComposer",
 	}
 }
 
