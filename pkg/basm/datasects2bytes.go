@@ -31,7 +31,7 @@ func dataSections2Bytes(bi *BasmInstance) error {
 				}
 
 				if len(line.Elements) != 2 {
-					return errors.New("Data elements expects 2 arguments")
+					return errors.New("data elements expects 2 arguments")
 				}
 
 				dataOperator := line.Elements[0].GetValue()

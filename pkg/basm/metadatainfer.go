@@ -42,6 +42,13 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 				location := re.ReplaceAllString(arg.GetValue(), "${location}")
 				arg.BasmMeta = arg.SetMeta("location", location)
 			}
+			re = regexp.MustCompile("^rom:(?P<var>[0-9a-zA-Z_]+)$")
+			if re.MatchString(arg.GetValue()) {
+				arg.BasmMeta = arg.SetMeta("type", "rom")
+				arg.BasmMeta = arg.SetMeta("romaddressing", "variable")
+				variable := re.ReplaceAllString(arg.GetValue(), "${var}")
+				arg.BasmMeta = arg.SetMeta("variable", variable)
+			}
 			re = regexp.MustCompile("^rom:\\[(?P<reg>r[0-9]+)\\]$")
 			if re.MatchString(arg.GetValue()) {
 				arg.BasmMeta = arg.SetMeta("type", "rom")
