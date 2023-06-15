@@ -21,12 +21,12 @@ var depth = flag.Int("depth", 8, "Depth of the stack/queue")
 var senders = flag.String("senders", "", "Comma separated list of names of signal tags that will send data to the stack/queue")
 var receivers = flag.String("receivers", "", "Comma separated list of names of signal tags that will receive data from the stack/queue")
 
-var hdlFile = flag.String("hdl-file", "stack.v", "Name of the file to write the HDL to (default: stack.v, empty string to disable)")
-var tbFile = flag.String("tb-file", "", "Name of the file to write the testbench to (default: empty, empty string to disable)")
+var hdlFile = flag.String("hdl-file", "stack.v", "Name of the file to write the HDL to (empty string to disable)")
+var tbFile = flag.String("tb-file", "", "Name of the file to write the testbench to (empty string to disable)")
 
-var stimulusFile = flag.String("stimulus-file", "", "Name of the JSON file to load the stimulus from (default: empty, empty string to disable)")
-var randomStimulus = flag.Int("random-stimulus", 0, "Generate random stimulus including N pushes and pops for every agent (default: 0, 0 to disable)")
-var simLength = flag.Int("sim-length", 1000, "Length of the simulation in clock cycles (default: 1000)")
+var stimulusFile = flag.String("stimulus-file", "", "Name of the JSON file to load the stimulus from (empty string to disable)")
+var randomStimulus = flag.Int("random-stimulus", 0, "Generate random stimulus including N pushes and pops for every agent (0 to disable)")
+var simLength = flag.Int("sim-length", 1000, "Length of the simulation in clock cycles")
 
 func init() {
 	flag.Parse()
