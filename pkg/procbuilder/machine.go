@@ -23,6 +23,7 @@ type Machine_json struct {
 	Shared_constraints string
 	Op                 []string
 	Slocs              []string
+	Vars               []string
 }
 
 var Allopcodes []Opcode
@@ -159,8 +160,12 @@ func (mach *Machine) Jsoner() *Machine_json {
 	result.O = mach.O
 	result.Shared_constraints = mach.Shared_constraints
 	result.Slocs = make([]string, len(mach.Slocs))
+	result.Vars = make([]string, len(mach.Vars))
 	for i, val := range mach.Slocs {
 		result.Slocs[i] = val
+	}
+	for i, val := range mach.Vars {
+		result.Vars[i] = val
 	}
 	result.Op = make([]string, len(mach.Op))
 	for i, val := range mach.Op {
@@ -183,8 +188,12 @@ func (machj *Machine_json) Dejsoner() *Machine {
 	result.O = machj.O
 	result.Shared_constraints = machj.Shared_constraints
 	result.Slocs = make([]string, len(machj.Slocs))
+	result.Vars = make([]string, len(machj.Vars))
 	for i, val := range machj.Slocs {
 		result.Slocs[i] = val
+	}
+	for i, val := range machj.Vars {
+		result.Vars[i] = val
 	}
 	result.Op = make([]Opcode, len(machj.Op))
 	for i, opname := range machj.Op {
