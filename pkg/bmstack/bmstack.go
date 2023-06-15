@@ -10,29 +10,29 @@ import (
 )
 
 type Push struct {
-	Agent string
-	Tick  uint64
-	Value string
+	Agent string // The name of the agent that is pushing
+	Tick  uint64 // The tick at which the push occurs
+	Value string // The value that is pushed
 }
 
 type Pop struct {
-	Agent string
-	Tick  uint64
+	Agent string // The name of the agent that is popping
+	Tick  uint64 // The tick at which the pop occurs
 }
 
 type TestBenchData struct {
-	Pops         []Pop
-	Pushes       []Push
+	Pops         []Pop    // List of pops
+	Pushes       []Push   // List of pushes
 	TestSequence []string // Pushes and pops in order
 }
 
 type BmStack struct {
-	ModuleName string
-	DataSize   int
-	Depth      int
-	Senders    []string
-	Receivers  []string
-	MemType    string
+	ModuleName string   // The name of the module
+	DataSize   int      // The size of the data bus
+	Depth      int      // The depth of the stack
+	Senders    []string // The names of the agents that can send data to the stack
+	Receivers  []string // The names of the agents that can receive data from the stack
+	MemType    string   // "LIFO" for a stack or "FIFO" for a queue
 	funcMap    template.FuncMap
 
 	// TestBench data
