@@ -91,21 +91,21 @@ Usage of bmstack:
   -depth int
         Depth of the stack/queue (default 8)
   -hdl-file string
-        Name of the file to write the HDL to (default: stack.v, empty string to disable) (default "stack.v")
+        Name of the file to write the HDL to (empty string to disable) (default "stack.v")
   -memory-type string
         Memory type, either stack or queue (default "queue")
   -random-stimulus int
-        Generate random stimulus including N pushes and pops for every agent (default: 0, 0 to disable)
+        Generate random stimulus including N pushes and pops for every agent (0 to disable)
   -receivers string
         Comma separated list of names of signal tags that will receive data from the stack/queue
   -senders string
         Comma separated list of names of signal tags that will send data to the stack/queue
   -sim-length int
-        Length of the simulation in clock cycles (default: 1000) (default 1000)
+        Length of the simulation in clock cycles (default 1000)
   -stimulus-file string
-        Name of the JSON file to load the stimulus from (default: empty, empty string to disable)
+        Name of the JSON file to load the stimulus from (empty string to disable)
   -tb-file string
-        Name of the file to write the testbench to (default: empty, empty string to disable)
+        Name of the file to write the testbench to (empty string to disable)
   -v    Verbose
 ```
 
