@@ -26,8 +26,15 @@ func (rom *Rom) Write_verilog(mach *Machine, rom_module_name string, flavor stri
 	result += "\tinitial\n"
 	result += "\tbegin\n"
 
-	for i, inst := range mach.Program.Slocs {
+	i := 0
+	for _, inst := range mach.Program.Slocs {
 		result += "\t_rom[" + strconv.Itoa(i) + "] = " + strconv.Itoa(rom_word) + "'b" + inst + ";\n"
+		i++
+	}
+
+	for _, inst := range mach.Data.Vars {
+		result += "\t_rom[" + strconv.Itoa(i) + "] = " + strconv.Itoa(rom_word) + "'b" + inst + ";\n"
+		i++
 	}
 
 	result += "\tend\n"

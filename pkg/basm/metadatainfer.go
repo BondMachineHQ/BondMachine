@@ -35,7 +35,7 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 			// 	arg.BasmMeta = arg.SetMeta("numbertype", "float")
 			// }
 
-			re = regexp.MustCompile("^rom:(?P<location>[0-9]+)$")
+			re = regexp.MustCompile("^rom:\\[(?P<location>[0-9]+)\\]$")
 			if re.MatchString(arg.GetValue()) {
 				arg.BasmMeta = arg.SetMeta("type", "rom")
 				arg.BasmMeta = arg.SetMeta("romaddressing", "immediate")

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
@@ -74,9 +75,19 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 			fmt.Println(" - " + green("rom code: ") + yellow(romCode))
 		}
 
+		romData := cp.GetMeta("romdata")
+
+		if bi.debug {
+			if romData != "" {
+				fmt.Println("\t\t" + green("rom data: ") + yellow(romData))
+			} else {
+				fmt.Println("\t\t" + green("rom data: ") + yellow("not specified"))
+			}
+		}
+
 		bi.rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps", T: bmreqs.ObjectSet, Name: "id", Value: strconv.Itoa(i), Op: bmreqs.OpAdd})
 
-		if cpm, err := bi.CreateConnectingProcessor(rSize, i, romCode); err == nil {
+		if cpm, err := bi.CreateConnectingProcessor(rSize, i, romCode, romData); err == nil {
 			cps[i] = cpm
 			cpIndexes[cp.GetValue()] = strconv.Itoa(i)
 			if bi.BMinfo != nil {
@@ -463,7 +474,7 @@ func (bi *BasmInstance) assembler2ExistingBondMachine() error {
 	return nil
 }
 
-func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCode string) (*procbuilder.Machine, error) {
+func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCode string, romData string) (*procbuilder.Machine, error) {
 	myMachine := new(procbuilder.Machine)
 
 	myArch := &myMachine.Arch
@@ -554,6 +565,37 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 	// } else {
 	// 	return nil, err
 	// }
+
+	if romData != "" {
+		wordSize := myMachine.Max_word()
+		wordPad := ""
+		for i := 0; i < int(wordSize); i++ {
+			wordPad += "0"
+		}
+		if wordSize < 8 {
+			return nil, errors.New("word size is too small")
+		}
+
+		data := make([]string, 0)
+
+		for _, line := range bi.sections[romData].sectionBody.Lines {
+			for _, arg := range line.Elements {
+				hexVal := arg.GetValue()
+				if n, err := bmnumbers.ImportString(hexVal); err == nil {
+					nS, _ := n.ExportBinary(false)
+					nS = wordPad + nS
+					nS = nS[len(nS)-int(wordSize):]
+					data = append(data, nS)
+				} else {
+					return nil, err
+				}
+			}
+		}
+
+		myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines) + len(data)))
+		myMachine.Data.Vars = data
+
+	}
 
 	return myMachine, nil
 }

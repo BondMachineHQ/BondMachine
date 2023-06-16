@@ -14,7 +14,7 @@ const (
 	passLabelsResolver        = uint64(1024)
 	passRomComposer           = uint64(2048)
 	passMatcherResolver       = uint64(4096)
-	LAST_PASS                 = uint64(2048)
+	LAST_PASS                 = uint64(4096)
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {

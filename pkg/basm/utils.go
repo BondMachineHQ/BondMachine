@@ -76,7 +76,6 @@ func object2Bytes(obj string, numeric bool) ([]string, error) {
 				}
 				for i := 0; i < len(hexstring); i = i + 2 {
 					result = append(result, "0x"+hexstring[i:i+2])
-					fmt.Println(result)
 				}
 				return result, nil
 			} else if obj[:2] == "0b" {

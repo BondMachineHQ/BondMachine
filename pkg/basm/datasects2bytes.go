@@ -8,6 +8,7 @@ import (
 )
 
 func dataSections2Bytes(bi *BasmInstance) error {
+
 	for sectName, section := range bi.sections {
 		if section.sectionType == sectRomData {
 			if bi.debug {

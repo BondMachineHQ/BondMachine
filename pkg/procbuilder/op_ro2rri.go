@@ -158,6 +158,16 @@ func (op Ro2rri) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Ro2rri) Simulate(vm *VM, instr string) error {
+	reg_bits := vm.Mach.R
+	regDest := get_id(instr[:reg_bits])
+	regSrc := get_id(instr[reg_bits : reg_bits*2])
+	loc := int(vm.Registers[regSrc].(uint8))
+	if loc < len(vm.Mach.Program.Slocs) {
+		vm.Registers[regDest] = uint8(get_id(vm.Mach.Program.Slocs[loc]))
+	} else {
+		vm.Registers[regDest] = uint8(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)]))
+	}
+
 	vm.Pc = vm.Pc + 1
 	return nil
 }
