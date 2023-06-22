@@ -173,6 +173,8 @@ const (
 					"    "
 				]
 			},
+			{{- if .ProjectsList }}
+			{{- range .ProjectsList }}
 			{
 				"cell_type": "code",
 				"execution_count": null,
@@ -180,46 +182,18 @@ const (
 				"metadata": {},
 				"outputs": [],
 				"source": [
-					"template_1d6c78b2_d2ea_403e_b1c2_d6226b866705=load_data(\"template_1d6c78b2_d2ea_403e_b1c2_d6226b866705_simreport\", False)"
+				"{{ . }}=load_data(\"{{ . }}_simreport\", False)"
 				]
 			},
-			{
-				"cell_type": "code",
-				"execution_count": null,
-				"id": "976bd531-2a31-4a80-b1d9-0cc7f4cc9ce8",
-				"metadata": {},
-				"outputs": [],
-				"source": [
-					"template_5b0b5dd1_8bbb_40cf_b5eb_447232f1eb88=load_data(\"template_5b0b5dd1_8bbb_40cf_b5eb_447232f1eb88_simreport\", False)"
-				]
-			},
-			{
-				"cell_type": "code",
-				"execution_count": null,
-				"id": "976bd531-2a31-4a80-b1d9-0cc7f4cc9ce8",
-				"metadata": {},
-				"outputs": [],
-				"source": [
-					"template_d4b87f3a_7764_4aa7_af73_66730e79f5b6=load_data(\"template_d4b87f3a_7764_4aa7_af73_66730e79f5b6_simreport\", False)"
-				]
-			},
-			{
-				"cell_type": "code",
-				"execution_count": null,
-				"id": "976bd531-2a31-4a80-b1d9-0cc7f4cc9ce8",
-				"metadata": {},
-				"outputs": [],
-				"source": [
-					"template_032a97ef_10f7_48d6_9c5a_8f5b56b32995=load_data(\"template_032a97ef_10f7_48d6_9c5a_8f5b56b32995_simreport\", False)"
-				]
-			},
+			{{- end }}
+			{{- end }}
 			{
 				"cell_type": "code",
 				"execution_count": null,
 				"metadata": {},
 				"outputs": [],
 				"source": [
-					"analyze([ template_1d6c78b2_d2ea_403e_b1c2_d6226b866705, template_5b0b5dd1_8bbb_40cf_b5eb_447232f1eb88, template_d4b87f3a_7764_4aa7_af73_66730e79f5b6, template_032a97ef_10f7_48d6_9c5a_8f5b56b32995], 0, True, True, [])"
+				 "analyze([{{- if .ProjectsList }} {{- $projectLen := len .ProjectsList }} {{- range $i, $project := .ProjectsList }} {{- if eq (inc $i) $projectLen }} {{ $project }} {{- else }} {{ $project }}, {{- end }} {{- end }} {{- end }}], 0, True, True, [])"
 				]
 			},
 			{
