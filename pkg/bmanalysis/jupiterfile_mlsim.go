@@ -10,6 +10,17 @@ const (
 				"metadata": {},
 				"outputs": [],
 				"source": [
+					"!pip install pandas\n",
+					"!pip install matplotlib\n",
+					"!pip install numpy"
+				]
+			},
+			{
+				"cell_type": "code",
+				"execution_count": null,
+				"metadata": {},
+				"outputs": [],
+				"source": [
 					"import pandas as pd\n",
 					"import json\n",
 					"import numpy as np\n",
@@ -129,9 +140,8 @@ const (
 					"                ticks = r[\"rundata\"].index\n",
 					"                values_in_scope = r[\"rundata\"][res]\n",
 					"                \n",
-					"                r[\"templateinfo\"].update({\"template\":r[\"name\"]})\n",
 					"                to_plot.append({\n",
-					"                    \"name\": r[\"name\"],\n",
+					"                    \"name\": r[\"templateinfo\"][\"TEMPLATE_INSTANCENAME\"],\n",
 					"                    \"resource\": res,\n",
 					"                    \"values\": values_in_scope.tolist(),\n",
 					"                    \"info\": r[\"templateinfo\"]\n",
@@ -141,7 +151,6 @@ const (
 					"            fig_height = len(to_plot)*2\n",
 					"            fig_width = len(to_plot)*4\n",
 					"            \n",
-					"            #plt.figure(figsize=(20, 6))\n",
 					"            fig, (ax1, ax2) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [4, 2]}, figsize=(fig_width, fig_height))\n",
 					"            ax2.set_axis_off()\n",
 					"            info_to_plot = r[\"templateinfo\"]\n",
@@ -150,7 +159,8 @@ const (
 					"            for t in to_plot:\n",
 					"                ax1.plot(ticks, t[\"values\"], label=t[\"name\"])\n",
 					"                last_value = t[\"values\"][-1]\n",
-					"                #ax1.text(ticks[-1], last_value, t[\"name\"], ha='center', va='bottom', fontsize=14)\n",
+					"                ax1.text(ticks[-1], last_value, t[\"name\"], ha='center', va='bottom', fontsize=14)\n",
+					"                ax1.set_title(t[\"resource\"])\n",
 					"                \n",
 					"                for key,value in t[\"info\"].items():\n",
 					"                    ax2.text(0.0, pos, key+\": \"+str(value))\n",
