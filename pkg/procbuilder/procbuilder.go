@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
@@ -22,6 +23,7 @@ type Opcode interface {
 	Assembler(*Arch, []string) (string, error)
 	HLAssemblerMatch(*Arch) []string
 	HLAssemblerNormalize(*Arch, *bmreqs.ReqRoot, string, *bmline.BasmLine) (*bmline.BasmLine, error)
+	HLAssemblerInstructionMetadata(*Arch, *bmline.BasmLine) (*bmmeta.BasmMeta, error)
 	Disassembler(*Arch, string) (string, error)
 	Simulate(*VM, string) error
 	Generate(*Arch) string

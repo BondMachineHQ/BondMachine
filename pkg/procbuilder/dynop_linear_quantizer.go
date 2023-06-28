@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
@@ -412,4 +413,8 @@ func (Op LinearQuantizer) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, n
 
 func (Op LinearQuantizer) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
+}
+
+func (Op LinearQuantizer) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	return nil, nil
 }

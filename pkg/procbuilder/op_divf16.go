@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 
 	"github.com/x448/float16"
@@ -302,3 +303,8 @@ func (Op Divf16) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node strin
 func (Op Divf16) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
 }
+
+func (Op Divf16) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	return nil, nil
+}
+

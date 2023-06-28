@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
@@ -289,4 +290,8 @@ func (Op FloPoCo) ExtraFiles(arch *Arch) ([]string, []string) {
 		}
 	}
 	return []string{"cp" + arch.Tag + "_" + Op.floPoCoName + ".vhd"}, []string{vHDL}
+}
+
+func (Op FloPoCo) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	return nil, nil
 }

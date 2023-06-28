@@ -34,6 +34,8 @@ var dumpRequirements = flag.String("dump-requirements", "", "Dump the requiremen
 
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
+// TODO var passes = flag.String("passes", "", "List of comma separated optional passes to run (default: none)")
+
 func check(e error) {
 	if e != nil {
 		panic(e)

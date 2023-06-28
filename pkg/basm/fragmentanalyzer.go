@@ -1,8 +1,12 @@
 package basm
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 )
 
 func fragmentAnalyzer(bi *BasmInstance) error {
@@ -58,7 +62,44 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 
 		fBody.BasmMeta = fBody.SetMeta("resused", resUseds)
 
-		// TODO rearrange resorces in the order they are used
+		// TODO rearrange resources in the order they are used
+
+		for _, line := range fBody.Lines {
+
+			if bi.debug {
+				fmt.Println(green("\t\t\tLine: ") + line.String())
+			}
+
+			matched := false
+			var matching procbuilder.Opcode
+
+			for j, matcher := range bi.matchers {
+				if bmline.MatchMatcher(matcher, line) {
+					if bi.debug {
+						fmt.Println(yellow("\t\t\t\tMatching " + matcher.String()))
+					}
+					if matched {
+						return errors.New("ambiguous, more than one operator match")
+					}
+					matched = true
+					matching = bi.matchersOps[j]
+				}
+			}
+
+			if !matched {
+				return errors.New("no operator match")
+			}
+
+			if meta, err := matching.HLAssemblerInstructionMetadata(nil, line); err != nil {
+				return err
+			} else {
+				if meta != nil {
+					for k, v := range meta.LoopMeta() {
+						line.BasmMeta = line.SetMeta(k, v)
+					}
+				}
+			}
+		}
 
 	}
 	// panic("fragmentAnalyzer not finished")

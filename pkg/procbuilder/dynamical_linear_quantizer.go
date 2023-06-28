@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 )
 
@@ -84,4 +86,8 @@ func (d DynLinearQuantizer) CreateInstruction(name string) (Opcode, error) {
 
 	return LinearQuantizer{lqName: name, s: s, t: t, opType: opType, max: max, pipeline: new(uint8)}, nil
 
+}
+
+func (Op DynLinearQuantizer) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	return nil, nil
 }

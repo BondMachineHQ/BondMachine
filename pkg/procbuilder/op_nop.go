@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
@@ -135,3 +136,8 @@ func (Op Nop) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 func (Op Nop) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
 }
+
+func (Op Nop) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	return nil, nil
+}
+

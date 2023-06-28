@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
@@ -194,4 +195,17 @@ func (Op Clr) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 }
 func (Op Clr) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
+}
+
+func (Op Clr) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	switch line.Operation.GetValue() {
+	case "clr":
+		regNeed := line.Elements[0].GetValue()
+		if regNeed != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("inval", regNeed)
+			return meta, nil
+		}
+	}
+	return nil, nil
 }

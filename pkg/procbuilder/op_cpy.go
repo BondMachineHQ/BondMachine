@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
@@ -229,4 +230,29 @@ func (Op Cpy) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 }
 func (Op Cpy) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
+}
+
+func (Op Cpy) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	switch line.Operation.GetValue() {
+	case "cpy":
+		regDst := line.Elements[0].GetValue()
+		regSrc := line.Elements[1].GetValue()
+		if regDst != "" && regSrc != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("val", regSrc)
+			meta = meta.SetMeta("inval", regDst)
+			return meta, nil
+		}
+	case "mov":
+		regDst := line.Elements[0].GetValue()
+		regSrc := line.Elements[1].GetValue()
+		if regDst != "" && regSrc != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("val", regSrc)
+			meta = meta.SetMeta("inval", regDst)
+			return meta, nil
+		}
+	}
+
+	return nil, nil
 }
