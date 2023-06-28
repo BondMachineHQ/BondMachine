@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/basm"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
@@ -114,10 +115,30 @@ func main() {
 	bi.BasmInstanceInit(bm)
 
 	for _, asmFile := range flag.Args() {
-		err := bi.ParseAssemblyDefault(asmFile)
-		if err != nil {
-			bi.Alert("Error while parsing file:", err)
-			return
+		// Get the file extension
+		ext := filepath.Ext(asmFile)
+
+		switch ext {
+
+		case ".basm":
+			err := bi.ParseAssemblyDefault(asmFile)
+			if err != nil {
+				bi.Alert("Error while parsing file:", err)
+				return
+			}
+		case ".ll":
+			err := bi.ParseAssemblyLLVM(asmFile)
+			if err != nil {
+				bi.Alert("Error while parsing file:", err)
+				return
+			}
+		default:
+			// Default is .basm
+			err := bi.ParseAssemblyDefault(asmFile)
+			if err != nil {
+				bi.Alert("Error while parsing file:", err)
+				return
+			}
 		}
 	}
 
