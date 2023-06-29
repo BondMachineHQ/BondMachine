@@ -247,8 +247,8 @@ func (Op Add) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) 
 		regSrc := line.Elements[1].GetValue()
 		if regDst != "" && regSrc != "" {
 			var meta *bmmeta.BasmMeta
-			meta = meta.SetMeta("inval", regDst)
-			meta = meta.SetMeta("val", regSrc+":"+regDst)
+			meta = meta.SetMeta("inv", regDst)
+			meta = meta.SetMeta("use", regSrc+":"+regDst)
 			return meta, nil
 		}
 	}

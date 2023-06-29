@@ -239,8 +239,8 @@ func (Op Cpy) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) 
 		regSrc := line.Elements[1].GetValue()
 		if regDst != "" && regSrc != "" {
 			var meta *bmmeta.BasmMeta
-			meta = meta.SetMeta("val", regSrc)
-			meta = meta.SetMeta("inval", regDst)
+			meta = meta.SetMeta("use", regSrc)
+			meta = meta.SetMeta("inv", regDst)
 			return meta, nil
 		}
 	case "mov":
@@ -248,8 +248,8 @@ func (Op Cpy) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) 
 		regSrc := line.Elements[1].GetValue()
 		if regDst != "" && regSrc != "" {
 			var meta *bmmeta.BasmMeta
-			meta = meta.SetMeta("val", regSrc)
-			meta = meta.SetMeta("inval", regDst)
+			meta = meta.SetMeta("use", regSrc)
+			meta = meta.SetMeta("inv", regDst)
 			return meta, nil
 		}
 	}

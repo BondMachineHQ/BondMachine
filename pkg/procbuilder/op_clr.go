@@ -203,7 +203,7 @@ func (Op Clr) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) 
 		regNeed := line.Elements[0].GetValue()
 		if regNeed != "" {
 			var meta *bmmeta.BasmMeta
-			meta = meta.SetMeta("inval", regNeed)
+			meta = meta.SetMeta("inv", regNeed)
 			return meta, nil
 		}
 	}
