@@ -9,6 +9,11 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 )
 
+func (bi *BasmInstance) fragmentResUsage(body *bmline.BasmBody, circolar bool) error {
+	//TODO finish this
+	return nil
+}
+
 func fragmentAnalyzer(bi *BasmInstance) error {
 	//TODO finish this
 
