@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/basm"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
@@ -34,13 +35,9 @@ var dumpRequirements = flag.String("dump-requirements", "", "Dump the requiremen
 
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
-// TODO var passes = flag.String("passes", "", "List of comma separated optional passes to run (default: none)")
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
+var listPasses = flag.Bool("list-passes", false, "List the available passes")
+var actPasses = flag.String("activate-passes", "", "List of comma separated optional passes to activate (default: none)")
+var deactPasses = flag.String("deactivate-passes", "", "List of comma separated optional passes to deactivate (default: none)")
 
 func init() {
 	flag.Parse()
@@ -116,7 +113,46 @@ func main() {
 
 	bi.BasmInstanceInit(bm)
 
+	mne := basm.GetPassMnemonic()
+
+	if *actPasses != "" {
+		passA := strings.Split(*actPasses, ",")
+
+		for _, p := range passA {
+			if err := bi.SetActive(p); err != nil {
+				bi.Alert("Error while activating pass:", err)
+				return
+			}
+		}
+	}
+
+	if *deactPasses != "" {
+		passD := strings.Split(*deactPasses, ",")
+
+		for _, p := range passD {
+			if err := bi.UnsetActive(p); err != nil {
+				bi.Alert("Error while deactivating pass:", err)
+				return
+			}
+		}
+	}
+
+	if *listPasses || *debug || *verbose {
+		fmt.Println("Selected passes:")
+		pass := uint64(1)
+
+		for i := 1; pass != basm.LAST_PASS; i++ {
+			fmt.Printf("  %02d: %s\n", i, mne[pass])
+			pass = pass << 1
+		}
+
+	}
+
+	startAssembling := false
+
 	for _, asmFile := range flag.Args() {
+		startAssembling = true
+
 		// Get the file extension
 		ext := filepath.Ext(asmFile)
 
@@ -142,6 +178,10 @@ func main() {
 				return
 			}
 		}
+	}
+
+	if !startAssembling {
+		return
 	}
 
 	if err := bi.RunAssembler(); err != nil {

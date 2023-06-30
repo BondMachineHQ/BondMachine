@@ -1,5 +1,7 @@
 package basm
 
+import "errors"
+
 const (
 	passTemplateResolver      = uint64(1)
 	passDynamicalInstructions = uint64(2)
@@ -53,17 +55,79 @@ func getPassFunctionName() map[uint64]string {
 	}
 }
 
-func activePass(passes uint64, active uint64) bool {
-	if (passes & active) == uint64(0) {
-		return false
+func IsOptionalPass() map[uint64]bool {
+	return map[uint64]bool{
+		passTemplateResolver:      false,
+		passDynamicalInstructions: false,
+		passLabelTagger:           false,
+		passDataSections2Bytes:    false,
+		passMetadataInfer1:        false,
+		passMetadataInfer2:        false,
+		passEntryPoints:           false,
+		passLabelsResolver:        false,
+		passMatcherResolver:       false,
+		passFragmentAnalyzer:      false,
+		passFragmentPruner:        false,
+		passFragmentComposer:      false,
+		passRomComposer:           false,
 	}
-	return true
 }
 
-func setActive(passes uint64, pass uint64) uint64 {
-	return passes | pass
+func (bi *BasmInstance) activePass(active uint64) bool {
+	return (bi.passes & active) != uint64(0)
 }
 
-func unsetActive(passes uint64, pass uint64) uint64 {
-	return passes & ^pass
+func GetPassMnemonic() map[uint64]string {
+	return map[uint64]string{
+		passTemplateResolver:      "templateresolver",
+		passDynamicalInstructions: "dynamicalinstructions",
+		passLabelTagger:           "labeltagger",
+		passDataSections2Bytes:    "datasections2bytes",
+		passMetadataInfer1:        "metadatainfer1",
+		passMetadataInfer2:        "metadatainfer2",
+		passEntryPoints:           "entrypoints",
+		passLabelsResolver:        "labelresolver",
+		passMatcherResolver:       "matcherresolver",
+		passFragmentAnalyzer:      "fragmentanalyzer",
+		passFragmentPruner:        "fragmentpruner",
+		passFragmentComposer:      "fragmentcomposer",
+		passRomComposer:           "romcomposer",
+	}
+
+}
+
+func (bi *BasmInstance) SetActive(pass string) error {
+	for passN, v := range GetPassMnemonic() {
+		if v == pass {
+			if ch, ok := IsOptionalPass()[passN]; ok {
+				if ch {
+					bi.passes = bi.passes | passN
+					return nil
+				} else {
+					return errors.New("pass is not optional")
+				}
+			} else {
+				return errors.New("pass is not defined")
+			}
+		}
+	}
+	return errors.New("pass not found")
+}
+
+func (bi *BasmInstance) UnsetActive(pass string) error {
+	for passN, v := range GetPassMnemonic() {
+		if v == pass {
+			if ch, ok := IsOptionalPass()[passN]; ok {
+				if ch {
+					bi.passes = bi.passes & ^passN
+					return nil
+				} else {
+					return errors.New("pass is not optional")
+				}
+			} else {
+				return errors.New("pass is not defined")
+			}
+		}
+	}
+	return errors.New("pass not found")
 }

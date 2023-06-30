@@ -154,7 +154,7 @@ func (bi *BasmInstance) RunAssembler() error {
 
 	passes := getPassFunction()
 	for i := 0; i < 64; i++ {
-		if activePass(bi.passes, step) {
+		if bi.activePass(step) {
 			if bi.debug {
 				fmt.Println(purple("Phase "+strconv.Itoa(i+1)) + ": " + red(names[step], " started"))
 			}
