@@ -106,6 +106,21 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 			}
 		}
 
+		// Identify every branching instruction, the identifier will be the line number of the starting point. To identify the end point, we will
+		// use the label.
+		// This will only work with labels, not with numbers. For this reason, it will execute after labeltagger and before labelresolver.
+
+		// Create a copy of the fragment body
+		// upper branch
+
+		// lower branch
+
+		// Fill with nops
+
+		// Compute the usage of reasource for each copy
+
+		// Union of the copies
+
 	}
 	// panic("fragmentAnalyzer not finished")
 	return nil
