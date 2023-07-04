@@ -347,5 +347,21 @@ func (Op R2o) ExtraFiles(arch *Arch) ([]string, []string) {
 }
 
 func (Op R2o) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	switch line.Operation.GetValue() {
+	case "r20":
+		regDst := line.Elements[0].GetValue()
+		if regDst != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("use", regDst)
+			return meta, nil
+		}
+	case "mov":
+		regDst := line.Elements[1].GetValue()
+		if regDst != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("use", regDst)
+			return meta, nil
+		}
+	}
 	return nil, nil
 }

@@ -233,5 +233,14 @@ func (Op Jz) ExtraFiles(arch *Arch) ([]string, []string) {
 }
 
 func (Op Jz) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	switch line.Operation.GetValue() {
+	case "jz":
+		regDst := line.Elements[0].GetValue()
+		if regDst != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("use", regDst)
+			return meta, nil
+		}
+	}
 	return nil, nil
 }

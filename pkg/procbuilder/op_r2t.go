@@ -266,7 +266,7 @@ func (Op R2t) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 	case "r2t":
 		regVal := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		soVal := line.Elements[0].GetValue()
+		soVal := line.Elements[1].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		return line, nil
 	case "push":
@@ -323,5 +323,21 @@ func (Op R2t) ExtraFiles(arch *Arch) ([]string, []string) {
 }
 
 func (Op R2t) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	switch line.Operation.GetValue() {
+	case "r2t", "push":
+		regDst := line.Elements[0].GetValue()
+		if regDst != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("use", regDst)
+			return meta, nil
+		}
+	case "mov":
+		regDst := line.Elements[1].GetValue()
+		if regDst != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("use", regDst)
+			return meta, nil
+		}
+	}
 	return nil, nil
 }

@@ -204,7 +204,6 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 
 						}
 					}
-
 				}
 			}
 		}

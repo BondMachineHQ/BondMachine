@@ -196,5 +196,15 @@ func (Op Dec) ExtraFiles(arch *Arch) ([]string, []string) {
 }
 
 func (Op Dec) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	switch line.Operation.GetValue() {
+	case "dec":
+		regDst := line.Elements[0].GetValue()
+		if regDst != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("inv", regDst)
+			meta = meta.SetMeta("use", regDst)
+			return meta, nil
+		}
+	}
 	return nil, nil
 }

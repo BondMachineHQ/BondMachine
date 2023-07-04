@@ -219,5 +219,14 @@ func (Op Rset) ExtraFiles(arch *Arch) ([]string, []string) {
 }
 
 func (Op Rset) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	switch line.Operation.GetValue() {
+	case "rset":
+		regNeed := line.Elements[0].GetValue()
+		if regNeed != "" {
+			var meta *bmmeta.BasmMeta
+			meta = meta.SetMeta("inv", regNeed)
+			return meta, nil
+		}
+	}
 	return nil, nil
 }
