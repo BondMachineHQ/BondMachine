@@ -1,6 +1,9 @@
 package bmmeta
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // Metadata
 type BasmMeta struct {
@@ -62,6 +65,27 @@ func (bm *BasmMeta) SetMeta(meta string, value string) *BasmMeta {
 		return newbm
 	}
 	bm.metaData[meta] = value
+	return bm
+
+}
+
+func (bm *BasmMeta) AddMeta(meta string, value string) *BasmMeta {
+	if bm == nil {
+		newbm := new(BasmMeta)
+		newbm.metaData = make(map[string]string)
+		newbm.metaData[meta] = value
+		return newbm
+	}
+	if _, ok := bm.metaData[meta]; ok {
+		splitted := strings.Split(bm.metaData[meta], ":")
+		if !stringInSlice(value, splitted) {
+			splitted = append(splitted, value)
+			sort.Strings(splitted)
+			bm.metaData[meta] = strings.Join(splitted, ":")
+		}
+	} else {
+		bm.metaData[meta] = value
+	}
 	return bm
 
 }
