@@ -17,7 +17,10 @@ const (
 
 func (bi *BasmInstance) fragmentResUsage(body *bmline.BasmBody, circular bool) error {
 	//TODO finish this
-	fmt.Println("fragmentResUsage", body, circular)
+	if bi.debug {
+		// TODO Better formatting
+		fmt.Println("fragmentResUsage", body, circular)
+	}
 
 	// Get all resources used by the fragment
 	resUsed := body.GetMeta("resused")
@@ -288,8 +291,12 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 			}
 		}
 
-		// Union of the copies
+		// TODO Eventually: Union of the copies
+
+		// TODO Temporary copy the main body
+		fragment.fragmentBody = branchingBlocks[0]
+
 	}
-	panic("fragmentAnalyzer not finished")
+	// panic("fragmentAnalyzer not finished")
 	return nil
 }

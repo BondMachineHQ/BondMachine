@@ -8,15 +8,16 @@ const (
 	passLabelTagger           = uint64(4)
 	passMetadataInfer1        = uint64(8)
 	passFragmentAnalyzer      = uint64(16)
-	passFragmentPruner        = uint64(32)
-	passFragmentComposer      = uint64(64)
-	passMetadataInfer2        = uint64(128)
-	passDataSections2Bytes    = uint64(256)
-	passEntryPoints           = uint64(512)
-	passLabelsResolver        = uint64(1024)
-	passRomComposer           = uint64(2048)
-	passMatcherResolver       = uint64(4096)
-	LAST_PASS                 = uint64(4096)
+	passFragmentOptimizer1    = uint64(32)
+	passFragmentPruner        = uint64(64)
+	passFragmentComposer      = uint64(128)
+	passMetadataInfer2        = uint64(256)
+	passDataSections2Bytes    = uint64(512)
+	passEntryPoints           = uint64(1024)
+	passLabelsResolver        = uint64(2048)
+	passRomComposer           = uint64(4096)
+	passMatcherResolver       = uint64(8192)
+	LAST_PASS                 = uint64(8192)
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {
@@ -33,6 +34,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passFragmentAnalyzer:      fragmentAnalyzer,
 		passFragmentPruner:        fragmentPruner,
 		passFragmentComposer:      fragmentComposer,
+		passFragmentOptimizer1:    fragmentOptimizer,
 		passRomComposer:           romComposer,
 	}
 }
@@ -51,6 +53,7 @@ func getPassFunctionName() map[uint64]string {
 		passFragmentAnalyzer:      "fragmentAnalyzer",
 		passFragmentPruner:        "fragmentPruner",
 		passFragmentComposer:      "fragmentComposer",
+		passFragmentOptimizer1:    "fragmentOptimizer",
 		passRomComposer:           "romComposer",
 	}
 }
@@ -69,11 +72,12 @@ func IsOptionalPass() map[uint64]bool {
 		passFragmentAnalyzer:      false,
 		passFragmentPruner:        false,
 		passFragmentComposer:      false,
+		passFragmentOptimizer1:    true,
 		passRomComposer:           false,
 	}
 }
 
-func (bi *BasmInstance) activePass(active uint64) bool {
+func (bi *BasmInstance) ActivePass(active uint64) bool {
 	return (bi.passes & active) != uint64(0)
 }
 
@@ -91,6 +95,7 @@ func GetPassMnemonic() map[uint64]string {
 		passFragmentAnalyzer:      "fragmentanalyzer",
 		passFragmentPruner:        "fragmentpruner",
 		passFragmentComposer:      "fragmentcomposer",
+		passFragmentOptimizer1:    "fragmentoptimizer",
 		passRomComposer:           "romcomposer",
 	}
 

@@ -33,6 +33,7 @@ type BasmInstance struct {
 	fragments        map[string]*BasmFragment
 	chunks           map[string]*BasmChunk
 	passes           uint64
+	optimizations    map[int]struct{}
 	matchers         []*bmline.BasmLine
 	matchersOps      []procbuilder.Opcode
 	bm               *bondmachine.Bondmachine
@@ -87,7 +88,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 	bi.sections = make(map[string]*BasmSection)
 	bi.fragments = make(map[string]*BasmFragment)
 	bi.chunks = make(map[string]*BasmChunk)
-	bi.passes = uint64(8191)
+	bi.passes = uint64(16351)
 	bi.matchers = make([]*bmline.BasmLine, 0)
 	bi.matchersOps = make([]procbuilder.Opcode, 0)
 
@@ -154,7 +155,7 @@ func (bi *BasmInstance) RunAssembler() error {
 
 	passes := getPassFunction()
 	for i := 0; i < 64; i++ {
-		if bi.activePass(step) {
+		if bi.ActivePass(step) {
 			if bi.debug {
 				fmt.Println(purple("Phase "+strconv.Itoa(i+1)) + ": " + red(names[step], " started"))
 			}

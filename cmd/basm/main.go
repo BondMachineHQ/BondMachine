@@ -39,6 +39,9 @@ var listPasses = flag.Bool("list-passes", false, "List the available passes")
 var actPasses = flag.String("activate-passes", "", "List of comma separated optional passes to activate (default: none)")
 var deactPasses = flag.String("deactivate-passes", "", "List of comma separated optional passes to deactivate (default: none)")
 
+var listOptimizations = flag.Bool("list-optimizations", false, "List the available optimizations")
+var actOptimizations = flag.String("activate-optimizations", "", "List of comma separated optional optimizations to activate (default: none, everything: all)")
+
 func init() {
 	flag.Parse()
 
@@ -142,10 +145,26 @@ func main() {
 		pass := uint64(1)
 
 		for i := 1; pass != basm.LAST_PASS; i++ {
-			fmt.Printf("  %02d: %s\n", i, mne[pass])
+			if bi.ActivePass(pass) {
+				fmt.Printf("  %02d: %s\n", i, mne[pass])
+			}
 			pass = pass << 1
 		}
 
+	}
+
+	if *actOptimizations != "" {
+		optA := strings.Split(*actOptimizations, ",")
+		for _, o := range optA {
+			if err := bi.ActivateOptimization(o); err != nil {
+				bi.Alert("Error while activating optimization:", err)
+				return
+			}
+		}
+	}
+
+	if *listOptimizations || *debug || *verbose {
+		// TODO: Finish this
 	}
 
 	startAssembling := false

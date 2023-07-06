@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
-	"github.com/kr/pretty"
 	"github.com/llir/llvm/asm"
 	"github.com/llir/llvm/ir"
 	"github.com/llir/llvm/ir/value"
@@ -53,7 +52,6 @@ func (bi *BasmInstance) ParseAssemblyLLVM(filePath string) error {
 		resin := make([]string, len(f.Params))
 
 		for i, param := range f.Params {
-			pretty.Println(param.LocalID)
 			assocMap[param.LocalID] = "r" + fmt.Sprint(param.LocalID)
 			resin[i] = "r" + fmt.Sprint(param.LocalID)
 		}
@@ -182,7 +180,7 @@ func (bi *BasmInstance) ParseAssemblyLLVM(filePath string) error {
 
 			}
 		}
-		pretty.Println(f)
+		//pretty.Println(f)
 
 		bi.fragments[fName] = newFragment
 	}
