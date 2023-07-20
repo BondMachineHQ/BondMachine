@@ -264,7 +264,7 @@ func main() {
 		}
 	}
 
-	if checks, ok := mymachine.Constraint_check(); ok {
+	if checks, ok := mymachine.ConstraintCheck(); ok {
 
 		if *verbose {
 			fmt.Print(checks)

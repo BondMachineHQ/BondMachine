@@ -209,7 +209,7 @@ func (machj *Machine_json) Dejsoner() *Machine {
 	return result
 }
 
-func (mach *Machine) Constraint_check() (string, bool) {
+func (mach *Machine) ConstraintCheck() (string, bool) {
 	result := ""
 	shared := make([]string, 0)
 	required := make([]string, 0)
@@ -287,7 +287,7 @@ func (mach *Machine) Constraint_check() (string, bool) {
 		}
 	}
 
-	// Checking conflitting modes
+	// Checking conflicting modes
 	for _, mode := range forbidden {
 		for _, req := range required {
 			if mode == req {
