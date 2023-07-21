@@ -14,26 +14,26 @@ func (rom *Rom) String() string {
 }
 
 func (rom *Rom) Write_verilog(mach *Machine, rom_module_name string, flavor string) string {
-	rom_word := mach.Max_word()
+	wordSize := mach.Max_word()
 
 	result := ""
 
 	// Module header
 	result += "`timescale 1ns/1ps\n"
-	result += "module " + rom_module_name + "(input [" + strconv.Itoa(int(rom.O)-1) + ":0] rom_bus, output [" + strconv.Itoa(rom_word-1) + ":0] rom_value);\n"
+	result += "module " + rom_module_name + "(input [" + strconv.Itoa(int(rom.O)-1) + ":0] rom_bus, output [" + strconv.Itoa(wordSize-1) + ":0] rom_value);\n"
 
-	result += "\treg [" + strconv.Itoa(rom_word-1) + ":0] _rom [0:" + strconv.Itoa((1<<rom.O)-1) + "];\n"
+	result += "\treg [" + strconv.Itoa(wordSize-1) + ":0] _rom [0:" + strconv.Itoa((1<<rom.O)-1) + "];\n"
 	result += "\tinitial\n"
 	result += "\tbegin\n"
 
 	i := 0
 	for _, inst := range mach.Program.Slocs {
-		result += "\t_rom[" + strconv.Itoa(i) + "] = " + strconv.Itoa(rom_word) + "'b" + inst + ";\n"
+		result += "\t_rom[" + strconv.Itoa(i) + "] = " + strconv.Itoa(wordSize) + "'b" + inst + ";\n"
 		i++
 	}
 
 	for _, inst := range mach.Data.Vars {
-		result += "\t_rom[" + strconv.Itoa(i) + "] = " + strconv.Itoa(rom_word) + "'b" + inst + ";\n"
+		result += "\t_rom[" + strconv.Itoa(i) + "] = " + strconv.Itoa(wordSize) + "'b" + inst + ";\n"
 		i++
 	}
 

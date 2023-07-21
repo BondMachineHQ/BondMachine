@@ -546,6 +546,7 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 
 	myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))
 
+	// TODO remove it, just for testing purposes	myArch.WordSize = uint8(8)
 	// The shared constrains will be populated later from the basm metadata
 	myArch.Shared_constraints = ""
 

@@ -15,6 +15,7 @@ type Machine struct {
 type Machine_json struct {
 	Modes              []string
 	Rsize              uint8
+	WordSize           uint8
 	R                  uint8 // Number of n-bit registers
 	N                  uint8 // Number of n-bit inputs
 	M                  uint8 // Number of n-bit outputs
@@ -158,6 +159,7 @@ func (mach *Machine) Jsoner() *Machine_json {
 	result.M = mach.M
 	result.L = mach.L
 	result.O = mach.O
+	result.WordSize = mach.WordSize
 	result.Shared_constraints = mach.Shared_constraints
 	result.Slocs = make([]string, len(mach.Slocs))
 	result.Vars = make([]string, len(mach.Vars))
@@ -186,6 +188,7 @@ func (machj *Machine_json) Dejsoner() *Machine {
 	result.M = machj.M
 	result.L = machj.L
 	result.O = machj.O
+	result.WordSize = machj.WordSize
 	result.Shared_constraints = machj.Shared_constraints
 	result.Slocs = make([]string, len(machj.Slocs))
 	result.Vars = make([]string, len(machj.Vars))

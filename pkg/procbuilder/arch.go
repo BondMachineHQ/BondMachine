@@ -15,6 +15,7 @@ type Arch struct {
 	Ram
 	Shared_constraints string
 	Tag                string
+	WordSize           uint8 // 0 means automatic computed, otherwise it is the size in bits of the word
 }
 
 func (arch *Arch) Shared_num(soname string) int {
@@ -64,22 +65,18 @@ func (arch *Arch) String() string {
 }
 
 func (arch *Arch) Max_word() int {
-	now := 1
-	for _, op := range arch.Op {
-		neww := op.Op_get_instruction_len(arch)
-		if neww > now {
-			now = neww
+	if arch.WordSize == 0 {
+		now := 1
+		for _, op := range arch.Op {
+			neww := op.Op_get_instruction_len(arch)
+			if neww > now {
+				now = neww
+			}
 		}
+		return now
+	} else {
+		return int(arch.WordSize)
 	}
-
-	//	served := 1
-	//	for bits := 1; bits < 16; bits++ {
-	//		if served<<uint8(bits) >= now {
-	//			return int(served << uint8(bits))
-	//		}
-	//	}
-
-	return now
 }
 
 func (arch *Arch) Write_verilog(arch_module_name string, modules_names map[string]string, flavor string) string {
