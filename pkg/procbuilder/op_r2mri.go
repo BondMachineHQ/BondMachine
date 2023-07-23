@@ -139,7 +139,6 @@ func (op R2mri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 func (op R2mri) Assembler(arch *Arch, words []string) (string, error) {
 	opbits := arch.Opcodes_bits()
 	rom_word := arch.Max_word()
-	ramdepth := int(arch.L)
 
 	reg_num := 1 << arch.R
 
@@ -159,13 +158,21 @@ func (op R2mri) Assembler(arch *Arch, words []string) (string, error) {
 		return "", Prerror{"Unknown register name " + words[0]}
 	}
 
-	if partial, err := Process_number(words[1]); err == nil {
-		result += zeros_prefix(ramdepth, partial)
-	} else {
-		return "", Prerror{err.Error()}
+	partial := ""
+	for i := 0; i < reg_num; i++ {
+		if words[1] == strings.ToLower(Get_register_name(i)) {
+			partial += zeros_prefix(int(arch.R), get_binary(i))
+			break
+		}
 	}
 
-	for i := opbits + int(arch.R) + ramdepth; i < rom_word; i++ {
+	if partial == "" {
+		return "", Prerror{"Unknown register name " + words[1]}
+	}
+
+	result += partial
+
+	for i := opbits + 2*int(arch.R); i < rom_word; i++ {
 		result += "0"
 	}
 
@@ -173,11 +180,10 @@ func (op R2mri) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op R2mri) Disassembler(arch *Arch, instr string) (string, error) {
-	ramdepth := int(arch.L)
 	reg_id := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(reg_id)) + " "
-	value := get_id(instr[arch.R : int(arch.R)+ramdepth])
-	result += strconv.Itoa(value)
+	reg_id = get_id(instr[arch.R : 2*int(arch.R)])
+	result += strings.ToLower(Get_register_name(reg_id))
 	return result, nil
 }
 
@@ -253,7 +259,7 @@ func (Op R2mri) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string
 		return line, nil
 	case "mov":
 		regVal := line.Elements[1].GetValue()
-		ramVal := line.Elements[0].GetValue()
+		ramVal := line.Elements[0].GetMeta("ramregister")
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: ramVal, Op: bmreqs.OpAdd})
 		if regVal != "" && ramVal != "" {

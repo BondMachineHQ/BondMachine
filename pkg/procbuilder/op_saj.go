@@ -68,8 +68,9 @@ func (op Saj) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Saj) Disassembler(arch *Arch, instr string) (string, error) {
-	// TODO
-	return "", nil
+	value := get_id(instr[:arch.O])
+	result := strconv.Itoa(value)
+	return result, nil
 }
 
 // The simulation does nothing
@@ -132,10 +133,17 @@ func (Op Saj) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 	return result
 }
 func (Op Saj) HLAssemblerMatch(arch *Arch) []string {
-	result := make([]string, 0)
+	result := make([]string, 2)
+	result[0] = "saj::*--type=lineno"
+	result[0] = "saj::*--type=number--numbertype=unsigned"
+	result[1] = "saj::*--type=label"
 	return result
 }
 func (Op Saj) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+	switch line.Operation.GetValue() {
+	case "saj":
+		return line, nil
+	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
 func (Op Saj) ExtraFiles(arch *Arch) ([]string, []string) {
