@@ -212,9 +212,41 @@ func (Op M2r) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 }
 func (Op M2r) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
+	result = append(result, "m2r::*--type=reg::*--type=number")
+	result = append(result, "mov::*--type=reg::*--type=ram--ramaddressing=immediate")
 	return result
 }
 func (Op M2r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+	switch line.Operation.GetValue() {
+	case "m2r":
+		regNeed := line.Elements[0].GetValue()
+		location := line.Elements[1].GetMeta("location")
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectMax, Name: "ram", Value: location, Op: bmreqs.OpAdd})
+		return line, nil
+	case "mov":
+		regNeed := line.Elements[0].GetValue()
+		location := line.Elements[1].GetMeta("location")
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectMax, Name: "ram", Value: location, Op: bmreqs.OpAdd})
+		if regNeed != "" && location != "" {
+			newLine := new(bmline.BasmLine)
+			newOp := new(bmline.BasmElement)
+			newOp.SetValue("m2r")
+			newLine.Operation = newOp
+			newArgs := make([]*bmline.BasmElement, 2)
+			newArg0 := new(bmline.BasmElement)
+			newArg0.BasmMeta = newArg0.SetMeta("type", "reg")
+			newArg0.SetValue(regNeed)
+			newArgs[0] = newArg0
+			newArg1 := new(bmline.BasmElement)
+			newArg1.SetValue(location)
+			newArg1.BasmMeta = newArg1.SetMeta("type", "number")
+			newArgs[1] = newArg1
+			newLine.Elements = newArgs
+			return newLine, nil
+		}
+	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
 func (Op M2r) ExtraFiles(arch *Arch) ([]string, []string) {

@@ -244,20 +244,16 @@ func (Op R2m) HLAssemblerMatch(arch *Arch) []string {
 	return result
 }
 func (Op R2m) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
-	// TODO Finish
 	switch line.Operation.GetValue() {
 	case "r2m":
 		regVal := line.Elements[0].GetValue()
-		ramVal := line.Elements[1].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: ramVal, Op: bmreqs.OpAdd})
 		return line, nil
 	case "mov":
 		regVal := line.Elements[1].GetValue()
-		ramVal := line.Elements[0].GetValue()
+		location := line.Elements[0].GetMeta("location")
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: ramVal, Op: bmreqs.OpAdd})
-		if regVal != "" && ramVal != "" {
+		if regVal != "" && location != "" {
 			newLine := new(bmline.BasmLine)
 			newOp := new(bmline.BasmElement)
 			newOp.SetValue("r2m")
@@ -268,7 +264,7 @@ func (Op R2m) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 			newArg0.SetValue(regVal)
 			newArgs[0] = newArg0
 			newArg1 := new(bmline.BasmElement)
-			newArg1.SetValue(ramVal)
+			newArg1.SetValue(location)
 			newArg1.BasmMeta = newArg1.SetMeta("type", "number")
 			newArgs[1] = newArg1
 			newLine.Elements = newArgs

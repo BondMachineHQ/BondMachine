@@ -22,6 +22,7 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 			re := regexp.MustCompile("^r[0-9]+$")
 			if re.MatchString(arg.GetValue()) {
 				arg.BasmMeta = arg.SetMeta("type", "reg")
+				continue
 			}
 
 			// re = regexp.MustCompile("^[0-9]+$")
@@ -35,12 +36,13 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 			// 	arg.BasmMeta = arg.SetMeta("numbertype", "float")
 			// }
 
-			re = regexp.MustCompile("^rom:\\[(?P<location>[0-9]+)\\]$")
+			re = regexp.MustCompile("^rom:(?P<location>[0-9]+)$")
 			if re.MatchString(arg.GetValue()) {
 				arg.BasmMeta = arg.SetMeta("type", "rom")
 				arg.BasmMeta = arg.SetMeta("romaddressing", "immediate")
 				location := re.ReplaceAllString(arg.GetValue(), "${location}")
 				arg.BasmMeta = arg.SetMeta("location", location)
+				continue
 			}
 			re = regexp.MustCompile("^rom:(?P<var>[0-9a-zA-Z_]+)$")
 			if re.MatchString(arg.GetValue()) {
@@ -48,6 +50,7 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 				arg.BasmMeta = arg.SetMeta("romaddressing", "variable")
 				variable := re.ReplaceAllString(arg.GetValue(), "${var}")
 				arg.BasmMeta = arg.SetMeta("variable", variable)
+				continue
 			}
 			re = regexp.MustCompile("^rom:\\[(?P<reg>r[0-9]+)\\]$")
 			if re.MatchString(arg.GetValue()) {
@@ -55,13 +58,15 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 				arg.BasmMeta = arg.SetMeta("romaddressing", "register")
 				regAddr := re.ReplaceAllString(arg.GetValue(), "${reg}")
 				arg.BasmMeta = arg.SetMeta("romregister", regAddr)
+				continue
 			}
-			re = regexp.MustCompile("^ram:\\[(?P<location>[0-9]+)\\]$")
+			re = regexp.MustCompile("^ram:(?P<location>[0-9]+)$")
 			if re.MatchString(arg.GetValue()) {
 				arg.BasmMeta = arg.SetMeta("type", "ram")
 				arg.BasmMeta = arg.SetMeta("ramaddressing", "immediate")
 				location := re.ReplaceAllString(arg.GetValue(), "${location}")
 				arg.BasmMeta = arg.SetMeta("location", location)
+				continue
 			}
 			re = regexp.MustCompile("^ram:(?P<var>[0-9a-zA-Z_]+)$")
 			if re.MatchString(arg.GetValue()) {
@@ -69,6 +74,7 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 				arg.BasmMeta = arg.SetMeta("ramaddressing", "variable")
 				variable := re.ReplaceAllString(arg.GetValue(), "${var}")
 				arg.BasmMeta = arg.SetMeta("variable", variable)
+				continue
 			}
 			re = regexp.MustCompile("^ram:\\[(?P<reg>r[0-9]+)\\]$")
 			if re.MatchString(arg.GetValue()) {
@@ -76,6 +82,7 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 				arg.BasmMeta = arg.SetMeta("ramaddressing", "register")
 				regAddr := re.ReplaceAllString(arg.GetValue(), "${reg}")
 				arg.BasmMeta = arg.SetMeta("ramregister", regAddr)
+				continue
 			}
 			re = regexp.MustCompile("^(?P<input>i[0-9]+):?$")
 			if re.MatchString(arg.GetValue()) {
@@ -102,6 +109,7 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 						}
 					}
 				}
+				continue
 			}
 			re = regexp.MustCompile("^(?P<output>o[0-9]+):?$")
 			if re.MatchString(arg.GetValue()) {
@@ -128,6 +136,7 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 						}
 					}
 				}
+				continue
 			}
 
 			for _, soname := range soShortNames {
