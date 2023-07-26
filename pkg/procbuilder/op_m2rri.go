@@ -269,7 +269,7 @@ func (Op M2rri) Op_instruction_verilog_extra_block(arch *Arch, flavor string, le
 func (Op M2rri) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
 	result = append(result, "m2rri::*--type=reg::*--type=reg")
-	result = append(result, "mov::*--type=reg::*--type=rom--ramaddressing=register")
+	result = append(result, "mov::*--type=reg::*--type=ram--ramaddressing=register")
 	return result
 }
 func (Op M2rri) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {

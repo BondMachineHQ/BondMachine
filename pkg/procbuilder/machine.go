@@ -80,6 +80,7 @@ func init() {
 	Allopcodes = append(Allopcodes, Lfsr82r{})
 	// TODO: planned Allopcodes = append(Allopcodes, Lfsr162r{})
 	Allopcodes = append(Allopcodes, M2r{})
+	Allopcodes = append(Allopcodes, M2rri{})
 	Allopcodes = append(Allopcodes, Mod{})
 	Allopcodes = append(Allopcodes, Mulc{})
 	Allopcodes = append(Allopcodes, Mult{})

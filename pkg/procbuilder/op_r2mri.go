@@ -95,7 +95,8 @@ func (op R2mri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 	}
 	if setflag {
 		result += "\tassign ram_din = ram_din_i;\n"
-		result += "\tassign ram_addr = (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2R) ? addr_ram_m2r : addr_ram_r2mri;\n"
+		// TODO Finish this
+		result += "\tassign ram_addr = (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==R2MRI) ? addr_ram_m2r : addr_ram_r2mri;\n"
 		result += "\tassign ram_wren = wr_int_ram;\n"
 		result += "\tassign ram_en = 1'b1;\n"
 	}
