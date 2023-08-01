@@ -35,7 +35,9 @@ func (op M2r) Op_get_instruction_len(arch *Arch) int {
 func (op M2r) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
 	result := ""
 	result += "\t//Internal Reg Wire for M2R opcode\n"
-	result += "\treg state_read_mem;\n"
+	if arch.OnlyOne(op.Op_get_name(), []string{"m2r", "m2rri"}) {
+		result += "\treg state_read_mem;\n"
+	}
 	result += "\twire [" + strconv.Itoa(int(arch.L)-1) + ":0] addr_ram_m2r;\n"
 	result += "\n"
 	return result
@@ -75,6 +77,12 @@ func (Op M2r) Op_instruction_verilog_internal_state(arch *Arch, flavor string) s
 	return result
 }
 
+func (Op M2r) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
+	result := ""
+	result += "\t\t\t\tstate_read_mem <= #1 1'b0;\n"
+	return result
+}
+
 func (op M2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	result := ""
 	result += "					M2R: begin\n"
@@ -84,31 +92,43 @@ func (op M2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 }
 
 func (op M2r) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
+	result := ""
+
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 
-	result := ""
-	result += "\t//logic code to control the address to read RAM\n"
-	result += "\tassign addr_ram_m2r = rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.L)) + "];\n"
-
-	setflag := true
-	for _, currop := range arch.Op {
-		if currop.Op_get_name() == "r2m" {
-			setflag = false
-			break
-		} else if currop.Op_get_name() == "m2r" {
-			break
-		}
-	}
-	if setflag {
-		result += "\tassign ram_din = ram_din_i;\n"
-		result += "\tassign ram_addr = (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2R) ? addr_ram_m2r : addr_ram_r2m;\n"
-		result += "\tassign ram_wren = wr_int_ram;\n"
+	// The ram is enabled if any of the opcodes is active
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {
 		result += "\tassign ram_en = 1'b1;\n"
 	}
 
-	return result
+	// The ram write signals
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m"}) {
+		result += "\tassign ram_din = ram_din_i;\n"
+		result += "\tassign ram_wren = wr_int_ram;\n"
+	}
 
+	ramAddr := ""
+	if arch.HasAny([]string{"r2mri", "r2m"}) {
+		ramAddr += "addr_ram_to_mem"
+	}
+
+	if arch.HasOp("m2r") {
+		ramAddr = " (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2R) ? addr_ram_m2r : " + ramAddr
+	}
+
+	if arch.HasOp("m2rri") {
+		ramAddr = " (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2RRI) ? addr_ram_m2rri: " + ramAddr
+	}
+
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {
+		result += "\tassign ram_addr = " + ramAddr + ";\n"
+	}
+
+	result += "\t//logic code to control the address to read RAM\n"
+	result += "\tassign addr_ram_m2r = rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.L)) + "];\n"
+
+	return result
 }
 
 func (op M2r) Assembler(arch *Arch, words []string) (string, error) {
@@ -182,12 +202,6 @@ func (op M2r) Required_modes() (bool, []string) {
 
 func (op M2r) Forbidden_modes() (bool, []string) {
 	return false, []string{}
-}
-
-func (Op M2r) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
-	result := ""
-	result += "\t\t\t\tstate_read_mem <= #1 1'b0;\n"
-	return result
 }
 
 func (Op M2r) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {

@@ -18,7 +18,7 @@ func (op R2mri) Op_get_name() string {
 }
 
 func (op R2mri) Op_get_desc() string {
-	return "Copy a register value to the ram"
+	return "Register indirect copy to RAM"
 }
 
 func (op R2mri) Op_show_assembler(arch *Arch) string {
@@ -34,16 +34,18 @@ func (op R2mri) Op_get_instruction_len(arch *Arch) int {
 
 func (op R2mri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
 	result := ""
-	result += "\treg [" + strconv.Itoa(int(arch.L)-1) + ":0] addr_ram_r2mri;\n"
-	result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] ram_din_i;\n"
-	result += "\treg wr_int_ram;\n"
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2m", "r2mri"}) {
+		result += "\treg [" + strconv.Itoa(int(arch.L)-1) + ":0] addr_ram_to_mem;\n"
+		result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] ram_din_i;\n"
+		result += "\treg wr_int_ram;\n"
+	}
 	return result
 }
 
 func (Op R2mri) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	result := ""
 	//result += "\t\t\twr_int_ram <= #1 1'b0;\n"
-	//result += "\t\t\taddr_ram_r2mri <= #1 'b0;\n"
+	//result += "\t\t\taddr_ram_to_mem <= #1 'b0;\n"
 	//result += "\t\t\tram_din_i <= #1 'b0;\n"
 	return result
 }
@@ -56,20 +58,6 @@ func (op R2mri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 
 	result := ""
 	result += "					R2MRI: begin\n"
-	/*if arch.R == 1 {
-		result += "					case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
-	} else {
-		result += "					case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
-	}
-	for i := 0; i < reg_num; i++ {
-		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "							wr_int_ram <= #1 1'b1;\n"
-		result += "							addr_ram_r2mri <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.Rsize)) + "];\n"
-		result += "							ram_din_i <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
-		result += "							$display(\"R2MRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
-		result += "						end\n"
-	}
-	result += "						endcase\n"*/
 	result += "						_pc <= #1 _pc + 1'b1 ;\n"
 	result += "					end\n"
 
@@ -82,38 +70,59 @@ func (op R2mri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 
-	reg_num := 1 << arch.R
-
-	setflag := true
-	for _, currop := range arch.Op {
-		if currop.Op_get_name() == "m2r" {
-			setflag = false
-			break
-		} else if currop.Op_get_name() == "r2mri" {
-			break
-		}
-	}
-	if setflag {
-		result += "\tassign ram_din = ram_din_i;\n"
-		// TODO Finish this
-		result += "\tassign ram_addr = (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==R2MRI) ? addr_ram_m2r : addr_ram_r2mri;\n"
-		result += "\tassign ram_wren = wr_int_ram;\n"
+	// The ram is enabled if any of the opcodes is active
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {
 		result += "\tassign ram_en = 1'b1;\n"
 	}
 
-	result += "\talways @(rom_value"
-	for i := 0; i < reg_num; i++ {
-		result += ",_" + strings.ToLower(Get_register_name(i))
+	// The ram write signals
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m"}) {
+		result += "\tassign ram_din = ram_din_i;\n"
+		result += "\tassign ram_wren = wr_int_ram;\n"
 	}
-	result += ")\n"
 
-	result += "\tbegin\n"
-
-	if opbits == 1 {
-		result += "		if(rom_value[" + strconv.Itoa(rom_word-1) + "] == R2MRI) begin\n"
-	} else {
-		result += "		if(rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "] == R2MRI) begin\n"
+	ramAddr := ""
+	if arch.HasAny([]string{"r2mri", "r2m"}) {
+		ramAddr += "addr_ram_to_mem"
 	}
+
+	if arch.HasOp("m2r") {
+		ramAddr = " (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2R) ? addr_ram_m2r : " + ramAddr
+	}
+
+	if arch.HasOp("m2rri") {
+		ramAddr = " (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2RRI) ? addr_ram_m2rri: " + ramAddr
+	}
+
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {
+		result += "\tassign ram_addr = " + ramAddr + ";\n"
+	}
+
+	reg_num := 1 << arch.R
+
+	// This is always the last module if present
+	firstModule := true
+	lastModule := true
+
+	// If r2m is also present, that will be the first opcode
+	for _, currOp := range arch.Op {
+		if currOp.Op_get_name() == "r2m" {
+			firstModule = false
+			break
+		}
+	}
+
+	if firstModule {
+		result += "\talways @(posedge clock_signal)\n"
+		result += "\tbegin\n"
+		if opbits == 1 {
+			result += "\t\tcase (rom_value[" + strconv.Itoa(rom_word-1) + "])\n"
+		} else {
+			result += "\t\tcase (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
+		}
+	}
+
+	result += "		R2MRI: begin\n"
 
 	if arch.R == 1 {
 		result += "			case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
@@ -122,17 +131,34 @@ func (op R2mri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 	}
 	for i := 0; i < reg_num; i++ {
 		result += "				" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "					wr_int_ram <= 1'b1;\n"
-		result += "					addr_ram_r2mri <= rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.L)) + "];\n"
-		result += "					ram_din_i <= _" + strings.ToLower(Get_register_name(i)) + ";\n"
-		result += "					$display(\"R2MRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
+
+		if arch.R == 1 {
+			result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + "])\n"
+		} else {
+			result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.R)) + "])\n"
+		}
+
+		for j := 0; j < reg_num; j++ {
+			result += "						" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
+			result += "							wr_int_ram <= 1'b1;\n"
+			result += "							addr_ram_to_mem <= _" + strings.ToLower(Get_register_name(j)) + ";\n"
+			result += "							ram_din_i <= _" + strings.ToLower(Get_register_name(i)) + ";\n"
+			result += "							$display(\"R2MRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
+			result += "						end\n"
+
+		}
+		result += "							endcase\n"
+
 		result += "				end\n"
 	}
 	result += "			endcase\n"
 	result += "\t	end\n"
-	result += "\t	else\n"
-	result += "			wr_int_ram <= 1'b0;\n"
-	result += "\tend\n"
+	if lastModule {
+		result += "\t	default:\n"
+		result += "			wr_int_ram <= 1'b0;\n"
+		result += "\t	endcase\n"
+		result += "\tend\n"
+	}
 
 	return result
 }

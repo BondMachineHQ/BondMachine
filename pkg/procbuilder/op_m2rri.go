@@ -32,79 +32,114 @@ func (op M2rri) Op_get_instruction_len(arch *Arch) int {
 }
 
 func (op M2rri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
+	result := ""
+	result += "\t//Internal Reg Wire for M2R opcode\n"
+	if arch.OnlyOne(op.Op_get_name(), []string{"m2r", "m2rri"}) {
+		result += "\treg state_read_mem;\n"
+	}
+	result += "\treg [" + strconv.Itoa(int(arch.L)-1) + ":0] addr_ram_m2rri;\n"
+	result += "\n"
+	return result
+}
+
+func (Op M2rri) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
+	result := ""
+	result += "\t\t\tstate_read_mem <= #1 1'b0;\n"
+	return result
+}
+
+func (Op M2rri) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
+	rom_word := arch.Max_word()
+	opbits := arch.Opcodes_bits()
+
+	reg_num := 1 << arch.R
 
 	result := ""
+	result += "\t\t\tif(state_read_mem) begin\n"
 
-	// Check if the romread facility has already been included
-	romreadflag := conf.Runinfo.Check("romread")
-
-	// If not, include it
-	if romreadflag {
-
-		romWord := arch.Max_word()
-
-		result += "\twire [" + strconv.Itoa(int(romWord-1)) + ":0] romread_value;\n"
-		result += "\treg [" + strconv.Itoa(int(arch.O)-1) + ":0] romread_bus;\n"
-		result += "\treg romread_ready;\n"
-		result += "\n"
-		result += "\t" + pname + "rom romread_instance(romread_bus,romread_value);\n"
-
+	if arch.R == 1 {
+		result += "				case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+	} else {
+		result += "				case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
+	for i := 0; i < reg_num; i++ {
+		result += "					" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
+		result += "						_" + strings.ToLower(Get_register_name(i)) + " <= #1 ram_dout;\n"
+		result += "						state_read_mem <= #1 1'b0;\n"
+		result += "						$display(\"M2RRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
+		result += "					end\n"
+	}
+	result += "				endcase\n"
+	result += "\t\t\t\t_pc <= #1 _pc + 1'b1;\n"
+	result += "\t\t\tend\n"
 
 	return result
 }
 
+func (Op M2rri) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
+	return ""
+}
 func (op M2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	romWord := arch.Max_word()
-	opbits := arch.Opcodes_bits()
-
+	opBits := arch.Opcodes_bits()
 	regNum := 1 << arch.R
 
 	result := ""
 	result += "					M2RRI: begin\n"
+	result += "						state_read_mem <= #1 1'b1;\n"
 	if arch.R == 1 {
-		result += "						case (rom_value[" + strconv.Itoa(romWord-opbits-1) + "])\n"
+		result += "						case (rom_value[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + "])\n"
 	} else {
-		result += "						case (rom_value[" + strconv.Itoa(romWord-opbits-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)) + "])\n"
+		result += "						case (rom_value[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(arch.R)) + "])\n"
 	}
+
 	for i := 0; i < regNum; i++ {
-		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-
-		if arch.R == 1 {
-			result += "							case (rom_value[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + "])\n"
-		} else {
-			result += "							case (rom_value[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)-int(arch.R)) + "])\n"
-		}
-
-		for j := 0; j < regNum; j++ {
-			result += "							" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
-
-			result += "								if (romread_ready == 1'b1) begin\n"
-			result += "									_" + strings.ToLower(Get_register_name(i)) + " <= #1 romread_value[" + strconv.Itoa(romWord-1) + ":0];\n"
-			result += "									romread_ready <= 1'b0;\n"
-			result += "									_pc <= #1 _pc + 1'b1 ;\n"
-			result += "								end\n"
-			result += "								else begin\n"
-			result += "									romread_bus[" + strconv.Itoa(int(arch.O)-1) + ":0] <= _" + strings.ToLower(Get_register_name(j)) + ";\n"
-			result += "									romread_ready <= 1'b1;\n"
-			result += "								end\n"
-			result += "								$display(\"M2RRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
-
-			result += "							end\n"
-
-		}
-		result += "							endcase\n"
-		result += "						end\n"
+		result += "\t\t					" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
+		result += "\t\t						addr_ram_m2rri <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
+		result += "\t\t						$display(\"M2RRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
+		result += "\t\t					end\n"
 	}
-	result += "						endcase\n"
+	result += "\t					endcase\n"
+
 	result += "					end\n"
 	return result
-
 }
 
 func (op M2rri) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
-	// TODO
-	return ""
+	result := ""
+
+	rom_word := arch.Max_word()
+	opbits := arch.Opcodes_bits()
+
+	// The ram is enabled if any of the opcodes is active
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {
+		result += "\tassign ram_en = 1'b1;\n"
+	}
+
+	// The ram write signals
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m"}) {
+		result += "\tassign ram_din = ram_din_i;\n"
+		result += "\tassign ram_wren = wr_int_ram;\n"
+	}
+
+	ramAddr := ""
+	if arch.HasAny([]string{"r2mri", "r2m"}) {
+		ramAddr += "addr_ram_to_mem"
+	}
+
+	if arch.HasOp("m2r") {
+		ramAddr = " (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2R) ? addr_ram_m2r : " + ramAddr
+	}
+
+	if arch.HasOp("m2rri") {
+		ramAddr = " (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2RRI) ? addr_ram_m2rri: " + ramAddr
+	}
+
+	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {
+		result += "\tassign ram_addr = " + ramAddr + ";\n"
+	}
+
+	return result
 }
 
 func (op M2rri) Assembler(arch *Arch, words []string) (string, error) {
@@ -213,22 +248,6 @@ func (op M2rri) Required_modes() (bool, []string) {
 
 func (op M2rri) Forbidden_modes() (bool, []string) {
 	return false, []string{}
-}
-
-func (op M2rri) Op_instruction_internal_state(arch *Arch, flavor string) string {
-	return ""
-}
-
-func (Op M2rri) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
-	return ""
-}
-
-func (Op M2rri) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
-	return ""
-}
-
-func (Op M2rri) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
-	return ""
 }
 
 func (Op M2rri) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {

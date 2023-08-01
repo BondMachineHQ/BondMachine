@@ -88,17 +88,7 @@ func (op R2vri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 			break
 		}
 	}
-	//	result += "\tassign vram_din = vram_din_i;\n"
-	//	result += "\tassign vram_addr = addr_vram_r2v;\n"
-	//	result += "\tassign vram_wren = wr_int_vram;\n"
-	//	result += "\tassign vram_en = 1'b1;\n"
 
-	// Check for differences
-	//	result += "\talways @(rom_value"
-	//	for i := 0; i < reg_num; i++ {
-	//		result += ",_" + strings.ToLower(Get_register_name(i))
-	//}
-	//result += ")\n"
 	if firstModule {
 		result += "\talways @(posedge clock_signal)\n"
 		result += "\tbegin\n"

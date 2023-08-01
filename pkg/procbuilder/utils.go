@@ -249,6 +249,26 @@ func (arch *Arch) OnlyOne(curOp string, ops []string) bool {
 	return false
 }
 
+func (arch *Arch) HasOp(curOp string) bool {
+	for _, op := range arch.Conproc.Op {
+		if op.Op_get_name() == curOp {
+			return true
+		}
+	}
+	return false
+}
+
+func (arch *Arch) HasAny(ops []string) bool {
+	for _, op := range ops {
+		for _, op2 := range arch.Conproc.Op {
+			if op2.Op_get_name() == op {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func Int8bits(f int8) uint8 {
 	return *(*uint8)(unsafe.Pointer(&f))
 }
