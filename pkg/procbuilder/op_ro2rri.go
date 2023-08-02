@@ -28,7 +28,7 @@ func (op Ro2rri) Op_show_assembler(arch *Arch) string {
 
 func (op Ro2rri) Op_get_instruction_len(arch *Arch) int {
 	opbits := arch.Opcodes_bits()
-	return opbits + int(arch.R) + int(arch.O) // The bits for the opcode + bits for a register + bits for the location
+	return opbits + int(arch.R) + int(arch.R) // The bits for the opcode + bits for a register + bits for a register
 }
 
 func (op Ro2rri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
@@ -63,17 +63,17 @@ func (op Ro2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, 
 	result := ""
 	result += "					RO2RRI: begin\n"
 	if arch.R == 1 {
-		result += "						case (rom_value[" + strconv.Itoa(romWord-opbits-1) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(romWord-opbits-1) + "])\n"
 	} else {
-		result += "						case (rom_value[" + strconv.Itoa(romWord-opbits-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(romWord-opbits-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < regNum; i++ {
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 		if arch.R == 1 {
-			result += "							case (rom_value[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + "])\n"
+			result += "							case (current_instruction[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + "])\n"
 		} else {
-			result += "							case (rom_value[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)-int(arch.R)) + "])\n"
+			result += "							case (current_instruction[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)-int(arch.R)) + "])\n"
 		}
 
 		for j := 0; j < regNum; j++ {

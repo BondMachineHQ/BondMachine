@@ -206,6 +206,7 @@ func (bi *BasmInstance) filteredMetaAdd(el *bmline.BasmElement, key string, valu
 		switch key {
 		case "registersize":
 		case "iomode":
+		case "defaultexecmode":
 		default:
 			return errors.New("Unknown global %meta: " + key)
 		}
@@ -213,6 +214,7 @@ func (bi *BasmInstance) filteredMetaAdd(el *bmline.BasmElement, key string, valu
 		switch key {
 		case "romcode":
 		case "romdata":
+		case "execmode":
 		case "fragcollapse":
 		default:
 			// If there in an unknown key, it is a user defined key that eventually will be used in a template.

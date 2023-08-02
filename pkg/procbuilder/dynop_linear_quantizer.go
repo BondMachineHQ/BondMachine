@@ -80,9 +80,9 @@ func (op LinearQuantizer) Op_instruction_verilog_state_machine(conf *Config, arc
 	result := ""
 	result += "					" + strings.ToUpper(op.lqName) + ": begin\n"
 	if arch.R == 1 {
-		result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
 	} else {
-		result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 
@@ -97,9 +97,9 @@ func (op LinearQuantizer) Op_instruction_verilog_state_machine(conf *Config, arc
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 		if arch.R == 1 {
-			result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + "])\n"
+			result += "							case (current_instruction[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + "])\n"
 		} else {
-			result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(arch.R)) + "])\n"
+			result += "							case (current_instruction[" + strconv.Itoa(rom_word-opBits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(arch.R)) + "])\n"
 		}
 
 		for j := 0; j < reg_num; j++ {

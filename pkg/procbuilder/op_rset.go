@@ -50,13 +50,13 @@ func (op Rset) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 	result := ""
 	result += "					RSET: begin\n"
 	if arch.R == 1 {
-		result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 	} else {
-		result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "							_" + strings.ToLower(Get_register_name(i)) + " <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-1-int(arch.R)) + ":" + strconv.Itoa(rom_word-opbits-int(arch.Rsize)-int(arch.R)) + "];\n"
+		result += "							_" + strings.ToLower(Get_register_name(i)) + " <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1-int(arch.R)) + ":" + strconv.Itoa(rom_word-opbits-int(arch.Rsize)-int(arch.R)) + "];\n"
 		result += "							$display(\"RSET " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
 		result += "						end\n"
 	}

@@ -64,9 +64,9 @@ func (op Addi) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor strin
 		result += "\t\tbegin\n"
 
 		if opbits == 1 {
-			result += "\t\t\tcase(rom_value[" + strconv.Itoa(rom_word-1) + "])\n"
+			result += "\t\t\tcase(current_instruction[" + strconv.Itoa(rom_word-1) + "])\n"
 		} else {
-			result += "\t\t\tcase(rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
+			result += "\t\t\tcase(current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
 		}
 
 		for _, currop := range arch.Op {
@@ -111,9 +111,9 @@ func (op Addi) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 	result += "					ADDI: begin\n"
 	if arch.N > 0 {
 		if arch.R == 1 {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 		} else {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 		}
 		for i := 0; i < reg_num; i++ {
 			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"

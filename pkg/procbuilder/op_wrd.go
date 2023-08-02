@@ -84,8 +84,8 @@ func (op Wrd) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 
 	result := ""
 	result += "\t				WRD: begin\n"
-	result += "\t					ch_num <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-chanbits) + "];\n"
-	result += "\t					reg_num <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "];\n"
+	result += "\t					ch_num <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-chanbits) + "];\n"
+	result += "\t					reg_num <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "];\n"
 	result += "\t					wrd_ch <= #1 1'b1;\n"
 	result += "\t					op_channel[ch_num] <= #1 1'b1;\n"
 	result += "\t					if(ack_wrd_i[ch_num] == 1'b1) begin //ack of the chanel for the operation done\n"

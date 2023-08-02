@@ -67,17 +67,17 @@ func (op Lfsr82r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch,
 	result += "					LFSR82R: begin\n"
 	if arch.M > 0 {
 		if arch.R == 1 {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 		} else {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 		}
 		for i := 0; i < reg_num; i++ {
 			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 			if lfbits == 1 {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + "])\n"
+				result += "							case (current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + "])\n"
 			} else {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(lfbits)) + "])\n"
+				result += "							case (current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(lfbits)) + "])\n"
 			}
 
 			for j := 0; j < lfsr8_num; j++ {

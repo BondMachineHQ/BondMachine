@@ -309,6 +309,32 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 		result += "	(* KEEP = \"TRUE\" *) reg [" + strconv.Itoa(regsize-1) + ":0] _" + strings.ToLower(Get_register_name(i)) + ";\n"
 	}
 
+	// modes handling
+	switch arch.Modes[0] {
+	case "ha":
+		result += "\n"
+		result += "	wire [" + strconv.Itoa(int(rom_word)-1) + ":0] current_instruction;\n"
+		result += "	assign current_instruction=rom_value;\n"
+		result += "\n"
+	case "hy":
+		result += "\n"
+		result += "	wire [" + strconv.Itoa(int(rom_word)-1) + ":0] current_instruction;\n"
+		result += "	reg [" + strconv.Itoa(int(rom_word)-1) + ":0] ram_instruction;\n"
+		result += "	reg exec_mode; // 0 = harvard , 1=VN\n"
+		result += "	reg vn_state;\n"
+		result += "	localparam FETCH=1'b0, EXECUTE=1'b1;\n"
+		result += "	assign current_instruction= (exec_mode==1'b0) rom_value : ram_instruction;\n"
+		result += "\n"
+	case "vn":
+		result += "\n"
+		result += "	wire [" + strconv.Itoa(int(rom_word)-1) + ":0] current_instruction;\n"
+		result += "	reg [" + strconv.Itoa(int(rom_word)-1) + ":0] ram_instruction;\n"
+		result += "	reg vn_state;\n"
+		result += "	localparam FETCH=1'b0, EXECUTE=1'b1;\n"
+		result += "	assign current_instruction=ram_instruction;\n"
+		result += "\n"
+	}
+
 	for _, op := range proc.Op {
 		if conf.Commented_verilog {
 			result += "\n// Start of the component \"header\" for the opcode " + op.Op_get_name() + "\n\n"
@@ -336,6 +362,16 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 
 	result += "		end\n"
 	result += "		else begin\n"
+
+	switch arch.Modes[0] {
+	case "ha":
+		result += "			// ha placeholder\n"
+	case "hy":
+		result += "			if (exec_mode == 1'b0 || vn_state == EXECUTE) begin\n"
+	case "vn":
+		result += "			if (vn_state == EXECUTE) begin\n"
+	}
+
 	result += "			$display(\"Program Counter:%d\", _pc);\n"
 	result += "			$display(\"Instruction:%b\", rom_value);\n"
 
@@ -388,6 +424,15 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 
 	// TODO What are they, maybe needed by some opcode ?
 	//	result += "			end\n"
+
+	switch arch.Modes[0] {
+	case "ha":
+		result += "			// ha placeholder\n"
+	case "hy":
+		result += "			end\n"
+	case "vn":
+		result += "			end\n"
+	}
 
 	result += "		end\n"
 	result += "	end\n"

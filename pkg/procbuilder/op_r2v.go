@@ -57,14 +57,14 @@ func (op R2v) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result := ""
 	result += "					R2V: begin\n"
 	/*if arch.R == 1 {
-		result += "					case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "					case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 	} else {
-		result += "					case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "					case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 		result += "							wr_int_ram <= #1 1'b1;\n"
-		result += "							addr_ram_r2m <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.Rsize)) + "];\n"
+		result += "							addr_ram_r2m <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.Rsize)) + "];\n"
 		result += "							ram_din_i <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
 		result += "							$display(\"R2M " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
 		result += "						end\n"
@@ -101,7 +101,7 @@ func (op R2v) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 	//	result += "\tassign vram_en = 1'b1;\n"
 
 	// Check for differences
-	//	result += "\talways @(rom_value"
+	//	result += "\talways @(current_instruction"
 	//	for i := 0; i < reg_num; i++ {
 	//		result += ",_" + strings.ToLower(Get_register_name(i))
 	//}
@@ -110,23 +110,23 @@ func (op R2v) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 		result += "\talways @(posedge clock_signal)\n"
 		result += "\tbegin\n"
 		if opbits == 1 {
-			result += "\t\tcase (rom_value[" + strconv.Itoa(rom_word-1) + "])\n"
+			result += "\t\tcase (current_instruction[" + strconv.Itoa(rom_word-1) + "])\n"
 		} else {
-			result += "\t\tcase (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
+			result += "\t\tcase (current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
 		}
 	}
 
 	result += "		R2V: begin\n"
 
 	if arch.R == 1 {
-		result += "			case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "			case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 	} else {
-		result += "			case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "			case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 		result += "				" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 		result += "					vtm0_wren_i <= 1'b1;\n"
-		result += "					vtm0_addr_i[7:0] <= rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-8) + "];\n"
+		result += "					vtm0_addr_i[7:0] <= current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-8) + "];\n"
 		result += "					vtm0_din_i[7:0] <= _" + strings.ToLower(Get_register_name(i)) + "[7:0];\n"
 		result += "					$display(\"R2V " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
 		result += "				end\n"

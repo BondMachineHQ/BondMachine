@@ -29,7 +29,7 @@ func (op R2mri) Op_show_assembler(arch *Arch) string {
 
 func (op R2mri) Op_get_instruction_len(arch *Arch) int {
 	opbits := arch.Opcodes_bits()
-	return opbits + int(arch.R) + int(arch.L) // The bits for the opcode + bits for a register + bits for RAM address
+	return opbits + int(arch.R) + int(arch.R) // The bits for the opcode + bits for a register + bits for a register
 }
 
 func (op R2mri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
@@ -87,11 +87,11 @@ func (op R2mri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 	}
 
 	if arch.HasOp("m2r") {
-		ramAddr = " (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2R) ? addr_ram_m2r : " + ramAddr
+		ramAddr = " (current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2R) ? addr_ram_m2r : " + ramAddr
 	}
 
 	if arch.HasOp("m2rri") {
-		ramAddr = " (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2RRI) ? addr_ram_m2rri: " + ramAddr
+		ramAddr = " (current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2RRI) ? addr_ram_m2rri: " + ramAddr
 	}
 
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {
@@ -116,26 +116,26 @@ func (op R2mri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 		result += "\talways @(posedge clock_signal)\n"
 		result += "\tbegin\n"
 		if opbits == 1 {
-			result += "\t\tcase (rom_value[" + strconv.Itoa(rom_word-1) + "])\n"
+			result += "\t\tcase (current_instruction[" + strconv.Itoa(rom_word-1) + "])\n"
 		} else {
-			result += "\t\tcase (rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
+			result += "\t\tcase (current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
 		}
 	}
 
 	result += "		R2MRI: begin\n"
 
 	if arch.R == 1 {
-		result += "			case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "			case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 	} else {
-		result += "			case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "			case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 		result += "				" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 		if arch.R == 1 {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + "])\n"
 		} else {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.R)) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.R)) + "])\n"
 		}
 
 		for j := 0; j < reg_num; j++ {

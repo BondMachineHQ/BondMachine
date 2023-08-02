@@ -66,13 +66,13 @@ func (Op S2r) Op_instruction_verilog_internal_state(arch *Arch, flavor string) s
 	result += "\t\t\tif(state_sh_read_mem) begin\n"
 
 	if arch.R == 1 {
-		result += "				case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "				case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 	} else {
-		result += "				case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "				case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 		result += "					" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "						_" + strings.ToLower(Get_register_name(i)) + " <= #1 sh_dout_i[rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits) + "]];\n"
+		result += "						_" + strings.ToLower(Get_register_name(i)) + " <= #1 sh_dout_i[current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits) + "]];\n"
 		result += "						state_sh_read_mem <= #1 1'b0;\n"
 		result += "						$display(\"S2R " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
 		result += "					end\n"
@@ -102,7 +102,7 @@ func (op S2r) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 
 	result := ""
 	result += "\t//logic code to control the address to read RAM\n"
-	result += "\tassign sh_addr_s2r = rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits-int(arch.Rsize)) + "];\n"
+	result += "\tassign sh_addr_s2r = current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits-int(arch.Rsize)) + "];\n"
 
 	return result
 }

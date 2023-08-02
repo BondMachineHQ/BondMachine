@@ -64,13 +64,13 @@ func (op Jc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *
 	result += "					JC: begin\n"
 	if arch.O == 1 {
 		result += "					if(carryflag == 'b0) begin\n"
-		result += "						_pc <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-1) + "];\n"
-		result += "						$display(\"JC \", rom_value[" + strconv.Itoa(rom_word-opbits-1) + "]);\n"
+		result += "						_pc <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "];\n"
+		result += "						$display(\"JC \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "]);\n"
 		result += " end \n"
 	} else {
 		result += "					if(carryflag == 'b0) begin\n"
-		result += "						_pc <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)) + "];\n"
-		result += "						$display(\"JC \", rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)) + "]);\n"
+		result += "						_pc <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)) + "];\n"
+		result += "						$display(\"JC \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)) + "]);\n"
 		result += " end \n"
 	}
 	result += "					end\n"

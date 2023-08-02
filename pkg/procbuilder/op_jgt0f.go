@@ -49,14 +49,14 @@ func (op Jgt0f) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 
 	result += "					JGT0F: begin\n"
 	if arch.R == 1 {
-		result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 	} else {
-		result += "						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 		result += "							" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 		result += "								if(_" + strings.ToLower(Get_register_name(i)) + "[31] == 1'b0)\n"
-		result += "									_pc <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-1-int(arch.R)) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)-int(arch.R)) + "];\n"
+		result += "									_pc <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1-int(arch.R)) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)-int(arch.R)) + "];\n"
 		result += "								else\n"
 		result += "									_pc <= #1 _pc + 1'b1;\n"
 		result += "								$display(\"JGT0F " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"

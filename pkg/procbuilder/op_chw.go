@@ -133,7 +133,7 @@ func (op Chw) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result += "\t					wrd_ch <= #1   1'b0;\n"
 	result += "\t					ch_op_ready_i <= #1 op_channel;\n"
 	result += "\t					if(finish_channel_i[ch_num_ack]) begin\n"
-	result += "\t						case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+	result += "\t						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	for i := 0; i < reg_num; i++ {
 		result += "\t							" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 		result += "\t								_" + strings.ToLower(Get_register_name(i)) + " <= #1 stat_op_int;\n"

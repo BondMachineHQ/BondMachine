@@ -81,17 +81,17 @@ func (op U2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result += "					U2R: begin\n"
 	if uartNum > 0 {
 		if arch.R == 1 {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
 		} else {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
 		}
 		for i := 0; i < reg_num; i++ {
 			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 			if uartBits == 1 {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-uartBits-1) + "])\n"
+				result += "							case (current_instruction[" + strconv.Itoa(rom_word-opBits-uartBits-1) + "])\n"
 			} else {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-uartBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(uartBits)) + "])\n"
+				result += "							case (current_instruction[" + strconv.Itoa(rom_word-opBits-uartBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(uartBits)) + "])\n"
 			}
 
 			for j := 0; j < uartNum; j++ {
@@ -318,4 +318,3 @@ func (Op U2r) ExtraFiles(arch *Arch) ([]string, []string) {
 func (Op U2r) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
 	return nil, nil
 }
-

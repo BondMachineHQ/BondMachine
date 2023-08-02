@@ -86,16 +86,16 @@ func (op R2s) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 
 	result += "					R2S: begin\n"
 	if arch.R == 1 {
-		result += "					case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "					case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 	} else {
-		result += "					case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "					case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "							sh_wren_i[rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits) + "]] <= #1 1'b1;\n"
-		result += "							sh_addr_r2s <= #1 rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits-int(arch.Rsize)) + "];\n"
-		result += "							sh_din_i[rom_value[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits) + "]] <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
+		result += "							sh_wren_i[current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits) + "]] <= #1 1'b1;\n"
+		result += "							sh_addr_r2s <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits-int(arch.Rsize)) + "];\n"
+		result += "							sh_din_i[current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-shbits) + "]] <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
 		result += "							$display(\"R2S " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
 		result += "						end\n"
 	}

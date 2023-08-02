@@ -81,17 +81,17 @@ func (op R2q) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result += "					R2Q: begin\n"
 	if queueNum > 0 {
 		if arch.R == 1 {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
 		} else {
-			result += "						case (rom_value[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
+			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
 		}
 		for i := 0; i < reg_num; i++ {
 			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 			if queueBits == 1 {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-queueBits-1) + "])\n"
+				result += "							case (current_instruction[" + strconv.Itoa(rom_word-opBits-queueBits-1) + "])\n"
 			} else {
-				result += "							case (rom_value[" + strconv.Itoa(rom_word-opBits-queueBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(queueBits)) + "])\n"
+				result += "							case (current_instruction[" + strconv.Itoa(rom_word-opBits-queueBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)-int(queueBits)) + "])\n"
 			}
 
 			for j := 0; j < queueNum; j++ {

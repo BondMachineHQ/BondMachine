@@ -20,7 +20,7 @@ func (mach *Machine) Specs() string {
 	result += "    Outputs: " + strconv.Itoa(int(mach.M)) + "\n"
 	ops := ""
 	for i := 0; i < len(mach.Conproc.Op); i++ {
-		ops += fmt.Sprint(mach.Conproc.Op[i].Op_get_name())
+		ops += fmt.Sprint(mach.Conproc.Op[i].Op_get_name()) + "(" + fmt.Sprint(mach.Conproc.Op[i].Op_get_instruction_len(&mach.Arch)) + ")"
 		if i < len(mach.Conproc.Op)-1 {
 			ops += ","
 		}
