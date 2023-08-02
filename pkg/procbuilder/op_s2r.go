@@ -78,7 +78,7 @@ func (Op S2r) Op_instruction_verilog_internal_state(arch *Arch, flavor string) s
 		result += "					end\n"
 	}
 	result += "				endcase\n"
-	result += "\t\t\t\t_pc <= #1 _pc + 1'b1;\n"
+	result += NextInstruction(nil, arch, 4, "_pc + 1'b1")
 	result += "\t\t\tend\n"
 
 	return result

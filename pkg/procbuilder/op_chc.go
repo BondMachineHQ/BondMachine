@@ -168,12 +168,12 @@ func (op Chc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result += "\t					end\n"
 	result += "\t					if(finish_channel_d2[ch_num_ack]) begin\n"
 	result += "\t						reset_flag_ch <= #1 'b0;\n"
-	result += "\t						_pc <= #1  _pc + 1'b1;\n"
+	result += NextInstruction(conf, arch, 7, "_pc + 1'b1")
 	result += "\t					end\n"
 	result += "\t					if((~(|ch_ready_i)) & (count_chc==2'b11)) begin\n"
 	result += "\t						reset_flag_ch <= #1 'b1;\n"
 	result += "\t						count_seq_ch <= #1 'b0;\n"
-	result += "\t						_pc <= #1  _pc + 1'b1;\n"
+	result += NextInstruction(conf, arch, 7, "_pc + 1'b1")
 	result += "\t					end\n"
 	result += "\t				end\n"
 

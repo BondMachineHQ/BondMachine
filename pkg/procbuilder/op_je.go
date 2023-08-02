@@ -45,7 +45,7 @@ func (op Je) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *
 	result := ""
 	result += "				JE: begin\n"
 	result += "					$display(\"JE\");\n"
-	result += "					_pc <= _pc + 1'b1 ;\n"
+	result += NextInstruction(conf, arch, 5, "_pc + 1'b1")
 	result += "				end\n"
 
 	return result

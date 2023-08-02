@@ -68,7 +68,7 @@ func (op Dec) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 		result += "					end\n"
 	}
 	result += "					endcase\n"
-	result += "					_pc <= _pc + 1'b1 ;\n"
+	result += NextInstruction(conf, arch, 5, "_pc + 1'b1")
 	result += "				end\n"
 	return result
 }

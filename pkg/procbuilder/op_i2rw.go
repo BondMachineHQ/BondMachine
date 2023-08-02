@@ -135,7 +135,7 @@ func (op I2rw) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 				result += pref + "\t\tif (" + strings.ToLower(Get_input_name(j)) + "_valid)\n"
 				result += pref + "\t\tbegin\n"
 				result += pref + "\t\t\t_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + strings.ToLower(Get_input_name(j)) + ";\n"
-				result += pref + "\t\t\t_pc <= #1 _pc + 1'b1 ;\n"
+				result += pref + NextInstruction(conf, arch, 3, "_pc + 1'b1")
 				result += pref + "\t\t\t$display(\"I2RW " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_input_name(j)) + "\");\n"
 				result += pref + "\t\tend\n"
 				result += "							end\n"

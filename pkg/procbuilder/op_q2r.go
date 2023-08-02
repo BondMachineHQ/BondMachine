@@ -99,7 +99,7 @@ func (op Q2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 				result += "								if (" + strings.ToLower(op.getQueueName((j))) + "receiverAck && " + strings.ToLower(op.getQueueName(j)) + "receiverRead) begin\n"
 				result += "								     " + strings.ToLower(op.getQueueName(j)) + "receiverRead <= #1 1'b0;\n"
 				result += "								     _" + strings.ToLower(Get_register_name(i)) + "[" + strconv.Itoa(int(arch.Rsize)-1) + ":0] <= #1 " + strings.ToLower(op.getQueueName(j)) + "receiverData[" + strconv.Itoa(int(arch.Rsize)-1) + ":0];\n"
-				result += "								       _pc <= #1 _pc + 1'b1 ;\n"
+				result += NextInstruction(conf, arch, 8, "_pc + 1'b1")
 				result += "								end\n"
 				result += "								else begin\n"
 				result += "								       " + strings.ToLower(op.getQueueName(j)) + "receiverRead <= #1 1'b1;\n"
@@ -114,7 +114,7 @@ func (op Q2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 		result += "						endcase\n"
 	} else {
 		result += "						$display(\"NOP\");\n"
-		result += "						_pc <= #1 _pc + 1'b1 ;\n"
+		result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
 	}
 	result += "					end\n"
 	return result

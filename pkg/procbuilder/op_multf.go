@@ -123,7 +123,7 @@ func (op Multf) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 			result += "									multiplier_" + arch.Tag + "_output_z_ack <= #1 1;\n"
 			result += "									multiplier_" + arch.Tag + "_state <= #1 multiplier_" + arch.Tag + "_put_a;\n"
 			result += "									multiplier_" + arch.Tag + "_input_b_stb <= #1 0;\n"
-			result += "									_pc <= #1 _pc + 1'b1 ;\n"
+			result += NextInstruction(conf, arch, 9, "_pc + 1'b1")
 			result += "								end\n"
 			result += "							end\n"
 			result += "							endcase\n"

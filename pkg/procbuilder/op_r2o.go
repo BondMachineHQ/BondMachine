@@ -136,7 +136,7 @@ func (op R2o) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	} else {
 		result += "						$display(\"NOP\");\n"
 	}
-	result += "						_pc <= #1 _pc + 1'b1 ;\n"
+	result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
 	result += "					end\n"
 	return result
 }

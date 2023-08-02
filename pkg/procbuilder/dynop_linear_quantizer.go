@@ -150,7 +150,7 @@ func (op LinearQuantizer) Op_instruction_verilog_state_machine(conf *Config, arc
 				result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + op.lqName + "_" + arch.Tag + "_output_corr;\n"
 			}
 			result += "								" + op.lqName + "_" + arch.Tag + "_state <= #1 " + op.lqName + "_" + arch.Tag + "_put;\n"
-			result += "								_pc <= #1 _pc + 1'b1 ;\n"
+			result += NextInstruction(conf, arch, 8, "_pc + 1'b1")
 			result += "							end\n"
 			result += "							endcase\n"
 			result += "								$display(\"" + strings.ToUpper(op.lqName) + " " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_register_name(j)) + "\");\n"

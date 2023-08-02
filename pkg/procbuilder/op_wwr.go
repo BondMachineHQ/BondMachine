@@ -138,7 +138,7 @@ func (op Wwr) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result += "\t					wwr_ch <= #1 1'b1;\n"
 	result += "\t					op_channel[ch_num] <= #1 1'b1;\n"
 	result += "\t					if(ack_wwr_i[ch_num] == 1'b1) begin //ack of the chanel for the operation done\n"
-	result += "\t                 		_pc <= #1  _pc + 1'b1;\n"
+	result += NextInstruction(conf, arch, 5, "_pc + 1'b1")
 	result += "\t						count_seq_ch <= #1 count_seq_ch + 1;     //increment the sequence of the channel operation\n"
 	result += "\t					end\n"
 	result += "\t					$display(\"WWR\");\n"

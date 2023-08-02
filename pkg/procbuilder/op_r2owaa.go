@@ -139,14 +139,14 @@ func (op R2owaa) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, 
 				result += pref + "\t\t\tif (" + strings.ToLower(Get_output_name(j)) + "_received)\n"
 				result += pref + "\t\t\tbegin\n"
 				result += pref + "\t\t\t\t_aux" + strings.ToLower(Get_output_name(j)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
-				result += pref + "\t\t\t\t_pc <= #1 _pc + 1'b1 ;\n"
+				result += pref + NextInstruction(conf, arch, 4, "_pc + 1'b1")
 				result += pref + "\t\t\t\t$display(\"R2OWAA " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_output_name(j)) + "\");\n"
 				result += pref + "\t\t\tend\n"
 				result += pref + "\t\tend\n"
 				result += pref + "\t\telse\n"
 				result += pref + "\t\tbegin\n"
 				result += pref + "\t\t\t\t_aux" + strings.ToLower(Get_output_name(j)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
-				result += pref + "\t\t\t\t_pc <= #1 _pc + 1'b1 ;\n"
+				result += pref + NextInstruction(conf, arch, 4, "_pc + 1'b1")
 				result += pref + "\t\t\t\t$display(\"R2OWAA " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_output_name(j)) + "\");\n"
 				result += pref + "\t\tend\n"
 

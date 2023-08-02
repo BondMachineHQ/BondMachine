@@ -73,7 +73,7 @@ func (op Ro2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 		result += "							if (romread_ready == 1'b1) begin\n"
 		result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 romread_value[" + strconv.Itoa(romWord-1) + ":0];\n"
 		result += "								romread_ready <= 1'b0;\n"
-		result += "								_pc <= #1 _pc + 1'b1 ;\n"
+		result += NextInstruction(conf, arch, 8, "_pc + 1'b1")
 		result += "							end\n"
 		result += "							else begin\n"
 		result += "								romread_bus[" + strconv.Itoa(int(arch.O)-1) + ":0] <= current_instruction[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)-int(arch.O)) + "];\n"

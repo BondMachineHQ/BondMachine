@@ -99,7 +99,7 @@ func (op Multp) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 			result += "							multp_" + arch.Tag + "_get : begin\n"
 			result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 multp_" + arch.Tag + "_output_z;\n"
 			result += "								multp_" + arch.Tag + "_state <= #1 multp_" + arch.Tag + "_put;\n"
-			result += "								_pc <= #1 _pc + 1'b1 ;\n"
+			result += NextInstruction(conf, arch, 8, "_pc + 1'b1")
 			result += "							end\n"
 			result += "							endcase\n"
 			result += "								$display(\"MULTP " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_register_name(j)) + "\");\n"

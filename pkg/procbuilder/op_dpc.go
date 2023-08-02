@@ -45,7 +45,7 @@ func (op Dpc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result := ""
 	result += "				DPC: begin\n"
 	result += "					$display(\"DPC\");\n"
-	result += "					_pc <= _pc + 1'b1 ;\n"
+	result += NextInstruction(conf, arch, 5, "_pc + 1'b1")
 	result += "				end\n"
 
 	return result

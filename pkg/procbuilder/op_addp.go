@@ -99,7 +99,7 @@ func (op Addp) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 			result += "							addp_" + arch.Tag + "_get : begin\n"
 			result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 addp_" + arch.Tag + "_output_z;\n"
 			result += "								addp_" + arch.Tag + "_state <= #1 addp_" + arch.Tag + "_put;\n"
-			result += "								_pc <= #1 _pc + 1'b1 ;\n"
+			result += NextInstruction(conf, arch, 8, "_pc + 1'b1")
 			result += "							end\n"
 			result += "							endcase\n"
 			result += "								$display(\"ADDP " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_register_name(j)) + "\");\n"

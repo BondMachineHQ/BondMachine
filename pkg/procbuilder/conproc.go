@@ -133,6 +133,26 @@ func (proc *Conproc) Write_opcodes_verilog() string {
 	return result
 }
 
+func NextInstruction(conf *Config, arch *Arch, tabs int, jumpTo string) string {
+	result := ""
+	tabS := ""
+	for i := 0; i < tabs; i++ {
+		tabS += "\t"
+	}
+	switch arch.Modes[0] {
+	case "ha":
+		result += tabS + "_pc <= #1 " + jumpTo + ";\n"
+	case "hy":
+		result += tabS + "if (exec_mode == 1'b1) begin\n"
+		result += tabS + "\tvn_state <= FETCH;\n"
+		result += tabS + "end\n"
+		result += tabS + "_pc <= #1 " + jumpTo + ";\n"
+	case "vn":
+		result += tabS + "vn_state <= FETCH;\n"
+		result += tabS + "_pc <= #1 " + jumpTo + ";\n"
+	}
+	return result
+}
 func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_name string, flavor string) string {
 	regsize := int(proc.Rsize)
 	rom_word := arch.Max_word()
@@ -417,7 +437,7 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 
 	result += "					default : begin\n"
 	result += "						$display(\"Unknown Opcode\");\n"
-	result += "						_pc <= #1 _pc + 1'b1;\n"
+	result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
 	result += "					end\n"
 
 	result += "				endcase\n"

@@ -57,7 +57,7 @@ func (op R2m) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 
 	result := ""
 	result += "					R2M: begin\n"
-	result += "						_pc <= #1 _pc + 1'b1 ;\n"
+	result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
 	result += "					end\n"
 
 	return result

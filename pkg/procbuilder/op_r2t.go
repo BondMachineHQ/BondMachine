@@ -107,7 +107,7 @@ func (op R2t) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 				result += "								   1'b1: begin\n"
 				result += "								     if (" + strings.ToLower(op.getStackName((j))) + "senderAck) begin\n"
 				result += "								       " + strings.ToLower(op.getStackName(j)) + "senderWrite <= #1 1'b0;\n"
-				result += "								       _pc <= #1 _pc + 1'b1 ;\n"
+				result += NextInstruction(conf, arch, 8, "_pc + 1'b1")
 				result += "								       stackqueueSM <= 1'b0;\n"
 				result += "								     end\n"
 				result += "								   end\n"
@@ -122,7 +122,7 @@ func (op R2t) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 		result += "						endcase\n"
 	} else {
 		result += "						$display(\"NOP\");\n"
-		result += "						_pc <= #1 _pc + 1'b1 ;\n"
+		result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
 	}
 	result += "					end\n"
 	return result

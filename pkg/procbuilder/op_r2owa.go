@@ -137,7 +137,7 @@ func (op R2owa) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 				result += pref + "\t\t_aux" + strings.ToLower(Get_output_name(j)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
 				result += pref + "\t\tif (" + strings.ToLower(Get_output_name(j)) + "_received)\n"
 				result += pref + "\t\tbegin\n"
-				result += pref + "\t\t\t_pc <= #1 _pc + 1'b1 ;\n"
+				result += pref + NextInstruction(conf, arch, 3, "_pc + 1'b1")
 				result += pref + "\t\tend\n"
 				result += pref + "\t\t$display(\"R2OWA " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_output_name(j)) + "\");\n"
 

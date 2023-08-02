@@ -69,7 +69,7 @@ func (Op M2rri) Op_instruction_verilog_internal_state(arch *Arch, flavor string)
 	// 	result += "					end\n"
 	// }
 	// result += "				endcase\n"
-	// result += "\t\t\t\t_pc <= #1 _pc + 1'b1;\n"
+	// result += NextInstruction(conf, arch, 4, "_pc + 1'b1")
 	// result += "\t\t\tend\n"
 
 	return result
@@ -105,7 +105,7 @@ func (op M2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 			result += "								if (state_read_mem_m2rri == 1'b1) begin\n"
 			result += "									_" + strings.ToLower(Get_register_name(i)) + " <= #1 ram_dout;\n"
 			result += "									state_read_mem_m2rri <= 1'b0;\n"
-			result += "									_pc <= #1 _pc + 1'b1 ;\n"
+			result += NextInstruction(conf, arch, 9, "_pc + 1'b1")
 			result += "								end\n"
 			result += "								else begin\n"
 			result += "									if (wait_read_mem == 1'b1) begin\n"

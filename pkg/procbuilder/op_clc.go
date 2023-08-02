@@ -56,7 +56,7 @@ func (op Clc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result += "					CLC: begin\n"
 	result += "						carryflag <= #1 'b0;\n"
 	result += "						$display(\"CLC\");\n"
-	result += "						_pc <= #1 _pc + 1'b1 ;\n"
+	result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
 	result += "					end\n"
 	return result
 }

@@ -133,7 +133,7 @@ func (op FloPoCo) Op_instruction_verilog_state_machine(conf *Config, arch *Arch,
 			result += "							" + op.floPoCoName + "_" + arch.Tag + "_get_out : begin\n"
 			result += "								_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + op.floPoCoName + "_" + arch.Tag + "_output_z;\n"
 			result += "								" + op.floPoCoName + "_" + arch.Tag + "_state <= #1 " + op.floPoCoName + "_" + arch.Tag + "_put_inputs;\n"
-			result += "								_pc <= #1 _pc + 1'b1 ;\n"
+			result += NextInstruction(conf, arch, 8, "_pc + 1'b1")
 			result += "							end\n"
 			result += "							endcase\n"
 			result += "								$display(\"" + op.floPoCoName + " " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_register_name(j)) + "\");\n"

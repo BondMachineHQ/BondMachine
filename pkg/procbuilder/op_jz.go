@@ -55,9 +55,9 @@ func (op Jz) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *
 	for i := 0; i < reg_num; i++ {
 		result += "							" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 		result += "								if(_" + strings.ToLower(Get_register_name(i)) + " == 'b0)\n"
-		result += "									_pc <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1-int(arch.R)) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)-int(arch.R)) + "];\n"
+		result += NextInstruction(conf, arch, 6, "current_instruction[" + strconv.Itoa(rom_word-opbits-1-int(arch.R)) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)-int(arch.R))+"]")
 		result += "								else\n"
-		result += "									_pc <= #1 _pc + 1'b1;\n"
+		result += NextInstruction(conf, arch, 7, "_pc + 1'b1")
 		result += "								$display(\"JZ " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
 		result += "							end\n"
 	}

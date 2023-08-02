@@ -51,7 +51,7 @@ func (op Nop) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result := ""
 	result += "					NOP: begin\n"
 	result += "						$display(\"NOP\");\n"
-	result += "						_pc <= _pc + 1'b1 ;\n"
+	result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
 	result += "					end\n"
 
 	return result
@@ -140,4 +140,3 @@ func (Op Nop) ExtraFiles(arch *Arch) ([]string, []string) {
 func (Op Nop) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
 	return nil, nil
 }
-

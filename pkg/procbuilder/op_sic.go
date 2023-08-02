@@ -88,7 +88,7 @@ func (op Sic) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 				result += "									else\n"
 				result += "									begin\n"
 				result += "										sic_state <= #1 1'b0;\n"
-				result += "										_pc <= #1 _pc + 1'b1 ;\n"
+				result += NextInstruction(conf, arch, 9, "_pc + 1'b1")
 				result += "									end\n"
 				result += "								end\n"
 				result += "								else\n"
