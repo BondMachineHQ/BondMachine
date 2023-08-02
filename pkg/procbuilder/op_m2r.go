@@ -35,9 +35,7 @@ func (op M2r) Op_get_instruction_len(arch *Arch) int {
 func (op M2r) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
 	result := ""
 	result += "\t//Internal Reg Wire for M2R opcode\n"
-	if arch.OnlyOne(op.Op_get_name(), []string{"m2r", "m2rri"}) {
-		result += "\treg state_read_mem;\n"
-	}
+	result += "\treg state_read_mem;\n"
 	result += "\twire [" + strconv.Itoa(int(arch.L)-1) + ":0] addr_ram_m2r;\n"
 	result += "\n"
 	return result

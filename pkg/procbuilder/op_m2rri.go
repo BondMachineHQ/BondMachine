@@ -34,9 +34,8 @@ func (op M2rri) Op_get_instruction_len(arch *Arch) int {
 func (op M2rri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
 	result := ""
 	result += "\t//Internal Reg Wire for M2R opcode\n"
-	if arch.OnlyOne(op.Op_get_name(), []string{"m2r", "m2rri"}) {
-		result += "\treg state_read_mem;\n"
-	}
+	result += "\treg state_read_mem_m2rri;\n"
+	result += "\treg wait_read_mem;\n"
 	result += "\treg [" + strconv.Itoa(int(arch.L)-1) + ":0] addr_ram_m2rri;\n"
 	result += "\n"
 	return result
@@ -44,34 +43,34 @@ func (op M2rri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor stri
 
 func (Op M2rri) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	result := ""
-	result += "\t\t\tstate_read_mem <= #1 1'b0;\n"
+	// result += "\t\t\tstate_read_mem_m2rri <= #1 1'b0;\n"
 	return result
 }
 
 func (Op M2rri) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
-	rom_word := arch.Max_word()
-	opbits := arch.Opcodes_bits()
+	// rom_word := arch.Max_word()
+	// opbits := arch.Opcodes_bits()
 
-	reg_num := 1 << arch.R
+	// reg_num := 1 << arch.R
 
 	result := ""
-	result += "\t\t\tif(state_read_mem) begin\n"
+	// result += "\t\t\tif(state_read_mem_m2rri) begin\n"
 
-	if arch.R == 1 {
-		result += "				case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
-	} else {
-		result += "				case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
-	}
-	for i := 0; i < reg_num; i++ {
-		result += "					" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "						_" + strings.ToLower(Get_register_name(i)) + " <= #1 ram_dout;\n"
-		result += "						state_read_mem <= #1 1'b0;\n"
-		result += "						$display(\"M2RRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
-		result += "					end\n"
-	}
-	result += "				endcase\n"
-	result += "\t\t\t\t_pc <= #1 _pc + 1'b1;\n"
-	result += "\t\t\tend\n"
+	// if arch.R == 1 {
+	// 	result += "				case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+	// } else {
+	// 	result += "				case (rom_value[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+	// }
+	// for i := 0; i < reg_num; i++ {
+	// 	result += "					" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
+	// 	result += "						_" + strings.ToLower(Get_register_name(i)) + " <= #1 ram_dout;\n"
+	// 	result += "						state_read_mem_m2rri <= #1 1'b0;\n"
+	// 	result += "						$display(\"M2RRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
+	// 	result += "					end\n"
+	// }
+	// result += "				endcase\n"
+	// result += "\t\t\t\t_pc <= #1 _pc + 1'b1;\n"
+	// result += "\t\t\tend\n"
 
 	return result
 }
@@ -86,23 +85,50 @@ func (op M2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 
 	result := ""
 	result += "					M2RRI: begin\n"
-	result += "						state_read_mem <= #1 1'b1;\n"
 	if arch.R == 1 {
-		result += "						case (rom_value[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + "])\n"
+		result += "						case (rom_value[" + strconv.Itoa(romWord-opBits-1) + "])\n"
 	} else {
-		result += "						case (rom_value[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(arch.R)) + "])\n"
+		result += "						case (rom_value[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)) + "])\n"
 	}
-
 	for i := 0; i < regNum; i++ {
-		result += "\t\t					" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "\t\t						addr_ram_m2rri <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
-		result += "\t\t						$display(\"M2RRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
-		result += "\t\t					end\n"
-	}
-	result += "\t					endcase\n"
+		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
+		if arch.R == 1 {
+			result += "							case (rom_value[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + "])\n"
+		} else {
+			result += "							case (rom_value[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(arch.R)) + "])\n"
+		}
+
+		for j := 0; j < regNum; j++ {
+			result += "							" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
+
+			result += "								if (state_read_mem_m2rri == 1'b1) begin\n"
+			result += "									_" + strings.ToLower(Get_register_name(i)) + " <= #1 ram_dout;\n"
+			result += "									state_read_mem_m2rri <= 1'b0;\n"
+			result += "									_pc <= #1 _pc + 1'b1 ;\n"
+			result += "								end\n"
+			result += "								else begin\n"
+			result += "									if (wait_read_mem == 1'b1) begin\n"
+			result += "										state_read_mem_m2rri <= 1'b1;\n"
+			result += "										wait_read_mem <= 1'b0;\n"
+			result += "									end\n"
+			result += "									else begin\n"
+			result += "										wait_read_mem <= 1'b1;\n"
+			result += "										addr_ram_m2rri <= #1 _" + strings.ToLower(Get_register_name(j)) + ";\n"
+			result += "									end\n"
+			result += "								end\n"
+			result += "								$display(\"M2RRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(j)) + ");\n"
+
+			result += "							end\n"
+
+		}
+		result += "							endcase\n"
+		result += "						end\n"
+	}
+	result += "						endcase\n"
 	result += "					end\n"
 	return result
+
 }
 
 func (op M2rri) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
