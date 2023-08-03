@@ -93,6 +93,10 @@ func (op R2m) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 		ramAddr = " (current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "]==M2RRI) ? addr_ram_m2rri: " + ramAddr
 	}
 
+	if arch.Modes[0] == "hy" || arch.Modes[0] == "vn" {
+		ramAddr = " (vn_state == FETCH | vn_state == WAIT) ? _pc : " + ramAddr
+	}
+
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {
 		result += "\tassign ram_addr = " + ramAddr + ";\n"
 	}
