@@ -23,8 +23,9 @@ var debug = flag.Bool("d", false, "Verbose")
 // BondMachine targets
 
 var bondmachineFile = flag.String("bondmachine", "", "Load a bondmachine JSON file")
-var outFile = flag.String("o", "", "Output file")
-var target = flag.String("target", "bondmachine", "Choose the assembler target among: bondmachine, bcof (BondMachineClusteredObjectFormat) ")
+var outFile = flag.String("o", "", "Output file or prefix (in case of multiple output files)")
+var sections = flag.String("sections", "", "JSON file containing a map of which section compile against a specific CP (for ex: { \"code1\": 0, \"code2\": 1})")
+var target = flag.String("target", "bondmachine", "Choose the assembler target among: bondmachine, mem, bcof (BondMachineClusteredObjectFormat) ")
 
 // Utils
 var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parameter of the BondMachine")
@@ -261,6 +262,11 @@ func main() {
 			}
 		}
 
+	case "mem":
+		if err := bi.Assembler2MEM(); err != nil {
+			bi.Alert("Error in creating a Mem file", err)
+			return
+		}
 	case "bcof":
 		if err := bi.Assembler2BCOF(); err != nil {
 			bi.Alert("Error in creating a BCOF file", err)
