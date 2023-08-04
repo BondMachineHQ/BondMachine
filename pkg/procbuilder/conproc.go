@@ -153,6 +153,32 @@ func NextInstruction(conf *Config, arch *Arch, tabs int, jumpTo string) string {
 	}
 	return result
 }
+
+func ExecutionCase(conf *Config, arch *Arch, tabs int, open bool) string {
+	result := ""
+	tabS := ""
+	for i := 0; i < tabs; i++ {
+		tabS += "\t"
+	}
+
+	switch arch.Modes[0] {
+	case "ha":
+	case "hy":
+		if open {
+			result += tabS + "if (exec_mode == 1'b0 || vn_state == EXECUTE) begin\n"
+		} else {
+			result += tabS + "end\n"
+		}
+	case "vn":
+		if open {
+			result += tabS + "if (vn_state == EXECUTE) begin\n"
+		} else {
+			result += tabS + "end\n"
+		}
+	}
+	return result
+}
+
 func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_name string, flavor string) string {
 	regsize := int(proc.Rsize)
 	rom_word := arch.Max_word()
@@ -345,23 +371,9 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 		result += "	localparam FETCH=1'b00, WAIT=1'b10, EXECUTE=1'b01;\n"
 		result += "	assign current_instruction= (exec_mode==1'b0) rom_value : ram_instruction;\n"
 		result += "\n"
-		result += "	always @(posedge clock_signal, posedge reset_signal)\n"
-		result += "	begin\n"
-		result += "		case (vn_state)\n"
-		result += "		FETCH: begin\n"
-		result += "			vn_state <= WAIT;\n"
-		result += "		end\n"
-		result += "		WAIT: begin\n"
-		result += "			vn_state <= EXECUTE;\n"
-		result += "			ram_instruction <= ram_dout;\n"
-		result += "		end\n"
-		result += "		//EXECUTE: begin\n"
-		result += "		//end\n"
-		result += "		endcase\n"
-		result += "	end\n"
-		result += "\n"
 		if !arch.HasOp("r2m") && !arch.HasOp("m2r") && !arch.HasOp("r2mri") && !arch.HasOp("m2rri") {
 			result += "	assign ram_addr = _pc;\n"
+			result += "	assign ram_en = 1'b1;\n"
 		}
 	case "vn":
 		result += "\n"
@@ -371,23 +383,9 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 		result += "	localparam FETCH=1'b00, WAIT=1'b10, EXECUTE=1'b01;\n"
 		result += "	assign current_instruction=ram_instruction;\n"
 		result += "\n"
-		result += "	always @(posedge clock_signal, posedge reset_signal)\n"
-		result += "	begin\n"
-		result += "		case (vn_state)\n"
-		result += "		FETCH: begin\n"
-		result += "			vn_state <= WAIT;\n"
-		result += "		end\n"
-		result += "		WAIT: begin\n"
-		result += "			vn_state <= EXECUTE;\n"
-		result += "			ram_instruction <= ram_dout;\n"
-		result += "		end\n"
-		result += "		//EXECUTE: begin\n"
-		result += "		//end\n"
-		result += "		endcase\n"
-		result += "	end\n"
-		result += "\n"
 		if !arch.HasOp("r2m") && !arch.HasOp("m2r") && !arch.HasOp("r2mri") && !arch.HasOp("m2rri") {
 			result += "	assign ram_addr = _pc;\n"
+			result += "	assign ram_en = 1'b1;\n"
 		}
 	}
 
@@ -423,9 +421,17 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 	case "ha":
 		result += "			// ha placeholder\n"
 	case "hy":
-		result += "			if (exec_mode == 1'b0 || vn_state == EXECUTE) begin\n"
+		result += "			if (exec_mode == 1'b1 && vn_state == FETCH) begin\n"
+		result += "				vn_state <= EXECUTE;\n"
+		result += "				ram_instruction <= ram_dout;\n"
+		result += "			else begin\n"
 	case "vn":
-		result += "			if (vn_state == EXECUTE) begin\n"
+		result += "			case (vn_state)\n"
+		result += "			FETCH: begin\n"
+		result += "				vn_state <= EXECUTE;\n"
+		result += "				ram_instruction <= ram_dout;\n"
+		result += "			end\n"
+		result += "			EXECUTE: begin\n"
 	}
 
 	result += "			$display(\"Program Counter:%d\", _pc);\n"
@@ -459,9 +465,9 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 	}
 
 	if opbits == 1 {
-		result += "				case(rom_value[" + strconv.Itoa(rom_word-1) + "])\n"
+		result += "				case(current_instruction[" + strconv.Itoa(rom_word-1) + "])\n"
 	} else {
-		result += "				case(rom_value[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
+		result += "				case(current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
 	}
 
 	for _, op := range proc.Op {
@@ -487,7 +493,8 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 	case "hy":
 		result += "			end\n"
 	case "vn":
-		result += "			end\n"
+		result += "				end\n"
+		result += "			endcase\n"
 	}
 
 	result += "		end\n"

@@ -69,6 +69,7 @@ func (op R2o) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 			result += "\t\tend\n"
 			result += "\t\telse\n"
 			result += "\t\tbegin\n"
+			result += ExecutionCase(conf, arch, 2, true)
 
 			if opbits == 1 {
 				result += "\t\t\tcase(current_instruction[" + strconv.Itoa(rom_word-1) + "])\n"
@@ -88,7 +89,7 @@ func (op R2o) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 			result += "\t\t\t\tend\n"
 
 			result += "\t\t\tendcase\n"
-
+			result += ExecutionCase(conf, arch, 2, false)
 			result += "\t\tend\n"
 
 			result += "\tend\n"
