@@ -201,6 +201,8 @@ func (m *BasmSection) String() string {
 		result += yellow("[.romdata]")
 	case sectRomText:
 		result += yellow("[.romtext]")
+	case sectRamText:
+		result += yellow("[.ramtext]")
 	}
 	result += m.sectionBody.String()
 	return result
