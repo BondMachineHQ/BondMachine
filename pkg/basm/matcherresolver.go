@@ -18,12 +18,16 @@ func matcherResolver(bi *BasmInstance) error {
 
 	// Loop over the sections
 	for sectName, section := range bi.sections {
-		if section.sectionType == setcRomText {
+		if section.sectionType == sectRomText || section.sectionType == sectRamText {
 			if bi.debug {
 				fmt.Println(green("\t\tSection: ") + sectName)
 			}
 
-			bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+			if section.sectionType == sectRomText {
+				bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+			} else {
+				bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+			}
 
 			body := section.sectionBody
 
@@ -55,16 +59,31 @@ func matcherResolver(bi *BasmInstance) error {
 
 				opname := maching.Op_get_name()
 
-				bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + sectName, T: bmreqs.ObjectSet, Name: "opcodes", Value: opname, Op: bmreqs.OpAdd})
+				if section.sectionType == sectRomText {
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + sectName, T: bmreqs.ObjectSet, Name: "opcodes", Value: opname, Op: bmreqs.OpAdd})
+				} else {
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts/sections:" + sectName, T: bmreqs.ObjectSet, Name: "opcodes", Value: opname, Op: bmreqs.OpAdd})
+				}
 
 				// Normalize instruction
-				if normalized, err := maching.HLAssemblerNormalize(nil, bi.rg, "/code:romtexts/sections:"+sectName, line); err != nil {
-					return err
-				} else {
-					if bi.debug {
-						fmt.Println(green("\t\t\t\tNormalized line: ") + normalized.String())
+				if section.sectionType == sectRomText {
+					if normalized, err := maching.HLAssemblerNormalize(nil, bi.rg, "/code:romtexts/sections:"+sectName, line); err != nil {
+						return err
+					} else {
+						if bi.debug {
+							fmt.Println(green("\t\t\t\tNormalized line: ") + normalized.String())
+						}
+						body.Lines[i] = normalized
 					}
-					body.Lines[i] = normalized
+				} else {
+					if normalized, err := maching.HLAssemblerNormalize(nil, bi.rg, "/code:ramtexts/sections:"+sectName, line); err != nil {
+						return err
+					} else {
+						if bi.debug {
+							fmt.Println(green("\t\t\t\tNormalized line: ") + normalized.String())
+						}
+						body.Lines[i] = normalized
+					}
 				}
 			}
 		} else {

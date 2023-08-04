@@ -207,12 +207,16 @@ func metadataInfer(bi *BasmInstance) error {
 
 	// Loop over the sections
 	for sectName, section := range bi.sections {
-		if section.sectionType == setcRomText {
+		if section.sectionType == sectRomText || section.sectionType == sectRamText {
 			if bi.debug {
 				fmt.Println(green("\t\tSection: ") + sectName)
 			}
 
-			bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+			if section.sectionType == sectRomText {
+				bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+			} else {
+				bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+			}
 
 			body := section.sectionBody
 

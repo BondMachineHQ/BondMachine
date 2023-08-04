@@ -13,7 +13,9 @@ import (
 
 const (
 	sectRomData = uint8(0) + iota
-	setcRomText
+	sectRomText
+	sectRamData
+	sectRamText
 )
 
 // The instance
@@ -197,7 +199,7 @@ func (m *BasmSection) String() string {
 	switch m.sectionType {
 	case sectRomData:
 		result += yellow("[.romdata]")
-	case setcRomText:
+	case sectRomText:
 		result += yellow("[.romtext]")
 	}
 	result += m.sectionBody.String()

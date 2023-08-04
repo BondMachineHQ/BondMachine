@@ -39,7 +39,7 @@ func romComposer(bi *BasmInstance) error {
 
 		newSection := new(BasmSection)
 		newSection.sectionName = cpNewSectionName
-		newSection.sectionType = setcRomText
+		newSection.sectionType = sectRomText
 		newSection.sectionBody = sectionCode.sectionBody.Copy()
 
 		// Collection locations

@@ -11,7 +11,7 @@ func dynamicalInstructions(bi *BasmInstance) error {
 
 	// Loop over the sections
 	for sectName, section := range bi.sections {
-		if section.sectionType == setcRomText {
+		if section.sectionType == sectRomText || section.sectionType == sectRamText {
 			if bi.debug {
 				fmt.Println(green("\t\tSection: ") + sectName)
 			}

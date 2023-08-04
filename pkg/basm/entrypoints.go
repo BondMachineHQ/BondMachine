@@ -8,7 +8,7 @@ import (
 // section entry points detection, the pass detects the label used as entry point of the section and sign it as metadata.
 func entryPoints(bi *BasmInstance) error {
 	for sectName, section := range bi.sections {
-		if section.sectionType == setcRomText {
+		if section.sectionType == sectRomText || section.sectionType == sectRamText {
 			if bi.debug {
 				fmt.Println(green("\tProcessing section: " + sectName))
 			}

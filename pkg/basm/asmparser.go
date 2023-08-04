@@ -120,7 +120,11 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 				case ".romdata":
 					sectionType = sectRomData
 				case ".romtext":
-					sectionType = setcRomText
+					sectionType = sectRomText
+				case ".ramdata":
+					sectionType = sectRamData
+				case ".ramtext":
+					sectionType = sectRamText
 				default:
 					return errors.New(line + ", section definition has an unknown type " + argS[2])
 				}
