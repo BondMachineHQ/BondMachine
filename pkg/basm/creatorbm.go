@@ -201,6 +201,7 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 
 	for i, cp := range bi.cps {
 		romCode := cp.GetMeta("romcode")
+		romData := cp.GetMeta("romdata")
 		myMachine := bMach.Domains[i]
 		myArch := &myMachine.Arch
 
@@ -218,6 +219,40 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 			myMachine.Program = prog
 		} else {
 			return err
+		}
+
+		if romData != "" {
+			wordSize := myArch.Max_word()
+			fmt.Println("Word size: ", wordSize)
+			wordPad := ""
+			for i := 0; i < int(wordSize); i++ {
+				wordPad += "0"
+			}
+			if wordSize < 8 {
+				return errors.New("word size is too small")
+			}
+
+			data := make([]string, 0)
+
+			for _, line := range bi.sections[romData].sectionBody.Lines {
+				for _, arg := range line.Elements {
+					hexVal := arg.GetValue()
+					if n, err := bmnumbers.ImportString(hexVal); err == nil {
+						nS, _ := n.ExportBinary(false)
+						nS = "00000000" + nS
+						nS = nS[len(nS)-8:]
+						nS = nS + wordPad
+						nS = nS[:wordSize]
+						data = append(data, nS)
+					} else {
+						return err
+					}
+				}
+			}
+
+			myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines) + len(data)))
+			myMachine.Data.Vars = data
+
 		}
 
 	}
@@ -584,8 +619,12 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 	// 	return nil, err
 	// }
 
+	// myArch.WordSize = uint8(16)
+
+	// If there is a data section, we need to add it to the machine and update the O field prior to assembling
 	if romData != "" {
 		wordSize := myMachine.Max_word()
+		// fmt.Println("Word size: ", wordSize)
 		wordPad := ""
 		for i := 0; i < int(wordSize); i++ {
 			wordPad += "0"
@@ -601,7 +640,7 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 				hexVal := arg.GetValue()
 				if n, err := bmnumbers.ImportString(hexVal); err == nil {
 					nS, _ := n.ExportBinary(false)
-					nS = wordPad + nS
+					nS = nS + wordPad
 					nS = nS[len(nS)-int(wordSize):]
 					data = append(data, nS)
 				} else {
@@ -611,7 +650,7 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 		}
 
 		myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines) + len(data)))
-		myMachine.Data.Vars = data
+		// myMachine.Data.Vars = data
 
 	}
 

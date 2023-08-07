@@ -368,8 +368,8 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 		result += "	reg [" + strconv.Itoa(int(rom_word)-1) + ":0] ram_instruction;\n"
 		result += "	reg exec_mode; // 0 = harvard , 1=VN\n"
 		result += "	reg [1:0] vn_state;\n"
-		result += "	localparam FETCH=1'b00, WAIT=1'b10, EXECUTE=1'b01;\n"
-		result += "	assign current_instruction= (exec_mode==1'b0) rom_value : ram_instruction;\n"
+		result += "	localparam FETCH=2'b00, WAIT=2'b10, EXECUTE=2'b01;\n"
+		result += "	assign current_instruction= (exec_mode==1'b0) ? rom_value : ram_instruction;\n"
 		result += "\n"
 		if !arch.HasOp("r2m") && !arch.HasOp("m2r") && !arch.HasOp("r2mri") && !arch.HasOp("m2rri") {
 			result += "	assign ram_addr = _pc;\n"
@@ -380,7 +380,7 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 		result += "	wire [" + strconv.Itoa(int(rom_word)-1) + ":0] current_instruction;\n"
 		result += "	reg [" + strconv.Itoa(int(rom_word)-1) + ":0] ram_instruction;\n"
 		result += "	reg [1:0] vn_state;\n"
-		result += "	localparam FETCH=1'b00, WAIT=1'b10, EXECUTE=1'b01;\n"
+		result += "	localparam FETCH=2'b00, WAIT=2'b10, EXECUTE=2'b01;\n"
 		result += "	assign current_instruction=ram_instruction;\n"
 		result += "\n"
 		if !arch.HasOp("r2m") && !arch.HasOp("m2r") && !arch.HasOp("r2mri") && !arch.HasOp("m2rri") {
@@ -424,6 +424,7 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 		result += "			if (exec_mode == 1'b1 && vn_state == FETCH) begin\n"
 		result += "				vn_state <= EXECUTE;\n"
 		result += "				ram_instruction <= ram_dout;\n"
+		result += "			end\n"
 		result += "			else begin\n"
 	case "vn":
 		result += "			case (vn_state)\n"

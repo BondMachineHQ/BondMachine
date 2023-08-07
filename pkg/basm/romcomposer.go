@@ -81,6 +81,9 @@ func romComposer(bi *BasmInstance) error {
 			}
 		}
 
+		// TODO Temporary fix
+		usefullSection = true
+
 		bi.sections[newSection.sectionName] = newSection
 		if usefullSection {
 			cp.BasmMeta = cp.BasmMeta.SetMeta("romcode", newSection.sectionName)

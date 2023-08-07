@@ -95,7 +95,7 @@ func (op R2mri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 	}
 
 	if arch.Modes[0] == "hy" || arch.Modes[0] == "vn" {
-		ramAddr = " (vn_state == FETCH | vn_state == WAIT) ? _pc : " + ramAddr
+		ramAddr = " (exec_mode == 1'b1 && vn_state == FETCH) ? _pc : " + ramAddr
 	}
 
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {

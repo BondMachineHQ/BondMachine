@@ -41,13 +41,25 @@ func (op Saj) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 }
 
 func (op Saj) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
-	// TODO
-	result := ""
-	result += "				SAJ: begin\n"
-	result += "					$display(\"SAJ\");\n"
-	result += NextInstruction(conf, arch, 5, "_pc + 1'b1")
-	result += "				end\n"
+	rom_word := arch.Max_word()
+	opbits := arch.Opcodes_bits()
 
+	result := ""
+	result += "					SAJ: begin\n"
+	result += "					if (exec_mode == 1'b0) begin\n"
+	result += "						exec_mode <= 1'b1;\n"
+	result += "						vn_state <= FETCH;\n"
+	result += "					end else begin\n"
+	result += "						exec_mode <= 1'b0;\n"
+	result += "					end\n"
+	if arch.O == 1 {
+		result += "						_pc <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "];\n"
+		result += "						$display(\"SAJ \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "]);\n"
+	} else {
+		result += "						_pc <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)) + "];\n"
+		result += "						$display(\"SAJ \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)) + "]);\n"
+	}
+	result += "					end\n"
 	return result
 }
 
