@@ -19,13 +19,16 @@ func (mach *Machine) Specs() string {
 	result += "    Inputs: " + strconv.Itoa(int(mach.N)) + "\n"
 	result += "    Outputs: " + strconv.Itoa(int(mach.M)) + "\n"
 	ops := ""
-	for i := 0; i < len(mach.Conproc.Op); i++ {
+	instrNum := len(mach.Conproc.Op)
+	for i := 0; i < instrNum; i++ {
 		ops += fmt.Sprint(mach.Conproc.Op[i].Op_get_name()) + "(" + fmt.Sprint(mach.Conproc.Op[i].Op_get_instruction_len(&mach.Arch)) + ")"
-		if i < len(mach.Conproc.Op)-1 {
+		if i < instrNum-1 {
 			ops += ","
 		}
 	}
-	result += "    ISA: " + ops + "\n"
+	result += "    ISA:\n"
+	result += "        Istructions: " + fmt.Sprint(instrNum) + "(" + fmt.Sprint(Needed_bits(instrNum)) + ")\n"
+	result += "        " + ops + "\n"
 	modes := ""
 	for i := 0; i < len(mach.Modes); i++ {
 		modes += fmt.Sprint(mach.Modes[i])
