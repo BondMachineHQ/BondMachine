@@ -48,43 +48,44 @@ func (Op M2r) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 }
 
 func (Op M2r) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
+	result := ""
+	return result
+}
+
+func (Op M2r) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
+	result := ""
+	return result
+}
+
+func (op M2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 
 	reg_num := 1 << arch.R
 
 	result := ""
-	result += "\t\t\tif(state_read_mem) begin\n"
 
+	result += "					M2R: begin\n"
+	result += "						if (state_read_mem == 0) begin\n"
+	result += "							state_read_mem <= #1 1'b1;\n"
+	result += "						end\n"
+	result += "						else begin\n"
+	result += "							state_read_mem <= #1 1'b0;\n"
+	result += NextInstruction(nil, arch, 7, "_pc + 1'b1")
 	if arch.R == 1 {
-		result += "				case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "							case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 	} else {
-		result += "				case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "							case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
-		result += "					" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "						_" + strings.ToLower(Get_register_name(i)) + " <= #1 ram_dout;\n"
-		result += "						state_read_mem <= #1 1'b0;\n"
-		result += "						$display(\"M2R " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
-		result += "					end\n"
+		result += "								" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
+		result += "									_" + strings.ToLower(Get_register_name(i)) + " <= #1 ram_dout;\n"
+		result += "									$display(\"M2R " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
+		result += "								end\n"
 	}
-	result += "				endcase\n"
-	result += NextInstruction(nil, arch, 4, "_pc + 1'b1")
-	result += "\t\t\tend\n"
+	result += "							endcase\n"
 
-	return result
-}
-
-func (Op M2r) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
-	result := ""
-	result += "\t\t\t\tstate_read_mem <= #1 1'b0;\n"
-	return result
-}
-
-func (op M2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
-	result := ""
-	result += "					M2R: begin\n"
-	result += "						state_read_mem <= #1 1'b1;\n"
+	result += "						end\n"
 	result += "					end\n"
 	return result
 }

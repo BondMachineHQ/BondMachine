@@ -51,14 +51,48 @@ func (Op R2mri) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 }
 
 func (op R2mri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
-	//rom_word := arch.Max_word()
-	//opbits := arch.Opcodes_bits()
+	rom_word := arch.Max_word()
+	opbits := arch.Opcodes_bits()
 
-	//reg_num := 1 << arch.R
+	reg_num := 1 << arch.R
 
 	result := ""
 	result += "					R2MRI: begin\n"
-	result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
+	result += "						if (wr_int_ram == 0) begin\n"
+	result += "							wr_int_ram <= #1 1'b1;\n"
+
+	if arch.R == 1 {
+		result += "							case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+	} else {
+		result += "							case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+	}
+	for i := 0; i < reg_num; i++ {
+		result += "								" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
+
+		if arch.R == 1 {
+			result += "									case (current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + "])\n"
+		} else {
+			result += "									case (current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.R)) + "])\n"
+		}
+
+		for j := 0; j < reg_num; j++ {
+			result += "										" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
+			result += "											addr_ram_to_mem <= _" + strings.ToLower(Get_register_name(j)) + ";\n"
+			result += "											ram_din_i <= _" + strings.ToLower(Get_register_name(i)) + ";\n"
+			result += "											$display(\"R2MRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(j)) + ");\n"
+			result += "										end\n"
+
+		}
+		result += "									endcase\n"
+
+		result += "								end\n"
+	}
+	result += "							endcase\n"
+	result += "						end\n"
+	result += "						else begin\n"
+	result += "							wr_int_ram <= #1 1'b0;\n"
+	result += NextInstruction(nil, arch, 7, "_pc + 1'b1")
+	result += "						end\n"
 	result += "					end\n"
 
 	return result
@@ -100,68 +134,6 @@ func (op R2mri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 
 	if arch.OnlyOne(op.Op_get_name(), []string{"r2mri", "r2m", "m2r", "m2rri"}) {
 		result += "\tassign ram_addr = " + ramAddr + ";\n"
-	}
-
-	reg_num := 1 << arch.R
-
-	// This is always the last module if present
-	firstModule := true
-	lastModule := true
-
-	// If r2m is also present, that will be the first opcode
-	for _, currOp := range arch.Op {
-		if currOp.Op_get_name() == "r2m" {
-			firstModule = false
-			break
-		}
-	}
-
-	if firstModule {
-		result += "\talways @(posedge clock_signal)\n"
-		result += "\tbegin\n"
-		if opbits == 1 {
-			result += "\t\tcase (current_instruction[" + strconv.Itoa(rom_word-1) + "])\n"
-		} else {
-			result += "\t\tcase (current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
-		}
-	}
-
-	result += "		R2MRI: begin\n"
-
-	if arch.R == 1 {
-		result += "			case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
-	} else {
-		result += "			case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
-	}
-	for i := 0; i < reg_num; i++ {
-		result += "				" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-
-		if arch.R == 1 {
-			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + "])\n"
-		} else {
-			result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-int(arch.R)) + "])\n"
-		}
-
-		for j := 0; j < reg_num; j++ {
-			result += "						" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
-			result += "							wr_int_ram <= 1'b1;\n"
-			result += "							addr_ram_to_mem <= _" + strings.ToLower(Get_register_name(j)) + ";\n"
-			result += "							ram_din_i <= _" + strings.ToLower(Get_register_name(i)) + ";\n"
-			result += "							$display(\"R2MRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
-			result += "						end\n"
-
-		}
-		result += "							endcase\n"
-
-		result += "				end\n"
-	}
-	result += "			endcase\n"
-	result += "\t	end\n"
-	if lastModule {
-		result += "\t	default:\n"
-		result += "			wr_int_ram <= 1'b0;\n"
-		result += "\t	endcase\n"
-		result += "\tend\n"
 	}
 
 	return result

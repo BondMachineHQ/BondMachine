@@ -422,6 +422,9 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 		result += "			// ha placeholder\n"
 	case "hy":
 		result += "			if (exec_mode == 1'b1 && vn_state == FETCH) begin\n"
+		result += "				vn_state <= WAIT;\n"
+		result += "			end\n"
+		result += "			else if (exec_mode == 1'b1 && vn_state == WAIT) begin\n"
 		result += "				vn_state <= EXECUTE;\n"
 		result += "				ram_instruction <= ram_dout;\n"
 		result += "			end\n"
