@@ -559,6 +559,10 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 	// Processing Code sections: CP has to have at least one code section
 	// Getting the ROM code requirements
 
+	if romCode == "" && ramCode == "" {
+		return nil, errors.New("no code section specified, neither ROM nor RAM")
+	}
+
 	if romCode != "" {
 		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "opcodes", Op: bmreqs.OpGet})
 		if resp.Error != nil {
