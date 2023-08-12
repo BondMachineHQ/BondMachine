@@ -85,6 +85,24 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 			}
 		}
 
+		ramCode := cp.GetMeta("ramcode")
+		if bi.debug {
+			if ramCode != "" {
+				fmt.Println("\t\t" + green("ram code: ") + yellow(ramCode))
+			} else {
+				fmt.Println("\t\t" + green("ram code: ") + yellow("not specified"))
+			}
+		}
+
+		ramData := cp.GetMeta("ramdata")
+		if bi.debug {
+			if ramData != "" {
+				fmt.Println("\t\t" + green("ram data: ") + yellow(ramData))
+			} else {
+				fmt.Println("\t\t" + green("ram data: ") + yellow("not specified"))
+			}
+		}
+
 		execMode := cp.GetMeta("execmode")
 		if execMode == "" {
 			execMode = bi.global.GetMeta("defaultexecmode")
@@ -104,7 +122,7 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 
 		bi.rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps", T: bmreqs.ObjectSet, Name: "id", Value: strconv.Itoa(i), Op: bmreqs.OpAdd})
 
-		if cpm, err := bi.CreateConnectingProcessor(rSize, i, romCode, romData, execMode); err == nil {
+		if cpm, err := bi.CreateConnectingProcessor(rSize, i, romCode, romData, ramCode, ramData, execMode); err == nil {
 			cps[i] = cpm
 			cpIndexes[cp.GetValue()] = strconv.Itoa(i)
 			if bi.BMinfo != nil {
@@ -526,7 +544,7 @@ func (bi *BasmInstance) assembler2ExistingBondMachine() error {
 	return nil
 }
 
-func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCode string, romData string, execMode string) (*procbuilder.Machine, error) {
+func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCode string, romData string, ramCode string, ramData string, execMode string) (*procbuilder.Machine, error) {
 	myMachine := new(procbuilder.Machine)
 
 	myArch := &myMachine.Arch
