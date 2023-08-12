@@ -554,22 +554,45 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 	myArch.Modes = make([]string, 1)
 	myArch.Modes[0] = execMode
 
-	resp := bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "opcodes", Op: bmreqs.OpGet})
-	if resp.Error != nil {
-		return nil, resp.Error
+	var resp bmreqs.ReqResponse
+
+	// Processing Code sections: CP has to have at least one code section
+	// Getting the ROM code requirements
+
+	if romCode != "" {
+		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "opcodes", Op: bmreqs.OpGet})
+		if resp.Error != nil {
+			return nil, resp.Error
+		}
 	}
 
-	bi.rg.Clone("/code:romtexts/sections:"+romCode, "/bm:cps/id:"+strconv.Itoa(procid))
+	opCodesROM := strings.Split(resp.Value, ",")
 
-	opCodesS := strings.Split(resp.Value, ",")
+	// Getting the RAM code requirements
+	if ramCode != "" {
+		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts/sections:" + ramCode, Name: "opcodes", Op: bmreqs.OpGet})
+		if resp.Error != nil {
+			return nil, resp.Error
+		}
+	}
 
+	opCodesRAM := strings.Split(resp.Value, ",")
+
+	// The final list of opcodes is the union of the two lists
 	opcodes := make([]procbuilder.Opcode, 0)
 
+outer:
 	for _, op := range procbuilder.Allopcodes {
-		for _, opn := range opCodesS {
+		for _, opn := range opCodesROM {
 			if opn == op.Op_get_name() {
 				opcodes = append(opcodes, op)
-				break
+				continue outer
+			}
+		}
+		for _, opn := range opCodesRAM {
+			if opn == op.Op_get_name() {
+				opcodes = append(opcodes, op)
+				continue outer
 			}
 		}
 	}
@@ -577,6 +600,8 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 	sort.Sort(procbuilder.ByName(opcodes))
 
 	myArch.Op = opcodes
+
+	bi.rg.Clone("/code:romtexts/sections:"+romCode, "/bm:cps/id:"+strconv.Itoa(procid))
 
 	// Getting the registers requirements on the ROM code
 	resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "registers", Op: bmreqs.OpGet})
