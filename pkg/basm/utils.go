@@ -186,3 +186,32 @@ func nextRes(res string) string {
 	num, _ := strconv.Atoi(res[1:])
 	return string(ty) + strconv.Itoa(num+1)
 }
+
+func compareStrings(str1, str2 string) bool {
+	// Extract the numbers from the strings
+	num1, err1 := extractNumber(str1)
+	num2, err2 := extractNumber(str2)
+
+	// If both strings contain numbers, compare them as numbers
+	if err1 == nil && err2 == nil {
+		return num1 < num2
+	}
+
+	// Otherwise, compare them as strings
+	return str1 < str2
+}
+
+func extractNumber(str string) (int, error) {
+	// Find the index of the first digit
+	tokens := strings.FieldsFunc(str, func(r rune) bool {
+		return !('0' <= r && r <= '9')
+	})
+
+	// If no numeric tokens were found, return an error
+	if len(tokens) == 0 {
+		return 0, fmt.Errorf("No numeric tokens found in %s", str)
+	}
+
+	// Otherwise, return the last token as an integer
+	return strconv.Atoi(tokens[len(tokens)-1])
+}
