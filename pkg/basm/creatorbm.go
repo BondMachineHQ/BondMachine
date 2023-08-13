@@ -65,41 +65,43 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 
 	for i, cp := range bi.cps {
 		if bi.debug {
-			fmt.Print("\t\t" + green("CP: ") + yellow(cp.GetValue()))
+			fmt.Println("\t\t" + green("CP: ") + yellow(cp.GetValue()))
 		}
 		romCode := cp.GetMeta("romcode")
-		if romCode == "" {
-			return errors.New("CP rom code not found")
-		}
+
 		if bi.debug {
-			fmt.Println(" - " + green("rom code: ") + yellow(romCode))
+			if romCode != "" {
+				fmt.Println("\t\t - " + green("rom code: ") + yellow(romCode))
+			} else {
+				fmt.Println("\t\t - " + green("rom code: ") + yellow("not specified"))
+			}
 		}
 
 		romData := cp.GetMeta("romdata")
 
 		if bi.debug {
 			if romData != "" {
-				fmt.Println("\t\t" + green("rom data: ") + yellow(romData))
+				fmt.Println("\t\t - " + green("rom data: ") + yellow(romData))
 			} else {
-				fmt.Println("\t\t" + green("rom data: ") + yellow("not specified"))
+				fmt.Println("\t\t - " + green("rom data: ") + yellow("not specified"))
 			}
 		}
 
 		ramCode := cp.GetMeta("ramcode")
 		if bi.debug {
 			if ramCode != "" {
-				fmt.Println("\t\t" + green("ram code: ") + yellow(ramCode))
+				fmt.Println("\t\t - " + green("ram code: ") + yellow(ramCode))
 			} else {
-				fmt.Println("\t\t" + green("ram code: ") + yellow("not specified"))
+				fmt.Println("\t\t - " + green("ram code: ") + yellow("not specified"))
 			}
 		}
 
 		ramData := cp.GetMeta("ramdata")
 		if bi.debug {
 			if ramData != "" {
-				fmt.Println("\t\t" + green("ram data: ") + yellow(ramData))
+				fmt.Println("\t\t - " + green("ram data: ") + yellow(ramData))
 			} else {
-				fmt.Println("\t\t" + green("ram data: ") + yellow("not specified"))
+				fmt.Println("\t\t - " + green("ram data: ") + yellow("not specified"))
 			}
 		}
 
@@ -110,9 +112,9 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 
 		if bi.debug {
 			if execMode != "" {
-				fmt.Println("\t\t" + green("execution mode: ") + yellow(execMode))
+				fmt.Println("\t\t - " + green("execution mode: ") + yellow(execMode))
 			} else {
-				fmt.Println("\t\t" + green("execution mode: ") + yellow("not specified, defaulting to 'ha'"))
+				fmt.Println("\t\t - " + green("execution mode: ") + yellow("not specified, defaulting to 'ha'"))
 			}
 		}
 
@@ -563,14 +565,17 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 		return nil, errors.New("no code section specified, neither ROM nor RAM")
 	}
 
+	opCodesROM := make([]string, 0)
+
 	if romCode != "" {
 		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "opcodes", Op: bmreqs.OpGet})
 		if resp.Error != nil {
 			return nil, resp.Error
 		}
+		opCodesROM = strings.Split(resp.Value, ",")
 	}
 
-	opCodesROM := strings.Split(resp.Value, ",")
+	opCodesRAM := make([]string, 0)
 
 	// Getting the RAM code requirements
 	if ramCode != "" {
@@ -578,74 +583,175 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCo
 		if resp.Error != nil {
 			return nil, resp.Error
 		}
+		opCodesRAM = strings.Split(resp.Value, ",")
 	}
-
-	opCodesRAM := strings.Split(resp.Value, ",")
-
-	// The final list of opcodes is the union of the two lists
-	opcodes := make([]procbuilder.Opcode, 0)
+	// The final list of opCodes is the union of the two lists
+	opCodes := make([]procbuilder.Opcode, 0)
 
 outer:
 	for _, op := range procbuilder.Allopcodes {
 		for _, opn := range opCodesROM {
 			if opn == op.Op_get_name() {
-				opcodes = append(opcodes, op)
+				opCodes = append(opCodes, op)
 				continue outer
 			}
 		}
 		for _, opn := range opCodesRAM {
 			if opn == op.Op_get_name() {
-				opcodes = append(opcodes, op)
+				opCodes = append(opCodes, op)
 				continue outer
 			}
 		}
 	}
 
-	sort.Sort(procbuilder.ByName(opcodes))
+	sort.Sort(procbuilder.ByName(opCodes))
 
-	myArch.Op = opcodes
+	myArch.Op = opCodes
 
+	// TODO: check how it is used and if it is needed, eventually remove or substitute with the merge of the two lists
 	bi.rg.Clone("/code:romtexts/sections:"+romCode, "/bm:cps/id:"+strconv.Itoa(procid))
 
+	regs := make([]string, 0)
+
 	// Getting the registers requirements on the ROM code
-	resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "registers", Op: bmreqs.OpGet})
-	if resp.Error != nil {
-		return nil, resp.Error
+	if romCode != "" {
+		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "registers", Op: bmreqs.OpGet})
+		if resp.Error != nil {
+			return nil, resp.Error
+		}
+
+		regs = strings.Split(resp.Value, ",")
 	}
 
-	// TODO CHECK: Only the number is relevant for now
-	regS := len(strings.Split(resp.Value, ","))
-	myArch.R = uint8(Needed_bits(regS))
+	// Getting the registers requirements on the RAM code, appending to the previous list
+	if ramCode != "" {
+		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts/sections:" + ramCode, Name: "registers", Op: bmreqs.OpGet})
+		if resp.Error != nil {
+			return nil, resp.Error
+		}
+		for _, reg := range strings.Split(resp.Value, ",") {
+			if !stringInSlice(reg, regs) {
+				regs = append(regs, reg)
+			}
+		}
+	}
+
+	// Sorting the registers list (ordering using the compareStrings function)
+	sort.Slice(regs, func(i, j int) bool {
+		return compareStrings(regs[i], regs[j])
+	})
+
+	// Getting the last register in the list
+	lastReg := regs[len(regs)-1]
+
+	// Getting the register number
+	regNum, _ := strconv.Atoi(lastReg[1:])
+
+	// To store up to the last register, we need regNum+1 registers
+	myArch.R = uint8(Needed_bits(regNum + 1))
+
+	// If the length of the register list is different from the number of registers, emit a warning
+	if len(regs) != regNum+1 {
+		bi.Warning("Register list is not complete, some registers are missing. This is not an error provided you know what you are doing.")
+	}
+
+	ins := make([]string, 0)
+
+	// Getting the Input requirements on the ROM code
+	if romCode != "" {
+		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "inputs", Op: bmreqs.OpGet})
+		if resp.Error == nil {
+			ins = strings.Split(resp.Value, ",")
+		}
+	}
+	// Getting the Input requirements on the RAM code, appending to the previous list
+	if ramCode != "" {
+		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts/sections:" + ramCode, Name: "inputs", Op: bmreqs.OpGet})
+		if resp.Error == nil {
+			for _, in := range strings.Split(resp.Value, ",") {
+				if !stringInSlice(in, ins) {
+					ins = append(ins, in)
+				}
+			}
+		}
+	}
+
+	if len(ins) == 0 {
+		bi.Warning("No inputs found on ROM/RAM code, assuming 0")
+		myArch.N = uint8(0)
+	} else {
+		// Sorting the inputs list (ordering using the compareStrings function)
+		sort.Slice(ins, func(i, j int) bool {
+			return compareStrings(ins[i], ins[j])
+		})
+
+		// Getting the last input in the list
+		lastIn := ins[len(ins)-1]
+
+		// Getting the input number
+		inNum, _ := strconv.Atoi(lastIn[1:])
+		// To store up to the last input, we need inNum+1 inputs
+		myArch.N = uint8(inNum + 1)
+
+		if len(ins) != inNum+1 {
+			bi.Warning("Input list is not complete, some inputs are missing. This is not an error, but you are wasting resources.")
+		}
+	}
+
+	outs := make([]string, 0)
+
+	// Getting the Output requirements on the ROM code
+	if romCode != "" {
+		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "outputs", Op: bmreqs.OpGet})
+		if resp.Error == nil {
+			outs = strings.Split(resp.Value, ",")
+		}
+	}
+
+	// Getting the Output requirements on the RAM code, appending to the previous list
+	if ramCode != "" {
+		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts/sections:" + ramCode, Name: "outputs", Op: bmreqs.OpGet})
+		if resp.Error == nil {
+			for _, out := range strings.Split(resp.Value, ",") {
+				if !stringInSlice(out, outs) {
+					outs = append(outs, out)
+				}
+			}
+		}
+	}
+
+	if len(outs) == 0 {
+		bi.Warning("No outputs found on ROM/RAM code, assuming 0")
+		myArch.M = uint8(0)
+	} else {
+		// Sorting the outputs list (ordering using the compareStrings function)
+		sort.Slice(outs, func(i, j int) bool {
+			return compareStrings(outs[i], outs[j])
+		})
+
+		// Getting the last output in the list
+		lastOut := outs[len(outs)-1]
+
+		// Getting the output number
+		outNum, _ := strconv.Atoi(lastOut[1:])
+		// To store up to the last output, we need outNum+1 outputs
+		myArch.M = uint8(outNum + 1)
+
+		if len(outs) != outNum+1 {
+			bi.Warning("Output list is not complete, some outputs are missing. This is not an error, but you are wasting resources.")
+		}
+	}
+
+	// Here start the mess with the RAM/ROM size, word size, etc.
+
+	myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))
 
 	// TODO RAM
 	// myarch.L = uint8(Needed_bits(preq.Ramsize))
 	myArch.L = uint8(8)
 
-	// Getting the Input requirements on the ROM code
-	resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "inputs", Op: bmreqs.OpGet})
-	if resp.Error != nil {
-		myArch.N = uint8(0)
-		bi.Warning("No inputs found on ROM code, assuming 0")
-	} else {
-		// TODO CHECK: Only the number is relevant for now
-		inputS := len(strings.Split(resp.Value, ","))
-		myArch.N = uint8(inputS)
-	}
-
-	// Getting the Output requirements on the ROM code
-	resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "outputs", Op: bmreqs.OpGet})
-	if resp.Error != nil {
-		myArch.M = uint8(0)
-		bi.Warning("No outputs found on ROM code, assuming 0")
-	} else {
-		// TODO CHECK: Only the number is relevant for now
-		outputS := len(strings.Split(resp.Value, ","))
-		myArch.M = uint8(outputS)
-	}
-
-	myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))
-
 	// TODO remove it, just for testing purposes	myArch.WordSize = uint8(8)
+
 	// The shared constrains will be populated later from the basm metadata
 	myArch.Shared_constraints = ""
 
@@ -668,7 +774,7 @@ outer:
 
 	// myArch.WordSize = uint8(16)
 
-	// If there is a data section, we need to add it to the machine and update the O field prior to assembling
+	// If there is a data section, we need to add it to the machine and update the myArch.O field prior to assembling
 	if romData != "" {
 		wordSize := myMachine.Max_word()
 		// fmt.Println("Word size: ", wordSize)
@@ -700,6 +806,8 @@ outer:
 		// myMachine.Data.Vars = data
 
 	}
+
+	// TODO ADD ramData
 
 	return myMachine, nil
 }
