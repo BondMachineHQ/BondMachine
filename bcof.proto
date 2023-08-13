@@ -1,0 +1,12 @@
+syntax = "proto3";
+option go_package = "./bcof";
+package bcof;
+
+message BCOFEntry {
+	uint32 id = 1;
+	string signature = 2;
+	oneof payload {
+		BCOFEntry sub = 3;
+		bytes data = 4;
+	}
+}
