@@ -137,9 +137,9 @@ func Sequence_to_0(start string) ([]string, uint8) {
 		obj := re.ReplaceAllString(start, "${obj}")
 
 		value_string := re.ReplaceAllString(start, "${value}")
-		tempvalue, _ := strconv.Atoi(value_string)
-		result = make([]string, tempvalue+1)
-		for i := 0; i < tempvalue+1; i++ {
+		tempValue, _ := strconv.Atoi(value_string)
+		result = make([]string, tempValue+1)
+		for i := 0; i < tempValue+1; i++ {
 			result[i] = obj + strconv.Itoa(i)
 		}
 		switch obj {
