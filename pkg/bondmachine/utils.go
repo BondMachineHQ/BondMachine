@@ -76,43 +76,4 @@ func ImportNumber(c *Config, input string) (uint64, error) {
 	} else {
 		return 0, err
 	}
-
-	// if len(input) > 2 {
-	// 	if input[:2] == "0x" {
-	// 		// TODO Hex
-	// 	} else if input[:2] == "0b" {
-	// 		// TODO Binary
-	// 	} else if input[:2] == "0d" {
-	// 		// Decimal (also the default)
-	// 		if s, err := strconv.Atoi(input[2:]); err == nil {
-	// 			return uint64(s), nil
-	// 		} else {
-	// 			return 0, errors.New("invalid number" + input)
-	// 		}
-	// 	} else if input[:2] == "0f" {
-	// 		// Float32
-	// 		if s, err := strconv.ParseFloat(input[2:], 32); err == nil {
-	// 			return uint64(math.Float32bits(float32(s))), nil
-	// 		} else {
-	// 			return 0, errors.New("unknown float32 number " + input)
-	// 		}
-	// 	} else {
-	// 		// Decimal (also the default)
-	// 		if s, err := strconv.Atoi(input); err == nil {
-	// 			return uint64(s), nil
-	// 		} else {
-	// 			return 0, errors.New("invalid number" + input)
-	// 		}
-
-	// 	}
-	// } else {
-	// 	// Decimal (also the default)
-	// 	if s, err := strconv.Atoi(input); err == nil {
-	// 		return uint64(s), nil
-	// 	} else {
-	// 		return 0, errors.New("invalid number" + input)
-	// 	}
-	// }
-
-	// return 0, errors.New("unknown number format " + input)
 }
