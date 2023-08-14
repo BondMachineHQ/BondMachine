@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -77,7 +76,7 @@ func main() {
 	if *bondmachineFile != "" {
 		if _, err := os.Stat(*bondmachineFile); err == nil {
 			// Open the bondmachine file is exists
-			if bondmachineJSON, err := ioutil.ReadFile(*bondmachineFile); err == nil {
+			if bondmachineJSON, err := os.ReadFile(*bondmachineFile); err == nil {
 				var bmj bondmachine.Bondmachine_json
 				if err := json.Unmarshal([]byte(bondmachineJSON), &bmj); err == nil {
 					bm = (&bmj).Dejsoner()
@@ -105,7 +104,7 @@ func main() {
 
 	if *bmInfoFile != "" {
 		bi.BMinfo = new(bminfo.BMinfo)
-		if bmInfoJSON, err := ioutil.ReadFile(*bmInfoFile); err == nil {
+		if bmInfoJSON, err := os.ReadFile(*bmInfoFile); err == nil {
 			if err := json.Unmarshal(bmInfoJSON, bi.BMinfo); err != nil {
 				panic(err)
 			}
@@ -245,7 +244,7 @@ func main() {
 		if *bmInfoFile != "" {
 			// Write the config file
 			if bmInfoFileJSON, err := json.MarshalIndent(bi.BMinfo, "", "  "); err == nil {
-				ioutil.WriteFile(*bmInfoFile, bmInfoFileJSON, 0644)
+				os.WriteFile(*bmInfoFile, bmInfoFileJSON, 0644)
 			} else {
 				panic(err)
 			}
@@ -254,7 +253,7 @@ func main() {
 		if *dumpRequirements != "" {
 			// Write the requirements file
 			if requirementsJSON, err := json.MarshalIndent(bi.DumpRequirements(), "", "  "); err == nil {
-				ioutil.WriteFile(*dumpRequirements, requirementsJSON, 0644)
+				os.WriteFile(*dumpRequirements, requirementsJSON, 0644)
 			} else {
 				panic(err)
 			}

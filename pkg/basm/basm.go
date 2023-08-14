@@ -80,6 +80,7 @@ type BasmMacro struct {
 
 func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 
+	bi.bm = bm
 	// bi.verbose = false
 	// bi.debug = false
 	bi.isWithinMacro = ""

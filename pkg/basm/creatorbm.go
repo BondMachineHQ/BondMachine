@@ -24,7 +24,7 @@ func (bi *BasmInstance) Assembler2BondMachine() error {
 		if bi.debug {
 			fmt.Println(purple("BondMachine generator") + ": " + red("An existing BondMachine has been provided, the assembler will use that as assembler target"))
 		}
-		return bi.assembler2ExistingBondMachine()
+		bi.result = bi.bm
 	}
 	return nil
 }
@@ -538,11 +538,6 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 
 	bi.result = bMach
 
-	return nil
-}
-
-func (bi *BasmInstance) assembler2ExistingBondMachine() error {
-	// TODO
 	return nil
 }
 
