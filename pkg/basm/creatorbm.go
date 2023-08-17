@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
@@ -124,7 +125,7 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 
 		bi.rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps", T: bmreqs.ObjectSet, Name: "id", Value: strconv.Itoa(i), Op: bmreqs.OpAdd})
 
-		if cpm, err := bi.CreateConnectingProcessor(rSize, i, romCode, romData, ramCode, ramData, execMode); err == nil {
+		if cpm, err := bi.CreateConnectingProcessor(rSize, cp, i, romCode, romData, ramCode, ramData, execMode); err == nil {
 			cps[i] = cpm
 			cpIndexes[cp.GetValue()] = strconv.Itoa(i)
 			if bi.BMinfo != nil {
@@ -541,7 +542,7 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 	return nil
 }
 
-func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, procid int, romCode string, romData string, ramCode string, ramData string, execMode string) (*procbuilder.Machine, error) {
+func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, cp *bmline.BasmElement, procid int, romCode string, romData string, ramCode string, ramData string, execMode string) (*procbuilder.Machine, error) {
 	myMachine := new(procbuilder.Machine)
 
 	myArch := &myMachine.Arch
@@ -738,14 +739,57 @@ outer:
 	}
 
 	// Here start the mess with the RAM/ROM size, word size, etc.
+	// Compute the word size and the RAM/ROM size, check the eventual cp options
 
-	myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))
+	// This is the sequence of check in order of priority (valid both for ROM and RAM):
+	// - Check if there is a cp option for the word size and use it overriding the other options. In the case of missing resources, the assembler will fail
+	// - TODO: Check requirements
+	//   - TODO From the direct opcodes
+	//   - TODO From the indirect opcodes
+	// - Check the ROM code size and use it (eventually adding the data section size).
 
-	// TODO RAM
-	// myarch.L = uint8(Needed_bits(preq.Ramsize))
-	myArch.L = uint8(8)
+	if cp.GetMeta("romsize") != "" {
+		if val, err := strconv.Atoi(cp.GetMeta("romsize")); err == nil {
+			myArch.O = uint8(val)
+			if bi.debug {
+				fmt.Println("\t\t - " + green("romsize (cp config): ") + yellow(cp.GetMeta("romsize")))
+			}
+		} else {
+			return nil, err
+		}
+	} else if romCode != "" {
+		myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))
+		if bi.debug {
+			fmt.Println("\t\t - " + green("romsize (pre-data): ") + yellow(strconv.Itoa(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))))
+		}
+	} else {
+		myArch.O = uint8(0)
+		if bi.debug {
+			fmt.Println("\t\t - " + green("romsize (pre-data): ") + yellow("0"))
+		}
+	}
 
-	// TODO remove it, just for testing purposes	myArch.WordSize = uint8(8)
+	if cp.GetMeta("ramsize") != "" {
+		if val, err := strconv.Atoi(cp.GetMeta("ramsize")); err == nil {
+			myArch.L = uint8(val)
+			if bi.debug {
+				fmt.Println("\t\t - " + green("ramsize (cp config): ") + yellow(cp.GetMeta("ramsize")))
+			}
+		} else {
+			return nil, err
+		}
+
+	} else if ramCode != "" {
+		myArch.L = uint8(Needed_bits(len(bi.sections[ramCode].sectionBody.Lines)))
+		if bi.debug {
+			fmt.Println("\t\t - " + green("ramsize (pre-data): ") + yellow(strconv.Itoa(Needed_bits(len(bi.sections[ramCode].sectionBody.Lines)))))
+		}
+	} else {
+		myArch.L = uint8(0)
+		if bi.debug {
+			fmt.Println("\t\t - " + green("ramsize (pre-data): ") + yellow("0"))
+		}
+	}
 
 	// The shared constrains will be populated later from the basm metadata
 	myArch.Shared_constraints = ""
@@ -766,8 +810,6 @@ outer:
 	// } else {
 	// 	return nil, err
 	// }
-
-	// myArch.WordSize = uint8(16)
 
 	// If there is a data section, we need to add it to the machine and update the myArch.O field prior to assembling
 	if romData != "" {
@@ -796,13 +838,47 @@ outer:
 				}
 			}
 		}
-
-		myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines) + len(data)))
-		// myMachine.Data.Vars = data
-
+		// TODO finire post-data
+		if romCode != "" {
+			myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines) + len(data)))
+		} else {
+			myArch.O = uint8(Needed_bits(len(data)))
+		}
 	}
 
-	// TODO ADD ramData
+	if ramData != "" {
+		rSize := myArch.Rsize
+		ramPad := ""
+		for i := 0; i < int(rSize); i++ {
+			ramPad += "0"
+		}
+		if rSize < 8 {
+			return nil, errors.New("register size is too small")
+		}
+
+		data := make([]string, 0)
+
+		for _, line := range bi.sections[ramData].sectionBody.Lines {
+			for _, arg := range line.Elements {
+				hexVal := arg.GetValue()
+				if n, err := bmnumbers.ImportString(hexVal); err == nil {
+					nS, _ := n.ExportBinary(false)
+					nS = nS + ramPad
+					nS = nS[len(nS)-int(rSize):]
+					data = append(data, nS)
+				} else {
+					return nil, err
+				}
+			}
+		}
+
+		// TODO finire post-data
+		if ramCode != "" {
+			myArch.L = uint8(Needed_bits(len(bi.sections[ramCode].sectionBody.Lines) + len(data)))
+		} else {
+			myArch.L = uint8(Needed_bits(len(data)))
+		}
+	}
 
 	return myMachine, nil
 }

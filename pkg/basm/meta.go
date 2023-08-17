@@ -216,6 +216,8 @@ func (bi *BasmInstance) filteredMetaAdd(el *bmline.BasmElement, key string, valu
 		case "romdata":
 		case "ramcode":
 		case "ramdata":
+		case "romsize":
+		case "ramsize":
 		case "execmode":
 		case "fragcollapse":
 		default:

@@ -1,6 +1,9 @@
 package basm
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+)
 
 // Assembler2BCOF transform an assembled instance into a BCOF file
 func (bi *BasmInstance) Assembler2BCOF() error {
@@ -29,6 +32,16 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 		}
 		// if the name of the CP (cp.GetValue()) is in the form of "cpN" (where N is a number) then we have to compile against the N-th CP of the result BM
 		// otherwise we have to compile against the CP with the same name that can be found into the bminfo file
+		re := regexp.MustCompile("^cp(?P<cpId>[0-9]+)$")
+		if re.MatchString(cp.GetValue()) {
+			cpId := re.ReplaceAllString(cp.GetValue(), "${cpId}")
+			if bi.debug {
+				fmt.Println("\t\t - " + green("cpId: ") + yellow(cpId))
+			}
+			//TODO
+		} else {
+			//TODO
+		}
 	}
 	//TODO
 	return nil
