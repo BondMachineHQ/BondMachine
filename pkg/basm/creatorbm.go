@@ -228,23 +228,29 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 
 		prog := ""
 
-		for _, line := range bi.sections[romCode].sectionBody.Lines {
-			prog += line.Operation.GetValue()
-			for _, arg := range line.Elements {
-				prog += " " + arg.GetValue()
-			}
-			prog += "\n"
-		}
+		romCodeContrib := 0
 
-		if prog, err := myArch.Assembler([]byte(prog)); err == nil {
-			myMachine.Program = prog
-		} else {
-			return err
+		if romCode != "" {
+			for _, line := range bi.sections[romCode].sectionBody.Lines {
+				prog += line.Operation.GetValue()
+				for _, arg := range line.Elements {
+					prog += " " + arg.GetValue()
+				}
+				prog += "\n"
+			}
+
+			if prog, err := myArch.Assembler([]byte(prog)); err == nil {
+				myMachine.Program = prog
+			} else {
+				return err
+			}
+
+			romCodeContrib = len(bi.sections[romCode].sectionBody.Lines)
 		}
 
 		if romData != "" {
 			wordSize := myArch.Max_word()
-			fmt.Println("Word size: ", wordSize)
+			// fmt.Println("Word size: ", wordSize)
 			wordPad := ""
 			for i := 0; i < int(wordSize); i++ {
 				wordPad += "0"
@@ -271,7 +277,7 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 				}
 			}
 
-			myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines) + len(data)))
+			myArch.O = uint8(Needed_bits(romCodeContrib + len(data)))
 			myMachine.Data.Vars = data
 
 		}
@@ -748,8 +754,10 @@ outer:
 	//   - TODO From the indirect opcodes
 	// - Check the ROM code size and use it (eventually adding the data section size).
 
+	romCodeContrib := 0
 	if cp.GetMeta("romsize") != "" {
 		if val, err := strconv.Atoi(cp.GetMeta("romsize")); err == nil {
+			romCodeContrib = 2 ^ val
 			myArch.O = uint8(val)
 			if bi.debug {
 				fmt.Println("\t\t - " + green("romsize (cp config): ") + yellow(cp.GetMeta("romsize")))
@@ -758,19 +766,24 @@ outer:
 			return nil, err
 		}
 	} else if romCode != "" {
-		myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))
+		romCodeContrib = len(bi.sections[romCode].sectionBody.Lines)
+		myArch.O = uint8(Needed_bits(romCodeContrib))
 		if bi.debug {
 			fmt.Println("\t\t - " + green("romsize (pre-data): ") + yellow(strconv.Itoa(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))))
 		}
 	} else {
+		romCodeContrib = 0
 		myArch.O = uint8(0)
 		if bi.debug {
 			fmt.Println("\t\t - " + green("romsize (pre-data): ") + yellow("0"))
 		}
 	}
 
+	ramCodeContrib := 0
+
 	if cp.GetMeta("ramsize") != "" {
 		if val, err := strconv.Atoi(cp.GetMeta("ramsize")); err == nil {
+			ramCodeContrib = 2 ^ val
 			myArch.L = uint8(val)
 			if bi.debug {
 				fmt.Println("\t\t - " + green("ramsize (cp config): ") + yellow(cp.GetMeta("ramsize")))
@@ -780,12 +793,14 @@ outer:
 		}
 
 	} else if ramCode != "" {
-		myArch.L = uint8(Needed_bits(len(bi.sections[ramCode].sectionBody.Lines)))
+		ramCodeContrib = len(bi.sections[ramCode].sectionBody.Lines)
+		myArch.L = uint8(Needed_bits(ramCodeContrib))
 		if bi.debug {
 			fmt.Println("\t\t - " + green("ramsize (pre-data): ") + yellow(strconv.Itoa(Needed_bits(len(bi.sections[ramCode].sectionBody.Lines)))))
 		}
 	} else {
 		myArch.L = uint8(0)
+		ramCodeContrib = 0
 		if bi.debug {
 			fmt.Println("\t\t - " + green("ramsize (pre-data): ") + yellow("0"))
 		}
@@ -838,12 +853,8 @@ outer:
 				}
 			}
 		}
-		// TODO finire post-data
-		if romCode != "" {
-			myArch.O = uint8(Needed_bits(len(bi.sections[romCode].sectionBody.Lines) + len(data)))
-		} else {
-			myArch.O = uint8(Needed_bits(len(data)))
-		}
+
+		myArch.O = uint8(Needed_bits(romCodeContrib + len(data)))
 	}
 
 	if ramData != "" {
@@ -872,12 +883,7 @@ outer:
 			}
 		}
 
-		// TODO finire post-data
-		if ramCode != "" {
-			myArch.L = uint8(Needed_bits(len(bi.sections[ramCode].sectionBody.Lines) + len(data)))
-		} else {
-			myArch.L = uint8(Needed_bits(len(data)))
-		}
+		myArch.L = uint8(Needed_bits(ramCodeContrib + len(data)))
 	}
 
 	return myMachine, nil
