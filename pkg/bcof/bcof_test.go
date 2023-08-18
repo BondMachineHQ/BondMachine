@@ -12,12 +12,30 @@ import (
 
 func TestBCOF(t *testing.T) {
 	// Create a BCOF file.
+
+	bcofData := &BCOFData{
+		Id:        1,
+		Rsize:     8,
+		Signature: "data",
+		Payload:   []byte("hello world"),
+	}
+
+	list := make([]*BCOFEntrySubentry, 2)
+	list[0] = new(BCOFEntrySubentry)
+	bin1 := new(BCOFEntrySubentry_Binary)
+	bin1.Binary = bcofData
+	list[0].Pl = bin1
+
+	list[1] = new(BCOFEntrySubentry)
+	bin2 := new(BCOFEntrySubentry_Binary)
+	bin2.Binary = bcofData
+	list[1].Pl = bin2
+
 	bcof := &BCOFEntry{
 		Id:        1,
+		Rsize:     8,
 		Signature: "sub",
-		Payload: &BCOFEntry_Data{
-			Data: []byte("hello world"),
-		},
+		Data:      list,
 	}
 
 	fmt.Println(bcof)

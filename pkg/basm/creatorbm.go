@@ -134,12 +134,6 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 				}
 				bi.CPNames[i] = cp.GetValue()
 			}
-			if bi.debug {
-				fmt.Println(green("\t\tProcessor created dump: "))
-				fmt.Println(green("\t\t----"))
-				fmt.Println(cpm)
-				fmt.Println(green("\t\t----"))
-			}
 		} else {
 			return err
 		}
@@ -282,6 +276,13 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 
 		}
 
+		if bi.debug {
+			fmt.Println("\t\t - " + green("romsize (post-data): ") + yellow(myArch.O))
+			fmt.Println(green("\t\tProcessor created dump: "))
+			fmt.Println(green("\t\t----"))
+			fmt.Println(cps[i])
+			fmt.Println(green("\t\t----"))
+		}
 	}
 
 	// Will keep track of the processed attach

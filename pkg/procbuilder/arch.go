@@ -249,35 +249,49 @@ func (arch *Arch) Assembler_process_line(line []byte) (string, error) {
 
 func (arch *Arch) Assembler(inp []byte) (Program, error) {
 	// TODO keep in mind this
-	currline := make([]byte, 256)
+	curLine := make([]byte, 256)
 
-	maxlines := make([]string, int(1<<arch.O))
-	iline := 0
+	var maxLines []string
+
+	switch arch.Modes[0] {
+	case "ha":
+		maxLines = make([]string, int(1<<arch.O))
+	case "vn":
+		maxLines = make([]string, int(1<<arch.L))
+	case "hy":
+		if arch.O > arch.L {
+			maxLines = make([]string, int(1<<arch.O))
+		} else {
+			maxLines = make([]string, int(1<<arch.L))
+		}
+	}
+
+	iLine := 0
 	j := 0
-	impline := 1
+	impLine := 1
 	for _, ch := range inp {
 		if ch == 10 {
 			//fmt.Println(currline[0:iline])
 			//fmt.Println(string(currline[0:iline]))
-			if result, err := arch.Assembler_process_line(currline[0:iline]); err == nil {
+			if result, err := arch.Assembler_process_line(curLine[0:iLine]); err == nil {
 				if result != "" {
-					maxlines[j] = result
+					maxLines[j] = result
 					j = j + 1
-					impline = impline + 1
+					impLine = impLine + 1
 				}
-				iline = 0
+				iLine = 0
 			} else {
-				return Program{}, Prerror{err.Error() + " on line " + strconv.Itoa(impline)}
+				return Program{}, Prerror{err.Error() + " on line " + strconv.Itoa(impLine)}
 			}
 		} else {
-			currline[iline] = ch
-			iline = iline + 1
+			curLine[iLine] = ch
+			iLine = iLine + 1
 		}
 	}
 
-	lines := make([]string, impline-1)
+	lines := make([]string, impLine-1)
 	for i, _ := range lines {
-		lines[i] = maxlines[i]
+		lines[i] = maxLines[i]
 	}
 
 	//	for i := j; i < int(1<<arch.O); i++ {

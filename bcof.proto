@@ -2,11 +2,24 @@ syntax = "proto3";
 option go_package = "./bcof";
 package bcof;
 
+message BCOFData {
+	uint32 id = 1;
+	uint32 rsize = 2;
+	string signature = 3;
+	bytes payload = 4;
+}
+
 message BCOFEntry {
 	uint32 id = 1;
-	string signature = 2;
-	oneof payload {
-		BCOFEntry sub = 3;
-		bytes data = 4;
+	uint32 rsize = 2;
+	string signature = 3;
+
+	message subentry {
+		oneof pl {
+			BCOFData binary = 1;
+			BCOFEntry leaf = 2;
+		}
 	}
+	
+	repeated subentry data = 4;
 }

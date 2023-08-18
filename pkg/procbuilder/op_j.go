@@ -24,13 +24,37 @@ func (op J) Op_get_desc() string {
 
 func (op J) Op_show_assembler(arch *Arch) string {
 	opbits := arch.Opcodes_bits()
-	result := "j [" + strconv.Itoa(int(arch.O)) + "(Location)]	// Jump to a program location [" + strconv.Itoa(opbits+int(arch.O)) + "]\n"
+	result := ""
+	switch arch.Modes[0] {
+	case "ha":
+		result = "j [" + strconv.Itoa(int(arch.O)) + "(Location)]	// Jump to a program location [" + strconv.Itoa(opbits+int(arch.O)) + "]\n"
+	case "vn":
+		result = "j [" + strconv.Itoa(int(arch.L)) + "(Location)]	// Jump to a program location [" + strconv.Itoa(opbits+int(arch.L)) + "]\n"
+	case "hy":
+		if arch.O > arch.L {
+			result = "j [" + strconv.Itoa(int(arch.O)) + "(Location)]	// Jump to a program location [" + strconv.Itoa(opbits+int(arch.O)) + "]\n"
+		} else {
+			result = "j [" + strconv.Itoa(int(arch.L)) + "(Location)]	// Jump to a program location [" + strconv.Itoa(opbits+int(arch.L)) + "]\n"
+		}
+	}
 	return result
 }
 
 func (op J) Op_get_instruction_len(arch *Arch) int {
 	opbits := arch.Opcodes_bits()
-	return opbits + int(arch.O) // The bits for the opcode + bits for a location
+	switch arch.Modes[0] {
+	case "ha":
+		return opbits + int(arch.O) // The bits for the opcode + bits for a location
+	case "vn":
+		return opbits + int(arch.L) // The bits for the opcode + bits for a location
+	case "hy":
+		if arch.O > arch.L {
+			return opbits + int(arch.O) // The bits for the opcode + bits for a location
+		} else {
+			return opbits + int(arch.L) // The bits for the opcode + bits for a location
+		}
+	}
+	return 0
 }
 
 func (op J) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
@@ -53,13 +77,28 @@ func (op J) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *b
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 
+	locationBits := arch.O
+
+	switch arch.Modes[0] {
+	case "ha":
+		locationBits = arch.O
+	case "vn":
+		locationBits = arch.L
+	case "hy":
+		if arch.O > arch.L {
+			locationBits = arch.O
+		} else {
+			locationBits = arch.L
+		}
+	}
+
 	result := ""
 	result += "					J: begin\n"
-	if arch.O == 1 {
+	if locationBits == 1 {
 		result += NextInstruction(conf, arch, 6, "current_instruction["+strconv.Itoa(rom_word-opbits-1)+"]")
 		result += "						$display(\"J \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "]);\n"
 	} else {
-		result += NextInstruction(conf, arch, 6, "current_instruction["+strconv.Itoa(rom_word-opbits-1)+":"+strconv.Itoa(rom_word-opbits-int(arch.O))+"]")
+		result += NextInstruction(conf, arch, 6, "current_instruction["+strconv.Itoa(rom_word-opbits-1)+":"+strconv.Itoa(rom_word-opbits-int(locationBits))+"]")
 		result += "						$display(\"J \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)) + "]);\n"
 	}
 	result += "					end\n"
@@ -74,18 +113,33 @@ func (op J) Assembler(arch *Arch, words []string) (string, error) {
 	opbits := arch.Opcodes_bits()
 	rom_word := arch.Max_word()
 
+	locationBits := arch.O
+
+	switch arch.Modes[0] {
+	case "ha":
+		locationBits = arch.O
+	case "vn":
+		locationBits = arch.L
+	case "hy":
+		if arch.O > arch.L {
+			locationBits = arch.O
+		} else {
+			locationBits = arch.L
+		}
+	}
+
 	if len(words) != 1 {
 		return "", Prerror{"Wrong arguments number"}
 	}
 
 	result := ""
 	if partial, err := Process_number(words[0]); err == nil {
-		result += zeros_prefix(int(arch.O), partial)
+		result += zeros_prefix(int(locationBits), partial)
 	} else {
 		return "", Prerror{err.Error()}
 	}
 
-	for i := opbits + int(arch.O); i < rom_word; i++ {
+	for i := opbits + int(locationBits); i < rom_word; i++ {
 		result += "0"
 	}
 
@@ -93,7 +147,23 @@ func (op J) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op J) Disassembler(arch *Arch, instr string) (string, error) {
-	value := get_id(instr[:arch.O])
+
+	locationBits := arch.O
+
+	switch arch.Modes[0] {
+	case "ha":
+		locationBits = arch.O
+	case "vn":
+		locationBits = arch.L
+	case "hy":
+		if arch.O > arch.L {
+			locationBits = arch.O
+		} else {
+			locationBits = arch.L
+		}
+	}
+
+	value := get_id(instr[:locationBits])
 	result := strconv.Itoa(value)
 	return result, nil
 }

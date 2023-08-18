@@ -102,6 +102,9 @@ func main() {
 		bi.SetVerbose()
 	}
 
+	// The BMinfo is always initialized and used internally. If the user wants to use it, it must be loaded from a file. Specifying the file is optional and it will be save only if specified.
+	bi.BMinfo = new(bminfo.BMinfo)
+
 	if *bmInfoFile != "" {
 		bi.BMinfo = new(bminfo.BMinfo)
 		if bmInfoJSON, err := os.ReadFile(*bmInfoFile); err == nil {

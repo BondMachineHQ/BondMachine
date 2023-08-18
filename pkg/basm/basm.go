@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
@@ -40,6 +41,7 @@ type BasmInstance struct {
 	matchersOps      []procbuilder.Opcode
 	bm               *bondmachine.Bondmachine
 	result           *bondmachine.Bondmachine
+	outBCOF          *bcof.BCOFEntry
 	rg               *bmreqs.ReqRoot
 	global           *bmline.BasmElement
 	cps              []*bmline.BasmElement
