@@ -87,6 +87,8 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 
 		var program *procbuilder.Program
 
+		cpPayload := bcof.NewBCOFData(uint32(rSize))
+
 		// To identify the CP id we have to check the following:
 		// - if the BM came from this assembler run, the BMinfo file will contain the CP id and we have to use it
 		// - if the BM came from the CLI, and the BMinfo is provided, we have to use the CP id from the BMinfo file
@@ -104,6 +106,9 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 						fmt.Println("\t\t - " + green("cpId: ") + yellow(id))
 					}
 
+					cpPayload.SetId(uint32(id))
+					cpPayload.SetSignature("cp" + strconv.Itoa(id)) // TODO: temporary name for the signature
+
 					prog := ""
 					for _, line := range bi.sections[ramCode].sectionBody.Lines {
 						prog += line.Operation.GetValue()
@@ -115,7 +120,7 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 					// Get the machine
 					myMachine := bi.result
 					myArch := myMachine.Domains[myMachine.Processors[id]].Arch
-					// TODO Finish this
+
 					if assembled, err := myArch.Assembler([]byte(prog)); err == nil {
 						program = &assembled
 					} else {
@@ -137,28 +142,31 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 				//TODO
 			}
 		}
+
 		for _, line := range program.Slocs {
 			// Pad the line to the padded register size
 			for len(line) < int(rSizePad) {
-				line += "0"
+				line = "0" + line
 			}
-			// Read the binary numbero with bmnumbers
-			num, _ := bmnumbers.ImportString("0b" + line)
-			for _, b := range num.GetBytes() {
-				fmt.Println(b)
-				// TODO Finish this, check if the bytes has to be reversed and correct the verilog code
-			}
+			// Read the binary number with bmnumbers
+			// fmt.Println("0b<" + strconv.Itoa(int(rSizePad)) + ">" + line)
+			num, _ := bmnumbers.ImportString("0b<" + strconv.Itoa(int(rSizePad)) + ">" + line)
+			cpPayload.Payload = append(cpPayload.Payload, num.GetBytes()...)
 		}
 
-		// Create the BCOF entry
-		// bcofData := &bcof.BCOFData{
-		// 	Id:        uint32(id),
-		// 	Rsize:     uint32(rSize),
-		// 	Signature: cp.GetValue(), // TODO: for now we use the CP name as signature
-		// 	Payload:   []byte(ramCode),
-		// }
+		bi.outBCOF.AddData(cpPayload)
 
+		if bi.debug {
+			fmt.Println(green("\t\tBCOF entry created dump: "))
+			fmt.Println(green("\t\t----"))
+			fmt.Println(cpPayload.Dump())
+			fmt.Println(green("\t\t----"))
+		}
 	}
 
 	return nil
+}
+
+func (bi *BasmInstance) GetBCOF() *bcof.BCOFEntry {
+	return bi.outBCOF
 }

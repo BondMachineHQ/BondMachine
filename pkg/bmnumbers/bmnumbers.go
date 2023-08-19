@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 )
 
 type ImportFunc func(*regexp.Regexp, string) (*BMNumber, error)
@@ -81,7 +82,10 @@ func (n *BMNumber) GetTypeName() string {
 }
 
 func (n *BMNumber) GetBytes() []byte {
-	return n.number
+	rev := make([]byte, len(n.number))
+	copy(rev, n.number)
+	slices.Reverse(rev)
+	return rev
 }
 
 func CastType(n *BMNumber, t BMNumberType) error {

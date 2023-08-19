@@ -14,6 +14,7 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
+	"google.golang.org/protobuf/proto"
 )
 
 var verbose = flag.Bool("v", false, "Verbose")
@@ -265,8 +266,15 @@ func main() {
 
 	if *bcofOutFile != "" {
 		if err := bi.Assembler2BCOF(); err != nil {
-			bi.Alert("Error in creating a BCOF file", err)
-			return
+			panic("Error in creating a BCOF file")
+		} else {
+			bcofBytes, err := proto.Marshal(bi.GetBCOF())
+			if err != nil {
+				panic("failed to marshal BCOF")
+			}
+			if err := os.WriteFile(*bcofOutFile, bcofBytes, 0644); err != nil {
+				panic("failed to write BCOF file")
+			}
 		}
 	}
 }
