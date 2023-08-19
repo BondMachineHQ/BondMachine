@@ -80,6 +80,10 @@ func (n *BMNumber) GetTypeName() string {
 	return n.nType.GetName()
 }
 
+func (n *BMNumber) GetBytes() []byte {
+	return n.number
+}
+
 func CastType(n *BMNumber, t BMNumberType) error {
 	if n == nil || n.number == nil {
 		return errors.New("Cannot cast type of nil number")

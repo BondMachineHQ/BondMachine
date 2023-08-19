@@ -102,8 +102,8 @@ func dbDataConverter(line string) ([]string, error) {
 	result := make([]string, 0)
 
 	withinString := false
-	currElem := ""
-	currNumeric := true
+	curElem := ""
+	curNumeric := true
 
 	for i := 0; i < len(trimmed); i++ {
 		ch := trimmed[i]
@@ -111,43 +111,39 @@ func dbDataConverter(line string) ([]string, error) {
 		case '"':
 			withinString = !withinString
 			if withinString {
-				currNumeric = false
+				curNumeric = false
 			}
 		case ',':
 			if withinString {
-				currElem += string(ch)
+				curElem += string(ch)
 			} else {
-				if currElem != "" {
-					if converted, err := object2Bytes(currElem, currNumeric); err != nil {
+				if curElem != "" {
+					if converted, err := object2Bytes(curElem, curNumeric); err != nil {
 						return []string{}, err
 					} else {
-						for _, el := range converted {
-							result = append(result, el)
-						}
-						currElem = ""
-						currNumeric = true
+						result = append(result, converted...)
+						curElem = ""
+						curNumeric = true
 					}
 				}
 			}
 		default:
 			if withinString {
-				currElem += string(ch)
+				curElem += string(ch)
 			} else {
-				currElem += strings.TrimSpace(string(ch))
+				curElem += strings.TrimSpace(string(ch))
 			}
 		}
 	}
 
 	if withinString {
-		return []string{}, errors.New("A string has not been closed")
+		return []string{}, errors.New("a string has not been closed")
 	}
 
-	if converted, err := object2Bytes(currElem, currNumeric); err != nil {
+	if converted, err := object2Bytes(curElem, curNumeric); err != nil {
 		return []string{}, err
 	} else {
-		for _, el := range converted {
-			result = append(result, el)
-		}
+		result = append(result, converted...)
 	}
 
 	return result, nil

@@ -7,6 +7,8 @@ import (
 	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
+	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 )
 
 // Assembler2BCOF transform an assembled instance into a BCOF file
@@ -34,6 +36,13 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 	}
 	if bi.debug {
 		fmt.Println("\t\t"+green("register size:"), rSize)
+	}
+
+	// Compute the register size padded to 8 bit multiples (the BCOF format requires bytes)
+	rSizePad := 8 * ((rSize + 7) / 8)
+
+	if bi.debug {
+		fmt.Println("\t\t"+green("register size padded:"), rSizePad)
 	}
 
 	if bi.debug {
@@ -76,6 +85,8 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 			continue
 		}
 
+		var program *procbuilder.Program
+
 		// To identify the CP id we have to check the following:
 		// - if the BM came from this assembler run, the BMinfo file will contain the CP id and we have to use it
 		// - if the BM came from the CLI, and the BMinfo is provided, we have to use the CP id from the BMinfo file
@@ -105,36 +116,49 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 					myMachine := bi.result
 					myArch := myMachine.Domains[myMachine.Processors[id]].Arch
 					// TODO Finish this
-					if prog, err := myArch.Assembler([]byte(prog)); err == nil {
-						fmt.Println(prog)
+					if assembled, err := myArch.Assembler([]byte(prog)); err == nil {
+						program = &assembled
 					} else {
 						return err
 					}
 
-					// Create the BCOF entry
-					// bcofData := &bcof.BCOFData{
-					// 	Id:        uint32(id),
-					// 	Rsize:     uint32(rSize),
-					// 	Signature: cp.GetValue(), // TODO: for now we use the CP name as signature
-					// 	Payload:   []byte(ramCode),
-					// }
-
-					break
 				}
 			}
+		} else {
+
+			re := regexp.MustCompile("^cp(?P<cpId>[0-9]+)$")
+			if re.MatchString(cp.GetValue()) {
+				cpId := re.ReplaceAllString(cp.GetValue(), "${cpId}")
+				if bi.debug {
+					fmt.Println("\t\t - " + green("cpId: ") + yellow(cpId))
+				}
+				//TODO
+			} else {
+				//TODO
+			}
+		}
+		for _, line := range program.Slocs {
+			// Pad the line to the padded register size
+			for len(line) < int(rSizePad) {
+				line += "0"
+			}
+			// Read the binary numbero with bmnumbers
+			num, _ := bmnumbers.ImportString("0b" + line)
+			for _, b := range num.GetBytes() {
+				fmt.Println(b)
+				// TODO Finish this, check if the bytes has to be reversed and correct the verilog code
+			}
 		}
 
-		re := regexp.MustCompile("^cp(?P<cpId>[0-9]+)$")
-		if re.MatchString(cp.GetValue()) {
-			cpId := re.ReplaceAllString(cp.GetValue(), "${cpId}")
-			if bi.debug {
-				fmt.Println("\t\t - " + green("cpId: ") + yellow(cpId))
-			}
-			//TODO
-		} else {
-			//TODO
-		}
+		// Create the BCOF entry
+		// bcofData := &bcof.BCOFData{
+		// 	Id:        uint32(id),
+		// 	Rsize:     uint32(rSize),
+		// 	Signature: cp.GetValue(), // TODO: for now we use the CP name as signature
+		// 	Payload:   []byte(ramCode),
+		// }
+
 	}
-	//TODO
+
 	return nil
 }
