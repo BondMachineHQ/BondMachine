@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
@@ -59,6 +60,7 @@ type Bond struct {
 type Config struct {
 	*bminfo.BMinfo
 	*bmreqs.ReqRoot
+	*bcof.BCOFEntry
 	procbuilder.HwOptimizations
 	Debug            bool
 	Dotdetail        uint8
@@ -151,6 +153,7 @@ type EmuDriver interface {
 func (c *Config) ProcbuilderConfig() *procbuilder.Config {
 	result := new(procbuilder.Config)
 	result.ReqRoot = c.ReqRoot
+	result.BCOFEntry = c.BCOFEntry
 	result.HwOptimizations = c.HwOptimizations
 	result.Commented_verilog = c.CommentedVerilog
 	return result

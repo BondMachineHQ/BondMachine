@@ -120,7 +120,7 @@ func (rg *ReqRoot) run() {
 					if reqSet, ok := node.getMap()[req.Name]; ok {
 						resp.Value = reqSet.getReqs()
 					} else {
-						resp.Error = errors.New("set of requirements not found")
+						resp.Error = errors.New("set of requirements not found" + req.Name)
 					}
 				} else {
 					resp.Error = errors.New("Node decoding failed: " + fmt.Sprint(err))

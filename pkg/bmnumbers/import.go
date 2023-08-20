@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -21,6 +22,16 @@ func ImportString(input string) (*BMNumber, error) {
 	}
 
 	return nil, errors.New("unknown number format " + input)
+}
+
+func ImportBytes(input []byte, bits int) (*BMNumber, error) {
+	result := new(BMNumber)
+	result.nType = Unsigned{}
+	result.bits = bits
+	result.number = make([]byte, len(input))
+	copy(result.number, input)
+	slices.Reverse(result.number)
+	return result, nil
 }
 
 func ImportUint(input interface{}, optionalBits int) (*BMNumber, error) {

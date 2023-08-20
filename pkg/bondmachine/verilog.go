@@ -37,7 +37,7 @@ func nth_assoc(assoc string, seq int) string {
 func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOmap, extramods []ExtraModule, sbox *simbox.Simbox) error {
 	if len(bmach.Domains) != 0 {
 
-		pconf := conf.ProcbuilderConfig()
+		pConf := conf.ProcbuilderConfig()
 
 		// Check if the bmapi module is present, needed for the exclusion of the bondmachine_main module from the accelerators
 		var bmapiModuleAXIStream bool
@@ -59,7 +59,7 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 			ri := new(procbuilder.RuntimeInfo)
 			ri.Init()
 
-			pconf.Runinfo = ri
+			pConf.Runinfo = ri
 			dom := bmach.Domains[dom_id]
 
 			sharedlist := ""
@@ -94,7 +94,7 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 				f, err := os.Create(arch_names["processor"] + ".v")
 				check(err)
 				//defer f.Close()
-				_, err = f.WriteString(dom.Arch.Conproc.Write_verilog(pconf, &dom.Arch, arch_names["processor"], flavor))
+				_, err = f.WriteString(dom.Arch.Conproc.Write_verilog(pConf, &dom.Arch, arch_names["processor"], flavor))
 				check(err)
 				f.Close()
 			}
@@ -112,7 +112,7 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 					f, err := os.Create(arch_names["ram"] + ".v")
 					check(err)
 					//defer f.Close()
-					_, err = f.WriteString(dom.Arch.Ram.Write_verilog(dom, arch_names["ram"], flavor))
+					_, err = f.WriteString(dom.Arch.Ram.Write_verilog(pConf, dom, arch_names["ram"], flavor))
 					check(err)
 					f.Close()
 				}

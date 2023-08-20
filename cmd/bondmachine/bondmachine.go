@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
@@ -26,6 +27,7 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 	"github.com/BondMachineHQ/BondMachine/pkg/simbox"
 	"github.com/BondMachineHQ/BondMachine/pkg/udpbond"
+	"google.golang.org/protobuf/proto"
 )
 
 type string_slice []string
@@ -48,6 +50,8 @@ var commentedVerilog = flag.Bool("comment-verilog", false, "Comment generated ve
 var register_size = flag.Int("register-size", 8, "Number of bits per register (n-bit)")
 
 var bondmachine_file = flag.String("bondmachine-file", "", "Filename of the bondmachine")
+
+var bcofInFile = flag.String("bcof-file", "", "Use a BCOF file as input for RAM initialization")
 
 // Verilog processing
 var create_verilog = flag.Bool("create-verilog", false, "Create default verilog files")
@@ -235,6 +239,17 @@ func main() {
 	conf.HwOptimizations = 0
 	conf.Dotdetail = uint8(*dot_detail)
 	conf.CommentedVerilog = *commentedVerilog
+
+	if *bcofInFile != "" {
+		conf.BCOFEntry = new(bcof.BCOFEntry)
+		bcofBytes, err := os.ReadFile(*bcofInFile)
+		if err != nil {
+			panic("failed to read BCOF file")
+		}
+		if err := proto.Unmarshal(bcofBytes, conf.BCOFEntry); err != nil {
+			panic("failed to unmarshal BCOF")
+		}
+	}
 
 	if *hwOptimizations != "" {
 		for _, opt := range strings.Split(*hwOptimizations, ",") {

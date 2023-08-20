@@ -356,7 +356,7 @@ func main() {
 				f, err := os.Create("ram.v")
 				check(err)
 				defer f.Close()
-				_, err = f.WriteString(myarch.Ram.Write_verilog(mymachine, "p0ram", *verilog_flavor))
+				_, err = f.WriteString(myarch.Ram.Write_verilog(nil, mymachine, "p0ram", *verilog_flavor))
 				check(err)
 			}
 
@@ -399,7 +399,7 @@ func main() {
 					f, err := os.Create(*create_verilog_ram)
 					check(err)
 					defer f.Close()
-					_, err = f.WriteString(myarch.Ram.Write_verilog(mymachine, "p0ram", *verilog_flavor))
+					_, err = f.WriteString(myarch.Ram.Write_verilog(nil, mymachine, "p0ram", *verilog_flavor))
 					check(err)
 				}
 			}

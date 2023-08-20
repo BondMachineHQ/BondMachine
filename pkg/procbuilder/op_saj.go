@@ -13,26 +13,46 @@ import (
 type Saj struct{}
 
 func (op Saj) Op_get_name() string {
-	// TODO
 	return "saj"
 }
 
 func (op Saj) Op_get_desc() string {
-	// TODO
-	return "No operation"
+	return "Change the execution mode and jump to the address specified in the instruction"
 }
 
 func (op Saj) Op_show_assembler(arch *Arch) string {
-	// TODO
 	opbits := arch.Opcodes_bits()
-	result := "saj [" + strconv.Itoa(opbits) + "]	// No operation [" + strconv.Itoa(opbits) + "]\n"
+	result := ""
+	switch arch.Modes[0] {
+	case "ha":
+		result = "j [" + strconv.Itoa(int(arch.O)) + "(Location)]	// Change and Jump to a program location [" + strconv.Itoa(opbits+int(arch.O)) + "]\n"
+	case "vn":
+		result = "j [" + strconv.Itoa(int(arch.L)) + "(Location)]	// Change and Jump to a program location [" + strconv.Itoa(opbits+int(arch.L)) + "]\n"
+	case "hy":
+		if arch.O > arch.L {
+			result = "j [" + strconv.Itoa(int(arch.O)) + "(Location)]	// Change and Jump to a program location [" + strconv.Itoa(opbits+int(arch.O)) + "]\n"
+		} else {
+			result = "j [" + strconv.Itoa(int(arch.L)) + "(Location)]	// Change and Jump to a program location [" + strconv.Itoa(opbits+int(arch.L)) + "]\n"
+		}
+	}
 	return result
 }
 
 func (op Saj) Op_get_instruction_len(arch *Arch) int {
-	// TODO
 	opbits := arch.Opcodes_bits()
-	return opbits
+	switch arch.Modes[0] {
+	case "ha":
+		return opbits + int(arch.O) // The bits for the opcode + bits for a location
+	case "vn":
+		return opbits + int(arch.L) // The bits for the opcode + bits for a location
+	case "hy":
+		if arch.O > arch.L {
+			return opbits + int(arch.O) // The bits for the opcode + bits for a location
+		} else {
+			return opbits + int(arch.L) // The bits for the opcode + bits for a location
+		}
+	}
+	return 0
 }
 
 func (op Saj) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
@@ -44,6 +64,21 @@ func (op Saj) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 
+	locationBits := arch.O
+
+	switch arch.Modes[0] {
+	case "ha":
+		locationBits = arch.O
+	case "vn":
+		locationBits = arch.L
+	case "hy":
+		if arch.O > arch.L {
+			locationBits = arch.O
+		} else {
+			locationBits = arch.L
+		}
+	}
+
 	result := ""
 	result += "					SAJ: begin\n"
 	result += "					if (exec_mode == 1'b0) begin\n"
@@ -52,12 +87,12 @@ func (op Saj) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	result += "					end else begin\n"
 	result += "						exec_mode <= 1'b0;\n"
 	result += "					end\n"
-	if arch.O == 1 {
+	if locationBits == 1 {
 		result += "						_pc <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "];\n"
 		result += "						$display(\"SAJ \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "]);\n"
 	} else {
-		result += "						_pc <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)) + "];\n"
-		result += "						$display(\"SAJ \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.O)) + "]);\n"
+		result += "						_pc <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(locationBits)) + "];\n"
+		result += "						$display(\"SAJ \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(locationBits)) + "]);\n"
 	}
 	result += "					end\n"
 	return result
@@ -69,18 +104,60 @@ func (op Saj) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 }
 
 func (op Saj) Assembler(arch *Arch, words []string) (string, error) {
-	// TODO
 	opbits := arch.Opcodes_bits()
 	rom_word := arch.Max_word()
+
+	locationBits := arch.O
+
+	switch arch.Modes[0] {
+	case "ha":
+		locationBits = arch.O
+	case "vn":
+		locationBits = arch.L
+	case "hy":
+		if arch.O > arch.L {
+			locationBits = arch.O
+		} else {
+			locationBits = arch.L
+		}
+	}
+
+	if len(words) != 1 {
+		return "", Prerror{"Wrong arguments number"}
+	}
+
 	result := ""
-	for i := opbits; i < rom_word; i++ {
+	if partial, err := Process_number(words[0]); err == nil {
+		result += zeros_prefix(int(locationBits), partial)
+	} else {
+		return "", Prerror{err.Error()}
+	}
+
+	for i := opbits + int(locationBits); i < rom_word; i++ {
 		result += "0"
 	}
+
 	return result, nil
 }
 
 func (op Saj) Disassembler(arch *Arch, instr string) (string, error) {
-	value := get_id(instr[:arch.O])
+
+	locationBits := arch.O
+
+	switch arch.Modes[0] {
+	case "ha":
+		locationBits = arch.O
+	case "vn":
+		locationBits = arch.L
+	case "hy":
+		if arch.O > arch.L {
+			locationBits = arch.O
+		} else {
+			locationBits = arch.L
+		}
+	}
+
+	value := get_id(instr[:locationBits])
 	result := strconv.Itoa(value)
 	return result, nil
 }

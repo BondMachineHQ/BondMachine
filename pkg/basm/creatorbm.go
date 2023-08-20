@@ -619,24 +619,25 @@ outer:
 	// Getting the registers requirements on the ROM code
 	if romCode != "" {
 		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + romCode, Name: "registers", Op: bmreqs.OpGet})
-		if resp.Error != nil {
-			return nil, resp.Error
+		if resp.Error == nil {
+			regs = strings.Split(resp.Value, ",")
 		}
-
-		regs = strings.Split(resp.Value, ",")
 	}
 
 	// Getting the registers requirements on the RAM code, appending to the previous list
 	if ramCode != "" {
 		resp = bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts/sections:" + ramCode, Name: "registers", Op: bmreqs.OpGet})
-		if resp.Error != nil {
-			return nil, resp.Error
-		}
-		for _, reg := range strings.Split(resp.Value, ",") {
-			if !stringInSlice(reg, regs) {
-				regs = append(regs, reg)
+		if resp.Error == nil {
+			for _, reg := range strings.Split(resp.Value, ",") {
+				if !stringInSlice(reg, regs) {
+					regs = append(regs, reg)
+				}
 			}
 		}
+	}
+
+	if len(regs) == 0 {
+		return nil, errors.New("no registers found on ROM/RAM code")
 	}
 
 	// Sorting the registers list (ordering using the compareStrings function)

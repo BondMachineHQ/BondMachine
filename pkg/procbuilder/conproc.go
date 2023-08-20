@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
@@ -26,6 +27,7 @@ type Conproc struct {
 
 type Config struct {
 	*bmreqs.ReqRoot
+	*bcof.BCOFEntry
 	HwOptimizations
 	Debug             bool
 	Commented_verilog bool
@@ -347,7 +349,18 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 	result += "\n"
 	result += "	reg [" + strconv.Itoa(regsize-1) + ":0] _ram [0:" + strconv.Itoa((1<<arch.L)-1) + "];		// Internal processor RAM\n"
 	result += "\n"
-	result += "	(* KEEP = \"TRUE\" *) reg [" + strconv.Itoa(int(arch.O)-1) + ":0] _pc;		// Program counter\n"
+	switch arch.Modes[0] {
+	case "ha":
+		result += "	(* KEEP = \"TRUE\" *) reg [" + strconv.Itoa(int(arch.O)-1) + ":0] _pc;		// Program counter\n"
+	case "hy":
+		if arch.L > arch.O {
+			result += "	(* KEEP = \"TRUE\" *) reg [" + strconv.Itoa(int(arch.L)-1) + ":0] _pc;		// Program counter\n"
+		} else {
+			result += "	(* KEEP = \"TRUE\" *) reg [" + strconv.Itoa(int(arch.O)-1) + ":0] _pc;		// Program counter\n"
+		}
+	case "vn":
+		result += "	(* KEEP = \"TRUE\" *) reg [" + strconv.Itoa(int(arch.L)-1) + ":0] _pc;		// Program counter\n"
+	}
 	result += "\n"
 	result += "	// The number of registers are 2^R, two letters and an unserscore as identifier , maximum R=8 and 265 rigisters\n"
 
@@ -401,10 +414,21 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 	result += "	begin\n"
 	result += "		if(reset_signal)\n"
 	result += "		begin\n"
-	result += "			_pc <= #1 " + strconv.Itoa(int(arch.O)) + "'h0;\n"
+	switch arch.Modes[0] {
+	case "ha":
+		result += "			_pc <= #1 " + strconv.Itoa(int(arch.O)) + "'h0;\n"
+	case "hy":
+		if arch.L > arch.O {
+			result += "			_pc <= #1 " + strconv.Itoa(int(arch.L)) + "'h0;\n"
+		} else {
+			result += "			_pc <= #1 " + strconv.Itoa(int(arch.O)) + "'h0;\n"
+		}
+	case "vn":
+		result += "			_pc <= #1 " + strconv.Itoa(int(arch.L)) + "'h0;\n"
+	}
 
 	for i := 0; i < reg_num; i++ {
-		result += "			_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + strconv.Itoa(int(arch.O)) + "'h0;\n"
+		result += "			_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + strconv.Itoa(int(arch.Rsize)) + "'h0;\n"
 	}
 
 	for _, op := range proc.Op {

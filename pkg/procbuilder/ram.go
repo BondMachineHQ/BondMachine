@@ -2,6 +2,8 @@ package procbuilder
 
 import (
 	"strconv"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 )
 
 // The Ram ,actually not used since the processor only have internal memory
@@ -9,11 +11,11 @@ type Ram struct {
 	L uint8 // Number of n-bit memory banks
 }
 
-func (ram *Ram) Write_verilog(mach *Machine, ram_module_name string, flavor string) string {
+// TODO Error handling
+func (ram *Ram) Write_verilog(conf *Config, mach *Machine, ram_module_name string, flavor string) string {
 	ram_depth := 1 << ram.L
 
 	result := ""
-
 	result += "`timescale 1ns/1ps\n"
 	result += "module " + ram_module_name + "(clk, rst, din, dout, addr, wren, en);\n"
 	result += "\n"
@@ -33,6 +35,28 @@ func (ram *Ram) Write_verilog(mach *Machine, ram_module_name string, flavor stri
 	result += "\n"
 	result += "	reg [" + strconv.Itoa(int(mach.Rsize)-1) + ":0] dout_i;\n"
 	result += "\n"
+	if conf.BCOFEntry != nil {
+		data := conf.BCOFEntry.SearchData("cp" + mach.Arch.Tag)
+
+		// Compute the register size padded to 8 bit multiples (the BCOF format requires bytes)
+		expBytes := (int(mach.Rsize) + 7) / 8
+		expLines := len(data.Payload) / expBytes
+
+		buff := make([]byte, expBytes)
+
+		result += "	initial begin\n"
+
+		for line := 0; line < expLines; line++ {
+			for b := 0; b < expBytes; b++ {
+				buff[b] = data.Payload[line*expBytes+b]
+			}
+			num, _ := bmnumbers.ImportBytes(buff, int(mach.Rsize))
+			numV, _ := num.ExportVerilogBinary()
+			result += "		mem[" + strconv.Itoa(line) + "] <= " + numV + ";\n"
+		}
+
+		result += "	end\n"
+	}
 	result += "	// Memory Write Block  \n"
 	result += "	// Write Operation we = 1 \n"
 	result += "	always @ (posedge clk) \n"

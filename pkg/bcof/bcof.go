@@ -55,3 +55,19 @@ func (b *BCOFEntry) AddData(data *BCOFData) {
 	newSubEntry.Pl = bin
 	b.Data = append(b.Data, newSubEntry)
 }
+
+func (b *BCOFEntry) SearchData(s string) *BCOFData {
+	for _, subEntry := range b.Data {
+		fmt.Println("subEntry: ", subEntry)
+		if d := subEntry.GetLeaf(); d != nil {
+			//TODO
+		}
+		if d := subEntry.GetBinary(); d != nil {
+			if d.Signature == s {
+				return d
+			}
+		}
+	}
+
+	return nil
+}
