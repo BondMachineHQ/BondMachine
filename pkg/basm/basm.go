@@ -29,12 +29,13 @@ type BasmInstance struct {
 	isWithinSection  string
 	isWithinFragment string
 	isWithinChunk    string
-	isLabelled       string
+	isSymbolled      string
 	lineMeta         string
 	macros           map[string]*BasmMacro
 	sections         map[string]*BasmSection
 	fragments        map[string]*BasmFragment
 	chunks           map[string]*BasmChunk
+	symbols          map[string]uint64
 	passes           uint64
 	optimizations    map[int]struct{}
 	matchers         []*bmline.BasmLine
@@ -88,11 +89,12 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 	bi.isWithinMacro = ""
 	bi.isWithinSection = ""
 	bi.isWithinFragment = ""
-	bi.isLabelled = ""
+	bi.isSymbolled = ""
 	bi.macros = make(map[string]*BasmMacro)
 	bi.sections = make(map[string]*BasmSection)
 	bi.fragments = make(map[string]*BasmFragment)
 	bi.chunks = make(map[string]*BasmChunk)
+	bi.symbols = make(map[string]uint64)
 	bi.passes = uint64(16351)
 	bi.matchers = make([]*bmline.BasmLine, 0)
 	bi.matchersOps = make([]procbuilder.Opcode, 0)
@@ -214,8 +216,8 @@ func (m *BasmSection) String() string {
 func (m *BasmSection) writeText() string {
 	result := ""
 	for _, line := range m.sectionBody.Lines {
-		if line.GetMeta("label") != "" {
-			result += line.GetMeta("label") + ":\n"
+		if line.GetMeta("symbol") != "" {
+			result += line.GetMeta("symbol") + ":\n"
 		}
 		result += line.Operation.GetValue() + " "
 		for _, element := range line.Elements {
@@ -232,8 +234,8 @@ func (m *BasmSection) writeText() string {
 func (m *BasmFragment) writeText() string {
 	result := ""
 	for _, line := range m.fragmentBody.Lines {
-		if line.GetMeta("label") != "" {
-			result += line.GetMeta("label") + ":\n"
+		if line.GetMeta("symbol") != "" {
+			result += line.GetMeta("symbol") + ":\n"
 		}
 		result += line.Operation.GetValue() + " "
 		for _, element := range line.Elements {

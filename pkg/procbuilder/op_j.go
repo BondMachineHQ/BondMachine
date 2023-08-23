@@ -218,7 +218,7 @@ func (Op J) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level 
 func (Op J) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 2)
 	result[0] = "j::*--type=lineno"
-	result[1] = "j::*--type=label"
+	result[1] = "j::*--type=symbol"
 	return result
 }
 func (Op J) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {

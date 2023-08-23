@@ -8,9 +8,9 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 )
 
-func labelResolver(bi *BasmInstance) error {
+func symbolResolver(bi *BasmInstance) error {
 
-	// Filter the matchers to select only the label based one
+	// Filter the matchers to select only the symbol based one
 	filteredMatchers := make([]*bmline.BasmLine, 0)
 
 	if bi.debug {
@@ -18,7 +18,7 @@ func labelResolver(bi *BasmInstance) error {
 	}
 
 	for _, matcher := range bi.matchers {
-		if bmline.FilterMatcher(matcher, "label") {
+		if bmline.FilterMatcher(matcher, "symbol") {
 			filteredMatchers = append(filteredMatchers, matcher)
 			if bi.debug {
 				fmt.Println(red("\t\tActive matcher:") + matcher.String())
@@ -41,16 +41,16 @@ func labelResolver(bi *BasmInstance) error {
 				fmt.Println(green("\t\tSection: ") + sectName)
 			}
 
-			// Map all the labels
-			labels := make(map[string]int)
+			// Map all the symbols
+			symbols := make(map[string]int)
 
 			body := section.sectionBody
 			for i, line := range body.Lines {
-				if label := line.GetMeta("label"); label != "" {
-					if _, exists := labels[label]; exists {
-						return errors.New("label is specified multiple time: " + label)
+				if symbol := line.GetMeta("symbol"); symbol != "" {
+					if _, exists := symbols[symbol]; exists {
+						return errors.New("symbol is specified multiple time: " + symbol)
 					} else {
-						labels[label] = i
+						symbols[symbol] = i
 					}
 				}
 			}
@@ -58,8 +58,8 @@ func labelResolver(bi *BasmInstance) error {
 			for _, line := range body.Lines {
 
 				for _, arg := range line.Elements {
-					if _, ok := labels[arg.GetValue()]; ok {
-						arg.BasmMeta = arg.SetMeta("type", "label")
+					if _, ok := symbols[arg.GetValue()]; ok {
+						arg.BasmMeta = arg.SetMeta("type", "symbol")
 					}
 				}
 
@@ -67,7 +67,7 @@ func labelResolver(bi *BasmInstance) error {
 					if bmline.MatchMatcher(matcher, line) {
 						// TODO Handling the operand
 						for _, arg := range line.Elements {
-							if lno, ok := labels[arg.GetValue()]; ok {
+							if lno, ok := symbols[arg.GetValue()]; ok {
 								arg.SetValue(strconv.Itoa(lno))
 								arg.BasmMeta = arg.SetMeta("type", "lineno")
 							}

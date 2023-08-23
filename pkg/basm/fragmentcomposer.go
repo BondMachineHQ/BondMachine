@@ -237,7 +237,7 @@ func fragmentComposer(bi *BasmInstance) error {
 					if inp != "" {
 						newLine := new(bmline.BasmLine)
 						if firstLine {
-							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("symbol", "_start")
 							firstLine = false
 						}
 						newOperation := new(bmline.BasmElement)
@@ -260,7 +260,7 @@ func fragmentComposer(bi *BasmInstance) error {
 					if inp != "" {
 						newLine := new(bmline.BasmLine)
 						if firstLine {
-							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("symbol", "_start")
 							firstLine = false
 						}
 						newOperation := new(bmline.BasmElement)
@@ -288,12 +288,12 @@ func fragmentComposer(bi *BasmInstance) error {
 				fCopy.fragmentName = fragment.fragmentName
 				fCopy.fragmentBody = fragment.fragmentBody.Copy()
 
-				// Change the labels including a prefix
+				// Change the symbols including a prefix
 				prefmeta := new(bmline.BasmElement)
-				prefmeta.BasmMeta = prefmeta.SetMeta("label", "frag"+strconv.Itoa(i))
+				prefmeta.BasmMeta = prefmeta.SetMeta("symbol", "frag"+strconv.Itoa(i))
 				prefvalue := new(bmline.BasmElement)
 				prefvalue.SetValue("frag" + strconv.Itoa(i))
-				prefvalue.BasmMeta = prefvalue.SetMeta("type", "label")
+				prefvalue.BasmMeta = prefvalue.SetMeta("type", "symbol")
 				fCopy.fragmentBody.PrefixMeta(prefmeta)
 				fCopy.fragmentBody.PrefixValue(prefvalue)
 
@@ -306,7 +306,7 @@ func fragmentComposer(bi *BasmInstance) error {
 					if out != "" {
 						newLine := new(bmline.BasmLine)
 						if firstLine {
-							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("symbol", "_start")
 							firstLine = false
 						}
 						newOperation := new(bmline.BasmElement)
@@ -329,7 +329,7 @@ func fragmentComposer(bi *BasmInstance) error {
 					if out != "" {
 						newLine := new(bmline.BasmLine)
 						if firstLine {
-							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("symbol", "_start")
 							firstLine = false
 						}
 						newOperation := new(bmline.BasmElement)

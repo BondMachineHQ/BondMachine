@@ -225,7 +225,7 @@ func (Op Saj) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 2)
 	result[0] = "saj::*--type=lineno"
 	result[0] = "saj::*--type=number--numbertype=unsigned"
-	result[1] = "saj::*--type=label"
+	result[1] = "saj::*--type=symbol"
 	return result
 }
 func (Op Saj) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {

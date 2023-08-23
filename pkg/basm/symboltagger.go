@@ -7,9 +7,9 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 )
 
-func labelTagger(bi *BasmInstance) error {
+func symbolTagger(bi *BasmInstance) error {
 
-	// Filter the matchers to select only the label based one
+	// Filter the matchers to select only the symbol based one
 	filteredMatchers := make([]*bmline.BasmLine, 0)
 
 	if bi.debug {
@@ -17,7 +17,7 @@ func labelTagger(bi *BasmInstance) error {
 	}
 
 	for _, matcher := range bi.matchers {
-		if bmline.FilterMatcher(matcher, "label") {
+		if bmline.FilterMatcher(matcher, "symbol") {
 			filteredMatchers = append(filteredMatchers, matcher)
 			if bi.debug {
 				fmt.Println(red("\t\tActive matcher:") + matcher.String())
@@ -40,16 +40,16 @@ func labelTagger(bi *BasmInstance) error {
 				fmt.Println(green("\t\tSection: ") + sectName)
 			}
 
-			// Map all the labels
-			labels := make(map[string]struct{})
+			// Map all the symbols
+			symbols := make(map[string]struct{})
 
 			body := section.sectionBody
 			for _, line := range body.Lines {
-				if label := line.GetMeta("label"); label != "" {
-					if _, exists := labels[label]; exists {
-						return errors.New("label is specified multiple time: " + label)
+				if symbol := line.GetMeta("symbol"); symbol != "" {
+					if _, exists := symbols[symbol]; exists {
+						return errors.New("symbol is specified multiple time: " + symbol)
 					} else {
-						labels[label] = struct{}{}
+						symbols[symbol] = struct{}{}
 					}
 				}
 			}
@@ -57,8 +57,8 @@ func labelTagger(bi *BasmInstance) error {
 			for _, line := range body.Lines {
 
 				for _, arg := range line.Elements {
-					if _, ok := labels[arg.GetValue()]; ok {
-						arg.BasmMeta = arg.SetMeta("type", "label")
+					if _, ok := symbols[arg.GetValue()]; ok {
+						arg.BasmMeta = arg.SetMeta("type", "symbol")
 					}
 				}
 			}
@@ -75,16 +75,16 @@ func labelTagger(bi *BasmInstance) error {
 			fmt.Println(green("\t\tFragment: ") + fragName)
 		}
 
-		// Map all the labels
-		labels := make(map[string]struct{})
+		// Map all the symbols
+		symbols := make(map[string]struct{})
 
 		body := fragment.fragmentBody
 		for _, line := range body.Lines {
-			if label := line.GetMeta("label"); label != "" {
-				if _, exists := labels[label]; exists {
-					return errors.New("label is specified multiple time: " + label)
+			if symbol := line.GetMeta("symbol"); symbol != "" {
+				if _, exists := symbols[symbol]; exists {
+					return errors.New("symbol is specified multiple time: " + symbol)
 				} else {
-					labels[label] = struct{}{}
+					symbols[symbol] = struct{}{}
 				}
 			}
 		}
@@ -92,8 +92,8 @@ func labelTagger(bi *BasmInstance) error {
 		for _, line := range body.Lines {
 
 			for _, arg := range line.Elements {
-				if _, ok := labels[arg.GetValue()]; ok {
-					arg.BasmMeta = arg.SetMeta("type", "label")
+				if _, ok := symbols[arg.GetValue()]; ok {
+					arg.BasmMeta = arg.SetMeta("type", "symbol")
 				}
 			}
 		}
