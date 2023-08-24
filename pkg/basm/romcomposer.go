@@ -59,10 +59,10 @@ func romComposer(bi *BasmInstance) error {
 
 		for _, line := range body.Lines {
 			for _, arg := range line.Elements {
-				if arg.GetMeta("type") == "rom" && arg.GetMeta("romaddressing") == "variable" {
+				if arg.GetMeta("type") == "rom" && arg.GetMeta("romaddressing") == "symbol" {
 					removalList[code] = struct{}{}
 					usefullSection = true
-					romVariable := arg.GetMeta("variable")
+					romVariable := arg.GetMeta("symbol")
 					if romVariable == "" {
 						return errors.New("ROM variable cannot be empty")
 					}
@@ -72,7 +72,7 @@ func romComposer(bi *BasmInstance) error {
 						arg.BasmMeta = arg.BasmMeta.SetMeta("type", "number")
 						arg.BasmMeta = arg.BasmMeta.SetMeta("numbertype", "unsigned")
 						arg.BasmMeta.RmMeta("romaddressing")
-						arg.BasmMeta.RmMeta("variable")
+						arg.BasmMeta.RmMeta("symbol")
 					} else {
 						return errors.New("ROM variable " + romVariable + " not found")
 					}
