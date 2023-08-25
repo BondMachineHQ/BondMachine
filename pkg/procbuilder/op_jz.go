@@ -219,7 +219,7 @@ func (Op Jz) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level
 }
 func (Op Jz) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 2)
-	result[0] = "jz::*--type=reg::*--type=lineno"
+	result[0] = "jz::*--type=reg::*--type=number"
 	result[1] = "jz::*--type=reg::*--type=symbol"
 	return result
 }

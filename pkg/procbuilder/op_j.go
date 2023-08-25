@@ -217,7 +217,7 @@ func (Op J) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level 
 }
 func (Op J) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 2)
-	result[0] = "j::*--type=lineno"
+	result[0] = "j::*--type=number"
 	result[1] = "j::*--type=symbol"
 	return result
 }

@@ -69,7 +69,7 @@ func symbolResolver(bi *BasmInstance) error {
 						for _, arg := range line.Elements {
 							if lno, ok := symbols[arg.GetValue()]; ok {
 								arg.SetValue(strconv.Itoa(lno))
-								arg.BasmMeta = arg.SetMeta("type", "lineno")
+								arg.BasmMeta = arg.SetMeta("type", "number")
 							}
 						}
 

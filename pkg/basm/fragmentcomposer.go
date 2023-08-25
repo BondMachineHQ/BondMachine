@@ -354,7 +354,7 @@ func fragmentComposer(bi *BasmInstance) error {
 			newOperation.SetValue("j")
 			newStart := new(bmline.BasmElement)
 			newStart.SetValue("_start")
-			newStart.BasmMeta = newStart.BasmMeta.SetMeta("type", "lineno")
+			newStart.BasmMeta = newStart.BasmMeta.SetMeta("type", "number")
 			newLine.Operation = newOperation
 			newLine.Elements = make([]*bmline.BasmElement, 1)
 			newLine.Elements[0] = newStart

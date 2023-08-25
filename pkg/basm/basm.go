@@ -35,7 +35,7 @@ type BasmInstance struct {
 	sections         map[string]*BasmSection
 	fragments        map[string]*BasmFragment
 	chunks           map[string]*BasmChunk
-	symbols          map[string]uint64
+	symbols          map[string]int64 // -1 for undefined, >=0 for defined and value
 	passes           uint64
 	optimizations    map[int]struct{}
 	matchers         []*bmline.BasmLine
@@ -94,7 +94,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 	bi.sections = make(map[string]*BasmSection)
 	bi.fragments = make(map[string]*BasmFragment)
 	bi.chunks = make(map[string]*BasmChunk)
-	bi.symbols = make(map[string]uint64)
+	bi.symbols = make(map[string]int64)
 	bi.passes = uint64(16351)
 	bi.matchers = make([]*bmline.BasmLine, 0)
 	bi.matchersOps = make([]procbuilder.Opcode, 0)
@@ -343,6 +343,16 @@ func (bi *BasmInstance) String() string {
 		result += purple("\tMatchers") + ":\n"
 		for _, matcher := range bi.matchers {
 			result += "\t\t" + matcher.String() + "\n"
+		}
+	}
+	if bi.symbols != nil {
+		result += purple("\tSymbols") + ":\n"
+		for symbol, value := range bi.symbols {
+			if value == -1 {
+				result += "\t\t" + symbol + " = " + red("undefined") + "\n"
+			} else {
+				result += "\t\t" + symbol + " = " + strconv.FormatInt(int64(value), 10) + "\n"
+			}
 		}
 	}
 	return result
