@@ -24,8 +24,8 @@ func matcherResolver(bi *BasmInstance) error {
 		fmt.Println(green("\tProcessing sections:"))
 	}
 
-	// sectionsIncoming := make(map[string]*BasmSection)
-	// sectionsOutgoing := make(map[string]struct{})
+	sectionsIncoming := make(map[string]*BasmSection)
+	sectionsOutgoing := make(map[string]struct{})
 
 	// Loop over the sections to find eventual alternatives
 	for sectName, section := range bi.sections {
@@ -120,84 +120,119 @@ func matcherResolver(bi *BasmInstance) error {
 					}
 				}
 			}
-			// TODO Finire da qui
-		}
-	}
-	// Loop over the sections
-	for sectName, section := range bi.sections {
-		if section.sectionType == sectRomText || section.sectionType == sectRamText {
-			if bi.debug {
-				fmt.Println(green("\t\tSection: ") + sectName)
-			}
 
-			if section.sectionType == sectRomText {
-				bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+			sectionWithChoices := ""
+			if len(sectAlts) == 0 {
+				sectAlts[sectName] = nil
 			} else {
-				bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+				alts := ""
+				for s := range sectAlts {
+					alts += s + ":"
+				}
+				sectionWithChoices = alts[:len(alts)-1]
 			}
 
-			body := section.sectionBody
+			// Ranging over the alternatives to create the reals sections
+			for sectNameNew, cs := range sectAlts {
 
-			for i, line := range body.Lines {
+				sectionNew := new(BasmSection)
+				sectionNew.sectionName = sectNameNew
+				sectionNew.sectionType = section.sectionType
+				sectionNew.sectionBody = section.sectionBody.Copy()
 
 				if bi.debug {
-					fmt.Println(green("\t\t\tLine: ") + line.String())
+					fmt.Println(green("\t\tNew section: ") + sectNameNew)
 				}
 
-				matched := false
-				var matching procbuilder.Opcode
-
-				for j, matcher := range bi.matchers {
-					if bmline.MatchMatcher(matcher, line) {
-						if bi.debug {
-							fmt.Println(yellow("\t\t\t\tMaching " + matcher.String()))
-						}
-						if matched {
-							return errors.New("ambiguous, more than one operator match")
-						}
-						matched = true
-						matching = bi.matchersOps[j]
-					}
-				}
-
-				if !matched {
-					return errors.New("no operator match")
-				}
-
-				opName := matching.Op_get_name()
-
-				if section.sectionType == sectRomText {
-					bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + sectName, T: bmreqs.ObjectSet, Name: "opcodes", Value: opName, Op: bmreqs.OpAdd})
+				if sectionNew.sectionType == sectRomText {
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectNameNew, Op: bmreqs.OpAdd})
 				} else {
-					bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts/sections:" + sectName, T: bmreqs.ObjectSet, Name: "opcodes", Value: opName, Op: bmreqs.OpAdd})
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectNameNew, Op: bmreqs.OpAdd})
 				}
 
-				// Normalize instruction
-				if section.sectionType == sectRomText {
-					if normalized, err := matching.HLAssemblerNormalize(nil, bi.rg, "/code:romtexts/sections:"+sectName, line); err != nil {
-						return err
-					} else {
-						if bi.debug {
-							fmt.Println(green("\t\t\t\tNormalized line: ") + normalized.String())
-						}
-						body.Lines[i] = normalized
+				body := sectionNew.sectionBody
+
+				for i, line := range body.Lines {
+
+					if bi.debug {
+						fmt.Println(green("\t\t\tLine: ") + line.String())
 					}
-				} else {
-					if normalized, err := matching.HLAssemblerNormalize(nil, bi.rg, "/code:ramtexts/sections:"+sectName, line); err != nil {
-						return err
-					} else {
-						if bi.debug {
-							fmt.Println(green("\t\t\t\tNormalized line: ") + normalized.String())
+
+					matching := make([]string, 0)
+					var matchingOp procbuilder.Opcode
+
+					for j, matcher := range bi.matchers {
+						if bmline.MatchMatcher(matcher, line) {
+							if bi.debug {
+								fmt.Println(yellow("\t\t\t\tMatching " + matcher.String()))
+							}
+							matching = append(matching, strconv.Itoa(j))
 						}
-						body.Lines[i] = normalized
+					}
+
+					if len(matching) > 1 {
+						choiceName := strings.Join(matching, "_")
+						for _, c := range cs {
+							if c.choiceName == choiceName {
+								idx, _ := strconv.Atoi(c.choiceSel)
+								matchingOp = bi.matchersOps[idx]
+								break
+							}
+						}
+					} else {
+						idx, _ := strconv.Atoi(matching[0])
+						matchingOp = bi.matchersOps[idx]
+					}
+
+					opName := matchingOp.Op_get_name()
+
+					if sectionNew.sectionType == sectRomText {
+						bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts/sections:" + sectNameNew, T: bmreqs.ObjectSet, Name: "opcodes", Value: opName, Op: bmreqs.OpAdd})
+					} else {
+						bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts/sections:" + sectNameNew, T: bmreqs.ObjectSet, Name: "opcodes", Value: opName, Op: bmreqs.OpAdd})
+					}
+
+					// Normalize instruction
+					if sectionNew.sectionType == sectRomText {
+						if normalized, err := matchingOp.HLAssemblerNormalize(nil, bi.rg, "/code:romtexts/sections:"+sectNameNew, line); err != nil {
+							return err
+						} else {
+							if bi.debug {
+								fmt.Println(green("\t\t\t\tNormalized line: ") + normalized.String())
+							}
+							body.Lines[i] = normalized
+						}
+					} else {
+						if normalized, err := matchingOp.HLAssemblerNormalize(nil, bi.rg, "/code:ramtexts/sections:"+sectNameNew, line); err != nil {
+							return err
+						} else {
+							if bi.debug {
+								fmt.Println(green("\t\t\t\tNormalized line: ") + normalized.String())
+							}
+							body.Lines[i] = normalized
+						}
 					}
 				}
+
+				sectionsIncoming[sectNameNew] = sectionNew
 			}
-		} else {
-			if bi.debug {
-				fmt.Println(yellow("\t\tSection type not handled: ") + sectName)
+
+			if sectionWithChoices != "" {
+				section.sectionBody = new(bmline.BasmBody)
+				section.sectionBody.BasmMeta = section.sectionBody.BasmMeta.SetMeta("alternatives", sectionWithChoices)
+			} else {
+				sectionsOutgoing[sectName] = struct{}{}
 			}
 		}
 	}
+
+	for sn := range sectionsOutgoing {
+		delete(bi.sections, sn)
+	}
+
+	for sn, s := range sectionsIncoming {
+		bi.sections[sn] = s
+	}
+
 	return nil
 }
