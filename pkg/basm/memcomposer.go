@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func romComposer(bi *BasmInstance) error {
+func memComposer(bi *BasmInstance) error {
 
 	if bi.debug {
 		fmt.Println(green("\tConnecting CP code and ROM:"))

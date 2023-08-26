@@ -23,8 +23,10 @@ var debug = flag.Bool("d", false, "Verbose")
 // BondMachine targets
 
 var bondmachineFile = flag.String("bondmachine", "", "Load a bondmachine JSON file")
+var symInFile = flag.String("si", "", "Load a symbols JSON file")
 var bmOutFile = flag.String("o", "", "BondMachine Output file")
 var bcofOutFile = flag.String("bo", "", "BCOF Output file")
+var symOutFile = flag.String("so", "", "Symbols Output file")
 
 // Utils
 var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parameter of the BondMachine")

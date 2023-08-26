@@ -14,7 +14,7 @@ const (
 	passFragmentComposer      = uint64(256)
 	passMetadataInfer2        = uint64(512)
 	passEntryPoints           = uint64(1024)
-	passRomComposer           = uint64(2048)
+	passMemComposer           = uint64(2048)
 	passSymbolsResolver       = uint64(4096)
 	passMatcherResolver       = uint64(8192)
 	LAST_PASS                 = uint64(8192)
@@ -35,7 +35,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passFragmentPruner:        fragmentPruner,
 		passFragmentComposer:      fragmentComposer,
 		passFragmentOptimizer1:    fragmentOptimizer,
-		passRomComposer:           romComposer,
+		passMemComposer:           memComposer,
 	}
 }
 
@@ -54,7 +54,7 @@ func getPassFunctionName() map[uint64]string {
 		passFragmentPruner:        "fragmentPruner",
 		passFragmentComposer:      "fragmentComposer",
 		passFragmentOptimizer1:    "fragmentOptimizer",
-		passRomComposer:           "romComposer",
+		passMemComposer:           "memComposer",
 	}
 }
 
@@ -73,7 +73,7 @@ func IsOptionalPass() map[uint64]bool {
 		passFragmentPruner:        false,
 		passFragmentComposer:      false,
 		passFragmentOptimizer1:    true,
-		passRomComposer:           false,
+		passMemComposer:           false,
 	}
 }
 
@@ -96,7 +96,7 @@ func GetPassMnemonic() map[uint64]string {
 		passFragmentPruner:        "fragmentpruner",
 		passFragmentComposer:      "fragmentcomposer",
 		passFragmentOptimizer1:    "fragmentoptimizer",
-		passRomComposer:           "romcomposer",
+		passMemComposer:           "memcomposer",
 	}
 
 }
