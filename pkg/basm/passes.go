@@ -14,9 +14,9 @@ const (
 	passFragmentComposer      = uint64(256)
 	passMetadataInfer2        = uint64(512)
 	passEntryPoints           = uint64(1024)
-	passMemComposer           = uint64(2048)
-	passSymbolsResolver       = uint64(4096)
-	passMatcherResolver       = uint64(8192)
+	passMatcherResolver       = uint64(2048)
+	passMemComposer           = uint64(4096)
+	passSymbolsResolver       = uint64(8192)
 	LAST_PASS                 = uint64(8192)
 )
 

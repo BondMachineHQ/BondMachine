@@ -3,6 +3,7 @@ package basm
 import (
 	"errors"
 	"fmt"
+	"strconv"
 )
 
 // section entry points detection, the pass detects the symbol used as entry point of the section and sign it as metadata.
@@ -80,6 +81,14 @@ func entryPoints(bi *BasmInstance) error {
 			copy(body.Lines[checkLine:], body.Lines[checkLine+1:])
 			body.Lines[len(body.Lines)-1] = nil
 			body.Lines = body.Lines[:len(body.Lines)-1]
+			// Removing the line means that symbols are shifted, so we need to correct the symbol correction
+			if body.GetMeta("symbcorrection") != "" {
+				correction, _ := strconv.Atoi(body.GetMeta("symbcorrection"))
+				correction--
+				body.BasmMeta = body.BasmMeta.SetMeta("symbcorrection", fmt.Sprintf("%d", correction))
+			} else {
+				body.BasmMeta = body.BasmMeta.SetMeta("symbcorrection", "-1")
+			}
 
 			if checkPosition < 0 {
 				for i, line := range body.Lines {

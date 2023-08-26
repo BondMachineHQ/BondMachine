@@ -41,38 +41,34 @@ func symbolResolver(bi *BasmInstance) error {
 				fmt.Println(green("\t\tSection: ") + sectName)
 			}
 
-			// Map all the symbols
-			symbols := make(map[string]int)
-
 			body := section.sectionBody
-			for i, line := range body.Lines {
-				if symbol := line.GetMeta("symbol"); symbol != "" {
-					if _, exists := symbols[symbol]; exists {
-						return errors.New("symbol is specified multiple time: " + symbol)
-					} else {
-						symbols[symbol] = i
-					}
-				}
-			}
 
 			for _, line := range body.Lines {
 
 				for _, arg := range line.Elements {
-					if _, ok := symbols[arg.GetValue()]; ok {
-						arg.BasmMeta = arg.SetMeta("type", "symbol")
-					}
-				}
+					if arg.GetMeta("type") == "symbol" {
+						symbol := arg.GetValue()
 
-				for _, matcher := range filteredMatchers {
-					if bmline.MatchMatcher(matcher, line) {
-						// TODO Handling the operand
-						for _, arg := range line.Elements {
-							if lno, ok := symbols[arg.GetValue()]; ok {
-								arg.SetValue(strconv.Itoa(lno))
-								arg.BasmMeta = arg.SetMeta("type", "number")
-							}
+						// Search the symbol in local symbols
+						localSymbol := ""
+						if section.sectionType == sectRomText {
+							localSymbol = "rom." + sectName + "." + symbol
+						} else {
+							localSymbol = "ram." + sectName + "." + symbol
 						}
 
+						if loc, ok := bi.symbols[localSymbol]; ok {
+							// Apply the correction if any
+							if body.GetMeta("symbcorrection") != "" {
+								correction, _ := strconv.Atoi(body.GetMeta("symbcorrection"))
+								loc += int64(correction)
+							}
+							arg.SetValue(strconv.Itoa(int(loc)))
+							arg.SetMeta("type", "number")
+							continue
+						}
+						// TODO: Finish this
+						return errors.New("symbol not found: " + symbol)
 					}
 				}
 			}
