@@ -34,7 +34,7 @@ func symbolResolver(bi *BasmInstance) error {
 		fmt.Println(green("\tProcessing sections:"))
 	}
 
-	// Loop over the sections
+	// Loop over the sections TODO over the cps (the unused sections are supposed to be removed at this point)
 	for sectName, section := range bi.sections {
 		if section.sectionType == sectRomText || section.sectionType == sectRamText {
 			if bi.debug {
