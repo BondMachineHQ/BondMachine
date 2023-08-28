@@ -59,10 +59,10 @@ func symbolResolver(bi *BasmInstance) error {
 
 						if loc, ok := bi.symbols[localSymbol]; ok {
 							// Apply the correction if any
-							if body.GetMeta("symbcorrection") != "" {
-								correction, _ := strconv.Atoi(body.GetMeta("symbcorrection"))
-								loc += int64(correction)
-							}
+							// if body.GetMeta("symbcorrection") != "" {
+							// 	correction, _ := strconv.Atoi(body.GetMeta("symbcorrection"))
+							// 	loc += int64(correction)
+							// }
 							arg.SetValue(strconv.Itoa(int(loc)))
 							arg.SetMeta("type", "number")
 							continue

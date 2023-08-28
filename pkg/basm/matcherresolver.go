@@ -200,6 +200,9 @@ func matcherResolver(bi *BasmInstance) error {
 							if bi.debug {
 								fmt.Println(green("\t\t\t\tNormalized line: ") + normalized.String())
 							}
+							for k, v := range body.Lines[i].LoopMeta() {
+								normalized.BasmMeta = normalized.BasmMeta.SetMeta(k, v)
+							}
 							body.Lines[i] = normalized
 						}
 					} else {
@@ -208,6 +211,9 @@ func matcherResolver(bi *BasmInstance) error {
 						} else {
 							if bi.debug {
 								fmt.Println(green("\t\t\t\tNormalized line: ") + normalized.String())
+							}
+							for k, v := range body.Lines[i].LoopMeta() {
+								normalized.BasmMeta = normalized.BasmMeta.SetMeta(k, v)
 							}
 							body.Lines[i] = normalized
 						}

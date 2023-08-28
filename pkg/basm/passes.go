@@ -5,7 +5,7 @@ import "errors"
 const (
 	passTemplateResolver      = uint64(1)
 	passDynamicalInstructions = uint64(2)
-	passSymbolTagger          = uint64(4)
+	passSymbolTagger1         = uint64(4)
 	passDataSections2Bytes    = uint64(8)
 	passMetadataInfer1        = uint64(16)
 	passFragmentAnalyzer      = uint64(32)
@@ -15,16 +15,18 @@ const (
 	passMetadataInfer2        = uint64(512)
 	passEntryPoints           = uint64(1024)
 	passMatcherResolver       = uint64(2048)
-	passMemComposer           = uint64(4096)
-	passSymbolsResolver       = uint64(8192)
-	LAST_PASS                 = uint64(8192)
+	passSymbolTagger2         = uint64(4096)
+	passMemComposer           = uint64(8192)
+	passSymbolsResolver       = uint64(16384)
+	LAST_PASS                 = uint64(16384)
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {
 	return map[uint64]func(*BasmInstance) error{
 		passTemplateResolver:      templateResolver,
 		passDynamicalInstructions: dynamicalInstructions,
-		passSymbolTagger:          symbolTagger,
+		passSymbolTagger1:         symbolTagger,
+		passSymbolTagger2:         symbolTagger,
 		passDataSections2Bytes:    dataSections2Bytes,
 		passMetadataInfer1:        metadataInfer,
 		passMetadataInfer2:        metadataInfer,
@@ -43,7 +45,8 @@ func getPassFunctionName() map[uint64]string {
 	return map[uint64]string{
 		passTemplateResolver:      "templateResolver",
 		passDynamicalInstructions: "dynamicalInstructions",
-		passSymbolTagger:          "symbolTagger",
+		passSymbolTagger1:         "symbolTagger (1)",
+		passSymbolTagger2:         "symbolTagger (2)",
 		passDataSections2Bytes:    "datasections2bytes",
 		passMetadataInfer1:        "metadataInfer (1)",
 		passMetadataInfer2:        "metadataInfer (2)",
@@ -62,7 +65,8 @@ func IsOptionalPass() map[uint64]bool {
 	return map[uint64]bool{
 		passTemplateResolver:      false,
 		passDynamicalInstructions: false,
-		passSymbolTagger:          false,
+		passSymbolTagger1:         false,
+		passSymbolTagger2:         false,
 		passDataSections2Bytes:    false,
 		passMetadataInfer1:        false,
 		passMetadataInfer2:        false,
@@ -85,7 +89,8 @@ func GetPassMnemonic() map[uint64]string {
 	return map[uint64]string{
 		passTemplateResolver:      "templateresolver",
 		passDynamicalInstructions: "dynamicalinstructions",
-		passSymbolTagger:          "symboltagger",
+		passSymbolTagger1:         "symboltagger1",
+		passSymbolTagger2:         "symboltagger2",
 		passDataSections2Bytes:    "datasections2bytes",
 		passMetadataInfer1:        "metadatainfer1",
 		passMetadataInfer2:        "metadatainfer2",

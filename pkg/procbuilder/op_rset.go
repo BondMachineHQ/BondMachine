@@ -198,6 +198,7 @@ func (Op Rset) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
 	result = append(result, "rset::*--type=reg::*--type=number")
 	result = append(result, "mov::*--type=reg::*--type=number")
+	result = append(result, "mov::*--type=reg::*--type=rom--romaddressing=symbol")
 	return result
 }
 func (Op Rset) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {

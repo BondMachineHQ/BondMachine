@@ -95,7 +95,22 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 	bi.fragments = make(map[string]*BasmFragment)
 	bi.chunks = make(map[string]*BasmChunk)
 	bi.symbols = make(map[string]int64)
-	bi.passes = uint64(16351)
+	bi.passes = passTemplateResolver |
+		passDynamicalInstructions |
+		passSymbolTagger1 |
+		passSymbolTagger2 |
+		passDataSections2Bytes |
+		passMetadataInfer1 |
+		passMetadataInfer2 |
+		passEntryPoints |
+		passSymbolsResolver |
+		passMatcherResolver |
+		passFragmentAnalyzer |
+		passFragmentPruner |
+		passFragmentComposer |
+		passFragmentOptimizer1 |
+		passMemComposer
+
 	bi.matchers = make([]*bmline.BasmLine, 0)
 	bi.matchersOps = make([]procbuilder.Opcode, 0)
 
