@@ -147,8 +147,12 @@ func (op Mulc) Simulate(vm *VM, instr string) error {
 		vm.Registers[regdest] = vm.Registers[regdest].(uint8) * vm.Registers[regsrc].(uint8)
 	case 16:
 		vm.Registers[regdest] = vm.Registers[regdest].(uint16) * vm.Registers[regsrc].(uint16)
+	case 32:
+		vm.Registers[regdest] = vm.Registers[regdest].(uint32) * vm.Registers[regsrc].(uint32)
+	case 64:
+		vm.Registers[regdest] = vm.Registers[regdest].(uint64) * vm.Registers[regsrc].(uint64)
 	default:
-		// TODO Fix
+
 	}
 	vm.Pc = vm.Pc + 1
 	return nil

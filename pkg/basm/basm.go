@@ -99,6 +99,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		passDynamicalInstructions |
 		passSymbolTagger1 |
 		passSymbolTagger2 |
+		passSymbolTagger3 |
 		passDataSections2Bytes |
 		passMetadataInfer1 |
 		passMetadataInfer2 |
@@ -109,7 +110,8 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		passFragmentPruner |
 		passFragmentComposer |
 		passFragmentOptimizer1 |
-		passMemComposer
+		passMemComposer |
+		passSectionCleaner
 
 	bi.matchers = make([]*bmline.BasmLine, 0)
 	bi.matchersOps = make([]procbuilder.Opcode, 0)

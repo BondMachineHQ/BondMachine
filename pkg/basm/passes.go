@@ -17,8 +17,10 @@ const (
 	passMatcherResolver       = uint64(2048)
 	passSymbolTagger2         = uint64(4096)
 	passMemComposer           = uint64(8192)
-	passSymbolsResolver       = uint64(16384)
-	LAST_PASS                 = uint64(16384)
+	passSectionCleaner        = uint64(16384)
+	passSymbolTagger3         = uint64(32768)
+	passSymbolsResolver       = uint64(65536)
+	LAST_PASS                 = uint64(65536)
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {
@@ -27,6 +29,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passDynamicalInstructions: dynamicalInstructions,
 		passSymbolTagger1:         symbolTagger,
 		passSymbolTagger2:         symbolTagger,
+		passSymbolTagger3:         symbolTagger,
 		passDataSections2Bytes:    dataSections2Bytes,
 		passMetadataInfer1:        metadataInfer,
 		passMetadataInfer2:        metadataInfer,
@@ -38,6 +41,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passFragmentComposer:      fragmentComposer,
 		passFragmentOptimizer1:    fragmentOptimizer,
 		passMemComposer:           memComposer,
+		passSectionCleaner:        sectionCleaner,
 	}
 }
 
@@ -47,6 +51,7 @@ func getPassFunctionName() map[uint64]string {
 		passDynamicalInstructions: "dynamicalInstructions",
 		passSymbolTagger1:         "symbolTagger (1)",
 		passSymbolTagger2:         "symbolTagger (2)",
+		passSymbolTagger3:         "symbolTagger (3)",
 		passDataSections2Bytes:    "datasections2bytes",
 		passMetadataInfer1:        "metadataInfer (1)",
 		passMetadataInfer2:        "metadataInfer (2)",
@@ -58,6 +63,7 @@ func getPassFunctionName() map[uint64]string {
 		passFragmentComposer:      "fragmentComposer",
 		passFragmentOptimizer1:    "fragmentOptimizer",
 		passMemComposer:           "memComposer",
+		passSectionCleaner:        "sectionCleaner",
 	}
 }
 
@@ -67,6 +73,7 @@ func IsOptionalPass() map[uint64]bool {
 		passDynamicalInstructions: false,
 		passSymbolTagger1:         false,
 		passSymbolTagger2:         false,
+		passSymbolTagger3:         false,
 		passDataSections2Bytes:    false,
 		passMetadataInfer1:        false,
 		passMetadataInfer2:        false,
@@ -78,6 +85,7 @@ func IsOptionalPass() map[uint64]bool {
 		passFragmentComposer:      false,
 		passFragmentOptimizer1:    true,
 		passMemComposer:           false,
+		passSectionCleaner:        false,
 	}
 }
 
@@ -91,6 +99,7 @@ func GetPassMnemonic() map[uint64]string {
 		passDynamicalInstructions: "dynamicalinstructions",
 		passSymbolTagger1:         "symboltagger1",
 		passSymbolTagger2:         "symboltagger2",
+		passSymbolTagger3:         "symboltagger3",
 		passDataSections2Bytes:    "datasections2bytes",
 		passMetadataInfer1:        "metadatainfer1",
 		passMetadataInfer2:        "metadatainfer2",
@@ -102,6 +111,7 @@ func GetPassMnemonic() map[uint64]string {
 		passFragmentComposer:      "fragmentcomposer",
 		passFragmentOptimizer1:    "fragmentoptimizer",
 		passMemComposer:           "memcomposer",
+		passSectionCleaner:        "sectioncleaner",
 	}
 
 }
