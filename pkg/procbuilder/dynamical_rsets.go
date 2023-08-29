@@ -3,6 +3,8 @@ package procbuilder
 import (
 	"regexp"
 	"strconv"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 )
 
 type DynRsets struct {
@@ -27,4 +29,14 @@ func (d DynRsets) CreateInstruction(name string) (Opcode, error) {
 
 	return Rsets{rsetsName: name, s: s}, nil
 
+}
+func (d DynRsets) HLAssemblerGeneratorMatch(c *DynConfig) []string {
+	result := make([]string, 0)
+	result = append(result, "mov::*--type=reg::*--type=number")
+	return result
+}
+
+func (d DynRsets) HLAssemblerGeneratorList(c *DynConfig, line *bmline.BasmLine) []string {
+	result := make([]string, 0)
+	return result
 }

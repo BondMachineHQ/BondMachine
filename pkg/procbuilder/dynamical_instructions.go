@@ -1,9 +1,16 @@
 package procbuilder
 
+import "github.com/BondMachineHQ/BondMachine/pkg/bmline"
+
+type DynConfig struct {
+}
+
 type DynamicInstruction interface {
 	GetName() string
 	MatchName(string) bool
 	CreateInstruction(string) (Opcode, error)
+	HLAssemblerGeneratorMatch(*DynConfig) []string
+	HLAssemblerGeneratorList(*DynConfig, *bmline.BasmLine) []string
 }
 
 func EventuallyCreateInstruction(name string) (bool, error) {
