@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmconfig"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
@@ -23,6 +24,7 @@ const (
 
 type BasmInstance struct {
 	*bminfo.BMinfo
+	*bmconfig.BmConfig
 	verbose          bool
 	debug            bool
 	isWithinMacro    string
@@ -86,6 +88,7 @@ type BasmMacro struct {
 func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 
 	bi.bm = bm
+	bi.BmConfig = bmconfig.NewBmConfig()
 	// bi.verbose = false
 	// bi.debug = false
 	bi.isWithinMacro = ""
@@ -155,7 +158,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		if bi.debug {
 			fmt.Println(purple("\tExamining dyn opcode: ") + dyn.GetName())
 		}
-		for _, line := range dyn.HLAssemblerGeneratorMatch(nil) {
+		for _, line := range dyn.HLAssemblerGeneratorMatch(bi.BmConfig) {
 			if mt, err := bmline.Text2BasmLine(line); err == nil {
 				bi.dynMatchers = append(bi.dynMatchers, mt)
 				bi.dynMatcherOps = append(bi.dynMatcherOps, dyn)
@@ -191,6 +194,8 @@ func (bi *BasmInstance) RunAssembler() error {
 
 	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "code", Value: "romtexts", Op: bmreqs.OpAdd})
 	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "code", Value: "ramtexts", Op: bmreqs.OpAdd})
+	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "code", Value: "romdatas", Op: bmreqs.OpAdd})
+	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "code", Value: "ramdatas", Op: bmreqs.OpAdd})
 
 	if bi.debug {
 		fmt.Println(purple("Pre phase 1 ") + bi.String())
@@ -244,6 +249,8 @@ func (m *BasmSection) String() string {
 		result += yellow("[.romtext]")
 	case sectRamText:
 		result += yellow("[.ramtext]")
+	case sectRamData:
+		result += yellow("[.ramdata]")
 	}
 	result += m.sectionBody.String()
 	return result

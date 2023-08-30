@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bmconfig"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 )
@@ -87,12 +88,12 @@ func (d DynLinearQuantizer) CreateInstruction(name string) (Opcode, error) {
 
 }
 
-func (d DynLinearQuantizer) HLAssemblerGeneratorMatch(c *DynConfig) []string {
+func (d DynLinearQuantizer) HLAssemblerGeneratorMatch(bmc *bmconfig.BmConfig) []string {
 	result := make([]string, 0)
 	return result
 }
 
-func (d DynLinearQuantizer) HLAssemblerGeneratorList(c *DynConfig, line *bmline.BasmLine) []string {
+func (d DynLinearQuantizer) HLAssemblerGeneratorList(bmc *bmconfig.BmConfig, bl *bmline.BasmLine) []string {
 	result := make([]string, 0)
 	return result
 }

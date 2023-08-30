@@ -128,12 +128,18 @@ func memComposer(bi *BasmInstance) error {
 
 				var romSectionLength int = 0
 				var ramSectionLength int = 0
+				var romDataLength int = 0
+				var ramDataLength int = 0
+				var romFinalLength int = 0
+				var ramFinalLength int = 0
 
 				if romCode != nil {
 					romSectionLength = len(romCode.sectionBody.Lines)
+					romFinalLength = romSectionLength
 				}
 				if ramCode != nil {
 					ramSectionLength = len(ramCode.sectionBody.Lines)
+					ramFinalLength = ramSectionLength
 				}
 
 				if bi.debug {
@@ -150,6 +156,12 @@ func memComposer(bi *BasmInstance) error {
 						location += romSectionLength
 						bi.symbols["romdata.romdata"+cpNewSectionName+"."+symbolName] = int64(location)
 					}
+					resp := bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romdatas/sections:" + romDataName, Name: "datalength", Op: bmreqs.OpGet})
+					if resp.Error != nil {
+						return resp.Error
+					}
+					romDataLength, _ = strconv.Atoi(resp.Value)
+					romFinalLength += romDataLength
 				}
 
 				if ramData != nil {
@@ -160,6 +172,12 @@ func memComposer(bi *BasmInstance) error {
 						location += ramSectionLength
 						bi.symbols["ramdata.ramdata"+cpNewSectionName+"."+symbolName] = int64(location)
 					}
+					resp := bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramdatas/sections:" + ramDataName, Name: "datalength", Op: bmreqs.OpGet})
+					if resp.Error != nil {
+						return resp.Error
+					}
+					ramDataLength, _ = strconv.Atoi(resp.Value)
+					ramFinalLength += ramDataLength
 				}
 
 				// If the original section is not empty, we need to create a new section from it
@@ -173,6 +191,9 @@ func memComposer(bi *BasmInstance) error {
 					romAlternatives = append(romAlternatives, newSection.sectionName)
 					bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:romtexts", T: bmreqs.ObjectSet, Name: "sections", Value: newSection.sectionName, Op: bmreqs.OpAdd})
 					bi.rg.Clone("/code:romtexts/sections:"+romSection, "/code:romtexts/sections:"+newSection.sectionName)
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:romtexts/sections:" + newSection.sectionName, T: bmreqs.ObjectMax, Name: "codelength", Value: strconv.Itoa(romSectionLength), Op: bmreqs.OpAdd})
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:romtexts/sections:" + newSection.sectionName, T: bmreqs.ObjectMax, Name: "datalength", Value: strconv.Itoa(romDataLength), Op: bmreqs.OpAdd})
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:romtexts/sections:" + newSection.sectionName, T: bmreqs.ObjectMax, Name: "finallength", Value: strconv.Itoa(romFinalLength), Op: bmreqs.OpAdd})
 				}
 
 				// Same for RAM code
@@ -186,6 +207,9 @@ func memComposer(bi *BasmInstance) error {
 					ramAlternatives = append(ramAlternatives, newSection.sectionName)
 					bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:ramtexts", T: bmreqs.ObjectSet, Name: "sections", Value: newSection.sectionName, Op: bmreqs.OpAdd})
 					bi.rg.Clone("/code:ramtexts/sections:"+ramSection, "/code:ramtexts/sections:"+newSection.sectionName)
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:ramtexts/sections:" + newSection.sectionName, T: bmreqs.ObjectMax, Name: "codelength", Value: strconv.Itoa(ramSectionLength), Op: bmreqs.OpAdd})
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:ramtexts/sections:" + newSection.sectionName, T: bmreqs.ObjectMax, Name: "datalength", Value: strconv.Itoa(ramDataLength), Op: bmreqs.OpAdd})
+					bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:ramtexts/sections:" + newSection.sectionName, T: bmreqs.ObjectMax, Name: "finallength", Value: strconv.Itoa(ramFinalLength), Op: bmreqs.OpAdd})
 				}
 			}
 		}
