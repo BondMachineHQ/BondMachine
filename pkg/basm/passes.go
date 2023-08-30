@@ -4,23 +4,24 @@ import "errors"
 
 const (
 	passTemplateResolver      = uint64(1)
-	passDynamicalInstructions = uint64(2)
-	passSymbolTagger1         = uint64(4)
-	passDataSections2Bytes    = uint64(8)
-	passMetadataInfer1        = uint64(16)
-	passFragmentAnalyzer      = uint64(32)
-	passFragmentOptimizer1    = uint64(64)
-	passFragmentPruner        = uint64(128)
-	passFragmentComposer      = uint64(256)
-	passMetadataInfer2        = uint64(512)
-	passEntryPoints           = uint64(1024)
-	passMatcherResolver       = uint64(2048)
-	passSymbolTagger2         = uint64(4096)
-	passMemComposer           = uint64(8192)
-	passSectionCleaner        = uint64(16384)
-	passSymbolTagger3         = uint64(32768)
-	passSymbolsResolver       = uint64(65536)
-	LAST_PASS                 = uint64(65536)
+	passMetadataInfer1        = uint64(2)
+	passDynamicalInstructions = uint64(4)
+	passSymbolTagger1         = uint64(8)
+	passDataSections2Bytes    = uint64(16)
+	passMetadataInfer2        = uint64(32)
+	passFragmentAnalyzer      = uint64(64)
+	passFragmentOptimizer1    = uint64(128)
+	passFragmentPruner        = uint64(256)
+	passFragmentComposer      = uint64(512)
+	passMetadataInfer3        = uint64(1024)
+	passEntryPoints           = uint64(2048)
+	passMatcherResolver       = uint64(4096)
+	passSymbolTagger2         = uint64(8192)
+	passMemComposer           = uint64(16384)
+	passSectionCleaner        = uint64(32768)
+	passSymbolTagger3         = uint64(65536)
+	passSymbolsResolver       = uint64(131072)
+	LAST_PASS                 = uint64(131072)
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {
@@ -33,6 +34,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passDataSections2Bytes:    dataSections2Bytes,
 		passMetadataInfer1:        metadataInfer,
 		passMetadataInfer2:        metadataInfer,
+		passMetadataInfer3:        metadataInfer,
 		passEntryPoints:           entryPoints,
 		passSymbolsResolver:       symbolResolver,
 		passMatcherResolver:       matcherResolver,
@@ -55,6 +57,7 @@ func getPassFunctionName() map[uint64]string {
 		passDataSections2Bytes:    "datasections2bytes",
 		passMetadataInfer1:        "metadataInfer (1)",
 		passMetadataInfer2:        "metadataInfer (2)",
+		passMetadataInfer3:        "metadataInfer (3)",
 		passEntryPoints:           "entryPoints",
 		passSymbolsResolver:       "symbolResolver",
 		passMatcherResolver:       "matcherResolver",
@@ -77,6 +80,7 @@ func IsOptionalPass() map[uint64]bool {
 		passDataSections2Bytes:    false,
 		passMetadataInfer1:        false,
 		passMetadataInfer2:        false,
+		passMetadataInfer3:        false,
 		passEntryPoints:           false,
 		passSymbolsResolver:       false,
 		passMatcherResolver:       false,
@@ -103,6 +107,7 @@ func GetPassMnemonic() map[uint64]string {
 		passDataSections2Bytes:    "datasections2bytes",
 		passMetadataInfer1:        "metadatainfer1",
 		passMetadataInfer2:        "metadatainfer2",
+		passMetadataInfer3:        "metadatainfer3",
 		passEntryPoints:           "entrypoints",
 		passSymbolsResolver:       "symbolresolver",
 		passMatcherResolver:       "matcherresolver",

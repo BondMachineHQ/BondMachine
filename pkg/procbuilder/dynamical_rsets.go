@@ -38,5 +38,8 @@ func (d DynRsets) HLAssemblerGeneratorMatch(c *DynConfig) []string {
 
 func (d DynRsets) HLAssemblerGeneratorList(c *DynConfig, line *bmline.BasmLine) []string {
 	result := make([]string, 0)
+	result = append(result, "rsets5")
+	result = append(result, "rsets6")
+	result = append(result, "rsets7")
 	return result
 }

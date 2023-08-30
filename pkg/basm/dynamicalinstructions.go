@@ -37,6 +37,35 @@ func dynamicalInstructions(bi *BasmInstance) error {
 					}
 				}
 
+				for j, matcher := range bi.dynMatchers {
+					if bmline.MatchMatcher(matcher, line) {
+						if bi.debug {
+							fmt.Println(yellow("\t\t\t\tMatching " + matcher.String()))
+						}
+						dyn := bi.dynMatcherOps[j]
+						for _, op := range dyn.HLAssemblerGeneratorList(nil, line) {
+							eventualInstruction := op
+
+							if created, err := procbuilder.EventuallyCreateInstruction(eventualInstruction); err != nil {
+								return err
+							} else {
+								if created {
+									op := procbuilder.Allopcodes[len(procbuilder.Allopcodes)-1]
+									for _, line := range op.HLAssemblerMatch(nil) {
+										if mt, err := bmline.Text2BasmLine(line); err == nil {
+											bi.matchers = append(bi.matchers, mt)
+											bi.matchersOps = append(bi.matchersOps, op)
+										} else {
+											bi.Warning(err)
+										}
+									}
+								}
+							}
+
+						}
+					}
+				}
+
 			}
 		} else {
 			if bi.debug {
@@ -68,6 +97,35 @@ func dynamicalInstructions(bi *BasmInstance) error {
 						} else {
 							bi.Warning(err)
 						}
+					}
+				}
+			}
+
+			for j, matcher := range bi.dynMatchers {
+				if bmline.MatchMatcher(matcher, line) {
+					if bi.debug {
+						fmt.Println(yellow("\t\t\t\tMatching " + matcher.String()))
+					}
+					dyn := bi.dynMatcherOps[j]
+					for _, op := range dyn.HLAssemblerGeneratorList(nil, line) {
+						eventualInstruction := op
+
+						if created, err := procbuilder.EventuallyCreateInstruction(eventualInstruction); err != nil {
+							return err
+						} else {
+							if created {
+								op := procbuilder.Allopcodes[len(procbuilder.Allopcodes)-1]
+								for _, line := range op.HLAssemblerMatch(nil) {
+									if mt, err := bmline.Text2BasmLine(line); err == nil {
+										bi.matchers = append(bi.matchers, mt)
+										bi.matchersOps = append(bi.matchersOps, op)
+									} else {
+										bi.Warning(err)
+									}
+								}
+							}
+						}
+
 					}
 				}
 			}

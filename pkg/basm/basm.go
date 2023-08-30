@@ -39,7 +39,9 @@ type BasmInstance struct {
 	passes           uint64
 	optimizations    map[int]struct{}
 	matchers         []*bmline.BasmLine
+	dynMatchers      []*bmline.BasmLine
 	matchersOps      []procbuilder.Opcode
+	dynMatcherOps    []procbuilder.DynamicInstruction
 	bm               *bondmachine.Bondmachine
 	result           *bondmachine.Bondmachine
 	outBCOF          *bcof.BCOFEntry
@@ -103,6 +105,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		passDataSections2Bytes |
 		passMetadataInfer1 |
 		passMetadataInfer2 |
+		passMetadataInfer3 |
 		passEntryPoints |
 		passSymbolsResolver |
 		passMatcherResolver |
@@ -114,7 +117,9 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		passSectionCleaner
 
 	bi.matchers = make([]*bmline.BasmLine, 0)
+	bi.dynMatchers = make([]*bmline.BasmLine, 0)
 	bi.matchersOps = make([]procbuilder.Opcode, 0)
+	bi.dynMatcherOps = make([]procbuilder.DynamicInstruction, 0)
 
 	bi.rg = bmreqs.NewReqRoot()
 
@@ -140,6 +145,20 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 			if mt, err := bmline.Text2BasmLine(line); err == nil {
 				bi.matchers = append(bi.matchers, mt)
 				bi.matchersOps = append(bi.matchersOps, op)
+			} else {
+				bi.Warning(err)
+			}
+		}
+	}
+
+	for _, dyn := range procbuilder.AllDynamicalInstructions {
+		if bi.debug {
+			fmt.Println(purple("\tExamining dyn opcode: ") + dyn.GetName())
+		}
+		for _, line := range dyn.HLAssemblerGeneratorMatch(nil) {
+			if mt, err := bmline.Text2BasmLine(line); err == nil {
+				bi.dynMatchers = append(bi.dynMatchers, mt)
+				bi.dynMatcherOps = append(bi.dynMatcherOps, dyn)
 			} else {
 				bi.Warning(err)
 			}
@@ -359,6 +378,12 @@ func (bi *BasmInstance) String() string {
 	if len(bi.matchers) > 0 {
 		result += purple("\tMatchers") + ":\n"
 		for _, matcher := range bi.matchers {
+			result += "\t\t" + matcher.String() + "\n"
+		}
+	}
+	if len(bi.dynMatchers) > 0 {
+		result += purple("\tDyn Matchers") + ":\n"
+		for _, matcher := range bi.dynMatchers {
 			result += "\t\t" + matcher.String() + "\n"
 		}
 	}
