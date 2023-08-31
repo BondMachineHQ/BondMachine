@@ -11,7 +11,19 @@ import (
 )
 
 func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []string) error {
+	symbolFilteredMatchers := make([]*bmline.BasmLine, 0)
+	for _, matcher := range bi.matchers {
+		if bmline.FilterMatcher(matcher, "symbol") {
+			symbolFilteredMatchers = append(symbolFilteredMatchers, matcher)
+		}
+	}
 
+	revSymbolFilteredMatchers := make([]*bmline.BasmLine, 0)
+	for _, matcher := range bi.matchers {
+		if bmline.FilterMatcher(matcher, "revsymbol") {
+			revSymbolFilteredMatchers = append(symbolFilteredMatchers, matcher)
+		}
+	}
 	for _, line := range body.Lines {
 
 		if bi.debug {
@@ -184,6 +196,28 @@ func (bi *BasmInstance) bodyMetadataInfer(body *bmline.BasmBody, soShortNames []
 			if bmNumber, err := bmnumbers.ImportString(arg.GetValue()); err == nil {
 				arg.BasmMeta = arg.SetMeta("type", "number")
 				arg.BasmMeta = arg.SetMeta("numbertype", bmNumber.GetTypeName())
+			}
+		}
+
+		// Every unknown arg is a symbol if the operation is a symbol matcher
+		for _, matcher := range symbolFilteredMatchers {
+			if bmline.MatchArg(matcher.Operation, line.Operation) {
+				for _, arg := range line.Elements {
+					if arg.GetMeta("type") == "" {
+						arg.BasmMeta = arg.SetMeta("type", "symbol")
+					}
+				}
+			}
+		}
+
+		// Every unknown arg is a revsymbol if the operation is a revsymbol matcher
+		for _, matcher := range revSymbolFilteredMatchers {
+			if bmline.MatchArg(matcher.Operation, line.Operation) {
+				for _, arg := range line.Elements {
+					if arg.GetMeta("type") == "" {
+						arg.BasmMeta = arg.SetMeta("type", "revsymbol")
+					}
+				}
 			}
 		}
 	}

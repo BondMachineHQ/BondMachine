@@ -68,8 +68,13 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 		if bi.debug {
 			fmt.Println("\t\t" + green("CP: ") + yellow(cp.GetValue()))
 		}
-		romCode := cp.GetMeta("romcode")
 
+		// Check for the ROM and RAM alternatives and select the right one by rewriting the meta romcode and ramcode
+		if err := bi.CodeChoice(i); err != nil {
+			return err
+		}
+
+		romCode := cp.GetMeta("romcode")
 		if bi.debug {
 			if romCode != "" {
 				fmt.Println("\t\t - " + green("rom code: ") + yellow(romCode))
@@ -79,7 +84,6 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 		}
 
 		romData := cp.GetMeta("romdata")
-
 		if bi.debug {
 			if romData != "" {
 				fmt.Println("\t\t - " + green("rom data: ") + yellow(romData))
@@ -893,4 +897,23 @@ outer:
 
 func (bi *BasmInstance) GetBondMachine() *bondmachine.Bondmachine {
 	return bi.result
+}
+
+func (bi *BasmInstance) CodeChoice(i int) error {
+	if i >= len(bi.cps) || i < 0 {
+		return errors.New("index out of range")
+	}
+
+	cp := bi.cps[i]
+
+	if cp.GetMeta("romalternatives") != "" || cp.GetMeta("ramalternatives") != "" {
+		romAlts := strings.Split(cp.GetMeta("romalternatives"), ":")
+		ramAlts := strings.Split(cp.GetMeta("ramalternatives"), ":")
+		_ = romAlts
+		_ = ramAlts
+		// TODO: implement the code choice
+
+	}
+
+	return nil
 }

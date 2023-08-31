@@ -3,6 +3,7 @@ package basm
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 )
 
@@ -67,6 +68,45 @@ func (bi *BasmInstance) resolveSymbols(section *BasmSection, name string) error 
 				}
 			}
 
+			// Search the revsymbols
+			if arg.GetMeta("type") == "revsymbol" {
+				symbol := arg.GetValue()
+				localSymbol := ""
+
+				if name == "" {
+					// To catch the revsymbol, a guess is made on the name
+					guessedName := ""
+					re := regexp.MustCompile("^romcode(?P<name>[0-9a-zA-Z_]+)$")
+					if re.MatchString(section.sectionName) {
+						guessedName = re.ReplaceAllString(section.sectionName, "${name}")
+					}
+					re = regexp.MustCompile("^ramcode(?P<name>[0-9a-zA-Z_]+)$")
+					if re.MatchString(section.sectionName) {
+						guessedName = re.ReplaceAllString(section.sectionName, "${name}")
+					}
+					if guessedName != "" {
+						if section.sectionType == sectRomText {
+							localSymbol = "ram.ramcode" + guessedName + "." + symbol
+						} else {
+							localSymbol = "rom.romcode" + guessedName + "." + symbol
+						}
+					}
+				} else {
+					if section.sectionType == sectRomText {
+						localSymbol = "ram.ramcode" + name + "." + symbol
+					} else {
+						localSymbol = "rom.romcode" + name + "." + symbol
+					}
+				}
+
+				if loc, ok := bi.symbols[localSymbol]; ok {
+					arg.SetValue(strconv.Itoa(int(loc)))
+					arg.BasmMeta = arg.BasmMeta.SetMeta("type", "number")
+					arg.BasmMeta = arg.BasmMeta.SetMeta("numbertype", "unsigned")
+					continue
+				}
+			}
+
 			// Search the symbol in rom
 			if arg.GetMeta("type") == "rom" && arg.GetMeta("romaddressing") == "symbol" {
 				symbol := arg.GetMeta("symbol")
@@ -107,7 +147,46 @@ func (bi *BasmInstance) resolveSymbols(section *BasmSection, name string) error 
 				}
 
 				// return errors.New("symbol not found: " + symbol)
+			}
 
+			// Search the symbol in ram
+			if arg.GetMeta("type") == "ram" && arg.GetMeta("ramaddressing") == "symbol" {
+				symbol := arg.GetMeta("symbol")
+				if symbol == "" {
+					return errors.New("RAM symbol cannot be empty")
+				}
+
+				// In ramdata
+				ramSymbol := ""
+				if name == "" {
+					ramSymbol = "ramdata." + section.sectionName + "." + symbol
+				} else {
+					ramSymbol = "ramdata.ramdata" + name + "." + symbol
+				}
+				if loc, ok := bi.symbols[ramSymbol]; ok {
+					arg.SetValue(strconv.Itoa(int(loc)))
+					arg.BasmMeta = arg.BasmMeta.SetMeta("type", "number")
+					arg.BasmMeta = arg.BasmMeta.SetMeta("numbertype", "unsigned")
+					arg.BasmMeta.RmMeta("ramaddressing")
+					arg.BasmMeta.RmMeta("symbol")
+					continue
+				}
+
+				// In ramcode
+				ramSymbol = ""
+				if name == "" {
+					ramSymbol = "ram." + section.sectionName + "." + symbol
+				} else {
+					ramSymbol = "ramcode.ramcode" + name + "." + symbol
+				}
+				if loc, ok := bi.symbols[ramSymbol]; ok {
+					arg.SetValue(strconv.Itoa(int(loc)))
+					arg.BasmMeta = arg.BasmMeta.SetMeta("type", "number")
+					arg.BasmMeta = arg.BasmMeta.SetMeta("numbertype", "unsigned")
+					arg.BasmMeta.RmMeta("ramaddressing")
+					arg.BasmMeta.RmMeta("symbol")
+					continue
+				}
 			}
 		}
 	}

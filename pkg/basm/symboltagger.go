@@ -40,14 +40,14 @@ func symbolTagger(bi *BasmInstance) error {
 				}
 			}
 
-			for _, line := range body.Lines {
+			// for _, line := range body.Lines {
 
-				for _, arg := range line.Elements {
-					if _, ok := symbols[arg.GetValue()]; ok {
-						arg.BasmMeta = arg.SetMeta("type", "symbol")
-					}
-				}
-			}
+			// 	for _, arg := range line.Elements {
+			// 		if _, ok := symbols[arg.GetValue()]; ok {
+			// 			arg.BasmMeta = arg.SetMeta("type", "symbol")
+			// 		}
+			// 	}
+			// }
 		} else {
 			if bi.debug {
 				fmt.Println(yellow("\t\tSection type not handled: ") + sectName)
