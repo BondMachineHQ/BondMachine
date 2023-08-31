@@ -13,15 +13,16 @@ const (
 	passFragmentOptimizer1    = uint64(128)
 	passFragmentPruner        = uint64(256)
 	passFragmentComposer      = uint64(512)
-	passMetadataInfer3        = uint64(1024)
-	passEntryPoints           = uint64(2048)
-	passMatcherResolver       = uint64(4096)
-	passSymbolTagger2         = uint64(8192)
-	passMemComposer           = uint64(16384)
-	passSectionCleaner        = uint64(32768)
-	passSymbolTagger3         = uint64(65536)
-	passSymbolsResolver       = uint64(131072)
-	LAST_PASS                 = uint64(131072)
+	passCallResolver          = uint64(1024)
+	passMetadataInfer3        = uint64(2048)
+	passEntryPoints           = uint64(4096)
+	passMatcherResolver       = uint64(8192)
+	passSymbolTagger2         = uint64(16384)
+	passMemComposer           = uint64(32768)
+	passSectionCleaner        = uint64(65536)
+	passSymbolTagger3         = uint64(131072)
+	passSymbolsResolver       = uint64(262144)
+	LAST_PASS                 = uint64(262144)
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {
@@ -44,6 +45,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passFragmentOptimizer1:    fragmentOptimizer,
 		passMemComposer:           memComposer,
 		passSectionCleaner:        sectionCleaner,
+		passCallResolver:          callResolver,
 	}
 }
 
@@ -67,6 +69,7 @@ func getPassFunctionName() map[uint64]string {
 		passFragmentOptimizer1:    "fragmentOptimizer",
 		passMemComposer:           "memComposer",
 		passSectionCleaner:        "sectionCleaner",
+		passCallResolver:          "callResolver",
 	}
 }
 
@@ -90,6 +93,7 @@ func IsOptionalPass() map[uint64]bool {
 		passFragmentOptimizer1:    true,
 		passMemComposer:           false,
 		passSectionCleaner:        false,
+		passCallResolver:          false,
 	}
 }
 

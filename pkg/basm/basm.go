@@ -117,7 +117,8 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		passFragmentComposer |
 		passFragmentOptimizer1 |
 		passMemComposer |
-		passSectionCleaner
+		passSectionCleaner |
+		passCallResolver
 
 	bi.matchers = make([]*bmline.BasmLine, 0)
 	bi.dynMatchers = make([]*bmline.BasmLine, 0)
