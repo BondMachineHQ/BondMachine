@@ -4,10 +4,12 @@ import (
 	"errors"
 	"math/rand"
 	"strconv"
+	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmstack"
 )
 
 type Call struct {
@@ -61,7 +63,61 @@ func (op Call) Op_get_instruction_len(arch *Arch) int {
 }
 
 func (op Call) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
-	return ""
+	result := ""
+
+	// Size of the return stack
+	dataSize := 0
+	switch arch.Modes[0] {
+	case "ha":
+		dataSize = int(arch.O)
+	case "vn":
+		dataSize = int(arch.L)
+	case "hy":
+		// +1 because the stack memorizes the origin of the return (ROM or RAM)
+		if arch.O > arch.L {
+			dataSize = int(arch.O) + 1
+		} else {
+			dataSize = int(arch.L) + 1
+		}
+	}
+	stackName := "restack" + arch.Tag + "_" + strconv.Itoa(op.s) + op.sn
+
+	// Connect the return stack only once
+	suffix := strconv.Itoa(op.s) + op.sn
+	if arch.OnlyOne(op.Op_get_name(), []string{"callo" + suffix, "calla" + suffix, "ret" + suffix}) {
+		result += "	reg [1:0] " + stackName + "SM;\n"
+		result += "	localparam	CALL1 = 2'b00,\n"
+		result += "			CALL2 = 2'b01,\n"
+		result += "			CALL3 = 2'b10,\n"
+		result += "			CALL4 = 2'b11;\n"
+		result += "\n"
+		result += "\treg [" + strconv.Itoa(dataSize-1) + ":0] " + stackName + "senderData;\n"
+		result += "\treg " + stackName + "senderWrite;\n"
+		result += "\twire " + stackName + "senderAck;\n"
+		result += "\n"
+		result += "\twire [" + strconv.Itoa(dataSize-1) + ":0] " + stackName + "receiverData;\n"
+		result += "\treg " + stackName + "receiverRead;\n"
+		result += "\twire " + stackName + "receiverAck;\n"
+		result += "\n"
+		result += "\twire " + stackName + "empty;\n"
+		result += "\twire " + stackName + "full;\n"
+		result += "\n"
+		result += "\t" + stackName + " " + stackName + "_inst (\n"
+		result += "\t\t.clk(clk),\n"
+		result += "\t\t.reset(reset),\n"
+		result += "\t\t.senderData(" + stackName + "senderData),\n"
+		result += "\t\t.senderWrite(" + stackName + "senderWrite),\n"
+		result += "\t\t.senderAck(" + stackName + "senderAck),\n"
+		result += "\t\t.receiverData(" + stackName + "receiverData),\n"
+		result += "\t\t.receiverRead(" + stackName + "receiverRead),\n"
+		result += "\t\t.receiverAck(" + stackName + "receiverAck),\n"
+		result += "\t\t.empty(" + stackName + "empty),\n"
+		result += "\t\t.full(" + stackName + "full)\n"
+		result += "\t);\n"
+
+	}
+
+	return result
 }
 
 func (op Call) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
@@ -77,34 +133,78 @@ func (op Call) Op_instruction_verilog_default_state(arch *Arch, flavor string) s
 }
 
 func (op Call) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
-	rom_word := arch.Max_word()
-	opbits := arch.Opcodes_bits()
-
+	romWord := arch.Max_word()
+	opBits := arch.Opcodes_bits()
+	stackName := "restack" + arch.Tag + "_" + strconv.Itoa(op.s) + op.sn
 	locationBits := arch.O
 
+	dataSize := 0
 	switch arch.Modes[0] {
 	case "ha":
 		locationBits = arch.O
+		dataSize = int(arch.O)
 	case "vn":
 		locationBits = arch.L
+		dataSize = int(arch.L)
 	case "hy":
 		if arch.O > arch.L {
 			locationBits = arch.O
+			dataSize = int(arch.O) + 1
 		} else {
 			locationBits = arch.L
+			dataSize = int(arch.L) + 1
 		}
 	}
 
 	result := ""
-	result += "					J: begin\n"
-	if locationBits == 1 {
-		result += NextInstruction(conf, arch, 6, "current_instruction["+strconv.Itoa(rom_word-opbits-1)+"]")
-		result += "						$display(\"J \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "]);\n"
+	if op.opType == OP_CALLA || op.opType == OP_CALLO {
+		result += "					" + strings.ToUpper(op.callName) + ": begin\n"
+		result += "						case (" + stackName + "SM)\n"
+		result += "						CALL1: begin\n"
+		result += "							if (!" + stackName + "senderAck) begin\n"
+		result += "							     " + stackName + "senderData[" + strconv.Itoa(dataSize-1) + ":0] <= #1 { exec_mode, _pc[" + strconv.Itoa(int(locationBits)-1) + ":0] + 1 };\n"
+		result += "							     " + stackName + "senderWrite <= #1 1'b1;\n"
+		result += "							     " + stackName + "SM <= CALL2;\n"
+		result += "							end\n"
+		result += "						end\n"
+		result += "						CALL2: begin\n"
+		result += "							if (" + stackName + "senderAck) begin\n"
+		result += "								" + stackName + "senderWrite <= #1 1'b0;\n"
+		if arch.Modes[0] == "hy" {
+			if op.opType == OP_CALLO {
+				result += "								exec_mode <= #1 1'b0;\n"
+			} else {
+				result += "								exec_mode <= #1 1'b1;\n"
+			}
+		}
+		if locationBits == 1 {
+			result += "								_pc <= #1 current_instruction[" + strconv.Itoa(romWord-opBits-1) + "];\n"
+			result += "								$display(\"" + strings.ToUpper(op.callName) + " \", current_instruction[" + strconv.Itoa(romWord-opBits-1) + "]);\n"
+		} else {
+			result += "								_pc <= #1 current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(locationBits)) + "];\n"
+			result += "								$display(\"" + strings.ToUpper(op.callName) + " \", current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(locationBits)) + "]);\n"
+		}
+		result += "								" + stackName + "SM <= CALL1;\n"
+		result += "							end\n"
+		result += "						end\n"
+		result += "						endcase\n"
+		result += "					end\n"
 	} else {
-		result += NextInstruction(conf, arch, 6, "current_instruction["+strconv.Itoa(rom_word-opbits-1)+":"+strconv.Itoa(rom_word-opbits-int(locationBits))+"]")
-		result += "						$display(\"J \", current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(locationBits)) + "]);\n"
+		result += "					" + strings.ToUpper(op.callName) + ": begin\n"
+		result += "						if (" + stackName + "receiverAck && " + stackName + "receiverRead) begin\n"
+		result += "							" + stackName + "receiverRead <= #1 1'b0;\n"
+		result += "							_pc[" + strconv.Itoa(int(locationBits)-1) + ":0] <= #1 " + stackName + "receiverData[" + strconv.Itoa(int(locationBits)-1) + ":0];\n"
+		result += "							exec_mode <= #1 " + stackName + "receiverData[" + strconv.Itoa(int(locationBits)) + "];\n"
+		if arch.Modes[0] == "hy" {
+			result += "							vn_state <= FETCH;\n"
+		}
+		result += "						end\n"
+		result += "						else begin\n"
+		result += "							" + stackName + "receiverRead <= #1 1'b1;\n"
+		result += "						end\n"
+		result += "					end\n"
 	}
-	result += "					end\n"
+
 	return result
 }
 
@@ -197,6 +297,34 @@ func (op Call) Forbidden_modes() (bool, []string) {
 }
 
 func (op Call) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
+	suffix := strconv.Itoa(op.s) + op.sn
+	if arch.OnlyOne(op.Op_get_name(), []string{"callo" + suffix, "calla" + suffix, "ret" + suffix}) {
+
+		s := bmstack.CreateBasicStack()
+		s.ModuleName = "restack" + arch.Tag + "_" + suffix
+		switch arch.Modes[0] {
+		case "ha":
+			s.DataSize = int(arch.O)
+		case "vn":
+			s.DataSize = int(arch.L)
+		case "hy":
+			// +1 because the stack memorizes the origin of the return (ROM or RAM)
+			if arch.O > arch.L {
+				s.DataSize = int(arch.O) + 1
+			} else {
+				s.DataSize = int(arch.L) + 1
+			}
+		}
+		s.Depth = op.s
+		s.MemType = "LIFO"
+		s.Senders = []string{"sender"}
+		s.Receivers = []string{"receiver"}
+
+		r, _ := s.WriteHDL()
+
+		result := r
+		return []string{s.ModuleName}, []string{result}
+	}
 	return []string{}, []string{}
 }
 
