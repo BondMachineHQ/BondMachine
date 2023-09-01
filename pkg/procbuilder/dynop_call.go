@@ -114,6 +114,10 @@ func (op Call) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor strin
 		result += "\t\t.empty(" + stackName + "empty),\n"
 		result += "\t\t.full(" + stackName + "full)\n"
 		result += "\t);\n"
+		result += "\n"
+		result += "initial begin\n"
+		result += "	" + stackName + "SM <= CALL1;\n"
+		result += "end\n"
 
 	}
 
@@ -162,7 +166,11 @@ func (op Call) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 		result += "						case (" + stackName + "SM)\n"
 		result += "						CALL1: begin\n"
 		result += "							if (!" + stackName + "senderAck) begin\n"
-		result += "							     " + stackName + "senderData[" + strconv.Itoa(dataSize-1) + ":0] <= #1 { exec_mode, _pc[" + strconv.Itoa(int(locationBits)-1) + ":0] + 1 };\n"
+		if arch.Modes[0] == "hy" {
+			result += "							     " + stackName + "senderData[" + strconv.Itoa(dataSize-1) + ":0] <= #1 { exec_mode, _pc + 1 };\n"
+		} else if arch.Modes[0] == "ha" {
+			result += "							     " + stackName + "senderData[" + strconv.Itoa(dataSize-1) + ":0] <= #1 _pc + 1;\n"
+		}
 		result += "							     " + stackName + "senderWrite <= #1 1'b1;\n"
 		result += "							     " + stackName + "SM <= CALL2;\n"
 		result += "							end\n"
@@ -194,8 +202,10 @@ func (op Call) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 		result += "						if (" + stackName + "receiverAck && " + stackName + "receiverRead) begin\n"
 		result += "							" + stackName + "receiverRead <= #1 1'b0;\n"
 		result += "							_pc[" + strconv.Itoa(int(locationBits)-1) + ":0] <= #1 " + stackName + "receiverData[" + strconv.Itoa(int(locationBits)-1) + ":0];\n"
-		result += "							exec_mode <= #1 " + stackName + "receiverData[" + strconv.Itoa(int(locationBits)) + "];\n"
 		if arch.Modes[0] == "hy" {
+			result += "							exec_mode <= #1 " + stackName + "receiverData[" + strconv.Itoa(int(locationBits)) + "];\n"
+		}
+		if arch.Modes[0] == "hy" || arch.Modes[0] == "vn" {
 			result += "							vn_state <= FETCH;\n"
 		}
 		result += "						end\n"
