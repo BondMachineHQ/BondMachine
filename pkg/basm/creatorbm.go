@@ -64,13 +64,19 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 
 	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "bm", Value: "cps", Op: bmreqs.OpAdd})
 
+	// Precompute the shared constraints in order to get the specs of the processors
+	sharedConstraints, err := bi.sharedPrecompute()
+	if err != nil {
+		return err
+	}
+
 	for i, cp := range bi.cps {
 		if bi.debug {
 			fmt.Println("\t\t" + green("CP: ") + yellow(cp.GetValue()))
 		}
 
 		// Check for the ROM and RAM alternatives and select the right one by rewriting the meta romcode and ramcode
-		if err := bi.CodeChoice(i); err != nil {
+		if err := bi.CodeChoice(rSize, i, sharedConstraints[i]); err != nil {
 			return err
 		}
 
@@ -759,7 +765,11 @@ func (bi *BasmInstance) GetBondMachine() *bondmachine.Bondmachine {
 	return bi.result
 }
 
-func (bi *BasmInstance) CodeChoice(i int) error {
+type choiceParams struct {
+	wordSize int
+}
+
+func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 	if i >= len(bi.cps) || i < 0 {
 		return errors.New("index out of range")
 	}
@@ -767,13 +777,165 @@ func (bi *BasmInstance) CodeChoice(i int) error {
 	cp := bi.cps[i]
 
 	if cp.GetMeta("romalternatives") != "" || cp.GetMeta("ramalternatives") != "" {
+		// Data cannot be alternative
+		romData := cp.GetMeta("romdata")
+		ramData := cp.GetMeta("ramdata")
+		execMode := cp.GetMeta("execmode")
+		if execMode == "" {
+			execMode = bi.global.GetMeta("defaultexecmode")
+		}
+		if execMode == "" {
+			execMode = "ha"
+		}
 		romAlts := strings.Split(cp.GetMeta("romalternatives"), ":")
 		ramAlts := strings.Split(cp.GetMeta("ramalternatives"), ":")
-		_ = romAlts
-		_ = ramAlts
-		// TODO: implement the code choice
+		if len(romAlts) == 0 {
+			romAlts = []string{""}
+		}
+		if len(ramAlts) == 0 {
+			ramAlts = []string{""}
+		}
+
+		params := make([]choiceParams, len(romAlts)*len(ramAlts))
+
+		for ii, romAlt := range romAlts {
+			for jj, ramAlt := range ramAlts {
+				tempCP, err := bi.CreateConnectingProcessor(rSize, cp, i, romAlt, romData, ramAlt, ramData, execMode)
+
+				if err != nil {
+					return err
+				}
+
+				tempCP.Shared_constraints = sh
+				myArch := tempCP.Arch
+
+				prog := ""
+
+				romAltContrib := 0
+
+				params[ii*len(ramAlts)+jj].wordSize = myArch.Max_word()
+
+				if romAlt != "" {
+					for _, line := range bi.sections[romAlt].sectionBody.Lines {
+						prog += line.Operation.GetValue()
+						for _, arg := range line.Elements {
+							prog += " " + arg.GetValue()
+						}
+						prog += "\n"
+					}
+
+					if prog, err := myArch.Assembler([]byte(prog)); err == nil {
+						tempCP.Program = prog
+					} else {
+						return err
+					}
+
+					romAltContrib = len(bi.sections[romAlt].sectionBody.Lines)
+				}
+
+				if romData != "" {
+					wordSize := myArch.Max_word()
+
+					// fmt.Println("Word size: ", wordSize)
+					wordPad := ""
+					for i := 0; i < int(wordSize); i++ {
+						wordPad += "0"
+					}
+					if wordSize < 8 {
+						return errors.New("word size is too small")
+					}
+
+					data := make([]string, 0)
+
+					for _, line := range bi.sections[romData].sectionBody.Lines {
+						for _, arg := range line.Elements {
+							hexVal := arg.GetValue()
+							if n, err := bmnumbers.ImportString(hexVal); err == nil {
+								nS, _ := n.ExportBinary(false)
+								nS = "00000000" + nS
+								nS = nS[len(nS)-8:]
+								nS = nS + wordPad
+								nS = nS[:wordSize]
+								data = append(data, nS)
+							} else {
+								return err
+							}
+						}
+					}
+
+					myArch.O = uint8(Needed_bits(romAltContrib + len(data)))
+					tempCP.Data.Vars = data
+
+				}
+			}
+		}
+
+		fmt.Println("params: ", params)
+		// TODO Finish the code
 
 	}
 
 	return nil
+}
+
+func (bi *BasmInstance) sharedPrecompute() ([]string, error) {
+
+	result := make([]string, len(bi.cps))
+
+	// Insert the Shared Objects into the BM and compose and hash of name,constraint
+	constrains := make(map[string]string)
+	soIndexes := make(map[string]string)
+	for i, so := range bi.sos {
+		if bi.debug {
+			fmt.Print("\t\t" + green("SO: ") + yellow(so.GetValue()))
+		}
+		constraint := so.GetMeta("constraint")
+		if bi.debug {
+			fmt.Println(" - " + green("constraint: ") + yellow(constraint))
+		}
+		constrains[so.GetValue()] = constraint
+		soIndexes[so.GetValue()] = strconv.Itoa(i)
+	}
+
+	// Will keep track of the processed attach
+	soattDone := make([]bool, len(bi.soAttach))
+
+	// Process every CP
+	for i, cp := range bi.cps {
+		cpName := cp.GetValue()
+		expectedIndex := 0
+		expectedIndexS := "0"
+		cpConstraints := make([]string, 0)
+		for {
+			indexFound := false
+			// Process every SO attach searching for the couple CP index
+			for j, soatt := range bi.soAttach {
+				if soatt.GetMeta("cp") == cpName && soatt.GetMeta("index") == expectedIndexS {
+					endpoints := make([]string, 2)
+					endpoints[0] = strconv.Itoa(i)
+					endpoints[1] = soIndexes[soatt.GetValue()]
+					indexFound = true
+					soattDone[j] = true
+					cpConstraints = append(cpConstraints, constrains[soatt.GetValue()])
+					break
+				}
+			}
+			if indexFound {
+				expectedIndex += 1
+				expectedIndexS = strconv.Itoa(expectedIndex)
+			} else {
+				break
+			}
+		}
+		// compose the Shared constraint of every processor
+		result[i] = strings.Join(cpConstraints, ",")
+	}
+
+	for _, val := range soattDone {
+		if !val {
+			return nil, errors.New("processor SO index inconsistent")
+		}
+	}
+
+	return result, nil
 }
