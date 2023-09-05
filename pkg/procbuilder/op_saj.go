@@ -223,9 +223,8 @@ func (Op Saj) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 }
 func (Op Saj) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 2)
-	result[0] = "saj::*--type=lineno"
-	result[0] = "saj::*--type=number--numbertype=unsigned"
-	result[1] = "saj::*--type=label"
+	result[0] = "saj::*--type=number"
+	result[1] = "saj::*--type=revsymbol"
 	return result
 }
 func (Op Saj) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {

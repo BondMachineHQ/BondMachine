@@ -4,38 +4,48 @@ import "errors"
 
 const (
 	passTemplateResolver      = uint64(1)
-	passDynamicalInstructions = uint64(2)
-	passLabelTagger           = uint64(4)
-	passMetadataInfer1        = uint64(8)
-	passFragmentAnalyzer      = uint64(16)
-	passFragmentOptimizer1    = uint64(32)
-	passFragmentPruner        = uint64(64)
-	passFragmentComposer      = uint64(128)
-	passMetadataInfer2        = uint64(256)
-	passDataSections2Bytes    = uint64(512)
-	passEntryPoints           = uint64(1024)
-	passLabelsResolver        = uint64(2048)
-	passRomComposer           = uint64(4096)
+	passMetadataInfer1        = uint64(2)
+	passCallResolver          = uint64(4)
+	passDynamicalInstructions = uint64(8)
+	passSymbolTagger1         = uint64(16)
+	passDataSections2Bytes    = uint64(32)
+	passMetadataInfer2        = uint64(64)
+	passFragmentAnalyzer      = uint64(128)
+	passFragmentOptimizer1    = uint64(256)
+	passFragmentPruner        = uint64(512)
+	passFragmentComposer      = uint64(1024)
+	passMetadataInfer3        = uint64(2048)
+	passEntryPoints           = uint64(4096)
 	passMatcherResolver       = uint64(8192)
-	LAST_PASS                 = uint64(8192)
+	passSymbolTagger2         = uint64(16384)
+	passMemComposer           = uint64(32768)
+	passSectionCleaner        = uint64(65536)
+	passSymbolTagger3         = uint64(131072)
+	passSymbolsResolver       = uint64(262144)
+	LAST_PASS                 = uint64(262144)
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {
 	return map[uint64]func(*BasmInstance) error{
 		passTemplateResolver:      templateResolver,
 		passDynamicalInstructions: dynamicalInstructions,
-		passLabelTagger:           labelTagger,
+		passSymbolTagger1:         symbolTagger,
+		passSymbolTagger2:         symbolTagger,
+		passSymbolTagger3:         symbolTagger,
 		passDataSections2Bytes:    dataSections2Bytes,
 		passMetadataInfer1:        metadataInfer,
 		passMetadataInfer2:        metadataInfer,
+		passMetadataInfer3:        metadataInfer,
 		passEntryPoints:           entryPoints,
-		passLabelsResolver:        labelResolver,
+		passSymbolsResolver:       symbolResolver,
 		passMatcherResolver:       matcherResolver,
 		passFragmentAnalyzer:      fragmentAnalyzer,
 		passFragmentPruner:        fragmentPruner,
 		passFragmentComposer:      fragmentComposer,
 		passFragmentOptimizer1:    fragmentOptimizer,
-		passRomComposer:           romComposer,
+		passMemComposer:           memComposer,
+		passSectionCleaner:        sectionCleaner,
+		passCallResolver:          callResolver,
 	}
 }
 
@@ -43,18 +53,23 @@ func getPassFunctionName() map[uint64]string {
 	return map[uint64]string{
 		passTemplateResolver:      "templateResolver",
 		passDynamicalInstructions: "dynamicalInstructions",
-		passLabelTagger:           "labelTagger",
+		passSymbolTagger1:         "symbolTagger (1)",
+		passSymbolTagger2:         "symbolTagger (2)",
+		passSymbolTagger3:         "symbolTagger (3)",
 		passDataSections2Bytes:    "datasections2bytes",
 		passMetadataInfer1:        "metadataInfer (1)",
 		passMetadataInfer2:        "metadataInfer (2)",
+		passMetadataInfer3:        "metadataInfer (3)",
 		passEntryPoints:           "entryPoints",
-		passLabelsResolver:        "labelResolver",
+		passSymbolsResolver:       "symbolResolver",
 		passMatcherResolver:       "matcherResolver",
 		passFragmentAnalyzer:      "fragmentAnalyzer",
 		passFragmentPruner:        "fragmentPruner",
 		passFragmentComposer:      "fragmentComposer",
 		passFragmentOptimizer1:    "fragmentOptimizer",
-		passRomComposer:           "romComposer",
+		passMemComposer:           "memComposer",
+		passSectionCleaner:        "sectionCleaner",
+		passCallResolver:          "callResolver",
 	}
 }
 
@@ -62,18 +77,23 @@ func IsOptionalPass() map[uint64]bool {
 	return map[uint64]bool{
 		passTemplateResolver:      false,
 		passDynamicalInstructions: false,
-		passLabelTagger:           false,
+		passSymbolTagger1:         false,
+		passSymbolTagger2:         false,
+		passSymbolTagger3:         false,
 		passDataSections2Bytes:    false,
 		passMetadataInfer1:        false,
 		passMetadataInfer2:        false,
+		passMetadataInfer3:        false,
 		passEntryPoints:           false,
-		passLabelsResolver:        false,
+		passSymbolsResolver:       false,
 		passMatcherResolver:       false,
 		passFragmentAnalyzer:      false,
 		passFragmentPruner:        false,
 		passFragmentComposer:      false,
 		passFragmentOptimizer1:    true,
-		passRomComposer:           false,
+		passMemComposer:           false,
+		passSectionCleaner:        false,
+		passCallResolver:          false,
 	}
 }
 
@@ -85,18 +105,22 @@ func GetPassMnemonic() map[uint64]string {
 	return map[uint64]string{
 		passTemplateResolver:      "templateresolver",
 		passDynamicalInstructions: "dynamicalinstructions",
-		passLabelTagger:           "labeltagger",
+		passSymbolTagger1:         "symboltagger1",
+		passSymbolTagger2:         "symboltagger2",
+		passSymbolTagger3:         "symboltagger3",
 		passDataSections2Bytes:    "datasections2bytes",
 		passMetadataInfer1:        "metadatainfer1",
 		passMetadataInfer2:        "metadatainfer2",
+		passMetadataInfer3:        "metadatainfer3",
 		passEntryPoints:           "entrypoints",
-		passLabelsResolver:        "labelresolver",
+		passSymbolsResolver:       "symbolresolver",
 		passMatcherResolver:       "matcherresolver",
 		passFragmentAnalyzer:      "fragmentanalyzer",
 		passFragmentPruner:        "fragmentpruner",
 		passFragmentComposer:      "fragmentcomposer",
 		passFragmentOptimizer1:    "fragmentoptimizer",
-		passRomComposer:           "romcomposer",
+		passMemComposer:           "memcomposer",
+		passSectionCleaner:        "sectioncleaner",
 	}
 
 }

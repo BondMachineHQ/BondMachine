@@ -104,7 +104,7 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 		fmt.Println(green("\tProcessing fragments:"))
 	}
 
-	// Filter the matchers to select only the label based one
+	// Filter the matchers to select only the symbol based one
 	filteredMatchers := make([]*bmline.BasmLine, 0)
 
 	// The nop line
@@ -119,7 +119,7 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 	}
 
 	for _, matcher := range bi.matchers {
-		if bmline.FilterMatcher(matcher, "label") {
+		if bmline.FilterMatcher(matcher, "symbol") {
 			filteredMatchers = append(filteredMatchers, matcher)
 			if bi.debug {
 				fmt.Println(red("\t\tActive matcher:") + matcher.String())
@@ -230,18 +230,18 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 		circularBlocks[0] = false
 
 		// Identify every branching instruction, the identifier will be the line number of the starting point. To identify the end point, we will
-		// use the label.
-		// This will only work with labels, not with numbers. For this reason, it will execute after labeltagger and before labelresolver.
+		// use the symbol.
+		// This will only work with symbols, not with numbers. For this reason, it will execute after symboltagger and before symbolresolver.
 
-		// Map all the labels
-		labels := make(map[string]int)
+		// Map all the symbols
+		symbols := make(map[string]int)
 
 		for i, line := range fBody.Lines {
-			if label := line.GetMeta("label"); label != "" {
-				if _, exists := labels[label]; exists {
-					return errors.New("label is specified multiple time: " + label)
+			if symbol := line.GetMeta("symbol"); symbol != "" {
+				if _, exists := symbols[symbol]; exists {
+					return errors.New("symbol is specified multiple time: " + symbol)
 				} else {
-					labels[label] = i
+					symbols[symbol] = i
 				}
 			}
 		}
@@ -254,8 +254,8 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 				if bmline.MatchMatcher(matcher, line) {
 					// TODO Handling the operand
 					for _, arg := range line.Elements {
-						if j, ok := labels[arg.GetValue()]; ok {
-							fmt.Println("the branch is at line", i, "and the label is at line", j)
+						if j, ok := symbols[arg.GetValue()]; ok {
+							fmt.Println("the branch is at line", i, "and the symbol is at line", j)
 
 							if i > j {
 								branchingBlocks[i] = fBody.Copy()

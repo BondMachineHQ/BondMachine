@@ -6,6 +6,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bmconfig"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 )
 
 type DynFloPoCo struct{}
@@ -103,4 +106,14 @@ func (d DynFloPoCo) CreateInstruction(name string) (Opcode, error) {
 	}
 
 	return FloPoCo{floPoCoName: name, regSize: regSize, vHDL: vHDL, topEntity: topEntity, entities: entities, pipeline: pipeline}, nil
+}
+
+func (d DynFloPoCo) HLAssemblerGeneratorMatch(bmc *bmconfig.BmConfig) []string {
+	result := make([]string, 0)
+	return result
+}
+
+func (d DynFloPoCo) HLAssemblerGeneratorList(bmc *bmconfig.BmConfig, bl *bmline.BasmLine) []string {
+	result := make([]string, 0)
+	return result
 }

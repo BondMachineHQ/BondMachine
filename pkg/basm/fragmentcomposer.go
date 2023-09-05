@@ -237,7 +237,8 @@ func fragmentComposer(bi *BasmInstance) error {
 					if inp != "" {
 						newLine := new(bmline.BasmLine)
 						if firstLine {
-							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("symbol", "_start")
+							bi.symbols["rom."+newSection.sectionName+"._start"] = 0
 							firstLine = false
 						}
 						newOperation := new(bmline.BasmElement)
@@ -260,7 +261,8 @@ func fragmentComposer(bi *BasmInstance) error {
 					if inp != "" {
 						newLine := new(bmline.BasmLine)
 						if firstLine {
-							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("symbol", "_start")
+							bi.symbols["rom."+newSection.sectionName+"._start"] = 0
 							firstLine = false
 						}
 						newOperation := new(bmline.BasmElement)
@@ -288,12 +290,12 @@ func fragmentComposer(bi *BasmInstance) error {
 				fCopy.fragmentName = fragment.fragmentName
 				fCopy.fragmentBody = fragment.fragmentBody.Copy()
 
-				// Change the labels including a prefix
+				// Change the symbols including a prefix
 				prefmeta := new(bmline.BasmElement)
-				prefmeta.BasmMeta = prefmeta.SetMeta("label", "frag"+strconv.Itoa(i))
+				prefmeta.BasmMeta = prefmeta.SetMeta("symbol", "frag"+strconv.Itoa(i))
 				prefvalue := new(bmline.BasmElement)
 				prefvalue.SetValue("frag" + strconv.Itoa(i))
-				prefvalue.BasmMeta = prefvalue.SetMeta("type", "label")
+				prefvalue.BasmMeta = prefvalue.SetMeta("type", "symbol")
 				fCopy.fragmentBody.PrefixMeta(prefmeta)
 				fCopy.fragmentBody.PrefixValue(prefvalue)
 
@@ -306,7 +308,8 @@ func fragmentComposer(bi *BasmInstance) error {
 					if out != "" {
 						newLine := new(bmline.BasmLine)
 						if firstLine {
-							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("symbol", "_start")
+							bi.symbols["rom."+newSection.sectionName+"._start"] = 0
 							firstLine = false
 						}
 						newOperation := new(bmline.BasmElement)
@@ -329,7 +332,8 @@ func fragmentComposer(bi *BasmInstance) error {
 					if out != "" {
 						newLine := new(bmline.BasmLine)
 						if firstLine {
-							newLine.BasmMeta = newLine.BasmMeta.SetMeta("label", "_start")
+							newLine.BasmMeta = newLine.BasmMeta.SetMeta("symbol", "_start")
+							bi.symbols["rom."+newSection.sectionName+"._start"] = 0
 							firstLine = false
 						}
 						newOperation := new(bmline.BasmElement)
@@ -354,7 +358,7 @@ func fragmentComposer(bi *BasmInstance) error {
 			newOperation.SetValue("j")
 			newStart := new(bmline.BasmElement)
 			newStart.SetValue("_start")
-			newStart.BasmMeta = newStart.BasmMeta.SetMeta("type", "lineno")
+			newStart.BasmMeta = newStart.BasmMeta.SetMeta("type", "symbol")
 			newLine.Operation = newOperation
 			newLine.Elements = make([]*bmline.BasmElement, 1)
 			newLine.Elements[0] = newStart

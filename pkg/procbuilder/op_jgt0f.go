@@ -205,8 +205,8 @@ func (Op Jgt0f) Op_instruction_verilog_extra_block(arch *Arch, flavor string, le
 }
 func (Op Jgt0f) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 2)
-	result[0] = "jgt0f::*--type=reg::*--type=lineno"
-	result[1] = "jgt0f::*--type=reg::*--type=label"
+	result[0] = "jgt0f::*--type=reg::*--type=number"
+	result[1] = "jgt0f::*--type=reg::*--type=symbol"
 	return result
 }
 func (Op Jgt0f) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {

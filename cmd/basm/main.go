@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/basm"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmconfig"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
@@ -23,8 +24,10 @@ var debug = flag.Bool("d", false, "Verbose")
 // BondMachine targets
 
 var bondmachineFile = flag.String("bondmachine", "", "Load a bondmachine JSON file")
+var symInFile = flag.String("si", "", "Load a symbols JSON file")
 var bmOutFile = flag.String("o", "", "BondMachine Output file")
 var bcofOutFile = flag.String("bo", "", "BCOF Output file")
+var symOutFile = flag.String("so", "", "Symbols Output file")
 
 // Utils
 var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parameter of the BondMachine")
@@ -35,12 +38,17 @@ var dumpRequirements = flag.String("dump-requirements", "", "Dump the requiremen
 
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
+// Phases
 var listPasses = flag.Bool("list-passes", false, "List the available passes")
 var actPasses = flag.String("activate-passes", "", "List of comma separated optional passes to activate (default: none)")
 var deactPasses = flag.String("deactivate-passes", "", "List of comma separated optional passes to deactivate (default: none)")
 
+// Optimizations
 var listOptimizations = flag.Bool("list-optimizations", false, "List the available optimizations")
 var actOptimizations = flag.String("activate-optimizations", "", "List of comma separated optional optimizations to activate (default: none, everything: all)")
+
+// Config
+var disableDynamicalMatching = flag.Bool("disable-dynamical-matching", false, "Disable the dynamical matching")
 
 func init() {
 	flag.Parse()
@@ -118,6 +126,11 @@ func main() {
 	}
 
 	bi.BasmInstanceInit(bm)
+
+	// Config options
+	if *disableDynamicalMatching {
+		bi.Activate(bmconfig.DisableDynamicalMatching)
+	}
 
 	mne := basm.GetPassMnemonic()
 

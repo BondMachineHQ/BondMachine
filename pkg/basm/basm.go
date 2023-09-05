@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmconfig"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
@@ -23,22 +24,26 @@ const (
 
 type BasmInstance struct {
 	*bminfo.BMinfo
+	*bmconfig.BmConfig
 	verbose          bool
 	debug            bool
 	isWithinMacro    string
 	isWithinSection  string
 	isWithinFragment string
 	isWithinChunk    string
-	isLabelled       string
+	isSymbolled      string
 	lineMeta         string
 	macros           map[string]*BasmMacro
 	sections         map[string]*BasmSection
 	fragments        map[string]*BasmFragment
 	chunks           map[string]*BasmChunk
+	symbols          map[string]int64 // -1 for undefined, >=0 for defined and value
 	passes           uint64
 	optimizations    map[int]struct{}
 	matchers         []*bmline.BasmLine
+	dynMatchers      []*bmline.BasmLine
 	matchersOps      []procbuilder.Opcode
+	dynMatcherOps    []procbuilder.DynamicInstruction
 	bm               *bondmachine.Bondmachine
 	result           *bondmachine.Bondmachine
 	outBCOF          *bcof.BCOFEntry
@@ -83,19 +88,42 @@ type BasmMacro struct {
 func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 
 	bi.bm = bm
+	bi.BmConfig = bmconfig.NewBmConfig()
 	// bi.verbose = false
 	// bi.debug = false
 	bi.isWithinMacro = ""
 	bi.isWithinSection = ""
 	bi.isWithinFragment = ""
-	bi.isLabelled = ""
+	bi.isSymbolled = ""
 	bi.macros = make(map[string]*BasmMacro)
 	bi.sections = make(map[string]*BasmSection)
 	bi.fragments = make(map[string]*BasmFragment)
 	bi.chunks = make(map[string]*BasmChunk)
-	bi.passes = uint64(16351)
+	bi.symbols = make(map[string]int64)
+	bi.passes = passTemplateResolver |
+		passDynamicalInstructions |
+		passSymbolTagger1 |
+		passSymbolTagger2 |
+		passSymbolTagger3 |
+		passDataSections2Bytes |
+		passMetadataInfer1 |
+		passMetadataInfer2 |
+		passMetadataInfer3 |
+		passEntryPoints |
+		passSymbolsResolver |
+		passMatcherResolver |
+		passFragmentAnalyzer |
+		passFragmentPruner |
+		passFragmentComposer |
+		passFragmentOptimizer1 |
+		passMemComposer |
+		passSectionCleaner |
+		passCallResolver
+
 	bi.matchers = make([]*bmline.BasmLine, 0)
+	bi.dynMatchers = make([]*bmline.BasmLine, 0)
 	bi.matchersOps = make([]procbuilder.Opcode, 0)
+	bi.dynMatcherOps = make([]procbuilder.DynamicInstruction, 0)
 
 	bi.rg = bmreqs.NewReqRoot()
 
@@ -121,6 +149,20 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 			if mt, err := bmline.Text2BasmLine(line); err == nil {
 				bi.matchers = append(bi.matchers, mt)
 				bi.matchersOps = append(bi.matchersOps, op)
+			} else {
+				bi.Warning(err)
+			}
+		}
+	}
+
+	for _, dyn := range procbuilder.AllDynamicalInstructions {
+		if bi.debug {
+			fmt.Println(purple("\tExamining dyn opcode: ") + dyn.GetName())
+		}
+		for _, line := range dyn.HLAssemblerGeneratorMatch(bi.BmConfig) {
+			if mt, err := bmline.Text2BasmLine(line); err == nil {
+				bi.dynMatchers = append(bi.dynMatchers, mt)
+				bi.dynMatcherOps = append(bi.dynMatcherOps, dyn)
 			} else {
 				bi.Warning(err)
 			}
@@ -153,6 +195,8 @@ func (bi *BasmInstance) RunAssembler() error {
 
 	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "code", Value: "romtexts", Op: bmreqs.OpAdd})
 	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "code", Value: "ramtexts", Op: bmreqs.OpAdd})
+	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "code", Value: "romdatas", Op: bmreqs.OpAdd})
+	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/", T: bmreqs.ObjectSet, Name: "code", Value: "ramdatas", Op: bmreqs.OpAdd})
 
 	if bi.debug {
 		fmt.Println(purple("Pre phase 1 ") + bi.String())
@@ -206,6 +250,8 @@ func (m *BasmSection) String() string {
 		result += yellow("[.romtext]")
 	case sectRamText:
 		result += yellow("[.ramtext]")
+	case sectRamData:
+		result += yellow("[.ramdata]")
 	}
 	result += m.sectionBody.String()
 	return result
@@ -214,8 +260,8 @@ func (m *BasmSection) String() string {
 func (m *BasmSection) writeText() string {
 	result := ""
 	for _, line := range m.sectionBody.Lines {
-		if line.GetMeta("label") != "" {
-			result += line.GetMeta("label") + ":\n"
+		if line.GetMeta("symbol") != "" {
+			result += line.GetMeta("symbol") + ":\n"
 		}
 		result += line.Operation.GetValue() + " "
 		for _, element := range line.Elements {
@@ -232,8 +278,8 @@ func (m *BasmSection) writeText() string {
 func (m *BasmFragment) writeText() string {
 	result := ""
 	for _, line := range m.fragmentBody.Lines {
-		if line.GetMeta("label") != "" {
-			result += line.GetMeta("label") + ":\n"
+		if line.GetMeta("symbol") != "" {
+			result += line.GetMeta("symbol") + ":\n"
 		}
 		result += line.Operation.GetValue() + " "
 		for _, element := range line.Elements {
@@ -341,6 +387,22 @@ func (bi *BasmInstance) String() string {
 		result += purple("\tMatchers") + ":\n"
 		for _, matcher := range bi.matchers {
 			result += "\t\t" + matcher.String() + "\n"
+		}
+	}
+	if len(bi.dynMatchers) > 0 {
+		result += purple("\tDyn Matchers") + ":\n"
+		for _, matcher := range bi.dynMatchers {
+			result += "\t\t" + matcher.String() + "\n"
+		}
+	}
+	if bi.symbols != nil {
+		result += purple("\tSymbols") + ":\n"
+		for symbol, value := range bi.symbols {
+			if value == -1 {
+				result += "\t\t" + symbol + " = " + red("undefined") + "\n"
+			} else {
+				result += "\t\t" + symbol + " = " + strconv.FormatInt(int64(value), 10) + "\n"
+			}
 		}
 	}
 	return result

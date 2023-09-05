@@ -253,16 +253,16 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 
 			} else {
 				if bi.isWithinMacro != "" || bi.isWithinSection != "" || bi.isWithinFragment != "" || bi.isWithinChunk != "" {
-					// Processing labels
+					// Processing symbols
 					if strings.HasSuffix(operand, ":") {
-						if bi.isLabelled != "" {
-							return errors.New(line + ", Multiple label")
+						if bi.isSymbolled != "" {
+							return errors.New(line + ", Multiple symbol")
 						}
-						newlabel := strings.TrimSuffix(operand, ":")
-						bi.isLabelled = newlabel
+						newSymbol := strings.TrimSuffix(operand, ":")
+						bi.isSymbolled = newSymbol
 						bi.lineMeta = strings.Join(argS[1:], "")
 						if bi.debug {
-							fmt.Print(yellow(" --> Label set"))
+							fmt.Print(yellow(" --> Symbol set"))
 						}
 					} else {
 
@@ -300,9 +300,9 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 								newLine.Elements = newArgs
 							}
 						}
-						if bi.isLabelled != "" || bi.lineMeta != "" {
-							if bi.isLabelled != "" {
-								newLine.BasmMeta = newLine.SetMeta("label", bi.isLabelled)
+						if bi.isSymbolled != "" || bi.lineMeta != "" {
+							if bi.isSymbolled != "" {
+								newLine.BasmMeta = newLine.SetMeta("symbol", bi.isSymbolled)
 							}
 							if bi.lineMeta != "" {
 								if len(argS) > 1 {
@@ -320,7 +320,7 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 									}
 								}
 							}
-							bi.isLabelled = ""
+							bi.isSymbolled = ""
 							bi.lineMeta = ""
 						}
 

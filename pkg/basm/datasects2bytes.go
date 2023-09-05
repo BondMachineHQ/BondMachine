@@ -3,16 +3,24 @@ package basm
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
 func dataSections2Bytes(bi *BasmInstance) error {
 
 	for sectName, section := range bi.sections {
-		if section.sectionType == sectRomData {
+		if section.sectionType == sectRomData || section.sectionType == sectRamData {
 			if bi.debug {
 				fmt.Println(green("\tProcessing section: " + sectName))
+			}
+
+			if section.sectionType == sectRomData {
+				bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:romdatas", T: bmreqs.ObjectSet, Name: "sections", Value: section.sectionName, Op: bmreqs.OpAdd})
+			} else {
+				bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:ramdatas", T: bmreqs.ObjectSet, Name: "sections", Value: section.sectionName, Op: bmreqs.OpAdd})
 			}
 
 			varCheck := make(map[string]struct{})
@@ -21,6 +29,13 @@ func dataSections2Bytes(bi *BasmInstance) error {
 			offset := 0
 			for _, line := range body.Lines {
 				varName := line.Operation.GetValue()
+				symbolName := ""
+
+				if section.sectionType == sectRomData {
+					symbolName = "romdata." + sectName + "." + varName
+				} else {
+					symbolName = "ramdata." + sectName + "." + varName
+				}
 
 				if bi.debug {
 					fmt.Println(green("\t\tvar " + varName))
@@ -30,6 +45,7 @@ func dataSections2Bytes(bi *BasmInstance) error {
 					return errors.New("Duplicate var " + varName)
 				} else {
 					varCheck[varName] = struct{}{}
+					bi.symbols[symbolName] = -1
 				}
 
 				if len(line.Elements) != 2 {
@@ -59,7 +75,12 @@ func dataSections2Bytes(bi *BasmInstance) error {
 				default:
 					return errors.New("Unknown data operator " + dataOperator)
 				}
+			}
 
+			if section.sectionType == sectRomData {
+				bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:romdatas/sections:" + section.sectionName, T: bmreqs.ObjectMax, Name: "datalength", Value: strconv.Itoa(offset), Op: bmreqs.OpAdd})
+			} else {
+				bi.rg.Requirement(bmreqs.ReqRequest{Node: "code:ramdatas/sections:" + section.sectionName, T: bmreqs.ObjectMax, Name: "datalength", Value: strconv.Itoa(offset), Op: bmreqs.OpAdd})
 			}
 		}
 	}

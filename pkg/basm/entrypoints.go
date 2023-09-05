@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// section entry points detection, the pass detects the label used as entry point of the section and sign it as metadata.
+// section entry points detection, the pass detects the symbol used as entry point of the section and sign it as metadata.
 func entryPoints(bi *BasmInstance) error {
 	for sectName, section := range bi.sections {
 		if section.sectionType == sectRomText || section.sectionType == sectRamText {
@@ -14,12 +14,12 @@ func entryPoints(bi *BasmInstance) error {
 			}
 
 			checkEntry := false
-			checkLabel := ""
+			checkSymbol := ""
 			checkLine := 0
 			checkExistence := false
 			checkPosition := -1
 
-			prevLabels := make([]string, 0)
+			prevSymbols := make([]string, 0)
 
 			body := section.sectionBody
 			for i, line := range body.Lines {
@@ -36,11 +36,11 @@ func entryPoints(bi *BasmInstance) error {
 						return errors.New("line has too many elements")
 					}
 
-					checkLabel = line.Elements[0].GetValue()
+					checkSymbol = line.Elements[0].GetValue()
 					checkLine = i
 
-					for _, label := range prevLabels {
-						if label == checkLabel {
+					for _, symbol := range prevSymbols {
+						if symbol == checkSymbol {
 							if checkExistence {
 								return errors.New("multiple entry points detected")
 							} else {
@@ -51,8 +51,8 @@ func entryPoints(bi *BasmInstance) error {
 				}
 
 				if checkEntry {
-					if label := line.GetMeta("label"); label != "" {
-						if label == checkLabel {
+					if symbol := line.GetMeta("symbol"); symbol != "" {
+						if symbol == checkSymbol {
 							if checkExistence {
 								return errors.New("multiple entry points detected")
 							} else {
@@ -62,8 +62,8 @@ func entryPoints(bi *BasmInstance) error {
 						}
 					}
 				} else {
-					if label := line.GetMeta("label"); label != "" {
-						prevLabels = append(prevLabels, label)
+					if symbol := line.GetMeta("symbol"); symbol != "" {
+						prevSymbols = append(prevSymbols, symbol)
 					}
 				}
 			}
@@ -81,10 +81,21 @@ func entryPoints(bi *BasmInstance) error {
 			body.Lines[len(body.Lines)-1] = nil
 			body.Lines = body.Lines[:len(body.Lines)-1]
 
+			body.Lines[0].BasmMeta = body.Lines[0].SetMeta("symbol", checkSymbol)
+
+			// Removing the line means that symbols are shifted, so we need to correct the symbol correction
+			// if body.GetMeta("symbcorrection") != "" {
+			// 	correction, _ := strconv.Atoi(body.GetMeta("symbcorrection"))
+			// 	correction--
+			// 	body.BasmMeta = body.BasmMeta.SetMeta("symbcorrection", fmt.Sprintf("%d", correction))
+			// } else {
+			// 	body.BasmMeta = body.BasmMeta.SetMeta("symbcorrection", "-1")
+			// }
+
 			if checkPosition < 0 {
 				for i, line := range body.Lines {
-					if label := line.GetMeta("label"); label != "" {
-						if label == checkLabel {
+					if symbol := line.GetMeta("symbol"); symbol != "" {
+						if symbol == checkSymbol {
 							checkPosition = i
 							break
 						}

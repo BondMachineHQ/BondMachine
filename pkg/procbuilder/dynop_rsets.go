@@ -202,7 +202,7 @@ func (Op Rsets) Op_instruction_verilog_extra_block(arch *Arch, flavor string, le
 func (Op Rsets) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
 	result = append(result, Op.rsetsName+"::*--type=reg::*--type=number")
-	// result = append(result, "mov::*--type=reg::*--type=number")
+	result = append(result, "mov::*--type=reg::*--type=number")
 	return result
 }
 func (Op Rsets) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
@@ -211,11 +211,11 @@ func (Op Rsets) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string
 		regNeed := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
 		return line, nil
-		// case "mov":
-		// 	regNeed := line.Elements[0].GetValue()
-		// 	rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
-		// 	line.Operation.SetValue("rset")
-		// 	return line, nil
+	case "mov":
+		regNeed := line.Elements[0].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		line.Operation.SetValue(Op.rsetsName)
+		return line, nil
 	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
