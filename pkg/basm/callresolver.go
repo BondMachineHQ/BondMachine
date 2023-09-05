@@ -9,6 +9,8 @@ import (
 
 // section entry points detection, the pass detects the symbol used as entry point of the section and sign it as metadata.
 func callResolver(bi *BasmInstance) error {
+	symbolTagger(bi)
+
 	for sectName, section := range bi.sections {
 		if section.sectionType == sectRomText || section.sectionType == sectRamText {
 			if bi.debug {
@@ -61,14 +63,29 @@ func callResolver(bi *BasmInstance) error {
 						// Rewrite the call to a jump to the fragment
 						section.sectionBody.Lines[i].Operation.SetValue("call" + mod + stack)
 						arg.BasmMeta = arg.SetMeta("type", "symbol")
+						fragName := arg.GetValue()
 						// It has to be a new symbol, otherwise it would have been caught by the previous check
 						// Append the fragment to the newcode
-						for j, appLine := range bi.fragments[arg.GetValue()].fragmentBody.Lines {
+						for j, appLine := range bi.fragments[fragName].fragmentBody.Lines {
 							newLine := appLine.Copy()
 							if j == 0 {
-								newLine.BasmMeta = newLine.SetMeta("symbol", arg.GetValue())
-								bi.symbols[symbolPrefix+sectName+"."+arg.GetValue()] = -1
+								newLine.BasmMeta = newLine.SetMeta("symbol", fragName)
+								bi.symbols[symbolPrefix+sectName+"."+fragName] = -1
+							} else {
+								if s := newLine.GetMeta("symbol"); s != "" {
+									newLine.BasmMeta = newLine.SetMeta("symbol", fragName+s)
+								}
 							}
+
+							for _, el := range newLine.Elements {
+								s := el.GetValue()
+								// if s is a symbol local to the fragment rewrite it
+								if _, ok := bi.symbols["frag."+fragName+"."+s]; ok {
+									el.SetValue(fragName + s)
+								}
+
+							}
+
 							newCode = append(newCode, newLine)
 						}
 						newLine := new(bmline.BasmLine)
