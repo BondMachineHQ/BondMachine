@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func symbolResolver(bi *BasmInstance) error {
@@ -14,6 +15,7 @@ func symbolResolver(bi *BasmInstance) error {
 	}
 
 	// Loop over the sections TODO over the cps (the unused sections are supposed to be removed at this point)
+	// This are the sections that are not combined
 	for sectName, section := range bi.sections {
 		if section.sectionType == sectRomText || section.sectionType == sectRamText {
 			if bi.debug {
@@ -25,6 +27,33 @@ func symbolResolver(bi *BasmInstance) error {
 		} else {
 			if bi.debug {
 				fmt.Println(yellow("\t\tSection type not handled: ") + sectName)
+			}
+		}
+	}
+
+	// Loop over the cps to resolve the symbols of the combined sections
+	for _, cp := range bi.cps {
+		romCodeName := cp.GetMeta("romcode")
+		if strings.HasPrefix(romCodeName, "romcode") {
+			if section, ok := bi.sections[romCodeName]; ok {
+				name := romCodeName[7:]
+				fmt.Println(name)
+				if err := bi.resolveSymbols(section, name); err != nil {
+					return err
+				}
+			} else {
+				return errors.New("romcode section not found: " + romCodeName)
+			}
+		}
+		ramCodeName := cp.GetMeta("ramcode")
+		if strings.HasPrefix(ramCodeName, "ramcode") {
+			if section, ok := bi.sections[ramCodeName]; ok {
+				name := ramCodeName[7:]
+				if err := bi.resolveSymbols(section, name); err != nil {
+					return err
+				}
+			} else {
+				return errors.New("ramcode section not found: " + ramCodeName)
 			}
 		}
 	}
@@ -135,7 +164,7 @@ func (bi *BasmInstance) resolveSymbols(section *BasmSection, name string) error 
 				if name == "" {
 					romSymbol = "rom." + section.sectionName + "." + symbol
 				} else {
-					romSymbol = "romcode.romcode" + name + "." + symbol
+					romSymbol = "rom.romcode" + name + "." + symbol
 				}
 				if loc, ok := bi.symbols[romSymbol]; ok {
 					arg.SetValue(strconv.Itoa(int(loc)))
@@ -177,7 +206,7 @@ func (bi *BasmInstance) resolveSymbols(section *BasmSection, name string) error 
 				if name == "" {
 					ramSymbol = "ram." + section.sectionName + "." + symbol
 				} else {
-					ramSymbol = "ramcode.ramcode" + name + "." + symbol
+					ramSymbol = "ram.ramcode" + name + "." + symbol
 				}
 				if loc, ok := bi.symbols[ramSymbol]; ok {
 					arg.SetValue(strconv.Itoa(int(loc)))
