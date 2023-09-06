@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bmconfig"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
@@ -870,8 +871,40 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 			}
 		}
 
-		fmt.Println("params: ", params)
-		// TODO Finish the code
+		// Choice of the sections
+		if bi.IsActive(bmconfig.ChooserMinWordSize) {
+			if bi.debug {
+				fmt.Println("\t\t - " + green("Choosing the code with the minimum word size"))
+			}
+			var ci string
+			var cj string
+			minSize := 1024
+			for ii, romAlt := range romAlts {
+				for jj, ramAlt := range ramAlts {
+					if params[ii*len(ramAlts)+jj].wordSize < minSize {
+						minSize = params[ii*len(ramAlts)+jj].wordSize
+						ci = romAlt
+						cj = ramAlt
+					}
+				}
+			}
+
+			if bi.debug {
+				fmt.Println("\t\t - " + green("Chosen code: ") + yellow(ci) + green(" - ") + yellow(cj))
+			}
+
+			if ci != "" {
+				cp.SetMeta("romcode", ci)
+			}
+			if cj != "" {
+				cp.SetMeta("ramcode", cj)
+			}
+			cp.RmMeta("romalternatives")
+			cp.RmMeta("ramalternatives")
+			return nil
+		}
+
+		return errors.New("unable to choose the code among the alternatives, a criteria is needed")
 
 	}
 

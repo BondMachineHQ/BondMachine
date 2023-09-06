@@ -2,6 +2,7 @@ package bmconfig
 
 const (
 	DisableDynamicalMatching = uint64(0) + iota
+	ChooserMinWordSize
 )
 
 type BmConfig struct {
@@ -16,7 +17,6 @@ func NewBmConfig() *BmConfig {
 
 func (bmc *BmConfig) Activate(key uint64) {
 	bmc.config[key] = struct{}{}
-	return
 }
 
 func (bmc *BmConfig) Deactivate(key uint64) {
@@ -24,7 +24,6 @@ func (bmc *BmConfig) Deactivate(key uint64) {
 		return
 	}
 	delete(bmc.config, key)
-	return
 }
 
 func (bmc *BmConfig) IsActive(key uint64) bool {

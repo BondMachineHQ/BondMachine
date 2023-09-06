@@ -49,6 +49,7 @@ var actOptimizations = flag.String("activate-optimizations", "", "List of comma 
 
 // Config
 var disableDynamicalMatching = flag.Bool("disable-dynamical-matching", false, "Disable the dynamical matching")
+var chooserMinWordSize = flag.Bool("chooser-min-word-size", false, "Choose the minimum word size for the chooser")
 
 func init() {
 	flag.Parse()
@@ -130,6 +131,9 @@ func main() {
 	// Config options
 	if *disableDynamicalMatching {
 		bi.Activate(bmconfig.DisableDynamicalMatching)
+	}
+	if *chooserMinWordSize {
+		bi.Activate(bmconfig.ChooserMinWordSize)
 	}
 
 	mne := basm.GetPassMnemonic()
