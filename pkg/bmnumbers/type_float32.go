@@ -24,8 +24,8 @@ func (d Float32) GetSize() int {
 func (d Float32) importMatchers() map[string]ImportFunc {
 	result := make(map[string]ImportFunc)
 
-	result["^0f<32>(?P<number>[^lL].*)$"] = float32Import
-	result["^0f(?P<number>[^lL<].*)$"] = float32Import
+	result["^0f<32>(?P<number>[^pPlL].*)$"] = float32Import
+	result["^0f(?P<number>[^pPlL<].*)$"] = float32Import
 
 	return result
 }

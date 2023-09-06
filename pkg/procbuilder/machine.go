@@ -126,6 +126,7 @@ func init() {
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynRsets{})
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynCall{})
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynStack{})
+	AllDynamicalInstructions = append(AllDynamicalInstructions, DynFixedPoint{})
 
 	Allshared = make([]Sharedel, 0)
 	Allshared = append(Allshared, Sharedmem{})
