@@ -27,9 +27,9 @@ func (d DynFixedPoint) CreateType(name string, param interface{}) (BMNumberType,
 		s, _ := strconv.Atoi(ss)
 		f, _ := strconv.Atoi(fs)
 		i := make(map[string]string)
-		i["multop"] = "multfps" + ss + "t" + fs
-		i["addop"] = "addfps" + ss + "t" + fs
-		i["divop"] = "divfps" + ss + "t" + fs
+		i["multop"] = "multfps" + ss + "f" + fs
+		i["addop"] = "addfps" + ss + "f" + fs
+		i["divop"] = "divfps" + ss + "f" + fs
 		return FixedPoint{FixedPointName: name, s: s, f: f, instructions: i}, nil
 	}
 
