@@ -5,24 +5,25 @@ import "errors"
 const (
 	passTemplateResolver      = uint64(1)
 	passMetadataInfer1        = uint64(2)
-	passCallResolver          = uint64(4)
-	passDynamicalInstructions = uint64(8)
-	passSymbolTagger1         = uint64(16)
-	passDataSections2Bytes    = uint64(32)
-	passMetadataInfer2        = uint64(64)
-	passFragmentAnalyzer      = uint64(128)
-	passFragmentOptimizer1    = uint64(256)
-	passFragmentPruner        = uint64(512)
-	passFragmentComposer      = uint64(1024)
-	passMetadataInfer3        = uint64(2048)
-	passEntryPoints           = uint64(4096)
-	passMatcherResolver       = uint64(8192)
-	passSymbolTagger2         = uint64(16384)
-	passMemComposer           = uint64(32768)
-	passSectionCleaner        = uint64(65536)
-	passSymbolTagger3         = uint64(131072)
-	passSymbolsResolver       = uint64(262144)
-	LAST_PASS                 = uint64(262144)
+	passMacroResolver         = uint64(4)
+	passCallResolver          = uint64(8)
+	passDynamicalInstructions = uint64(16)
+	passSymbolTagger1         = uint64(32)
+	passDataSections2Bytes    = uint64(64)
+	passMetadataInfer2        = uint64(128)
+	passFragmentAnalyzer      = uint64(256)
+	passFragmentOptimizer1    = uint64(512)
+	passFragmentPruner        = uint64(1024)
+	passFragmentComposer      = uint64(2048)
+	passMetadataInfer3        = uint64(4096)
+	passEntryPoints           = uint64(8192)
+	passMatcherResolver       = uint64(16384)
+	passSymbolTagger2         = uint64(32768)
+	passMemComposer           = uint64(65536)
+	passSectionCleaner        = uint64(131072)
+	passSymbolTagger3         = uint64(262144)
+	passSymbolsResolver       = uint64(524288)
+	LAST_PASS                 = uint64(524288)
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {
@@ -46,6 +47,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passMemComposer:           memComposer,
 		passSectionCleaner:        sectionCleaner,
 		passCallResolver:          callResolver,
+		passMacroResolver:         macroResolver,
 	}
 }
 
@@ -70,6 +72,7 @@ func getPassFunctionName() map[uint64]string {
 		passMemComposer:           "memComposer",
 		passSectionCleaner:        "sectionCleaner",
 		passCallResolver:          "callResolver",
+		passMacroResolver:         "macroResolver",
 	}
 }
 
@@ -94,6 +97,7 @@ func IsOptionalPass() map[uint64]bool {
 		passMemComposer:           false,
 		passSectionCleaner:        false,
 		passCallResolver:          false,
+		passMacroResolver:         false,
 	}
 }
 
@@ -121,6 +125,8 @@ func GetPassMnemonic() map[uint64]string {
 		passFragmentOptimizer1:    "fragmentoptimizer",
 		passMemComposer:           "memcomposer",
 		passSectionCleaner:        "sectioncleaner",
+		passCallResolver:          "callresolver",
+		passMacroResolver:         "macroresolver",
 	}
 
 }
