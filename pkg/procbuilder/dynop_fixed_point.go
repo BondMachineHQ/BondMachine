@@ -179,6 +179,42 @@ func (op FixedPoint) Disassembler(arch *Arch, instr string) (string, error) {
 	return result, nil
 }
 
+func FP_mult(a, b, regsize, fsize int64) int64 {
+	shifted_a := a >> regsize
+	shifted_b := b >> regsize
+
+	part1 := (shifted_a | shifted_b) * ((a * b) >> fsize)
+	part2 := (1 - (shifted_a | shifted_b)) * ((a * b) >> fsize)
+	multResult := part1 + part2
+
+	return multResult
+}
+
+func FP_div(num1, num2, regsize, fsize int64) int64 {
+	bit1 := (num1 >> (regsize - 1)) & 1
+	bit2 := (num2 >> (regsize - 1)) & 1
+
+	if bit1^bit2 == 1 {
+		numerator := num1
+		denominator := num2
+
+		if bit1 == 1 {
+			numerator = -int64(num1)
+		}
+
+		if bit2 == 1 {
+			denominator = -int64(num2)
+		}
+
+		numerator <<= fsize
+		result := -int64(numerator / denominator)
+		return result
+	} else {
+		result := int64(num1 << fsize / num2)
+		return result
+	}
+}
+
 func (op FixedPoint) Simulate(vm *VM, instr string) error {
 	regBits := vm.Mach.R
 	regDest := get_id(instr[:regBits])
@@ -192,43 +228,35 @@ func (op FixedPoint) Simulate(vm *VM, instr string) error {
 	case LQGET:
 		switch op.opType {
 		case LQADD:
-			if vm.Mach.Rsize <= 8 {
-				vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) + Int8FromBits(vm.Registers[regSrc].(uint8)))
-			} else if vm.Mach.Rsize <= 16 {
-				vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) + Int16FromBits(vm.Registers[regSrc].(uint16)))
-			} else if vm.Mach.Rsize <= 32 {
-				vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) + Int32FromBits(vm.Registers[regSrc].(uint32)))
-			} else if vm.Mach.Rsize <= 64 {
-				vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) + Int64FromBits(vm.Registers[regSrc].(uint64)))
-			} else {
-				return errors.New("invalid register size, must be <= 64")
-			}
+			vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) + Int64FromBits(vm.Registers[regSrc].(uint64)))
 		case LQMULT:
 			// TODO Check if this is correct
-			if vm.Mach.Rsize <= 8 {
-				vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) * Int8FromBits(vm.Registers[regSrc].(uint8)) / int8(s))
-			} else if vm.Mach.Rsize <= 16 {
-				vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) * Int16FromBits(vm.Registers[regSrc].(uint16)) / int16(s))
-			} else if vm.Mach.Rsize <= 32 {
-				vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) * Int32FromBits(vm.Registers[regSrc].(uint32)) / int32(s))
-			} else if vm.Mach.Rsize <= 64 {
-				vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) * Int64FromBits(vm.Registers[regSrc].(uint64)) / int64(s))
-			} else {
-				return errors.New("invalid register size, must be <= 64")
-			}
+			// if vm.Mach.Rsize <= 8 {
+			// 	vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) * Int8FromBits(vm.Registers[regSrc].(uint8)) / int8(s))
+			// } else if vm.Mach.Rsize <= 16 {
+			// 	vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) * Int16FromBits(vm.Registers[regSrc].(uint16)) / int16(s))
+			// } else if vm.Mach.Rsize <= 32 {
+			// 	vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) * Int32FromBits(vm.Registers[regSrc].(uint32)) / int32(s))
+			// } else if vm.Mach.Rsize <= 64 {
+			// 	vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) * Int64FromBits(vm.Registers[regSrc].(uint64)) / int64(s))
+			// } else {
+			// 	return errors.New("invalid register size, must be <= 64")
+			// }
+
+			a := Int64FromBits(vm.Registers[regDest].(uint64))
+			b := Int64FromBits(vm.Registers[regSrc].(uint64))
+			
+			// WIP: change 16 and 6
+			vm.Registers[regDest] = FP_mult(a, b, op.s, op.f)
+
+
 		case LQDIV:
 			// TODO Check if this is correct
-			if vm.Mach.Rsize <= 8 {
-				vm.Registers[regDest] = Int8bits(Int8FromBits(vm.Registers[regDest].(uint8)) * int8(s) / Int8FromBits(vm.Registers[regSrc].(uint8)))
-			} else if vm.Mach.Rsize <= 16 {
-				vm.Registers[regDest] = Int16bits(Int16FromBits(vm.Registers[regDest].(uint16)) * int16(s) / Int16FromBits(vm.Registers[regSrc].(uint16)))
-			} else if vm.Mach.Rsize <= 32 {
-				vm.Registers[regDest] = Int32bits(Int32FromBits(vm.Registers[regDest].(uint32)) * int32(s) / Int32FromBits(vm.Registers[regSrc].(uint32)))
-			} else if vm.Mach.Rsize <= 64 {
-				vm.Registers[regDest] = Int64bits(Int64FromBits(vm.Registers[regDest].(uint64)) * int64(s) / Int64FromBits(vm.Registers[regSrc].(uint64)))
-			} else {
-				return errors.New("invalid register size, must be <= 64")
-			}
+			a := Int64FromBits(vm.Registers[regDest].(uint64))
+			b := Int64FromBits(vm.Registers[regSrc].(uint64))
+			
+			// WIP: change 16 and 6
+			vm.Registers[regDest] = FP_div(a, b, op.s, op.f)
 		}
 		vm.Pc = vm.Pc + 1
 		*op.pipeline = LQPUT

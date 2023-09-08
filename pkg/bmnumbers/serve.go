@@ -1,5 +1,5 @@
 // TRY WITH CURL
-// curl -X POST -d '{"action": "cast", "numbers": ["0f0.45", "0f0.30"], "reqType": "bin", "viewMode": "native"}' http://127.0.0.1:8080/bmnumbers
+// curl -X POST -d '{"action": "cast", "numbers": ["0f0.45", "0f0.30"], "reqType": "bin", "viewMode": "native"}' http://127.0.0.1:80/bmnumbers
 
 package bmnumbers
 
@@ -119,7 +119,7 @@ func Serve(conf *BMNumberConfig) {
 	http.HandleFunc("/", server.HomePage)
 	http.HandleFunc("/bmnumbers", server.ExecRequest)
 
-	fmt.Println("Server started on localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("Server started on localhost:80")
+	log.Fatal(http.ListenAndServe(":80", nil))
 
 }
