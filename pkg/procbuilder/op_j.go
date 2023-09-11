@@ -216,13 +216,18 @@ func (Op J) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level 
 	return result
 }
 func (Op J) HLAssemblerMatch(arch *Arch) []string {
-	result := make([]string, 2)
+	result := make([]string, 4)
 	result[0] = "j::*--type=number"
 	result[1] = "j::*--type=symbol"
+	result[2] = "jmp::*--type=number"
+	result[3] = "jmp::*--type=symbol"
 	return result
 }
 func (Op J) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
+	case "jmp":
+		line.Operation.SetValue("j")
+		return line, nil
 	case "j":
 		return line, nil
 	}

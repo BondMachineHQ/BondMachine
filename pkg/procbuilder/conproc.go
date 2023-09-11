@@ -456,6 +456,9 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 	case "vn":
 		result += "			case (vn_state)\n"
 		result += "			FETCH: begin\n"
+		result += "				vn_state <= WAIT;\n"
+		result += "			end\n"
+		result += "			WAIT: begin\n"
 		result += "				vn_state <= EXECUTE;\n"
 		result += "				ram_instruction <= ram_dout;\n"
 		result += "			end\n"
