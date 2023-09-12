@@ -191,7 +191,7 @@ func (Op Rsets) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, er
 	return []UsageNotify{}, errors.New("Wrong register")
 }
 
-func (Op Rsets) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
+func (op Rsets) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
 	result := ""
 	switch blockname {
 	default:
@@ -199,33 +199,37 @@ func (Op Rsets) Op_instruction_verilog_extra_block(arch *Arch, flavor string, le
 	}
 	return result
 }
-func (Op Rsets) HLAssemblerMatch(arch *Arch) []string {
+func (op Rsets) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
-	result = append(result, Op.rsetsName+"::*--type=reg::*--type=number")
+	result = append(result, op.rsetsName+"::*--type=reg::*--type=number")
 	result = append(result, "mov::*--type=reg::*--type=number")
+	result = append(result, "mov::*--type=reg::*--type=rom--romaddressing=symbol")
+	result = append(result, op.rsetsName+"::*--type=reg::*--type=rom--romaddressing=symbol")
+	result = append(result, "mov::*--type=reg::*--type=ram--ramaddressing=symbol")
+	result = append(result, op.rsetsName+"::*--type=reg::*--type=ram--ramaddressing=symbol")
 	return result
 }
-func (Op Rsets) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+func (op Rsets) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
-	case Op.rsetsName:
+	case op.rsetsName:
 		regNeed := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
 		return line, nil
 	case "mov":
 		regNeed := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
-		line.Operation.SetValue(Op.rsetsName)
+		line.Operation.SetValue(op.rsetsName)
 		return line, nil
 	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
-func (Op Rsets) ExtraFiles(arch *Arch) ([]string, []string) {
+func (op Rsets) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
 }
 
-func (Op Rsets) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+func (op Rsets) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
 	switch line.Operation.GetValue() {
-	case Op.rsetsName:
+	case op.rsetsName:
 		regNeed := line.Elements[0].GetValue()
 		if regNeed != "" {
 			var meta *bmmeta.BasmMeta
