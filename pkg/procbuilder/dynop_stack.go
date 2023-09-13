@@ -287,9 +287,9 @@ func (op DynOpStack) Op_instruction_verilog_extra_block(arch *Arch, flavor strin
 func (op DynOpStack) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
 	switch op.opType {
-	case OP_CALLO:
+	case OP_PUSH:
 		result = append(result, op.callName+"::*--type=reg")
-	case OP_CALLA:
+	case OP_PULL:
 		result = append(result, op.callName+"::*--type=reg")
 	}
 	return result
