@@ -168,8 +168,10 @@ var vgatextFlavor = flag.String("vgatext-flavor", "800x600", "VGA Textual flavor
 var vgatextFonts = flag.String("vgatext-fonts", "", "VGA Textual fonts file")
 var vgatextHeader = flag.String("vgatext-header", "", "VGA Textual header rom file")
 
-var ps2keyboard = flag.Bool("ps2-keyboard", false, "PS2 Keyboard support")
-var ps2keyboardMap = flag.String("ps2-keyboard-map", "", "PS2 Keyboard mappings")
+var ps2keyboardIo = flag.Bool("ps2-keyboard-io", false, "PS2 Keyboard support via IO")
+var ps2keyboardIoMap = flag.String("ps2-keyboard-io-map", "", "PS2 Keyboard via IO mappings")
+
+var ps2keyboard = flag.Bool("ps2-keyboard", false, "PS2 Keyboard support via SO")
 
 var attach_benchmark_core string_slice
 
@@ -608,9 +610,9 @@ func main() {
 			}
 
 			// Inclusion of PS2 keyboard extra module
-			if *ps2keyboard {
-				ps2 := new(bondmachine.Ps2KeyboardExtra)
-				ps2.MappedInput = *ps2keyboardMap
+			if *ps2keyboardIo {
+				ps2 := new(bondmachine.Ps2KeyboardIoExtra)
+				ps2.MappedInput = *ps2keyboardIoMap
 				extramodules = append(extramodules, ps2)
 			}
 

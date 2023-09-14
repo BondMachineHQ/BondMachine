@@ -5,41 +5,41 @@ import (
 	"errors"
 )
 
-type Ps2KeyboardExtra struct {
+type Ps2KeyboardIoExtra struct {
 	MappedInput string
 }
 
-func (sl *Ps2KeyboardExtra) Get_Name() string {
+func (sl *Ps2KeyboardIoExtra) Get_Name() string {
 	return "ps2keyboard"
 }
 
-func (sl *Ps2KeyboardExtra) Get_Params() *ExtraParams {
+func (sl *Ps2KeyboardIoExtra) Get_Params() *ExtraParams {
 	result := new(ExtraParams)
 	result.Params = map[string]string{"mapped_input": sl.MappedInput}
 	return result
 }
 
-func (sl *Ps2KeyboardExtra) Import(inp string) error {
+func (sl *Ps2KeyboardIoExtra) Import(inp string) error {
 	if err := json.Unmarshal([]byte(inp), sl); err != nil {
 		return errors.New("Unmarshalling failed")
 	}
 	return nil
 }
 
-func (sl *Ps2KeyboardExtra) Export() string {
+func (sl *Ps2KeyboardIoExtra) Export() string {
 	b, _ := json.Marshal(sl)
 	return string(b)
 }
 
-func (sl *Ps2KeyboardExtra) Check(bmach *Bondmachine) error {
+func (sl *Ps2KeyboardIoExtra) Check(bmach *Bondmachine) error {
 	return nil
 }
 
-func (sl *Ps2KeyboardExtra) Verilog_headers() string {
+func (sl *Ps2KeyboardIoExtra) Verilog_headers() string {
 	return ""
 }
 
-func (sl *Ps2KeyboardExtra) StaticVerilog() string {
+func (sl *Ps2KeyboardIoExtra) StaticVerilog() string {
 	result := "\n`timescale 1ns / 1ps\n"
 	result += `
 module debouncer(
@@ -574,6 +574,6 @@ endmodule
 	return result
 }
 
-func (sl *Ps2KeyboardExtra) ExtraFiles() ([]string, []string) {
+func (sl *Ps2KeyboardIoExtra) ExtraFiles() ([]string, []string) {
 	return []string{}, []string{}
 }
