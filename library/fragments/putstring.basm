@@ -10,4 +10,6 @@ putchar:
         inc     r0
         inc     r1
         j putchar
+end:
+        nop
 %endfragment
