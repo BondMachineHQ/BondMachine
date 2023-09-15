@@ -1,0 +1,54 @@
+; Ths function writes a string to the screen
+; r0: pointer to the null terminated string
+; r1: x position within the screen (video textual memory)
+%fragment putstring
+
+%endfragment 
+
+%section constants .romdata
+        toled   db 0xff
+        message db "Hello World!", 0x00
+%endsection
+
+%section code1 .romtext
+        entry _start    ; Entry point
+_start:
+        mov     r0, rom:message
+	mov     r1,0
+putchar:
+        mov     r2, rom:[r0]
+        jz      r2, end
+        mov     vtm0:[r1], r2
+        inc     r0
+        inc     r1
+        j putchar
+end:
+        j end
+
+%endsection
+
+%section code2 .romtext
+        entry _start    ; Entry point
+_start:
+
+        clr     r0
+        rset    r0,49
+	rset	r1,135
+        mov     vtm0:[r1], r0
+        rset    r0, 50
+        r2v     r0, 128
+        clr     r0
+        j _start
+
+%endsection
+
+%meta cpdef	cpu1	romcode: code1
+%meta cpdef	cpu2	romcode: code2
+%meta cpdef	cpu1	romdata: constants
+%meta cpdef	cpu2	romdata: constants
+%meta cpdef	cpu1	ramsize: 8
+%meta cpdef	cpu2	ramsize: 8
+%meta sodef	videomemory    constraint:vtextmem:0:3:3:16:16:1:25:25:16:16
+%meta soatt	videomemory cp: cpu1, index:0
+%meta soatt	videomemory cp: cpu2, index:0
+%meta bmdef	global registersize:8
