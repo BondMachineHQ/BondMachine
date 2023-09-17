@@ -21,14 +21,14 @@ func (op Ro2rri) Op_get_desc() string {
 }
 
 func (op Ro2rri) Op_show_assembler(arch *Arch) string {
-	opbits := arch.Opcodes_bits()
-	result := "ro2rri [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(int(arch.O)) + "(Location)]	// Set a register to the value of the given ROM location [" + strconv.Itoa(opbits+int(arch.R)+int(arch.O)) + "]\n"
+	opBits := arch.Opcodes_bits()
+	result := "ro2rri [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(int(arch.O)) + "(Location)]	// Set a register to the value of the given ROM location [" + strconv.Itoa(opBits+int(arch.R)+int(arch.O)) + "]\n"
 	return result
 }
 
 func (op Ro2rri) Op_get_instruction_len(arch *Arch) int {
-	opbits := arch.Opcodes_bits()
-	return opbits + int(arch.R) + int(arch.R) // The bits for the opcode + bits for a register + bits for a register
+	opBits := arch.Opcodes_bits()
+	return opBits + int(arch.R) + int(arch.R) // The bits for the opcode + bits for a register + bits for a register
 }
 
 func (op Ro2rri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
@@ -36,10 +36,10 @@ func (op Ro2rri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor str
 	result := ""
 
 	// Check if the romread facility has already been included
-	romreadflag := conf.Runinfo.Check("romread")
+	romReadFlag := conf.Runinfo.Check("romread")
 
 	// If not, include it
-	if romreadflag {
+	if romReadFlag {
 
 		romWord := arch.Max_word()
 
@@ -56,36 +56,52 @@ func (op Ro2rri) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor str
 
 func (op Ro2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	romWord := arch.Max_word()
-	opbits := arch.Opcodes_bits()
+	opBits := arch.Opcodes_bits()
 
 	regNum := 1 << arch.R
+	rSize := int(arch.Rsize)
+
+	// If the WORD size is bigger than the register size, we need to slice the ROM value (that is right padded with zeros)
+	sliceROM := "romread_value[" + strconv.Itoa(romWord-1) + ":" + strconv.Itoa(romWord-rSize) + "]"
+	sliceReg := "[" + strconv.Itoa(int(arch.Rsize)-1) + ":0]"
+
+	// If the register size is bigger than the WORD size, we need to add zeros to the ROM value
+	// TODO: unchecked code, check if it works
+	if int(arch.Rsize) > romWord {
+		sliceROM = "{ " + strconv.Itoa(int(arch.Rsize)-romWord) + "'b0 ,romread_value[" + strconv.Itoa(romWord-1) + ":0] }"
+	}
 
 	result := ""
 	result += "					RO2RRI: begin\n"
 	if arch.R == 1 {
-		result += "						case (current_instruction[" + strconv.Itoa(romWord-opbits-1) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + "])\n"
 	} else {
-		result += "						case (current_instruction[" + strconv.Itoa(romWord-opbits-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < regNum; i++ {
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 		if arch.R == 1 {
-			result += "							case (current_instruction[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + "])\n"
+			result += "							case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + "])\n"
 		} else {
-			result += "							case (current_instruction[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)-int(arch.R)) + "])\n"
+			result += "							case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(arch.R)) + "])\n"
 		}
 
 		for j := 0; j < regNum; j++ {
 			result += "							" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
 
 			result += "								if (romread_ready == 1'b1) begin\n"
-			result += "									_" + strings.ToLower(Get_register_name(i)) + " <= #1 romread_value[" + strconv.Itoa(romWord-1) + ":0];\n"
+			result += "									_" + strings.ToLower(Get_register_name(i)) + sliceReg + " <= #1 " + sliceROM + ";\n"
 			result += "									romread_ready <= 1'b0;\n"
 			result += NextInstruction(conf, arch, 9, "_pc + 1'b1")
 			result += "								end\n"
 			result += "								else begin\n"
-			result += "									romread_bus[" + strconv.Itoa(int(arch.O)-1) + ":0] <= _" + strings.ToLower(Get_register_name(j)) + ";\n"
+			if arch.O <= arch.Rsize {
+				result += "									romread_bus[" + strconv.Itoa(int(arch.O)-1) + ":0] <= _" + strings.ToLower(Get_register_name(j)) + "[" + strconv.Itoa(int(arch.O)-1) + ":0];\n"
+			} else {
+				// TODO: unchecked code, check if it works
+				result += "									romread_bus[" + strconv.Itoa(int(arch.O)-1) + ":0] <= { " + strconv.Itoa(int(arch.O)-rSize) + "'b0 ,_" + strings.ToLower(Get_register_name(j)) + "[" + strconv.Itoa(int(arch.O)-1) + ":0] };\n"
+			}
 			result += "									romread_ready <= 1'b1;\n"
 			result += "								end\n"
 			result += "								$display(\"RO2RRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
@@ -103,18 +119,17 @@ func (op Ro2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, 
 }
 
 func (op Ro2rri) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
-	// TODO
 	return ""
 }
 
 func (op Ro2rri) Assembler(arch *Arch, words []string) (string, error) {
-	opbits := arch.Opcodes_bits()
+	opBits := arch.Opcodes_bits()
 	romWord := arch.Max_word()
 
 	regNum := 1 << arch.R
 
 	if len(words) != 2 {
-		return "", Prerror{"Wrong arguments number"}
+		return "", Prerror{"wrong arguments number"}
 	}
 
 	result := ""
@@ -126,7 +141,7 @@ func (op Ro2rri) Assembler(arch *Arch, words []string) (string, error) {
 	}
 
 	if result == "" {
-		return "", Prerror{"Unknown register name " + words[0]}
+		return "", Prerror{"unknown register name " + words[0]}
 	}
 
 	partial := ""
@@ -138,12 +153,12 @@ func (op Ro2rri) Assembler(arch *Arch, words []string) (string, error) {
 	}
 
 	if partial == "" {
-		return "", Prerror{"Unknown register name " + words[1]}
+		return "", Prerror{"unknown register name " + words[1]}
 	}
 
 	result += partial
 
-	for i := opbits + 2*int(arch.R); i < romWord; i++ {
+	for i := opBits + 2*int(arch.R); i < romWord; i++ {
 		result += "0"
 	}
 
@@ -159,38 +174,44 @@ func (op Ro2rri) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Ro2rri) Simulate(vm *VM, instr string) error {
-	reg_bits := vm.Mach.R
-	regDest := get_id(instr[:reg_bits])
-	regSrc := get_id(instr[reg_bits : reg_bits*2])
-	rSize := vm.Mach.Rsize
+	regBits := vm.Mach.R
+	regDest := get_id(instr[:regBits])
+	regSrc := get_id(instr[regBits : regBits*2])
+	sliceSize := int(vm.Mach.Rsize)
+	rSize := int(vm.Mach.Rsize)
+
+	// The slice size is the minimum between the register size and the word size
+	if sliceSize > len(vm.Mach.Program.Slocs[0]) {
+		sliceSize = len(vm.Mach.Program.Slocs[0])
+	}
 
 	if rSize <= 8 {
 		loc := int(vm.Registers[regSrc].(uint8))
 		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint8(get_id(vm.Mach.Program.Slocs[loc][0:rSize]))
+			vm.Registers[regDest] = uint8(get_id(vm.Mach.Program.Slocs[loc][0:sliceSize]))
 		} else {
-			vm.Registers[regDest] = uint8(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:rSize]))
+			vm.Registers[regDest] = uint8(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:sliceSize]))
 		}
 	} else if rSize <= 16 {
 		loc := int(vm.Registers[regSrc].(uint16))
 		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint16(get_id(vm.Mach.Program.Slocs[loc][0:rSize]))
+			vm.Registers[regDest] = uint16(get_id(vm.Mach.Program.Slocs[loc][0:sliceSize]))
 		} else {
-			vm.Registers[regDest] = uint16(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:rSize]))
+			vm.Registers[regDest] = uint16(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:sliceSize]))
 		}
 	} else if rSize <= 32 {
 		loc := int(vm.Registers[regSrc].(uint32))
 		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint32(get_id(vm.Mach.Program.Slocs[loc][0:rSize]))
+			vm.Registers[regDest] = uint32(get_id(vm.Mach.Program.Slocs[loc][0:sliceSize]))
 		} else {
-			vm.Registers[regDest] = uint32(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:rSize]))
+			vm.Registers[regDest] = uint32(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:sliceSize]))
 		}
 	} else if rSize <= 64 {
 		loc := int(vm.Registers[regSrc].(uint64))
 		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint64(get_id(vm.Mach.Program.Slocs[loc][0:rSize]))
+			vm.Registers[regDest] = uint64(get_id(vm.Mach.Program.Slocs[loc][0:sliceSize]))
 		} else {
-			vm.Registers[regDest] = uint64(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:rSize]))
+			vm.Registers[regDest] = uint64(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:sliceSize]))
 		}
 	} else {
 		return errors.New("invalid register size, must be <= 64")

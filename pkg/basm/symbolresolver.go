@@ -37,7 +37,6 @@ func symbolResolver(bi *BasmInstance) error {
 		if strings.HasPrefix(romCodeName, "romcode") {
 			if section, ok := bi.sections[romCodeName]; ok {
 				name := romCodeName[7:]
-				fmt.Println(name)
 				if err := bi.resolveSymbols(section, name); err != nil {
 					return err
 				}
