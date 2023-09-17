@@ -21,14 +21,14 @@ func (op Ro2r) Op_get_desc() string {
 }
 
 func (op Ro2r) Op_show_assembler(arch *Arch) string {
-	opbits := arch.Opcodes_bits()
-	result := "ro2r [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(int(arch.O)) + "(Location)]	// Set a register to the value of the given ROM location [" + strconv.Itoa(opbits+int(arch.R)+int(arch.O)) + "]\n"
+	opBits := arch.Opcodes_bits()
+	result := "ro2r [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(int(arch.O)) + "(Location)]	// Set a register to the value of the given ROM location [" + strconv.Itoa(opBits+int(arch.R)+int(arch.O)) + "]\n"
 	return result
 }
 
 func (op Ro2r) Op_get_instruction_len(arch *Arch) int {
-	opbits := arch.Opcodes_bits()
-	return opbits + int(arch.R) + int(arch.O) // The bits for the opcode + bits for a register + bits for the location
+	opBits := arch.Opcodes_bits()
+	return opBits + int(arch.R) + int(arch.O) // The bits for the opcode + bits for a register + bits for the location
 }
 
 func (op Ro2r) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
@@ -36,10 +36,10 @@ func (op Ro2r) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor strin
 	result := ""
 
 	// Check if the romread facility has already been included
-	romreadflag := conf.Runinfo.Check("romread")
+	romReadFlag := conf.Runinfo.Check("romread")
 
 	// If not, include it
-	if romreadflag {
+	if romReadFlag {
 
 		romWord := arch.Max_word()
 
@@ -57,16 +57,16 @@ func (op Ro2r) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor strin
 func (op Ro2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	// TODO Incomplete
 	romWord := arch.Max_word()
-	opbits := arch.Opcodes_bits()
+	opBits := arch.Opcodes_bits()
 
 	regNum := 1 << arch.R
 
 	result := ""
 	result += "					RO2R: begin\n"
 	if arch.R == 1 {
-		result += "						case (current_instruction[" + strconv.Itoa(romWord-opbits-1) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + "])\n"
 	} else {
-		result += "						case (current_instruction[" + strconv.Itoa(romWord-opbits-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < regNum; i++ {
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
@@ -76,7 +76,7 @@ func (op Ro2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 		result += NextInstruction(conf, arch, 8, "_pc + 1'b1")
 		result += "							end\n"
 		result += "							else begin\n"
-		result += "								romread_bus[" + strconv.Itoa(int(arch.O)-1) + ":0] <= current_instruction[" + strconv.Itoa(romWord-opbits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opbits-int(arch.R)-int(arch.O)) + "];\n"
+		result += "								romread_bus[" + strconv.Itoa(int(arch.O)-1) + ":0] <= current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(arch.O)) + "];\n"
 		result += "								romread_ready <= 1'b1;\n"
 		result += "							end\n"
 		result += "							$display(\"RO2R " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"

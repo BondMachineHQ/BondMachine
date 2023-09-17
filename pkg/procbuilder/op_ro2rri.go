@@ -162,34 +162,35 @@ func (op Ro2rri) Simulate(vm *VM, instr string) error {
 	reg_bits := vm.Mach.R
 	regDest := get_id(instr[:reg_bits])
 	regSrc := get_id(instr[reg_bits : reg_bits*2])
+	rSize := vm.Mach.Rsize
 
-	if vm.Mach.Rsize <= 8 {
+	if rSize <= 8 {
 		loc := int(vm.Registers[regSrc].(uint8))
 		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint8(get_id(vm.Mach.Program.Slocs[loc]))
+			vm.Registers[regDest] = uint8(get_id(vm.Mach.Program.Slocs[loc][0:rSize]))
 		} else {
-			vm.Registers[regDest] = uint8(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)]))
+			vm.Registers[regDest] = uint8(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:rSize]))
 		}
-	} else if vm.Mach.Rsize <= 16 {
+	} else if rSize <= 16 {
 		loc := int(vm.Registers[regSrc].(uint16))
 		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint16(get_id(vm.Mach.Program.Slocs[loc]))
+			vm.Registers[regDest] = uint16(get_id(vm.Mach.Program.Slocs[loc][0:rSize]))
 		} else {
-			vm.Registers[regDest] = uint16(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)]))
+			vm.Registers[regDest] = uint16(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:rSize]))
 		}
-	} else if vm.Mach.Rsize <= 32 {
+	} else if rSize <= 32 {
 		loc := int(vm.Registers[regSrc].(uint32))
 		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint32(get_id(vm.Mach.Program.Slocs[loc]))
+			vm.Registers[regDest] = uint32(get_id(vm.Mach.Program.Slocs[loc][0:rSize]))
 		} else {
-			vm.Registers[regDest] = uint32(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)]))
+			vm.Registers[regDest] = uint32(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:rSize]))
 		}
-	} else if vm.Mach.Rsize <= 64 {
+	} else if rSize <= 64 {
 		loc := int(vm.Registers[regSrc].(uint64))
 		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint64(get_id(vm.Mach.Program.Slocs[loc]))
+			vm.Registers[regDest] = uint64(get_id(vm.Mach.Program.Slocs[loc][0:rSize]))
 		} else {
-			vm.Registers[regDest] = uint64(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)]))
+			vm.Registers[regDest] = uint64(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:rSize]))
 		}
 	} else {
 		return errors.New("invalid register size, must be <= 64")
