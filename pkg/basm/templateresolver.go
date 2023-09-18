@@ -63,7 +63,31 @@ func createBasicTemplateData() *templateData {
 	return result
 }
 
+func (bi *BasmInstance) templateAutoMark() error {
+	// Set the template meta to true for all the sections and fragments that contains the template mark
+	for _, section := range bi.sections {
+		if section.isTemplate() {
+			section.sectionBody.BasmMeta = section.sectionBody.SetMeta("template", "true")
+		} else {
+			section.sectionBody.BasmMeta = section.sectionBody.SetMeta("template", "false")
+		}
+	}
+
+	for _, fragment := range bi.fragments {
+		if fragment.isTemplate() {
+			fragment.fragmentBody.BasmMeta = fragment.fragmentBody.SetMeta("template", "true")
+		} else {
+			fragment.fragmentBody.BasmMeta = fragment.fragmentBody.SetMeta("template", "false")
+		}
+	}
+	return nil
+}
+
 func templateResolver(bi *BasmInstance) error {
+
+	if err := bi.templateAutoMark(); err != nil {
+		return err
+	}
 
 	// Computing which CP needs a templated version of the code
 	sort.Sort(bmline.ByName(bi.cps))
@@ -124,7 +148,11 @@ func templateResolver(bi *BasmInstance) error {
 				return err
 			}
 
-			bi.sections[guessedName].sectionBody.SetMeta("template", "false")
+			if isTemplate(newSection) {
+				bi.sections[guessedName].sectionBody.SetMeta("template", "true")
+			} else {
+				bi.sections[guessedName].sectionBody.SetMeta("template", "false")
+			}
 
 			cp.SetMeta("romcode", guessedName)
 
@@ -196,7 +224,11 @@ func templateResolver(bi *BasmInstance) error {
 				return err
 			}
 
-			bi.fragments[guessedName].fragmentBody.SetMeta("template", "false")
+			if isTemplate(newFragment) {
+				bi.fragments[guessedName].fragmentBody.SetMeta("template", "true")
+			} else {
+				bi.fragments[guessedName].fragmentBody.SetMeta("template", "false")
+			}
 
 			fi.SetMeta("fragment", guessedName)
 

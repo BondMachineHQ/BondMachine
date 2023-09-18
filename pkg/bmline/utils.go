@@ -56,3 +56,15 @@ func (el *BasmElement) String() string {
 	}
 	return result
 }
+
+func (op *BasmBody) Flat() string {
+	result := ""
+	for _, line := range op.Lines {
+		result += line.Operation.GetValue() + " "
+		for _, arg := range line.Elements {
+			result += arg.GetValue() + " "
+		}
+		result += "\n"
+	}
+	return result
+}
