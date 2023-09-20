@@ -76,6 +76,7 @@ func init() {
 	Allopcodes = append(Allopcodes, Jcmpa{})
 	Allopcodes = append(Allopcodes, Jcmpl{})
 	Allopcodes = append(Allopcodes, Jcmpo{})
+	Allopcodes = append(Allopcodes, Jcmpria{})
 	Allopcodes = append(Allopcodes, Jcmprio{})
 	Allopcodes = append(Allopcodes, Je{})
 	Allopcodes = append(Allopcodes, Jri{})

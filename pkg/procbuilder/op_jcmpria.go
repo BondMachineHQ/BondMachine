@@ -11,28 +11,28 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
-type Jcmprio struct{}
+type Jcmpria struct{}
 
-func (op Jcmprio) Op_get_name() string {
-	return "jcmprio"
+func (op Jcmpria) Op_get_name() string {
+	return "jcmpria"
 }
 
-func (op Jcmprio) Op_get_desc() string {
-	return "Register indirect Jump to a program location on ROM conditioned to the comparison flag"
+func (op Jcmpria) Op_get_desc() string {
+	return "Register indirect Jump to a program location on RAM"
 }
 
-func (op Jcmprio) Op_show_assembler(arch *Arch) string {
+func (op Jcmpria) Op_show_assembler(arch *Arch) string {
 	opBits := arch.Opcodes_bits()
-	result := "jcmprio [" + strconv.Itoa(int(arch.R)) + "(Reg)]	// Jump to the location contained in reg conditioned to the comparison flag [" + strconv.Itoa(opBits+int(arch.R)) + "]\n"
+	result := "jcmpria [" + strconv.Itoa(int(arch.R)) + "(Reg)]	// Jump to the location contained in reg [" + strconv.Itoa(opBits+int(arch.R)) + "]\n"
 	return result
 }
 
-func (op Jcmprio) Op_get_instruction_len(arch *Arch) int {
+func (op Jcmpria) Op_get_instruction_len(arch *Arch) int {
 	opBits := arch.Opcodes_bits()
 	return opBits + int(arch.R) // The bits for the opcode + bits for a register
 }
 
-func (op Jcmprio) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
+func (op Jcmpria) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
 	result := ""
 	if arch.OnlyOne(op.Op_get_name(), []string{"cmpr", "jcmpl", "jcmpo", "jcmpa", "jcmprio", "jcmpria"}) {
 		result += "\treg cmpflag;\n"
@@ -40,25 +40,25 @@ func (op Jcmprio) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor st
 	return result
 }
 
-func (Op Jcmprio) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
+func (Op Jcmpria) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	return ""
 }
-func (Op Jcmprio) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
-	return ""
-}
-
-func (Op Jcmprio) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
+func (Op Jcmpria) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (op Jcmprio) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (Op Jcmpria) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
+	return ""
+}
+
+func (op Jcmpria) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	romWord := arch.Max_word()
 	opBits := arch.Opcodes_bits()
 
 	reg_num := 1 << arch.R
 
 	result := ""
-	result += "					JCMPRIO: begin\n"
+	result += "					JCMPRIA: begin\n"
 
 	if arch.R == 1 {
 		result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + "])\n"
@@ -69,13 +69,14 @@ func (op Jcmprio) Op_instruction_verilog_state_machine(conf *Config, arch *Arch,
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 		result += "							if (cmpflag == 1'b1) begin\n"
 		if arch.Modes[0] == "hy" {
-			result += "								exec_mode <= #1 1'b0;\n"
+			result += "								exec_mode <= #1 1'b1;\n"
 		}
+		result += "								vn_state <= #1 FETCH;\n"
 		result += "								_pc <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
 		result += "							end else begin\n"
 		result += NextInstruction(conf, arch, 8, "_pc + 1'b1")
 		result += "							end\n"
-		result += "							$display(\"JCMPRIO " + strings.ToUpper(Get_register_name(i)) + "\");\n"
+		result += "							$display(\"JCMPRIA " + strings.ToUpper(Get_register_name(i)) + "\");\n"
 		result += "						end\n"
 	}
 	result += "						endcase\n"
@@ -83,11 +84,11 @@ func (op Jcmprio) Op_instruction_verilog_state_machine(conf *Config, arch *Arch,
 	return result
 }
 
-func (op Jcmprio) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
+func (op Jcmpria) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (op Jcmprio) Assembler(arch *Arch, words []string) (string, error) {
+func (op Jcmpria) Assembler(arch *Arch, words []string) (string, error) {
 	opBits := arch.Opcodes_bits()
 	romWord := arch.Max_word()
 
@@ -116,45 +117,45 @@ func (op Jcmprio) Assembler(arch *Arch, words []string) (string, error) {
 	return result, nil
 }
 
-func (op Jcmprio) Disassembler(arch *Arch, instr string) (string, error) {
+func (op Jcmpria) Disassembler(arch *Arch, instr string) (string, error) {
 	regId := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(regId)) + " "
 	return result, nil
 }
 
-func (op Jcmprio) Simulate(vm *VM, instr string) error {
+func (op Jcmpria) Simulate(vm *VM, instr string) error {
 	// TODO
 	return nil
 }
 
-func (op Jcmprio) Generate(arch *Arch) string {
+func (op Jcmpria) Generate(arch *Arch) string {
 	reg_num := 1 << arch.R
 	reg := rand.Intn(reg_num)
 	return zeros_prefix(int(arch.R), get_binary(reg))
 }
 
-func (op Jcmprio) Required_shared() (bool, []string) {
+func (op Jcmpria) Required_shared() (bool, []string) {
 	return false, []string{}
 }
 
-func (op Jcmprio) Required_modes() (bool, []string) {
+func (op Jcmpria) Required_modes() (bool, []string) {
 	return false, []string{}
 }
 
-func (op Jcmprio) Forbidden_modes() (bool, []string) {
+func (op Jcmpria) Forbidden_modes() (bool, []string) {
 	return false, []string{}
 }
 
-func (Op Jcmprio) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
+func (Op Jcmpria) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
 	return []string{}, []string{}
 }
 
-func (Op Jcmprio) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
+func (Op Jcmpria) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
 	seq, types := Sequence_to_0(words[0])
 	if len(seq) > 0 && types == O_REGISTER {
 
 		result := make([]UsageNotify, 2)
-		newnot0 := UsageNotify{C_OPCODE, "jcmprio", I_NIL}
+		newnot0 := UsageNotify{C_OPCODE, "jcmpria", I_NIL}
 		result[0] = newnot0
 		newnot1 := UsageNotify{C_REGSIZE, S_NIL, len(seq)}
 		result[1] = newnot1
@@ -166,7 +167,7 @@ func (Op Jcmprio) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, 
 
 }
 
-func (Op Jcmprio) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
+func (Op Jcmpria) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
 	result := ""
 	switch blockname {
 	default:
@@ -175,38 +176,38 @@ func (Op Jcmprio) Op_instruction_verilog_extra_block(arch *Arch, flavor string, 
 	return result
 }
 
-func (Op Jcmprio) HLAssemblerMatch(arch *Arch) []string {
+func (Op Jcmpria) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
-	result = append(result, "jcmprio::*--type=reg")
-	result = append(result, "jcmp::*--type=rom--romaddressing=register")
+	result = append(result, "jcmpria::*--type=reg")
+	result = append(result, "jcmp::*--type=ram--ramaddressing=register")
 	return result
 }
 
-func (Op Jcmprio) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+func (Op Jcmpria) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
 	case "jcmp":
-		regNeed := line.Elements[0].GetMeta("romregister")
+		regNeed := line.Elements[0].GetMeta("ramregister")
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
-		line.Operation.SetValue("jcmprio")
+		line.Operation.SetValue("jcmpria")
 		line.Elements[0].SetValue(regNeed)
-		line.Elements[0].RmMeta("romregister")
-		line.Elements[0].RmMeta("romaddressing")
+		line.Elements[0].RmMeta("ramregister")
+		line.Elements[0].RmMeta("ramaddressing")
 		line.Elements[0].BasmMeta = line.Elements[0].SetMeta("type", "reg")
 		return line, nil
-	case "jcmprio":
+	case "jcmpria":
 		regNeed := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
 		return line, nil
 	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
-func (Op Jcmprio) ExtraFiles(arch *Arch) ([]string, []string) {
+func (Op Jcmpria) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
 }
 
-func (Op Jcmprio) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+func (Op Jcmpria) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
 	switch line.Operation.GetValue() {
-	case "jcmprio":
+	case "jcmpria":
 		regNeed := line.Elements[0].GetValue()
 		if regNeed != "" {
 			var meta *bmmeta.BasmMeta
