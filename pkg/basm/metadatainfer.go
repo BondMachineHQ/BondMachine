@@ -271,6 +271,30 @@ func metadataInfer(bi *BasmInstance) error {
 		}
 	}
 
+	for sectName, section := range bi.sections {
+		if section.sectionType == sectRomData || section.sectionType == sectRamData {
+			if bi.debug {
+				fmt.Println(green("\t\tSection: ") + sectName)
+			}
+
+			// if section.sectionType == sectRomText {
+			// 	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:romtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+			// } else {
+			// 	bi.rg.Requirement(bmreqs.ReqRequest{Node: "/code:ramtexts", T: bmreqs.ObjectSet, Name: "sections", Value: sectName, Op: bmreqs.OpAdd})
+			// }
+
+			body := section.sectionBody
+
+			if err := bi.bodyMetadataInfer(body, soShortNames); err != nil {
+				return err
+			}
+		} else {
+			if bi.debug {
+				fmt.Println(yellow("\t\tSection type not handled: ") + sectName)
+			}
+		}
+	}
+
 	for fragName, frag := range bi.fragments {
 		if bi.debug {
 			fmt.Println(green("\t\tFragment: ") + fragName)

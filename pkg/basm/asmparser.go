@@ -272,7 +272,7 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 						newLine := new(bmline.BasmLine)
 						newLine.Operation = newElem
 
-						if bi.isWithinSection != "" && bi.sections[bi.isWithinSection].sectionType == sectRomData {
+						if bi.isWithinSection != "" && (bi.sections[bi.isWithinSection].sectionType == sectRomData || bi.sections[bi.isWithinSection].sectionType == sectRamData) {
 							if argN > 1 {
 								argS := strings.Split(strings.TrimSpace(strings.Join(argS[1:], " ")), " ")
 								if len(argS) > 1 {

@@ -149,7 +149,15 @@ func memComposer(bi *BasmInstance) error {
 
 				// Resolving Symbols for the composed section
 				if romData != nil {
-					for _, symbol := range romData.sectionBody.Lines {
+					newSection := new(BasmSection)
+					newSection.sectionName = "romdata" + cpNewSectionName
+					newSection.sectionType = sectRomData
+					newSection.sectionBody = romData.sectionBody.Copy()
+					bi.resolveSymbols(newSection, cpNewSectionName)
+					bi.sections[newSection.sectionName] = newSection
+					cp.BasmMeta = cp.BasmMeta.SetMeta("romdata", newSection.sectionName)
+
+					for _, symbol := range newSection.sectionBody.Lines {
 						symbolName := symbol.Operation.GetValue()
 						offset := symbol.Operation.GetMeta("offset")
 						location, _ := strconv.Atoi(offset)
@@ -165,6 +173,14 @@ func memComposer(bi *BasmInstance) error {
 				}
 
 				if ramData != nil {
+					newSection := new(BasmSection)
+					newSection.sectionName = "ramdata" + cpNewSectionName
+					newSection.sectionType = sectRomData
+					newSection.sectionBody = ramData.sectionBody.Copy()
+					bi.resolveSymbols(newSection, cpNewSectionName)
+					bi.sections[newSection.sectionName] = newSection
+					cp.BasmMeta = cp.BasmMeta.SetMeta("ramdata", newSection.sectionName)
+
 					for _, symbol := range ramData.sectionBody.Lines {
 						symbolName := symbol.Operation.GetValue()
 						offset := symbol.Operation.GetMeta("offset")

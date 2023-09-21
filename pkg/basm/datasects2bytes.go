@@ -70,6 +70,15 @@ func dataSections2Bytes(bi *BasmInstance) error {
 						line.Elements = newElements
 						offset += len(decodedBytes)
 					}
+				case "sym":
+					// The symbol is resolved in the next steps
+					newElements := make([]*bmline.BasmElement, 1)
+					newArg := new(bmline.BasmElement)
+					newArg.SetValue(dataValue)
+					newElements[0] = newArg
+					line.Elements = newElements
+					// the amount of bytes is not known yet, anyway, the symbol will be stored in a single cell so the offset is incremented by 1
+					offset += 1
 				case "equ":
 					// TODO: finish this and the other data operators
 				default:

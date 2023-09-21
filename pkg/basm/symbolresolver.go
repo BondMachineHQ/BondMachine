@@ -55,6 +55,28 @@ func symbolResolver(bi *BasmInstance) error {
 				return errors.New("ramcode section not found: " + ramCodeName)
 			}
 		}
+		romDataName := cp.GetMeta("romdata")
+		if strings.HasPrefix(romDataName, "romdata") {
+			if section, ok := bi.sections[romDataName]; ok {
+				name := romDataName[7:]
+				if err := bi.resolveSymbols(section, name); err != nil {
+					return err
+				}
+			} else {
+				return errors.New("romdata section not found: " + romDataName)
+			}
+		}
+		ramDataName := cp.GetMeta("ramdata")
+		if strings.HasPrefix(ramDataName, "ramdata") {
+			if section, ok := bi.sections[ramDataName]; ok {
+				name := ramDataName[7:]
+				if err := bi.resolveSymbols(section, name); err != nil {
+					return err
+				}
+			} else {
+				return errors.New("ramdata section not found: " + ramDataName)
+			}
+		}
 	}
 	return nil
 }
