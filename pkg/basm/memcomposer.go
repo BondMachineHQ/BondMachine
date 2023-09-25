@@ -20,6 +20,8 @@ func memComposer(bi *BasmInstance) error {
 
 		romAlternatives := make([]string, 0)
 		ramAlternatives := make([]string, 0)
+		romDataAlternatives := make([]string, 0)
+		ramDataAlternatives := make([]string, 0)
 
 		message := "\t\tConnecting "
 		cpNewSectionName := ""
@@ -155,7 +157,7 @@ func memComposer(bi *BasmInstance) error {
 					newSection.sectionBody = romData.sectionBody.Copy()
 					bi.resolveSymbols(newSection, cpNewSectionName)
 					bi.sections[newSection.sectionName] = newSection
-					cp.BasmMeta = cp.BasmMeta.SetMeta("romdata", newSection.sectionName)
+					romDataAlternatives = append(romDataAlternatives, newSection.sectionName)
 
 					for _, symbol := range newSection.sectionBody.Lines {
 						symbolName := symbol.Operation.GetValue()
@@ -179,7 +181,7 @@ func memComposer(bi *BasmInstance) error {
 					newSection.sectionBody = ramData.sectionBody.Copy()
 					bi.resolveSymbols(newSection, cpNewSectionName)
 					bi.sections[newSection.sectionName] = newSection
-					cp.BasmMeta = cp.BasmMeta.SetMeta("ramdata", newSection.sectionName)
+					ramDataAlternatives = append(ramDataAlternatives, newSection.sectionName)
 
 					for _, symbol := range ramData.sectionBody.Lines {
 						symbolName := symbol.Operation.GetValue()
@@ -246,6 +248,24 @@ func memComposer(bi *BasmInstance) error {
 		default:
 			cp.BasmMeta = cp.BasmMeta.SetMeta("ramalternatives", strings.Join(ramAlternatives, ":"))
 			cp.BasmMeta.RmMeta("ramcode")
+		}
+
+		switch len(romDataAlternatives) {
+		case 0:
+		case 1:
+			cp.BasmMeta = cp.BasmMeta.SetMeta("romdata", romDataAlternatives[0])
+		default:
+			cp.BasmMeta = cp.BasmMeta.SetMeta("romdataalternatives", strings.Join(romDataAlternatives, ":"))
+			cp.BasmMeta.RmMeta("romdata")
+		}
+
+		switch len(ramDataAlternatives) {
+		case 0:
+		case 1:
+			cp.BasmMeta = cp.BasmMeta.SetMeta("ramdata", ramDataAlternatives[0])
+		default:
+			cp.BasmMeta = cp.BasmMeta.SetMeta("ramdataalternatives", strings.Join(ramDataAlternatives, ":"))
+			cp.BasmMeta.RmMeta("ramdata")
 		}
 	}
 

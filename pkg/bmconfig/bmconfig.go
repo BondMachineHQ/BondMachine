@@ -3,6 +3,7 @@ package bmconfig
 const (
 	DisableDynamicalMatching = uint64(0) + iota
 	ChooserMinWordSize
+	ChooserForceSameName
 )
 
 type BmConfig struct {

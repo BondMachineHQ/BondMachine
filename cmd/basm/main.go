@@ -50,6 +50,7 @@ var actOptimizations = flag.String("activate-optimizations", "", "List of comma 
 // Config
 var disableDynamicalMatching = flag.Bool("disable-dynamical-matching", false, "Disable the dynamical matching")
 var chooserMinWordSize = flag.Bool("chooser-min-word-size", false, "Choose the minimum word size for the chooser")
+var chooserForceSameName = flag.Bool("chooser-force-same-name", false, "Force the chooser to use the same name for the ROM and the RAM")
 
 func init() {
 	flag.Parse()
@@ -134,6 +135,9 @@ func main() {
 	}
 	if *chooserMinWordSize {
 		bi.Activate(bmconfig.ChooserMinWordSize)
+	}
+	if *chooserForceSameName {
+		bi.Activate(bmconfig.ChooserForceSameName)
 	}
 
 	mne := basm.GetPassMnemonic()

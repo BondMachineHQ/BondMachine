@@ -29,6 +29,18 @@ func red(in ...interface{}) string {
 	ins := fmt.Sprint(in...)
 	return "\033[31m" + ins + "\033[0m"
 }
+func cyan(in ...interface{}) string {
+	ins := fmt.Sprint(in...)
+	return "\033[36m" + ins + "\033[0m"
+}
+func gray(in ...interface{}) string {
+	ins := fmt.Sprint(in...)
+	return "\033[37m" + ins + "\033[0m"
+}
+func white(in ...interface{}) string {
+	ins := fmt.Sprint(in...)
+	return "\033[97m" + ins + "\033[0m"
+}
 
 func Needed_bits(num int) int {
 	if num > 0 {

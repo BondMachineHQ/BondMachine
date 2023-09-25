@@ -432,6 +432,12 @@ func (bi *BasmInstance) CreateConnectingProcessor(rSize uint8, cp *bmline.BasmEl
 
 	var resp bmreqs.ReqResponse
 
+	tabs := "\t\t"
+
+	if bi.extra != "" {
+		tabs = bi.extra
+	}
+
 	// Processing Code sections: CP has to have at least one code section
 	// Getting the ROM code requirements
 
@@ -552,7 +558,7 @@ outer:
 	}
 
 	if len(ins) == 0 {
-		bi.Warning("No inputs found on ROM/RAM code, assuming 0")
+		fmt.Println(tabs + " - " + purple("warning:") + " No inputs found on ROM/RAM code, assuming 0")
 		myArch.N = uint8(0)
 	} else {
 		// Sorting the inputs list (ordering using the compareStrings function)
@@ -569,7 +575,7 @@ outer:
 		myArch.N = uint8(inNum + 1)
 
 		if len(ins) != inNum+1 {
-			bi.Warning("Input list is not complete, some inputs are missing. This is not an error, but you are wasting resources.")
+			fmt.Println(tabs + " - " + purple("warning:") + "Input list is not complete, some inputs are missing. This is not an error, but you are wasting resources.")
 		}
 	}
 
@@ -596,7 +602,7 @@ outer:
 	}
 
 	if len(outs) == 0 {
-		bi.Warning("No outputs found on ROM/RAM code, assuming 0")
+		fmt.Println(tabs + " - " + purple("warning:") + " No outputs found on ROM/RAM code, assuming 0")
 		myArch.M = uint8(0)
 	} else {
 		// Sorting the outputs list (ordering using the compareStrings function)
@@ -613,7 +619,7 @@ outer:
 		myArch.M = uint8(outNum + 1)
 
 		if len(outs) != outNum+1 {
-			bi.Warning("Output list is not complete, some outputs are missing. This is not an error, but you are wasting resources.")
+			fmt.Println(tabs + " - " + purple("warning:") + "Output list is not complete, some outputs are missing. This is not an error, but you are wasting resources.")
 		}
 	}
 
@@ -633,7 +639,7 @@ outer:
 			romCodeContrib = 2 ^ val
 			myArch.O = uint8(val)
 			if bi.debug {
-				fmt.Println("\t\t - " + green("romsize (cp config): ") + yellow(cp.GetMeta("romsize")))
+				fmt.Println(tabs + " - " + green("romsize (cp config): ") + yellow(cp.GetMeta("romsize")))
 			}
 		} else {
 			return nil, err
@@ -642,13 +648,13 @@ outer:
 		romCodeContrib = len(bi.sections[romCode].sectionBody.Lines)
 		myArch.O = uint8(Needed_bits(romCodeContrib))
 		if bi.debug {
-			fmt.Println("\t\t - " + green("romsize (pre-data): ") + yellow(strconv.Itoa(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))))
+			fmt.Println(tabs + " - " + green("romsize (pre-data): ") + yellow(strconv.Itoa(Needed_bits(len(bi.sections[romCode].sectionBody.Lines)))))
 		}
 	} else {
 		romCodeContrib = 0
 		myArch.O = uint8(0)
 		if bi.debug {
-			fmt.Println("\t\t - " + green("romsize (pre-data): ") + yellow("0"))
+			fmt.Println(tabs + " - " + green("romsize (pre-data): ") + yellow("0"))
 		}
 	}
 
@@ -659,7 +665,7 @@ outer:
 			ramCodeContrib = 2 ^ val
 			myArch.L = uint8(val)
 			if bi.debug {
-				fmt.Println("\t\t - " + green("ramsize (cp config): ") + yellow(cp.GetMeta("ramsize")))
+				fmt.Println(tabs + " - " + green("ramsize (cp config): ") + yellow(cp.GetMeta("ramsize")))
 			}
 		} else {
 			return nil, err
@@ -669,13 +675,13 @@ outer:
 		ramCodeContrib = len(bi.sections[ramCode].sectionBody.Lines)
 		myArch.L = uint8(Needed_bits(ramCodeContrib))
 		if bi.debug {
-			fmt.Println("\t\t - " + green("ramsize (pre-data): ") + yellow(strconv.Itoa(Needed_bits(len(bi.sections[ramCode].sectionBody.Lines)))))
+			fmt.Println(tabs + " - " + green("ramsize (pre-data): ") + yellow(strconv.Itoa(Needed_bits(len(bi.sections[ramCode].sectionBody.Lines)))))
 		}
 	} else {
 		myArch.L = uint8(0)
 		ramCodeContrib = 0
 		if bi.debug {
-			fmt.Println("\t\t - " + green("ramsize (pre-data): ") + yellow("0"))
+			fmt.Println(tabs + " - " + green("ramsize (pre-data): ") + yellow("0"))
 		}
 	}
 
@@ -767,7 +773,8 @@ func (bi *BasmInstance) GetBondMachine() *bondmachine.Bondmachine {
 }
 
 type choiceParams struct {
-	wordSize int
+	wordSize  int
+	groupName string
 }
 
 func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
@@ -778,9 +785,6 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 	cp := bi.cps[i]
 
 	if cp.GetMeta("romalternatives") != "" || cp.GetMeta("ramalternatives") != "" {
-		// Data cannot be alternative
-		romData := cp.GetMeta("romdata")
-		ramData := cp.GetMeta("ramdata")
 		execMode := cp.GetMeta("execmode")
 		if execMode == "" {
 			execMode = bi.global.GetMeta("defaultexecmode")
@@ -797,11 +801,61 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 			ramAlts = []string{""}
 		}
 
+		romData := cp.GetMeta("romdata")
+		ramData := cp.GetMeta("ramdata")
+		romDataAlts := strings.Split(cp.GetMeta("romdataalternatives"), ":")
+		ramDataAlts := strings.Split(cp.GetMeta("ramdataalternatives"), ":")
+
 		params := make([]choiceParams, len(romAlts)*len(ramAlts))
 
 		for ii, romAlt := range romAlts {
 			for jj, ramAlt := range ramAlts {
-				tempCP, err := bi.CreateConnectingProcessor(rSize, cp, i, romAlt, romData, ramAlt, ramData, execMode)
+
+				if bi.debug {
+					fmt.Println("\t\t - " + green("evaluating alternatives: ") + yellow(romAlt) + green(" - ") + yellow(ramAlt))
+				}
+
+				// Find the eventual common name
+				groupName := ""
+				if strings.HasPrefix(romAlt, "romcode") {
+					groupName = romAlt[7:]
+				}
+				if strings.HasPrefix(ramAlt, "ramcode") {
+					if groupName != ramAlt[7:] {
+						groupName = ""
+					}
+				} else {
+					groupName = ""
+				}
+
+				if groupName != "" {
+					params[ii*len(ramAlts)+jj].groupName = groupName
+				}
+
+				romDataAlt := romData
+				ramDataAlt := ramData
+
+				if groupName != "" && len(romDataAlts) > 0 {
+					for _, rda := range romDataAlts {
+						if strings.HasSuffix(rda, groupName) {
+							romDataAlt = rda
+							break
+						}
+					}
+				}
+
+				if groupName != "" && len(ramDataAlts) > 0 {
+					for _, rda := range ramDataAlts {
+						if strings.HasSuffix(rda, groupName) {
+							ramDataAlt = rda
+							break
+						}
+					}
+				}
+
+				bi.extra = "\t\t\t"
+				tempCP, err := bi.CreateConnectingProcessor(rSize, cp, i, romAlt, romDataAlt, ramAlt, ramDataAlt, execMode)
+				bi.extra = ""
 
 				if err != nil {
 					return err
@@ -880,7 +934,20 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 			var cj string
 			minSize := 1024
 			for ii, romAlt := range romAlts {
+				iiGuessedName := ""
+				if strings.HasPrefix(romAlt, "romcode") {
+					iiGuessedName = romAlt[7:]
+				}
 				for jj, ramAlt := range ramAlts {
+					jjGuessedName := ""
+					if strings.HasPrefix(ramAlt, "ramcode") {
+						jjGuessedName = ramAlt[7:]
+					}
+					if bi.IsActive(bmconfig.ChooserForceSameName) {
+						if iiGuessedName != "" && jjGuessedName != "" && iiGuessedName != jjGuessedName {
+							continue
+						}
+					}
 					if params[ii*len(ramAlts)+jj].wordSize < minSize {
 						minSize = params[ii*len(ramAlts)+jj].wordSize
 						ci = romAlt
@@ -895,9 +962,30 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 
 			if ci != "" {
 				cp.SetMeta("romcode", ci)
+				if cp.GetMeta("romdata") == "" {
+					guessName := ""
+					if strings.HasPrefix(ci, "romcode") {
+						guessName = "romdata" + ci[7:]
+					}
+					if stringInSlice(guessName, romDataAlts) {
+						cp.SetMeta("romdata", guessName)
+						cp.RmMeta("romdataalternatives")
+					}
+				}
 			}
+
 			if cj != "" {
 				cp.SetMeta("ramcode", cj)
+				if cp.GetMeta("ramdata") == "" {
+					guessName := ""
+					if strings.HasPrefix(cj, "ramcode") {
+						guessName = "ramdata" + cj[7:]
+					}
+					if stringInSlice(guessName, ramDataAlts) {
+						cp.SetMeta("ramdata", guessName)
+						cp.RmMeta("ramdataalternatives")
+					}
+				}
 			}
 			cp.RmMeta("romalternatives")
 			cp.RmMeta("ramalternatives")

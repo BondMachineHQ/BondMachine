@@ -44,6 +44,20 @@ func sectionCleaner(bi *BasmInstance) error {
 				usefulSections[alt] = struct{}{}
 			}
 		}
+		altRomDataName := cp.GetMeta("romdataalternatives")
+		if altRomDataName != "" {
+			splitAlts := strings.Split(altRomDataName, ":")
+			for _, alt := range splitAlts {
+				usefulSections[alt] = struct{}{}
+			}
+		}
+		altRamDataName := cp.GetMeta("ramdataalternatives")
+		if altRamDataName != "" {
+			splitAlts := strings.Split(altRamDataName, ":")
+			for _, alt := range splitAlts {
+				usefulSections[alt] = struct{}{}
+			}
+		}
 	}
 
 	// Remove the unused sections

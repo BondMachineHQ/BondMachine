@@ -3,6 +3,7 @@ package basm
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -11,11 +12,29 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 )
 
-type choice struct {
-	choiceName string
-	choiceSel  string
+type choice []string
+
+func mergeChoices(poss [][]string, level int) [][]string {
+	if len(poss) == 0 {
+		return [][]string{}
+	}
+
+	if level == len(poss)-1 {
+		result := make([][]string, 0)
+		for _, c := range poss[level] {
+			result = append(result, []string{c})
+		}
+		return result
+	} else {
+		result := make([][]string, 0)
+		for _, c := range poss[level] {
+			for _, r := range mergeChoices(poss, level+1) {
+				result = append(result, append(r, c))
+			}
+		}
+		return result
+	}
 }
-type choices []choice
 
 func matcherResolver(bi *BasmInstance) error {
 	//TODO finish this
@@ -25,17 +44,19 @@ func matcherResolver(bi *BasmInstance) error {
 	}
 
 	sectionsIncoming := make(map[string]*BasmSection)
-	sectionsOutgoing := make(map[string]struct{})
 
 	// Loop over the sections to find eventual alternatives
 	for sectName, section := range bi.sections {
+
+		sectionWithChoices := ""
+
 		if section.sectionType == sectRomText || section.sectionType == sectRamText {
 			if bi.debug {
 				fmt.Println(green("\t\tSection: ") + sectName)
 			}
 
 			// Setup the map of alternatives sections based on the choices
-			sectAlts := make(map[string]choices)
+			sectAlts := make(map[string]choice)
 
 			body := section.sectionBody
 
@@ -57,83 +78,52 @@ func matcherResolver(bi *BasmInstance) error {
 						matching = append(matching, strconv.Itoa(j))
 					}
 				}
+
+				// Sort the matching slice to have always the same order
+				slices.Sort(matching)
 				// fmt.Println(matching)
+
 				if !matched {
 					return errors.New("no operator match")
 				} else if len(matching) > 1 {
-					found := false
+					// 	found := false
 					choiceName := strings.Join(matching, "_")
-				sLoop:
-					for _, cs := range sectAlts {
-						for _, c := range cs {
-							if c.choiceName == choiceName {
-								found = true
-								break sLoop
-							}
-						}
-					}
-					// There is a choice to be made, creating the alternatives names and the choices for the sections
-					if !found {
-						sectRem := make(map[string]struct{})
 
-						if len(sectAlts) == 0 {
-							for _, c := range matching {
-								idx := 0
-							idxLoop1:
-								// Identify the next available index
-								for {
-									if _, ok := bi.sections[sectName+"_"+strconv.Itoa(idx)]; !ok {
-										if _, ok := sectAlts[sectName+"_"+strconv.Itoa(idx)]; !ok {
-											break idxLoop1
-										}
-									}
-									idx++
-								}
-								// Create the new section with the new name and the choice
-								sectAlts[sectName+"_"+strconv.Itoa(idx)] = choices{choice{choiceName: choiceName, choiceSel: c}}
-							}
-						} else {
-							for s, cs := range sectAlts {
-								for _, c := range matching {
-									idx := 0
-								idxLoop2:
-									// Identify the next available index
-									for {
-										if _, ok := bi.sections[sectName+"_"+strconv.Itoa(idx)]; !ok {
-											if _, ok := sectAlts[sectName+"_"+strconv.Itoa(idx)]; !ok {
-												break idxLoop2
-											}
-										}
-										idx++
-									}
-									// Create the new section with the new name and the choice
-									sectAlts[sectName+"_"+strconv.Itoa(idx)] = append(cs, choice{choiceName: choiceName, choiceSel: c})
-								}
-								sectRem[s] = struct{}{}
-							}
-
-							// Remove the old sections
-							for s := range sectRem {
-								delete(sectAlts, s)
-							}
-						}
+					if _, ok := sectAlts[choiceName]; !ok {
+						sectAlts[choiceName] = make([]string, len(matching))
+						copy(sectAlts[choiceName], matching)
 					}
 				}
 			}
 
-			sectionWithChoices := ""
-			if len(sectAlts) == 0 {
-				sectAlts[sectName] = nil
-			} else {
-				alts := ""
-				for s := range sectAlts {
-					alts += s + ":"
-				}
-				sectionWithChoices = alts[:len(alts)-1]
+			secAltsKeys := make([]string, 0)
+			secChoices := make([][]string, 0)
+			for k := range sectAlts {
+				secAltsKeys = append(secAltsKeys, k)
+				secChoices = append(secChoices, sectAlts[k])
 			}
 
-			// Ranging over the alternatives to create the reals sections
-			for sectNameNew, cs := range sectAlts {
+			allChoices := mergeChoices(secChoices, 0)
+
+			if len(allChoices) == 0 {
+				allChoices = make([][]string, 1)
+			}
+
+			for _, c := range allChoices {
+
+				idx := 0
+			idxLoop:
+				// Identify the next available index
+				for {
+					if _, ok := bi.sections[sectName+"_"+strconv.Itoa(idx)]; !ok {
+						if _, ok := sectionsIncoming[sectName+"_"+strconv.Itoa(idx)]; !ok {
+							break idxLoop
+						}
+					}
+					idx++
+				}
+				// Create the new section with the new name and the choice
+				sectNameNew := sectName + "_" + strconv.Itoa(idx)
 
 				sectionNew := new(BasmSection)
 				sectionNew.sectionName = sectNameNew
@@ -170,15 +160,21 @@ func matcherResolver(bi *BasmInstance) error {
 						}
 					}
 
+					// Sort the matching slice to have always the same order
+					slices.Sort(matching)
+
 					if len(matching) > 1 {
 						choiceName := strings.Join(matching, "_")
-						for _, c := range cs {
-							if c.choiceName == choiceName {
-								idx, _ := strconv.Atoi(c.choiceSel)
-								matchingOp = bi.matchersOps[idx]
+						choiceId := 0
+						for cid, cn := range secAltsKeys {
+							if cn == choiceName {
+								choiceId = cid
 								break
 							}
 						}
+
+						idx, _ := strconv.Atoi(c[choiceId])
+						matchingOp = bi.matchersOps[idx]
 					} else {
 						idx, _ := strconv.Atoi(matching[0])
 						matchingOp = bi.matchersOps[idx]
@@ -221,19 +217,16 @@ func matcherResolver(bi *BasmInstance) error {
 				}
 
 				sectionsIncoming[sectNameNew] = sectionNew
+				if sectionWithChoices == "" {
+					sectionWithChoices = sectNameNew
+				} else {
+					sectionWithChoices = sectionWithChoices + ":" + sectNameNew
+				}
 			}
 
-			if sectionWithChoices != "" {
-				section.sectionBody = new(bmline.BasmBody)
-				section.sectionBody.BasmMeta = section.sectionBody.BasmMeta.SetMeta("alternatives", sectionWithChoices)
-			} else {
-				sectionsOutgoing[sectName] = struct{}{}
-			}
+			section.sectionBody = new(bmline.BasmBody)
+			section.sectionBody.BasmMeta = section.sectionBody.BasmMeta.SetMeta("alternatives", sectionWithChoices)
 		}
-	}
-
-	for sn := range sectionsOutgoing {
-		delete(bi.sections, sn)
 	}
 
 	for sn, s := range sectionsIncoming {

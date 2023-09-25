@@ -25,6 +25,7 @@ const (
 type BasmInstance struct {
 	*bminfo.BMinfo
 	*bmconfig.BmConfig
+	extra            string
 	verbose          bool
 	debug            bool
 	isWithinMacro    string
