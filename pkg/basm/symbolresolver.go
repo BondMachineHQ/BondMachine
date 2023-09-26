@@ -33,6 +33,8 @@ func symbolResolver(bi *BasmInstance) error {
 
 	// Loop over the cps to resolve the symbols of the combined sections
 	for _, cp := range bi.cps {
+
+		// Romcode specified
 		romCodeName := cp.GetMeta("romcode")
 		if strings.HasPrefix(romCodeName, "romcode") {
 			if section, ok := bi.sections[romCodeName]; ok {
@@ -44,6 +46,25 @@ func symbolResolver(bi *BasmInstance) error {
 				return errors.New("romcode section not found: " + romCodeName)
 			}
 		}
+
+		// Romcode alternatives
+		romCodeAlts := strings.Split(cp.GetMeta("romalternatives"), ":")
+		if len(romCodeAlts) > 0 {
+			for _, romCodeName := range romCodeAlts {
+				if strings.HasPrefix(romCodeName, "romcode") {
+					if section, ok := bi.sections[romCodeName]; ok {
+						name := romCodeName[7:]
+						if err := bi.resolveSymbols(section, name); err != nil {
+							return err
+						}
+					} else {
+						return errors.New("romcode section not found: " + romCodeName)
+					}
+				}
+			}
+		}
+
+		// Ramcode specified
 		ramCodeName := cp.GetMeta("ramcode")
 		if strings.HasPrefix(ramCodeName, "ramcode") {
 			if section, ok := bi.sections[ramCodeName]; ok {
@@ -55,6 +76,25 @@ func symbolResolver(bi *BasmInstance) error {
 				return errors.New("ramcode section not found: " + ramCodeName)
 			}
 		}
+
+		// Ramcode alternatives
+		ramCodeAlts := strings.Split(cp.GetMeta("ramalternatives"), ":")
+		if len(ramCodeAlts) > 0 {
+			for _, ramCodeName := range ramCodeAlts {
+				if strings.HasPrefix(ramCodeName, "ramcode") {
+					if section, ok := bi.sections[ramCodeName]; ok {
+						name := ramCodeName[7:]
+						if err := bi.resolveSymbols(section, name); err != nil {
+							return err
+						}
+					} else {
+						return errors.New("ramcode section not found: " + ramCodeName)
+					}
+				}
+			}
+		}
+
+		// Romdata specified
 		romDataName := cp.GetMeta("romdata")
 		if strings.HasPrefix(romDataName, "romdata") {
 			if section, ok := bi.sections[romDataName]; ok {
@@ -66,6 +106,25 @@ func symbolResolver(bi *BasmInstance) error {
 				return errors.New("romdata section not found: " + romDataName)
 			}
 		}
+
+		// Romdata alternatives
+		romDataAlts := strings.Split(cp.GetMeta("romdataalternatives"), ":")
+		if len(romDataAlts) > 0 {
+			for _, romDataName := range romDataAlts {
+				if strings.HasPrefix(romDataName, "romdata") {
+					if section, ok := bi.sections[romDataName]; ok {
+						name := romDataName[7:]
+						if err := bi.resolveSymbols(section, name); err != nil {
+							return err
+						}
+					} else {
+						return errors.New("romdata section not found: " + romDataName)
+					}
+				}
+			}
+		}
+
+		// Ramdata specified
 		ramDataName := cp.GetMeta("ramdata")
 		if strings.HasPrefix(ramDataName, "ramdata") {
 			if section, ok := bi.sections[ramDataName]; ok {
@@ -75,6 +134,23 @@ func symbolResolver(bi *BasmInstance) error {
 				}
 			} else {
 				return errors.New("ramdata section not found: " + ramDataName)
+			}
+		}
+
+		// Ramdata alternatives
+		ramDataAlts := strings.Split(cp.GetMeta("ramdataalternatives"), ":")
+		if len(ramDataAlts) > 0 {
+			for _, ramDataName := range ramDataAlts {
+				if strings.HasPrefix(ramDataName, "ramdata") {
+					if section, ok := bi.sections[ramDataName]; ok {
+						name := ramDataName[7:]
+						if err := bi.resolveSymbols(section, name); err != nil {
+							return err
+						}
+					} else {
+						return errors.New("ramdata section not found: " + ramDataName)
+					}
+				}
 			}
 		}
 	}

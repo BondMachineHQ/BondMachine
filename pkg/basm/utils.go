@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 )
 
 func purple(in ...interface{}) string {
@@ -79,27 +81,16 @@ func (bi *BasmInstance) Alert(logline ...interface{}) {
 
 func object2Bytes(obj string, numeric bool) ([]string, error) {
 	if numeric {
-		result := make([]string, 0)
-		if len(obj) > 2 {
-			if strings.HasPrefix(obj, "0x") {
-				// Hex
-				hexstring := obj[2:]
-				if len(obj)%2 == 1 {
-					hexstring = "0" + hexstring
-				}
-				for i := 0; i < len(hexstring); i = i + 2 {
-					result = append(result, "0x"+hexstring[i:i+2])
-				}
-				return result, nil
-			} else if obj[:2] == "0b" {
-				// TODO
-			} else if obj[:2] == "0d" {
-				// TODO
-			} else if obj[:2] == "0f" {
-				// TODO
+		if bmNumber, err := bmnumbers.ImportString(obj); err != nil {
+			return []string{}, err
+		} else {
+			b := bmNumber.GetBytes()
+			result := make([]string, len(b))
+			for i, ch := range b {
+				result[i] = fmt.Sprintf("0x%x", ch)
 			}
+			return result, nil
 		}
-		return []string{}, errors.New("Unknown number format " + obj)
 	} else {
 		result := make([]string, len(obj))
 		for i, ch := range obj {

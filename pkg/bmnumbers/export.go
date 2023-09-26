@@ -59,6 +59,34 @@ func (n *BMNumber) ExportBinary(withSize bool) (string, error) {
 	return result, nil
 }
 
+func (n *BMNumber) ExportBinaryNBits(bits int) (string, error) {
+	if n == nil || n.number == nil {
+		return "", errors.New("undefined number")
+	}
+
+	result := ""
+
+	for _, number := range n.number {
+		dataVal := "00000000" + strconv.FormatUint(uint64(number), 2)
+		result = dataVal[len(dataVal)-8:] + result
+	}
+
+	for len(result) > 1 && result[0] == '0' {
+		result = result[1:]
+	}
+
+	if len(result) > bits {
+		return "", errors.New("number too big for " + strconv.Itoa(bits) + " bits")
+	}
+
+	for len(result) < bits {
+		result = "0" + result
+	}
+
+	return result, nil
+
+}
+
 func (n *BMNumber) ExportVerilogBinary() (string, error) {
 	if n == nil || n.number == nil {
 		return "", errors.New("undefined number")

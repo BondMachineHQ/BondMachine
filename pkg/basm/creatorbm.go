@@ -256,10 +256,6 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 		if romData != "" {
 			wordSize := myArch.Max_word()
 			// fmt.Println("Word size: ", wordSize)
-			wordPad := ""
-			for i := 0; i < int(wordSize); i++ {
-				wordPad += "0"
-			}
 			if wordSize < 8 {
 				return errors.New("word size is too small")
 			}
@@ -270,11 +266,7 @@ func (bi *BasmInstance) assembler2NewBondMachine() error {
 				for _, arg := range line.Elements {
 					hexVal := arg.GetValue()
 					if n, err := bmnumbers.ImportString(hexVal); err == nil {
-						nS, _ := n.ExportBinary(false)
-						nS = "00000000" + nS
-						nS = nS[len(nS)-8:]
-						nS = nS + wordPad
-						nS = nS[:wordSize]
+						nS, _ := n.ExportBinaryNBits(int(wordSize))
 						data = append(data, nS)
 					} else {
 						return err
@@ -709,10 +701,6 @@ outer:
 	if romData != "" {
 		wordSize := myMachine.Max_word()
 		// fmt.Println("Word size: ", wordSize)
-		wordPad := ""
-		for i := 0; i < int(wordSize); i++ {
-			wordPad += "0"
-		}
 		if wordSize < 8 {
 			return nil, errors.New("word size is too small")
 		}
@@ -723,9 +711,7 @@ outer:
 			for _, arg := range line.Elements {
 				hexVal := arg.GetValue()
 				if n, err := bmnumbers.ImportString(hexVal); err == nil {
-					nS, _ := n.ExportBinary(false)
-					nS = nS + wordPad
-					nS = nS[len(nS)-int(wordSize):]
+					nS, _ := n.ExportBinaryNBits(int(wordSize))
 					data = append(data, nS)
 				} else {
 					return nil, err
@@ -738,10 +724,6 @@ outer:
 
 	if ramData != "" {
 		rSize := myArch.Rsize
-		ramPad := ""
-		for i := 0; i < int(rSize); i++ {
-			ramPad += "0"
-		}
 		if rSize < 8 {
 			return nil, errors.New("register size is too small")
 		}
@@ -752,9 +734,7 @@ outer:
 			for _, arg := range line.Elements {
 				hexVal := arg.GetValue()
 				if n, err := bmnumbers.ImportString(hexVal); err == nil {
-					nS, _ := n.ExportBinary(false)
-					nS = nS + ramPad
-					nS = nS[len(nS)-int(rSize):]
+					nS, _ := n.ExportBinaryNBits(int(rSize))
 					data = append(data, nS)
 				} else {
 					return nil, err
@@ -892,10 +872,6 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 					wordSize := myArch.Max_word()
 
 					// fmt.Println("Word size: ", wordSize)
-					wordPad := ""
-					for i := 0; i < int(wordSize); i++ {
-						wordPad += "0"
-					}
 					if wordSize < 8 {
 						return errors.New("word size is too small")
 					}
@@ -906,11 +882,7 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 						for _, arg := range line.Elements {
 							hexVal := arg.GetValue()
 							if n, err := bmnumbers.ImportString(hexVal); err == nil {
-								nS, _ := n.ExportBinary(false)
-								nS = "00000000" + nS
-								nS = nS[len(nS)-8:]
-								nS = nS + wordPad
-								nS = nS[:wordSize]
+								nS, _ := n.ExportBinaryNBits(int(wordSize))
 								data = append(data, nS)
 							} else {
 								return err

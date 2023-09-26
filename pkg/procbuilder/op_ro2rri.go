@@ -61,8 +61,8 @@ func (op Ro2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, 
 	regNum := 1 << arch.R
 	rSize := int(arch.Rsize)
 
-	// If the WORD size is bigger than the register size, we need to slice the ROM value (that is right padded with zeros)
-	sliceROM := "romread_value[" + strconv.Itoa(romWord-1) + ":" + strconv.Itoa(romWord-rSize) + "]"
+	// If the WORD size is bigger than the register size, we need to slice the ROM value (that is left padded with zeros)
+	sliceROM := "romread_value[" + strconv.Itoa(int(arch.Rsize)-1) + ":0]"
 	sliceReg := "[" + strconv.Itoa(int(arch.Rsize)-1) + ":0]"
 
 	// If the register size is bigger than the WORD size, we need to add zeros to the ROM value

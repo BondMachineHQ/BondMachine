@@ -1,0 +1,18 @@
+; Compare a string rom/ram
+; r0 pointer to the buffer beginning (es: mov r0, ram:buff)
+; r1 pointer to the ROM string
+; r2 is the lenght
+%fragment comparestring
+	nop
+cmpchar:
+	mov	r3, ram:[r0]
+	mov	r4, rom:[r1]
+	cmpr	r3, r4
+	dec	r2
+	jz	r2, end
+	inc	r0
+	inc	r1
+	jcmp	cmpchar
+end:
+	nop
+%endfragment

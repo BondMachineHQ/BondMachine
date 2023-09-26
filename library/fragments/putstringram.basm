@@ -1,0 +1,15 @@
+; Ths function writes a string to the screen
+; r0: pointer to the null terminated string (es: mov r0, ram:message)
+; r1: x position within the screen (video textual memory vtm0)
+%fragment putstringram
+        nop
+putchar:
+        mov     r2, ram:[r0]
+        jz      r2, end
+        mov     vtm0:[r1], r2
+        inc     r0
+        inc     r1
+        j putchar
+end:
+        nop
+%endfragment
