@@ -244,18 +244,18 @@ func templateResolver(bi *BasmInstance) error {
 	}
 
 	// Remove all the templated sections
-	for sectionName, section := range bi.sections {
-		if section.sectionBody.GetMeta("template") == "true" {
-			delete(bi.sections, sectionName)
-		}
-	}
+	// for sectionName, section := range bi.sections {
+	// 	if section.sectionBody.GetMeta("template") == "true" {
+	// 		delete(bi.sections, sectionName)
+	// 	}
+	// }
 
-	// Remove all the templated fragments
-	for fragmentName, fragment := range bi.fragments {
-		if fragment.fragmentBody.GetMeta("template") == "true" {
-			delete(bi.fragments, fragmentName)
-		}
-	}
+	// // Remove all the templated fragments
+	// for fragmentName, fragment := range bi.fragments {
+	// 	if fragment.fragmentBody.GetMeta("template") == "true" {
+	// 		delete(bi.fragments, fragmentName)
+	// 	}
+	// }
 
 	return nil
 }

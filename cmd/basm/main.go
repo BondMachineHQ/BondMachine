@@ -165,12 +165,19 @@ func main() {
 	}
 
 	if *listPasses || *debug || *verbose {
-		fmt.Println("Selected passes:")
+		fmt.Println("Passes:")
 		pass := uint64(1)
 
 		for i := 1; pass != basm.LAST_PASS; i++ {
+			opt := basm.IsOptionalPass()[pass]
 			if bi.ActivePass(pass) {
-				fmt.Printf("  %02d: %s\n", i, mne[pass])
+				if opt {
+					fmt.Printf("  %02d: %s (optional)\n", i, mne[pass])
+				} else {
+					fmt.Printf("  %02d: %s\n", i, mne[pass])
+				}
+			} else {
+				fmt.Printf("  %02d: %s (optional, disabled)\n", i, mne[pass])
 			}
 			pass = pass << 1
 		}

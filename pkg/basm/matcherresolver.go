@@ -37,7 +37,6 @@ func mergeChoices(poss [][]string, level int) [][]string {
 }
 
 func matcherResolver(bi *BasmInstance) error {
-	//TODO finish this
 
 	if bi.debug {
 		fmt.Println(green("\tProcessing sections:"))
@@ -53,6 +52,13 @@ func matcherResolver(bi *BasmInstance) error {
 		if section.sectionType == sectRomText || section.sectionType == sectRamText {
 			if bi.debug {
 				fmt.Println(green("\t\tSection: ") + sectName)
+			}
+
+			if section.sectionBody.GetMeta("template") == "true" {
+				if bi.debug {
+					fmt.Println(green("\t\t\tTemplated section, skipping"))
+				}
+				continue
 			}
 
 			// Setup the map of alternatives sections based on the choices

@@ -44,6 +44,17 @@ func (line *BasmLine) String() string {
 	return result
 }
 
+func (line *BasmLine) Flat() string {
+	result := ""
+	if line == nil {
+		result = line.Operation.GetValue() + " "
+		for _, arg := range line.Elements {
+			result += arg.GetValue() + " "
+		}
+	}
+	return result
+}
+
 func (el *BasmElement) String() string {
 	result := ""
 	if el != nil {
@@ -53,6 +64,14 @@ func (el *BasmElement) String() string {
 		} else {
 			result += blue("[" + el.ListMeta() + "]")
 		}
+	}
+	return result
+}
+
+func (op *BasmElement) Flat() string {
+	result := ""
+	if op != nil {
+		result += op.string
 	}
 	return result
 }

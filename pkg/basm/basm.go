@@ -120,7 +120,8 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		passMemComposer |
 		passSectionCleaner |
 		passCallResolver |
-		passMacroResolver
+		passMacroResolver |
+		passTemplateFinalizer
 
 	bi.matchers = make([]*bmline.BasmLine, 0)
 	bi.dynMatchers = make([]*bmline.BasmLine, 0)

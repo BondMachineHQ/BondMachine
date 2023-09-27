@@ -137,6 +137,13 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 			fmt.Println(green("\t\tFragment: ")+fragName, fragment)
 		}
 
+		if fragment.fragmentBody.GetMeta("template") == "true" {
+			if bi.debug {
+				fmt.Println(green("\t\t\tFragment is templated, cannot be processed"))
+			}
+			continue
+		}
+
 		fBody := fragment.fragmentBody
 
 		resInS := fBody.GetMeta("resin")
