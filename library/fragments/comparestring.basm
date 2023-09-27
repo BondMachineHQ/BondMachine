@@ -16,3 +16,17 @@ cmpchar:
 end:
 	nop
 %endfragment
+
+; Docs (GitHub copilot generated)
+
+; The file comparestring.basm is a file containing assembly code written in the BASM language. 
+; The purpose of this code is to compare two strings, one stored in ROM and the other in RAM, and determine if they are equal.
+; The code defines a fragment called comparestring which takes three arguments: r0, r1, and r2.
+; r0 is a pointer to the beginning of the buffer in RAM,
+; r1 is a pointer to the beginning of the string in ROM, 
+; and r2 is the length of the string.
+; The code then uses a loop to compare each character of the two strings. 
+; It loads the current character from RAM into r3 and the current character from ROM into r4, and then compares them using the cmpr instruction. 
+; If the characters are not equal, the loop exits and the code jumps to the end label. 
+; If the characters are equal, the loop continues until all characters have been compared.
+; Once the loop has completed, the code reaches the end label and exits the comparestring fragment.
