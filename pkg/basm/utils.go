@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -214,19 +213,4 @@ func extractNumber(str string) (int, error) {
 
 	// Otherwise, return the last token as an integer
 	return strconv.Atoi(tokens[len(tokens)-1])
-}
-
-func isTemplate(s string) bool {
-	pattern := `{{[^{}]*}}`
-	regex := regexp.MustCompile(pattern)
-	matches := regex.FindAllString(s, -1)
-	return len(matches) > 0
-}
-
-func (f *BasmFragment) isTemplate() bool {
-	return isTemplate(f.fragmentBody.Flat())
-}
-
-func (s *BasmSection) isTemplate() bool {
-	return isTemplate(s.sectionBody.Flat())
 }

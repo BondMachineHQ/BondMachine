@@ -1,6 +1,8 @@
 package basm
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func templateFinalizer(bi *BasmInstance) error {
 
@@ -22,20 +24,12 @@ func templateFinalizer(bi *BasmInstance) error {
 				continue
 			}
 
-			// TODO: Implement this
+			body := section.sectionBody
+			params := make(map[string]string)
 
-			// body := section.sectionBody
-
-			// for _, line := range body.Lines {
-
-			// 	operation := line.Operation
-
-			// 	for _, arg := range line.Elements {
-
-			// 	}
-
-			// }
-
+			if err := bodyTemplateResolver(body, params); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

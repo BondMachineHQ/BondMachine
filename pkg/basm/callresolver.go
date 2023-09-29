@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
+	"golang.org/x/exp/maps"
 )
 
 // section entry points detection, the pass detects the symbol used as entry point of the section and sign it as metadata.
@@ -60,13 +61,28 @@ func callResolver(bi *BasmInstance) error {
 
 					// Check if the arg is a fragment
 					if _, ok := bi.fragments[arg.GetValue()]; ok {
+						fragName := arg.GetValue()
+
+						// TODO  handle start and end metadata
+
+						// Make a copy of the fragment body
+						fBody := bi.fragments[fragName].fragmentBody.Copy()
+
+						if isTemplate(fBody.Flat()) {
+							params := make(map[string]string)
+							maps.Copy(params, section.sectionBody.LoopMeta())
+							maps.Copy(params, line.LoopMeta())
+							if err := bodyTemplateResolver(fBody, params); err != nil {
+								return err
+							}
+						}
 						// Rewrite the call to a jump to the fragment
 						section.sectionBody.Lines[i].Operation.SetValue("call" + mod + stack)
 						arg.BasmMeta = arg.SetMeta("type", "symbol")
-						fragName := arg.GetValue()
-						// It has to be a new symbol, otherwise it would have been caught by the previous check
+
+						// It has to be a new symbol, otherwise it would have been caught by the previous checks
 						// Append the fragment to the newcode
-						for j, appLine := range bi.fragments[fragName].fragmentBody.Lines {
+						for j, appLine := range fBody.Lines {
 							newLine := appLine.Copy()
 							if j == 0 {
 								newLine.BasmMeta = newLine.SetMeta("symbol", fragName)

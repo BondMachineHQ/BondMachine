@@ -46,7 +46,7 @@ func (line *BasmLine) String() string {
 
 func (line *BasmLine) Flat() string {
 	result := ""
-	if line == nil {
+	if line != nil {
 		result = line.Operation.GetValue() + " "
 		for _, arg := range line.Elements {
 			result += arg.GetValue() + " "

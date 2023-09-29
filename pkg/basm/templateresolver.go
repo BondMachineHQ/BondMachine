@@ -5,83 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
 	"text/template"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 )
-
-type templateData struct {
-	Params  map[string]string
-	funcMap template.FuncMap
-}
-
-func createBasicTemplateData() *templateData {
-	result := new(templateData)
-	result.Params = make(map[string]string)
-	funcMap := template.FuncMap{
-		"inc": func(i int) int {
-			return i + 1
-		},
-		"incs": func(i string) string {
-			j, _ := strconv.Atoi(i)
-			return strconv.Itoa(j + 1)
-		},
-		"dec": func(i int) int {
-			return i - 1
-		},
-		"decs": func(i string) string {
-			j, _ := strconv.Atoi(i)
-			return strconv.Itoa(j - 1)
-		},
-		"add": func(i, j int) int {
-			return i + j
-		},
-		"adds": func(i, j string) string {
-			k, _ := strconv.Atoi(i)
-			l, _ := strconv.Atoi(j)
-			return strconv.Itoa(k + l)
-		},
-		"intRange": func(startS, endS string) []int {
-			start, _ := strconv.Atoi(startS)
-			end, _ := strconv.Atoi(endS)
-
-			n := end - start
-			result := make([]int, n)
-			for i := 0; i < n; i++ {
-				result[i] = start + i
-			}
-			return result
-		},
-		"atoi": func(s string) int {
-			i, _ := strconv.Atoi(s)
-			return i
-		},
-	}
-
-	result.funcMap = funcMap
-	return result
-}
-
-func (bi *BasmInstance) templateAutoMark() error {
-	// Set the template meta to true for all the sections and fragments that contains the template mark
-	for _, section := range bi.sections {
-		if section.isTemplate() {
-			section.sectionBody.BasmMeta = section.sectionBody.SetMeta("template", "true")
-		} else {
-			section.sectionBody.BasmMeta = section.sectionBody.SetMeta("template", "false")
-		}
-	}
-
-	for _, fragment := range bi.fragments {
-		if fragment.isTemplate() {
-			fragment.fragmentBody.BasmMeta = fragment.fragmentBody.SetMeta("template", "true")
-		} else {
-			fragment.fragmentBody.BasmMeta = fragment.fragmentBody.SetMeta("template", "false")
-		}
-	}
-	return nil
-}
 
 func templateResolver(bi *BasmInstance) error {
 
@@ -91,6 +18,9 @@ func templateResolver(bi *BasmInstance) error {
 
 	// Computing which CP needs a templated version of the code
 	sort.Sort(bmline.ByName(bi.cps))
+
+	sectionRem := make(map[string]struct{})
+	fragmentRem := make(map[string]struct{})
 
 	for _, cp := range bi.cps {
 
@@ -152,6 +82,7 @@ func templateResolver(bi *BasmInstance) error {
 				bi.sections[guessedName].sectionBody.SetMeta("template", "true")
 			} else {
 				bi.sections[guessedName].sectionBody.SetMeta("template", "false")
+				sectionRem[romCode] = struct{}{}
 			}
 
 			cp.SetMeta("romcode", guessedName)
@@ -228,6 +159,7 @@ func templateResolver(bi *BasmInstance) error {
 				bi.fragments[guessedName].fragmentBody.SetMeta("template", "true")
 			} else {
 				bi.fragments[guessedName].fragmentBody.SetMeta("template", "false")
+				fragmentRem[fragCode] = struct{}{}
 			}
 
 			fi.SetMeta("fragment", guessedName)
@@ -244,18 +176,14 @@ func templateResolver(bi *BasmInstance) error {
 	}
 
 	// Remove all the templated sections
-	// for sectionName, section := range bi.sections {
-	// 	if section.sectionBody.GetMeta("template") == "true" {
-	// 		delete(bi.sections, sectionName)
-	// 	}
-	// }
+	for sectionName := range sectionRem {
+		delete(bi.sections, sectionName)
+	}
 
-	// // Remove all the templated fragments
-	// for fragmentName, fragment := range bi.fragments {
-	// 	if fragment.fragmentBody.GetMeta("template") == "true" {
-	// 		delete(bi.fragments, fragmentName)
-	// 	}
-	// }
+	// Remove all the templated fragments
+	for fragmentName := range fragmentRem {
+		delete(bi.fragments, fragmentName)
+	}
 
 	return nil
 }

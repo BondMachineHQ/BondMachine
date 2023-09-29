@@ -2,11 +2,11 @@
 ; r0 pointer to the buffer beginning (es: mov r0, ram:buff)
 ; r1 pointer to the ROM string
 ; r2 is the lenght
-%fragment comparestring
+%fragment comparestring default_mem1:ram default_mem2:rom
 	nop
 cmpchar:
-	mov	r3, ram:[r0]
-	mov	r4, rom:[r1]
+	mov	r3, {{ .Params.mem1 }}:[r0]
+	mov	r4, {{ .Params.mem2 }}:[r1]
 	cmpr	r3, r4
 	dec	r2
 	jz	r2, end
