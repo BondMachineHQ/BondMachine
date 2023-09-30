@@ -3,6 +3,7 @@ package basm
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 func symbolTagger(bi *BasmInstance) error {
@@ -25,17 +26,19 @@ func symbolTagger(bi *BasmInstance) error {
 				symbolPrefix = "ram." + sectName + "."
 			}
 
-			// Map all the symbols
-			symbols := make(map[string]struct{})
+			// Map all the symbolList
+			symbolList := make(map[string]struct{})
 
 			body := section.sectionBody
 			for i, line := range body.Lines {
-				if symbol := line.GetMeta("symbol"); symbol != "" {
-					if _, exists := symbols[symbol]; exists {
-						return errors.New("symbol is specified multiple time: " + symbol)
-					} else {
-						symbols[symbol] = struct{}{}
-						bi.symbols[symbolPrefix+symbol] = int64(i)
+				if symbols := line.GetMeta("symbol"); symbols != "" {
+					for _, symbol := range strings.Split(symbols, ":") {
+						if _, exists := symbolList[symbol]; exists {
+							return errors.New("symbol is specified multiple time: " + symbol)
+						} else {
+							symbolList[symbol] = struct{}{}
+							bi.symbols[symbolPrefix+symbol] = int64(i)
+						}
 					}
 				}
 			}
@@ -63,17 +66,19 @@ func symbolTagger(bi *BasmInstance) error {
 
 		symbolPrefix := "frag." + fragName + "."
 
-		// Map all the symbols
-		symbols := make(map[string]struct{})
+		// Map all the symbolList
+		symbolList := make(map[string]struct{})
 
 		body := fragment.fragmentBody
 		for i, line := range body.Lines {
-			if symbol := line.GetMeta("symbol"); symbol != "" {
-				if _, exists := symbols[symbol]; exists {
-					return errors.New("symbol is specified multiple time: " + symbol)
-				} else {
-					symbols[symbol] = struct{}{}
-					bi.symbols[symbolPrefix+symbol] = int64(i)
+			if symbols := line.GetMeta("symbol"); symbols != "" {
+				for _, symbol := range strings.Split(symbols, ":") {
+					if _, exists := symbolList[symbol]; exists {
+						return errors.New("symbol is specified multiple time: " + symbol)
+					} else {
+						symbolList[symbol] = struct{}{}
+						bi.symbols[symbolPrefix+symbol] = int64(i)
+					}
 				}
 			}
 		}
@@ -81,7 +86,7 @@ func symbolTagger(bi *BasmInstance) error {
 		for _, line := range body.Lines {
 
 			for _, arg := range line.Elements {
-				if _, ok := symbols[arg.GetValue()]; ok {
+				if _, ok := symbolList[arg.GetValue()]; ok {
 					arg.BasmMeta = arg.SetMeta("type", "symbol")
 				}
 			}

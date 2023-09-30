@@ -3,6 +3,7 @@ package basm
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"golang.org/x/exp/maps"
@@ -63,8 +64,6 @@ func callResolver(bi *BasmInstance) error {
 					if _, ok := bi.fragments[arg.GetValue()]; ok {
 						fragName := arg.GetValue()
 
-						// TODO  handle start and end metadata
-
 						// Make a copy of the fragment body
 						fBody := bi.fragments[fragName].fragmentBody.Copy()
 
@@ -85,11 +84,24 @@ func callResolver(bi *BasmInstance) error {
 						for j, appLine := range fBody.Lines {
 							newLine := appLine.Copy()
 							if j == 0 {
-								newLine.BasmMeta = newLine.SetMeta("symbol", fragName)
+								if symbols := newLine.GetMeta("symbol"); symbols != "" {
+									newSymbols := make([]string, len(strings.Split(symbols, ":"))+1)
+									for k, s := range strings.Split(symbols, ":") {
+										newSymbols[k] = fragName + s
+									}
+									newSymbols[len(newSymbols)-1] = fragName
+									newLine.BasmMeta = newLine.SetMeta("symbol", strings.Join(newSymbols, ":"))
+								} else {
+									newLine.BasmMeta = newLine.SetMeta("symbol", fragName)
+								}
 								bi.symbols[symbolPrefix+sectName+"."+fragName] = -1
 							} else {
-								if s := newLine.GetMeta("symbol"); s != "" {
-									newLine.BasmMeta = newLine.SetMeta("symbol", fragName+s)
+								if symbols := newLine.GetMeta("symbol"); symbols != "" {
+									newSymbols := make([]string, len(strings.Split(symbols, ":")))
+									for k, s := range strings.Split(symbols, ":") {
+										newSymbols[k] = fragName + s
+									}
+									newLine.BasmMeta = newLine.SetMeta("symbol", strings.Join(newSymbols, ":"))
 								}
 							}
 
@@ -99,7 +111,6 @@ func callResolver(bi *BasmInstance) error {
 								if _, ok := bi.symbols["frag."+fragName+"."+s]; ok {
 									el.SetValue(fragName + s)
 								}
-
 							}
 
 							newCode = append(newCode, newLine)

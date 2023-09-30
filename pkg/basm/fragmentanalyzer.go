@@ -240,15 +240,17 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 		// use the symbol.
 		// This will only work with symbols, not with numbers. For this reason, it will execute after symboltagger and before symbolresolver.
 
-		// Map all the symbols
-		symbols := make(map[string]int)
+		// Map all the symbolList
+		symbolList := make(map[string]int)
 
 		for i, line := range fBody.Lines {
-			if symbol := line.GetMeta("symbol"); symbol != "" {
-				if _, exists := symbols[symbol]; exists {
-					return errors.New("symbol is specified multiple time: " + symbol)
-				} else {
-					symbols[symbol] = i
+			if symbols := line.GetMeta("symbol"); symbols != "" {
+				for _, symbol := range strings.Split(symbols, ":") {
+					if _, exists := symbolList[symbol]; exists {
+						return errors.New("symbol is specified multiple time: " + symbol)
+					} else {
+						symbolList[symbol] = i
+					}
 				}
 			}
 		}
@@ -261,7 +263,7 @@ func fragmentAnalyzer(bi *BasmInstance) error {
 				if bmline.MatchMatcher(matcher, line) {
 					// TODO Handling the operand
 					for _, arg := range line.Elements {
-						if j, ok := symbols[arg.GetValue()]; ok {
+						if j, ok := symbolList[arg.GetValue()]; ok {
 							fmt.Println("the branch is at line", i, "and the symbol is at line", j)
 
 							if i > j {

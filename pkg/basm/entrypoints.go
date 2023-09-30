@@ -3,6 +3,7 @@ package basm
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // section entry points detection, the pass detects the symbol used as entry point of the section and sign it as metadata.
@@ -51,19 +52,23 @@ func entryPoints(bi *BasmInstance) error {
 				}
 
 				if checkEntry {
-					if symbol := line.GetMeta("symbol"); symbol != "" {
-						if symbol == checkSymbol {
-							if checkExistence {
-								return errors.New("multiple entry points detected")
-							} else {
-								checkExistence = true
-								checkPosition = i - 1
+					if symbols := line.GetMeta("symbol"); symbols != "" {
+						for _, symbol := range strings.Split(symbols, ":") {
+							if symbol == checkSymbol {
+								if checkExistence {
+									return errors.New("multiple entry points detected")
+								} else {
+									checkExistence = true
+									checkPosition = i - 1
+								}
 							}
 						}
 					}
 				} else {
-					if symbol := line.GetMeta("symbol"); symbol != "" {
-						prevSymbols = append(prevSymbols, symbol)
+					if symbols := line.GetMeta("symbol"); symbols != "" {
+						for _, symbol := range strings.Split(symbols, ":") {
+							prevSymbols = append(prevSymbols, symbol)
+						}
 					}
 				}
 			}
@@ -94,10 +99,12 @@ func entryPoints(bi *BasmInstance) error {
 
 			if checkPosition < 0 {
 				for i, line := range body.Lines {
-					if symbol := line.GetMeta("symbol"); symbol != "" {
-						if symbol == checkSymbol {
-							checkPosition = i
-							break
+					if symbols := line.GetMeta("symbol"); symbols != "" {
+						for _, symbol := range strings.Split(symbols, ":") {
+							if symbol == checkSymbol {
+								checkPosition = i
+								break
+							}
 						}
 					}
 				}

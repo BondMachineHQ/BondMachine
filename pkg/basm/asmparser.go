@@ -255,12 +255,16 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 				if bi.isWithinMacro != "" || bi.isWithinSection != "" || bi.isWithinFragment != "" || bi.isWithinChunk != "" {
 					// Processing symbols
 					if strings.HasSuffix(operand, ":") {
-						if bi.isSymbolled != "" {
-							return errors.New(line + ", Multiple symbol")
-						}
 						newSymbol := strings.TrimSuffix(operand, ":")
+						if bi.isSymbolled != "" {
+							newSymbol += ":" + bi.isSymbolled
+						}
 						bi.isSymbolled = newSymbol
-						bi.lineMeta = strings.Join(argS[1:], "")
+						if bi.lineMeta != "" {
+							bi.lineMeta += "," + strings.Join(argS[1:], "")
+						} else {
+							bi.lineMeta = strings.Join(argS[1:], "")
+						}
 						if bi.debug {
 							fmt.Print(yellow(" --> Symbol set"))
 						}
