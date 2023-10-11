@@ -122,7 +122,7 @@ func (op Rsets) Simulate(vm *VM, instr string) error {
 	// TODO: check
 	reg_bits := vm.Mach.R
 	reg := get_id(instr[:reg_bits])
-	memVal := get_id(instr[reg_bits : reg_bits+vm.Mach.Rsize])
+	memVal := get_id(instr[reg_bits : reg_bits+uint8(op.s)])
 	if vm.Mach.Rsize <= 8 {
 		vm.Registers[reg] = uint8(memVal)
 	} else if vm.Mach.Rsize <= 16 {

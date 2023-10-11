@@ -2,7 +2,6 @@ package basm
 
 import (
 	"bytes"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -130,7 +129,7 @@ func applyTemplate(e *bmline.BasmElement, params map[string]string) error {
 
 	e.SetValue(f.String())
 
-	fmt.Println(params)
+	// fmt.Println(params)
 
 	return nil
 }

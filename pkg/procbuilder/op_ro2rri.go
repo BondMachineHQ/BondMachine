@@ -179,39 +179,41 @@ func (op Ro2rri) Simulate(vm *VM, instr string) error {
 	regSrc := get_id(instr[regBits : regBits*2])
 	sliceSize := int(vm.Mach.Rsize)
 	rSize := int(vm.Mach.Rsize)
+	wordSize := len(vm.Mach.Program.Slocs[0])
+	slocsLen := len(vm.Mach.Program.Slocs)
 
 	// The slice size is the minimum between the register size and the word size
-	if sliceSize > len(vm.Mach.Program.Slocs[0]) {
-		sliceSize = len(vm.Mach.Program.Slocs[0])
+	if sliceSize > wordSize {
+		sliceSize = wordSize
 	}
 
 	if rSize <= 8 {
 		loc := int(vm.Registers[regSrc].(uint8))
-		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint8(get_id(vm.Mach.Program.Slocs[loc][0:sliceSize]))
+		if loc < slocsLen {
+			vm.Registers[regDest] = uint8(get_id(vm.Mach.Program.Slocs[loc][wordSize-sliceSize : wordSize]))
 		} else {
-			vm.Registers[regDest] = uint8(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:sliceSize]))
+			vm.Registers[regDest] = uint8(get_id(vm.Mach.Data.Vars[loc-slocsLen][wordSize-sliceSize : wordSize]))
 		}
 	} else if rSize <= 16 {
 		loc := int(vm.Registers[regSrc].(uint16))
-		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint16(get_id(vm.Mach.Program.Slocs[loc][0:sliceSize]))
+		if loc < slocsLen {
+			vm.Registers[regDest] = uint16(get_id(vm.Mach.Program.Slocs[loc][wordSize-sliceSize : wordSize]))
 		} else {
-			vm.Registers[regDest] = uint16(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:sliceSize]))
+			vm.Registers[regDest] = uint16(get_id(vm.Mach.Data.Vars[loc-slocsLen][wordSize-sliceSize : wordSize]))
 		}
 	} else if rSize <= 32 {
 		loc := int(vm.Registers[regSrc].(uint32))
-		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint32(get_id(vm.Mach.Program.Slocs[loc][0:sliceSize]))
+		if loc < slocsLen {
+			vm.Registers[regDest] = uint32(get_id(vm.Mach.Program.Slocs[loc][wordSize-sliceSize : wordSize]))
 		} else {
-			vm.Registers[regDest] = uint32(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:sliceSize]))
+			vm.Registers[regDest] = uint32(get_id(vm.Mach.Data.Vars[loc-slocsLen][wordSize-sliceSize : wordSize]))
 		}
 	} else if rSize <= 64 {
 		loc := int(vm.Registers[regSrc].(uint64))
-		if loc < len(vm.Mach.Program.Slocs) {
-			vm.Registers[regDest] = uint64(get_id(vm.Mach.Program.Slocs[loc][0:sliceSize]))
+		if loc < slocsLen {
+			vm.Registers[regDest] = uint64(get_id(vm.Mach.Program.Slocs[loc][wordSize-sliceSize : wordSize]))
 		} else {
-			vm.Registers[regDest] = uint64(get_id(vm.Mach.Data.Vars[loc-len(vm.Mach.Program.Slocs)][0:sliceSize]))
+			vm.Registers[regDest] = uint64(get_id(vm.Mach.Data.Vars[loc-slocsLen][wordSize-sliceSize : wordSize]))
 		}
 	} else {
 		return errors.New("invalid register size, must be <= 64")
