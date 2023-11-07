@@ -314,7 +314,7 @@ func (op FixedPoint) Op_instruction_verilog_extra_modules(arch *Arch, flavor str
 	result += "output_z);\n"
 	result += "	input signed    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input_a;\n"
 	result += "	input signed    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input_b;\n"
-	result += "	output signed   [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] output_z;\n"
+	result += "	output signed   [" + strconv.Itoa(int(arch.Rsize)*2-1) + ":0] output_z;\n"
 	result += "\n"
 
 	switch op.opType {
@@ -322,9 +322,7 @@ func (op FixedPoint) Op_instruction_verilog_extra_modules(arch *Arch, flavor str
 		result += "	assign output_z = input_a + input_b;\n"
 		moduleName = "adder"
 	case LQMULT:
-		result += "	wire signed [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] mult_result;\n"
-		result += "	assign mult_result = input_a * input_b;\n"
-		result += "	assign output_z = (mult_result[" + s + "]) ? (mult_result >>> " + f + ") : (mult_result >> " + f + ");\n"
+		result += " assign output_z = (input_a[" + s + "] || input_b[" + s + "]) ? ((input_a * input_b) >>> " + f + ") : ((input_a * input_b) >> " + f + ");\n"
 		moduleName = "multiplier"
 	case LQDIV:
 		result += "	assign output_z = (input_a[" + s + "] ^ input_b[" + s + "]) ? -((((input_a[" + s + "] ? -input_a : input_a) <<< " + f + ") / (input_b[" + s + "] ? -input_b : input_b))) : ((input_a <<< " + f + ") / input_b);\n"

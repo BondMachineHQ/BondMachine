@@ -120,6 +120,20 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 		axiStData.ModuleName = "bmaccelerator"
 		axiStData.InputNum = bmach.Inputs
 		axiStData.OutputNum = bmach.Outputs
+		axiStData.funcmap = template.FuncMap{
+			"inc": func(i int) int {
+				return i + 1
+			},
+			"dec": func(i int) int {
+				return i - 1
+			},
+			"add": func(i, j int) int {
+				return i + j
+			},
+			"sub": func(i, j int) int {
+				return i - j
+			},
+		}
 
 		// This fields are temporarely hardcoded, in the future could be get from the command line
 		axiStData.Samples = 16

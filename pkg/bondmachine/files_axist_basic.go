@@ -405,12 +405,6 @@ const (
 				{{- end }}
 				{{- end }}
 
-				outputs_counter_pointer <= outputs_counter_pointer + bmoutputs;
-                outputs_counter_incr <= outputs_counter_incr + 1;
-                outputs_counter <= bminputs*(outputs_counter_incr+1);
-				
-				send <= 2'b00;
-
 			end
 			else if(
 				{{- if .Outputs }}
@@ -430,6 +424,11 @@ const (
 					{{ . }}_received_r <= 1'b0;
 				{{- end }}
 				{{- end }}
+					outputs_counter_pointer <= outputs_counter_pointer + bmoutputs;
+					outputs_counter_incr <= outputs_counter_incr + 1;
+					outputs_counter <= bminputs*(outputs_counter_incr+1);
+					
+					send <= 2'b00;
 			end
 			end
 			end
