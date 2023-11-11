@@ -15,6 +15,7 @@ func (op Clc) Op_get_name() string {
 	return "clc"
 }
 
+// Op_get_desc returns the description of the Clc operation which is "Clear carry-bit".
 func (op Clc) Op_get_desc() string {
 	return "Clear carry-bit"
 }
