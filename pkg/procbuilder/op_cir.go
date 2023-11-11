@@ -112,8 +112,12 @@ func (op Cir) Simulate(vm *VM, instr string) error {
 		vm.Registers[regdest] = vm.Registers[regsrc].(uint8) >> 1
 	case 16:
 		vm.Registers[regdest] = vm.Registers[regsrc].(uint16) >> 1
+	case 32:
+		vm.Registers[regdest] = vm.Registers[regsrc].(uint32) >> 1
+	case 64:
+		vm.Registers[regdest] = vm.Registers[regsrc].(uint64) >> 1
 	default:
-		// TODO Fix
+		return errors.New("Wrong register size")
 	}
 	vm.Pc = vm.Pc + 1
 	return nil
