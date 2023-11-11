@@ -1,0 +1,20 @@
+; Ths reads a string from the keyboard
+; in  r0 pointer to the buffer beginning (es: mov r0, ram:buff)
+; in  r1 pointer to the screen position (es: mov r1, vtm0:pos)
+; out r2 lenght
+%fragment read default_mem:ram default_out:vtm0
+        rsets8 	r2, 0
+	rsets8	r3, 13
+getchar:
+	i2rw	r4, i0
+	cmpr	r4, r3
+	jcmp	end
+        mov     {{ .Params.out }}:[r1], r4
+	mov	{{ .Params.mem }}:[r0], r4
+        inc     r0
+	inc     r1
+        inc     r2
+        j getchar
+end:
+	nop
+%endfragment
