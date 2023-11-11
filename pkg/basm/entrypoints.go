@@ -86,7 +86,7 @@ func entryPoints(bi *BasmInstance) error {
 			body.Lines[len(body.Lines)-1] = nil
 			body.Lines = body.Lines[:len(body.Lines)-1]
 
-			body.Lines[0].BasmMeta = body.Lines[0].SetMeta("symbol", checkSymbol)
+			// body.Lines[0].BasmMeta = body.Lines[0].SetMeta("symbol", checkSymbol)
 
 			// Removing the line means that symbols are shifted, so we need to correct the symbol correction
 			// if body.GetMeta("symbcorrection") != "" {
