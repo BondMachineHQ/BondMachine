@@ -125,7 +125,7 @@ func (op R2m) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 func (op R2m) Assembler(arch *Arch, words []string) (string, error) {
 	opbits := arch.Opcodes_bits()
 	rom_word := arch.Max_word()
-	ramdepth := int(arch.L)
+	ramDepth := int(arch.L)
 
 	reg_num := 1 << arch.R
 
@@ -146,12 +146,12 @@ func (op R2m) Assembler(arch *Arch, words []string) (string, error) {
 	}
 
 	if partial, err := Process_number(words[1]); err == nil {
-		result += zeros_prefix(ramdepth, partial)
+		result += zeros_prefix(ramDepth, partial)
 	} else {
 		return "", Prerror{err.Error()}
 	}
 
-	for i := opbits + int(arch.R) + ramdepth; i < rom_word; i++ {
+	for i := opbits + int(arch.R) + ramDepth; i < rom_word; i++ {
 		result += "0"
 	}
 
@@ -159,10 +159,10 @@ func (op R2m) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op R2m) Disassembler(arch *Arch, instr string) (string, error) {
-	ramdepth := int(arch.L)
+	ramDepth := int(arch.L)
 	reg_id := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(reg_id)) + " "
-	value := get_id(instr[arch.R : int(arch.R)+ramdepth])
+	value := get_id(instr[arch.R : int(arch.R)+ramDepth])
 	result += strconv.Itoa(value)
 	return result, nil
 }
@@ -226,7 +226,9 @@ func (Op R2m) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 func (Op R2m) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
 	result = append(result, "r2m::*--type=reg::*--type=ram--ramaddressing=immediate")
+	result = append(result, "r2m::*--type=reg::*--type=ram--ramaddressing=symbol")
 	result = append(result, "mov::*--type=ram--ramaddressing=immediate::*--type=reg")
+	result = append(result, "mov::*--type=ram--ramaddressing=symbol::*--type=reg")
 	return result
 }
 func (Op R2m) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
@@ -237,24 +239,53 @@ func (Op R2m) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 		return line, nil
 	case "mov":
 		regVal := line.Elements[1].GetValue()
-		location := line.Elements[0].GetMeta("location")
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		if regVal != "" && location != "" {
-			newLine := new(bmline.BasmLine)
-			newOp := new(bmline.BasmElement)
-			newOp.SetValue("r2m")
-			newLine.Operation = newOp
-			newArgs := make([]*bmline.BasmElement, 2)
-			newArg0 := new(bmline.BasmElement)
-			newArg0.BasmMeta = newArg0.SetMeta("type", "reg")
-			newArg0.SetValue(regVal)
-			newArgs[0] = newArg0
-			newArg1 := new(bmline.BasmElement)
-			newArg1.SetValue(location)
-			newArg1.BasmMeta = newArg1.SetMeta("type", "number")
-			newArgs[1] = newArg1
-			newLine.Elements = newArgs
-			return newLine, nil
+		addressing := line.Elements[0].GetMeta("ramaddressing")
+		switch addressing {
+		case "immediate":
+			location := line.Elements[0].GetMeta("location")
+			rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
+			if regVal != "" && location != "" {
+				newLine := new(bmline.BasmLine)
+				newOp := new(bmline.BasmElement)
+				newOp.SetValue("r2m")
+				newLine.Operation = newOp
+				newArgs := make([]*bmline.BasmElement, 2)
+				newArg0 := new(bmline.BasmElement)
+				newArg0.BasmMeta = newArg0.SetMeta("type", "reg")
+				newArg0.SetValue(regVal)
+				newArgs[0] = newArg0
+				newArg1 := new(bmline.BasmElement)
+				newArg1.SetValue(location)
+				newArg1.BasmMeta = newArg1.SetMeta("type", "number")
+				newArgs[1] = newArg1
+				newLine.Elements = newArgs
+				return newLine, nil
+			}
+		case "symbol":
+			// The mov is a r2m, the symbol is kept unchanged because it will be resolved by the symbol resolver
+			symbol := line.Elements[0].GetMeta("symbol")
+			rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
+			if regVal != "" && symbol != "" {
+				newLine := new(bmline.BasmLine)
+				newOp := new(bmline.BasmElement)
+				newOp.SetValue("r2m")
+				newLine.Operation = newOp
+				newArgs := make([]*bmline.BasmElement, 2)
+				newArg0 := new(bmline.BasmElement)
+				newArg0.BasmMeta = newArg0.SetMeta("type", "reg")
+				newArg0.SetValue(regVal)
+				newArgs[0] = newArg0
+				newArg1 := new(bmline.BasmElement)
+				newArg1.SetValue(symbol)
+				newArg1.BasmMeta = newArg1.SetMeta("type", "ram")
+				newArg1.BasmMeta = newArg1.SetMeta("ramaddressing", "symbol")
+				newArg1.BasmMeta = newArg1.SetMeta("symbol", symbol)
+				newArgs[1] = newArg1
+				newLine.Elements = newArgs
+				return newLine, nil
+			}
+		default:
+			return nil, errors.New("unknown addressing mode")
 		}
 	}
 	return nil, errors.New("HL Assembly normalize failed")
