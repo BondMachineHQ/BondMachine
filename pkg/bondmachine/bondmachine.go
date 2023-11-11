@@ -37,6 +37,7 @@ func init() {
 	Allshared = append(Allshared, Queue{})
 	Allshared = append(Allshared, Stack{})
 	Allshared = append(Allshared, Uart{})
+	Allshared = append(Allshared, Kbd{})
 }
 
 func (e Prerror) Error() string {
