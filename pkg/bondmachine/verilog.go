@@ -169,7 +169,8 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 				_, err = f.WriteString(bmach.Write_verilog_testbench("bondmachine", flavor, iomaps, extramods, sbox))
 				check(err)
 			}
-		case "basys3", "kc705", "zedboard", "ebaz4205", "zc702", "ice40lp1k", "icefun", "icebreaker", "de10nano", "max1000", "icesugarnano":
+		case "alveou50", "basys3", "kc705", "zedboard", "ebaz4205", "zc702", "ice40lp1k", "icefun", "icebreaker", "de10nano", "max1000", "icesugarnano":
+
 			// Create the board file only if it doesn't belong to an AXIStream accelerator
 			if !bmapiModuleAXIStream {
 				if _, err := os.Stat("bondmachine_main.v"); os.IsNotExist(err) {
@@ -2024,7 +2025,7 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 
 	switch flavor {
 
-	case "basys3", "kc705", "zedboard", "ebaz4205", "icebreaker", "icefun", "icesugarnano", "max1000", "de10nano", "zc702", "ice40lp1k":
+	case "alveou50", "basys3", "kc705", "zedboard", "ebaz4205", "icebreaker", "icefun", "icesugarnano", "max1000", "de10nano", "zc702", "ice40lp1k":
 
 		for _, iores := range resolved_io {
 

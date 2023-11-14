@@ -187,32 +187,83 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 			}
 		}
 
-		vFiles := make(map[string]string)
-		if bmapiFlavorVersion == "basic" {
-			vFiles["axistream.v"] = basicAXIStream
-		} else if bmapiFlavorVersion == "optimized" {
-			vFiles["axistream.v"] = optimizedAXIStream
-		} else {
-			return errors.New("unknown AXI Stream flavor version")
-		}
-
-		for file, temp := range vFiles {
-			t, err := template.New(file).Funcs(axiStData.funcmap).Parse(temp)
-			if err != nil {
-				return err
+		switch flavor {
+		case "alveou50":
+			// This is the generation of the directory for the kernel project
+			if _, err := os.Stat(bmapiModOutDir); os.IsNotExist(err) {
+				os.Mkdir(bmapiModOutDir, 0700)
+				os.Mkdir(bmapiModOutDir+"/src", 0700)
+				os.Mkdir(bmapiModOutDir+"/src/krnl_bondmachine", 0700)
+				os.Mkdir(bmapiModOutDir+"/src/krnl_bondmachine/hdl", 0700)
+			} else {
+				return errors.New("BMAPI modoutdir already exists")
+			}
+			// Adding the files to the project
+			vFiles := make(map[string]string)
+			vFiles["krnl_bondmachine_rtl.v"] = krnlBondmachineRTL
+			vFiles["krnl_bondmachine_rtl_axi_read_master.sv"] = krnlBondmachineRTLAxiReadMaster
+			vFiles["krnl_bondmachine_rtl_axi_write_master.sv"] = krnlBondmachineRTLAxiWriteMaster
+			vFiles["krnl_bondmachine_rtl_caller.sv"] = krnlBondmachineRTLCaller
+			vFiles["krnl_bondmachine_rtl_control_s_axi.v"] = krnlBondmachineRTLControlSAxi
+			vFiles["krnl_bondmachine_rtl_counter.sv"] = krnlBondmachineRTLCounter
+			vFiles["krnl_bondmachine_rtl_int.sv"] = krnlBondmachineRTLInt
+			if bmapiFlavorVersion == "basic" {
+				vFiles["bmaccelerator_v1_0.v"] = basicAXIStream
+			} else if bmapiFlavorVersion == "optimized" {
+				vFiles["bmaccelerator_v1_0.v"] = optimizedAXIStream
+			} else {
+				return errors.New("unknown AXI Stream flavor version")
 			}
 
-			f, err := os.Create(file)
-			if err != nil {
-				return err
+			for file, temp := range vFiles {
+				t, err := template.New(file).Funcs(axiStData.funcmap).Parse(temp)
+				if err != nil {
+					return err
+				}
+
+				f, err := os.Create(bmapiModOutDir + "/src/krnl_bondmachine/hdl/" + file)
+				if err != nil {
+					return err
+				}
+
+				err = t.Execute(f, axiStData)
+				if err != nil {
+					return err
+				}
+
+				f.Close()
 			}
 
-			err = t.Execute(f, axiStData)
-			if err != nil {
-				return err
+		case "zedboard", "ebaz4205", "zc702":
+			vFiles := make(map[string]string)
+			if bmapiFlavorVersion == "basic" {
+				vFiles["axistream.v"] = basicAXIStream
+			} else if bmapiFlavorVersion == "optimized" {
+				vFiles["axistream.v"] = optimizedAXIStream
+			} else {
+				return errors.New("unknown AXI Stream flavor version")
 			}
 
-			f.Close()
+			for file, temp := range vFiles {
+				t, err := template.New(file).Funcs(axiStData.funcmap).Parse(temp)
+				if err != nil {
+					return err
+				}
+
+				f, err := os.Create(file)
+				if err != nil {
+					return err
+				}
+
+				err = t.Execute(f, axiStData)
+				if err != nil {
+					return err
+				}
+
+				f.Close()
+			}
+		default:
+			return errors.New("unknown board")
 		}
 
 		switch bmapiLanguage {
