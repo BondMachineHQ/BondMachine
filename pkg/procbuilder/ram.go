@@ -35,7 +35,7 @@ func (ram *Ram) Write_verilog(conf *Config, mach *Machine, ram_module_name strin
 	result += "\n"
 	result += "	reg [" + strconv.Itoa(int(mach.Rsize)-1) + ":0] dout_i;\n"
 	result += "\n"
-	if conf.BCOFEntry != nil {
+	if conf != nil && conf.BCOFEntry != nil {
 		data := conf.BCOFEntry.SearchData("cp" + mach.Arch.Tag)
 
 		// Compute the register size padded to 8 bit multiples (the BCOF format requires bytes)
