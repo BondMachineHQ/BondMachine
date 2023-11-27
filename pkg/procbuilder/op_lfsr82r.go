@@ -218,17 +218,46 @@ func (Op Lfsr82r) Op_instruction_verilog_extra_block(arch *Arch, flavor string, 
 	}
 	return result
 }
-func (Op Lfsr82r) HLAssemblerMatch(arch *Arch) []string {
-	result := make([]string, 0)
-	return result
-}
-func (Op Lfsr82r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
-	return nil, errors.New("HL Assembly normalize failed")
-}
 func (Op Lfsr82r) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
 }
-
+func (Op Lfsr82r) HLAssemblerMatch(arch *Arch) []string {
+	result := make([]string, 0)
+	result = append(result, "lfsr82r::*--type=reg::*--type=somov--sotype=lfsr8")
+	result = append(result, "mov::*--type=reg::*--type=somov--sotype=lfsr8")
+	return result
+}
+func (Op Lfsr82r) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+	switch line.Operation.GetValue() {
+	case "lfsr82r":
+		regNeed := line.Elements[0].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		return line, nil
+	case "mov":
+		regVal := line.Elements[0].GetValue()
+		inVal := line.Elements[1].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
+		if regVal != "" && inVal != "" {
+			newLine := new(bmline.BasmLine)
+			newOp := new(bmline.BasmElement)
+			newOp.SetValue("lfsr82r")
+			newLine.Operation = newOp
+			newArgs := make([]*bmline.BasmElement, 2)
+			newArg0 := new(bmline.BasmElement)
+			newArg0.BasmMeta = newArg0.SetMeta("type", "reg")
+			newArg0.SetValue(regVal)
+			newArgs[0] = newArg0
+			newArg1 := new(bmline.BasmElement)
+			newArg1.SetValue(inVal)
+			newArg1.BasmMeta = newArg1.SetMeta("type", "somov")
+			newArg1.BasmMeta = newArg1.SetMeta("sotype", "lfsr8")
+			newArgs[1] = newArg1
+			newLine.Elements = newArgs
+			return newLine, nil
+		}
+	}
+	return nil, errors.New("HL Assembly normalize failed")
+}
 func (Op Lfsr82r) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
 	return nil, nil
 }
