@@ -27,6 +27,7 @@ var execution_model = flag.String("execution-model", "ha", "Execution model: vn 
 var register_size = flag.Int("register-size", 8, "Number of bits per register (n-bit)")
 
 var enabledOpcodes = flag.String("opcodes", "nop", "Enabled opcodes")
+var listOpcodes = flag.Bool("list-opcodes", false, "List all opcodes")
 
 var rbit = flag.Int("registers", 3, "Number of n-bit registers 2^")
 var lbit = flag.Int("ram", 8, "Number of n-bit RAM memory cells 2^")
@@ -145,12 +146,18 @@ func main() {
 		//ep.Pars["procbuilder:n"] = strconv.Itoa(*nbit)
 		//ep.Pars["procbuilder:o"] = strconv.Itoa(*obit)
 
+		if *listOpcodes {
+			for _, op := range procbuilder.Allopcodes {
+				fmt.Println(op.Op_get_name())
+			}
+		}
+
 		// Processing enabled opcodes
 		if *inputAssembly != "" && *opcode_optimizer {
 			if _, err := os.Stat(*inputAssembly); err == nil {
-				if prog, err := ioutil.ReadFile(*inputAssembly); err == nil {
+				if prog, err := os.ReadFile(*inputAssembly); err == nil {
 
-					// TODO keep the opecodes ordered by name
+					// TODO keep the opcodes ordered by name
 					opcodes := make([]procbuilder.Opcode, 0)
 
 					curLine := make([]byte, 256)

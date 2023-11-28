@@ -84,9 +84,14 @@ localparam integer LP_LOG_BURST_LEN      = $clog2(LP_AXI_BURST_LEN);
 localparam integer LP_RD_MAX_OUTSTANDING = 3;
 localparam integer LP_RD_FIFO_DEPTH      = LP_AXI_BURST_LEN*(LP_RD_MAX_OUTSTANDING + 1);
 localparam integer LP_WR_FIFO_DEPTH      = LP_AXI_BURST_LEN;
+
+localparam precision = {{ $.Rsize }} ; // precision bit
 localparam samples = {{ .Samples }}; // number of samples that I expect from the client
 localparam bminputs = {{ .InputNum }};  // number of bminputs for each sample (or bminputs)
 localparam bmoutputs = {{ .OutputNum }}; // number of output for the classificationP
+
+localparam ctrl_len_input = (precision == 32) ?  samples * bminputs : (samples * bminputs)/2;
+localparam ctrl_len_output = (precision == 32) ?  samples * bmoutputs : (samples * bmoutputs)/2;
 
 logic areset = 1'b0;  
 logic ap_start;
@@ -205,7 +210,7 @@ inst_axi_read_master (
   .ctrl_start     ( ap_start_pulse         ) ,
   .ctrl_done      ( read_done              ) ,
   .ctrl_offset    ( {a}                  ) , 
-  .ctrl_length    ( samples * bminputs ) ,
+  .ctrl_length    ( ctrl_len_input ) ,
   .ctrl_prog_full ( ctrl_rd_fifo_prog_full ) ,
 
   .arvalid        ( m_axi_gmem_ARVALID     ) ,
@@ -340,7 +345,7 @@ inst_axi_write_master (
 
   .ctrl_start  ( ap_start_pulse     ) ,
   .ctrl_offset ( b                  ) ,
-  .ctrl_length ( samples * bmoutputs ) ,
+  .ctrl_length ( ctrl_len_output) ,
   .ctrl_done   ( ap_done            ) ,
 
   .awvalid     ( m_axi_gmem_AWVALID ) ,
