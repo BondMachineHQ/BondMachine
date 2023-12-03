@@ -1,0 +1,19 @@
+; This implements a simple sleep function
+; in  r0 pointer to the outer loop counter
+; in  r1 pointer to the inner loop counter
+; in  r2 pointer to the temp loop counter
+
+%fragment sleep default_outer:r0 default_inner:r1 default_temp:r2
+outerloop:
+jz	{{ .Params.outer }}, endouter	
+	mov	{{ .Params.temp }} , {{ .Params.inner }}
+	dec 	{{ .Params.outer }}
+innerloop:
+	jz	{{ .Params.temp }}, endinner
+	dec	{{ .Params.temp }}
+	jmp	innerloop
+endinner:
+	jmp	outerloop
+endouter:
+	nop
+%endfragment
