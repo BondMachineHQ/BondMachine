@@ -14,7 +14,9 @@ require (
 )
 
 require (
+	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71 // indirect
+	github.com/goccy/go-graphviz v0.1.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/josharian/native v1.1.0 // indirect
 	github.com/llir/ll v0.0.0-20220802044011-65001c0fb73c // indirect
@@ -23,6 +25,7 @@ require (
 	github.com/mewmew/float v0.0.0-20211212214546-4fe539893335 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/veandco/go-sdl2 v0.4.36 // indirect
+	github.com/yuin/gopher-lua v1.1.1 // indirect
 	golang.org/x/image v0.14.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
