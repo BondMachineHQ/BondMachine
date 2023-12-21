@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
+	"os"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
@@ -11,7 +12,7 @@ import (
 )
 
 var verbose = flag.Bool("v", false, "Verbose")
-var debug = flag.Bool("d", false, "Verbose")
+var debug = flag.Bool("d", false, "Debug")
 
 var registerSize = flag.Int("register-size", 32, "Number of bits per register (n-bit)")
 var dataType = flag.String("data-type", "float32", "bmnumbers data types")
@@ -61,11 +62,12 @@ func main() {
 		panic("Unknown operating mode")
 	}
 
+	// Create the config struct
 	config := new(neuralbond.Config)
 
 	// Load net from a JSON file the configuration
 	if *configFile != "" {
-		if netFileJSON, err := ioutil.ReadFile(*configFile); err == nil {
+		if netFileJSON, err := os.ReadFile(*configFile); err == nil {
 			if err := json.Unmarshal(netFileJSON, config); err != nil {
 				panic(err)
 			}
@@ -82,7 +84,7 @@ func main() {
 	config.BMinfo = new(bminfo.BMinfo)
 
 	if *bmInfoFile != "" {
-		if bmInfoJSON, err := ioutil.ReadFile(*bmInfoFile); err == nil {
+		if bmInfoJSON, err := os.ReadFile(*bmInfoFile); err == nil {
 			if err := json.Unmarshal(bmInfoJSON, config.BMinfo); err != nil {
 				panic(err)
 			}
@@ -166,7 +168,7 @@ func main() {
 
 	if *saveBasm != "" {
 		if basmFile, err := net.WriteBasm(); err == nil {
-			ioutil.WriteFile(*saveBasm, []byte(basmFile), 0644)
+			os.WriteFile(*saveBasm, []byte(basmFile), 0644)
 		} else {
 			panic(err)
 		}
@@ -175,7 +177,7 @@ func main() {
 	if *bmInfoFile != "" {
 		// Write the info file
 		if bmInfoFileJSON, err := json.MarshalIndent(config.BMinfo, "", "  "); err == nil {
-			ioutil.WriteFile(*bmInfoFile, bmInfoFileJSON, 0644)
+			os.WriteFile(*bmInfoFile, bmInfoFileJSON, 0644)
 		} else {
 			panic(err)
 		}
@@ -186,7 +188,7 @@ func main() {
 	if *configFile != "" {
 		// Write the eventually updated config file
 		if configFileJSON, err := json.MarshalIndent(config, "", "  "); err == nil {
-			ioutil.WriteFile(*configFile, configFileJSON, 0644)
+			os.WriteFile(*configFile, configFileJSON, 0644)
 		} else {
 			panic(err)
 		}
