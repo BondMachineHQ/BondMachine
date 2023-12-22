@@ -1,7 +1,11 @@
 package bmgraph
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
+	"github.com/goccy/go-graphviz/cgraph"
 )
 
 const (
@@ -24,4 +28,23 @@ type Config struct {
 
 type Neuron struct {
 	Params []string
+}
+
+type Graph struct {
+	*cgraph.Graph
+}
+
+func (g *Graph) WriteBasm() (string, error) {
+	if g == nil {
+		return "", errors.New("Graph is nil")
+	}
+
+	// Find out all the vertices
+	vertices := make(map[string]*cgraph.Node)
+	for n := g.FirstNode(); n != nil; n = g.NextNode(n) {
+		vertices[n.Name()] = n
+		fmt.Println(n.Name())
+	}
+
+	return "", nil
 }

@@ -107,7 +107,7 @@ func main() {
 	if *neuronLibPath != "" {
 		config.NeuronLibPath = *neuronLibPath
 	} else {
-		panic("No neuron library path specified")
+		// panic("No neuron library path specified")
 	}
 
 	if *dataType != "" {
@@ -152,13 +152,16 @@ func main() {
 		}
 	}
 
-	// if *saveBasm != "" {
-	// 	if basmFile, err := net.WriteBasm(); err == nil {
-	// 		os.WriteFile(*saveBasm, []byte(basmFile), 0644)
-	// 	} else {
-	// 		panic(err)
-	// 	}
-	// }
+	bg := new(bmgraph.Graph)
+	bg.Graph = graph
+
+	if *saveBasm != "" {
+		if basmFile, err := bg.WriteBasm(); err == nil {
+			os.WriteFile(*saveBasm, []byte(basmFile), 0644)
+		} else {
+			panic(err)
+		}
+	}
 
 	if *bmInfoFile != "" {
 		// Write the info file
