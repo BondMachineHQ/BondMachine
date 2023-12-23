@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"sort"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
@@ -70,13 +70,13 @@ func (n *TrainedNet) Init(config *Config) error {
 	n.Neurons = make(map[string]*Neuron)
 
 	// List nb files in the neuron library path and load them
-	neuronFiles, err := ioutil.ReadDir(n.NetConfig.NeuronLibPath)
+	neuronFiles, err := os.ReadDir(n.NetConfig.NeuronLibPath)
 	if err != nil {
 		return err
 	}
 	for _, f := range neuronFiles {
 		if len(f.Name()) > 3 && f.Name()[len(f.Name())-3:] == ".nb" {
-			neuronFile, err := ioutil.ReadFile(n.NetConfig.NeuronLibPath + "/" + f.Name())
+			neuronFile, err := os.ReadFile(n.NetConfig.NeuronLibPath + "/" + f.Name())
 			if err != nil {
 				return err
 			}

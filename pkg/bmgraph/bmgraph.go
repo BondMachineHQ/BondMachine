@@ -23,6 +23,7 @@ type Config struct {
 	Debug         bool
 	Verbose       bool
 	NeuronLibPath string
+	UseNilNeuron  bool
 	*bminfo.BMinfo
 }
 
@@ -31,7 +32,10 @@ type Neuron struct {
 }
 
 type Graph struct {
+	RegisterSize int
+	IOMode       uint8
 	*cgraph.Graph
+	*Config
 }
 
 func (g *Graph) WriteBasm() (string, error) {
@@ -39,8 +43,17 @@ func (g *Graph) WriteBasm() (string, error) {
 		return "", errors.New("Graph is nil")
 	}
 
+	config := g.Config
 	result := ""
 
+	regSize := g.RegisterSize
+	result += fmt.Sprintf("%%meta bmdef     global registersize:%d\n", regSize)
+	switch g.IOMode {
+	case ASYNC:
+		result += fmt.Sprintf("%%meta bmdef     global iomode:async\n")
+	case SYNC:
+		result += fmt.Sprintf("%%meta bmdef     global iomode:sync\n")
+	}
 	// Find out all the vertices
 	vertices := make(map[string]*cgraph.Node)
 	verticesInputs := make(map[string]int)
@@ -60,8 +73,8 @@ func (g *Graph) WriteBasm() (string, error) {
 				result += "%meta filinkdef " + src + "_" + dest + " type:fl\n"
 				destIdx := verticesInputs[dest]
 				srcIdx := verticesOutputs[src]
-				result += "%meta filinkatt " + src + "_" + dest + " fi:" + src + " type:output, index:" + fmt.Sprintf("%d", srcIdx) + "\n"
-				result += "%meta filinkatt " + src + "_" + dest + " fi:" + dest + " type:input, index:" + fmt.Sprintf("%d", destIdx) + "\n"
+				result += "%meta filinkatt " + src + "_" + dest + " fi:" + src + ", type:output, index:" + fmt.Sprintf("%d", srcIdx) + "\n"
+				result += "%meta filinkatt " + src + "_" + dest + " fi:" + dest + ", type:input, index:" + fmt.Sprintf("%d", destIdx) + "\n"
 				verticesInputs[dest]++
 				verticesOutputs[src]++
 
@@ -70,7 +83,15 @@ func (g *Graph) WriteBasm() (string, error) {
 	}
 
 	for _, v := range vertices {
-		result += "%meta fidef " + v.Name() + " fragment:" + v.Name() + " inputs:" + fmt.Sprintf("%d", verticesInputs[v.Name()]) + " outputs:" + fmt.Sprintf("%d", verticesOutputs[v.Name()]) + "\n"
+		name := v.Name()
+		if config.UseNilNeuron {
+			name = "nil"
+		}
+		result += "%meta fidef " + v.Name() + " fragment:" + name + ", inputs:" + fmt.Sprintf("%d", verticesInputs[v.Name()]) + ", outputs:" + fmt.Sprintf("%d", verticesOutputs[v.Name()]) + "\n"
+	}
+
+	for _, v := range vertices {
+		result += "%meta cpdef " + v.Name() + " fragcollapse:" + v.Name() + "\n"
 	}
 
 	return result, nil

@@ -1,0 +1,5 @@
+%fragment nil template:true
+%meta literal resin {{with $last := incs .Params.inputs}}{{range $y := intRange "1" $last}}{{printf "r%d:" $y}}{{end}}{{end}}
+%meta literal resout {{with $last := incs .Params.outputs}}{{range $y := intRange "1" $last}}{{printf "r%d:" $y}}{{end}}{{end}}
+	nop
+%endfragment

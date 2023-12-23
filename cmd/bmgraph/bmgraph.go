@@ -28,6 +28,8 @@ var bmInfoFile = flag.String("bminfo-file", "", "JSON description of the BondMac
 
 var iomode = flag.String("io-mode", "async", "IO mode: async, sync")
 
+var useNilNeuron = flag.Bool("use-nil-neuron", false, "Use the nil neuron")
+
 func init() {
 	flag.Parse()
 	if *saveBasm == "" {
@@ -104,6 +106,10 @@ func main() {
 		config.Pruned = make([]string, 0)
 	}
 
+	if *useNilNeuron {
+		config.UseNilNeuron = true
+	}
+
 	if *neuronLibPath != "" {
 		config.NeuronLibPath = *neuronLibPath
 	} else {
@@ -154,6 +160,18 @@ func main() {
 
 	bg := new(bmgraph.Graph)
 	bg.Graph = graph
+	bg.Config = config
+
+	bg.RegisterSize = *registerSize
+
+	switch *iomode {
+	case "async":
+		bg.IOMode = bmgraph.ASYNC
+	case "sync":
+		bg.IOMode = bmgraph.SYNC
+	default:
+		panic("Unknown IO mode")
+	}
 
 	if *saveBasm != "" {
 		if basmFile, err := bg.WriteBasm(); err == nil {
