@@ -39,20 +39,39 @@ func (g *Graph) WriteBasm() (string, error) {
 		return "", errors.New("Graph is nil")
 	}
 
+	result := ""
+
 	// Find out all the vertices
 	vertices := make(map[string]*cgraph.Node)
+	verticesInputs := make(map[string]int)
+	verticesOutputs := make(map[string]int)
 	for n := g.FirstNode(); n != nil; n = g.NextNode(n) {
 		vertices[n.Name()] = n
-		fmt.Println(n.Name())
+		verticesInputs[n.Name()] = 0
+		verticesOutputs[n.Name()] = 0
+		// result += "%meta fidef " + n.Name() + " fragment:" + n.Name() + "\n"
 	}
 
-	for vn, v := range vertices {
-		fmt.Println(vn)
+	for _, v := range vertices {
 		for e := g.FirstEdge(v); e != nil; e = g.NextEdge(e, v) {
-			dest := e.Node()
-			fmt.Println(v.Name(), dest.Name(), e.Name())
+			if e.Name() != "" {
+				dest := e.Node().Name()
+				src := v.Name()
+				result += "%meta filinkdef " + src + "_" + dest + " type:fl\n"
+				destIdx := verticesInputs[dest]
+				srcIdx := verticesOutputs[src]
+				result += "%meta filinkatt " + src + "_" + dest + " fi:" + src + " type:output, index:" + fmt.Sprintf("%d", srcIdx) + "\n"
+				result += "%meta filinkatt " + src + "_" + dest + " fi:" + dest + " type:input, index:" + fmt.Sprintf("%d", destIdx) + "\n"
+				verticesInputs[dest]++
+				verticesOutputs[src]++
+
+			}
 		}
 	}
 
-	return "", nil
+	for _, v := range vertices {
+		result += "%meta fidef " + v.Name() + " fragment:" + v.Name() + " inputs:" + fmt.Sprintf("%d", verticesInputs[v.Name()]) + " outputs:" + fmt.Sprintf("%d", verticesOutputs[v.Name()]) + "\n"
+	}
+
+	return result, nil
 }
