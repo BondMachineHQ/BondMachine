@@ -46,5 +46,13 @@ func (g *Graph) WriteBasm() (string, error) {
 		fmt.Println(n.Name())
 	}
 
+	for vn, v := range vertices {
+		fmt.Println(vn)
+		for e := g.FirstEdge(v); e != nil; e = g.NextEdge(e, v) {
+			dest := e.Node()
+			fmt.Println(v.Name(), dest.Name(), e.Name())
+		}
+	}
+
 	return "", nil
 }
