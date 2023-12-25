@@ -9,7 +9,7 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/simbox"
 
 	//"mel"
-	"io/ioutil"
+
 	"math/rand"
 	"os"
 
@@ -102,7 +102,7 @@ func main() {
 
 	if *load_machine != "" {
 		if _, err := os.Stat(*load_machine); err == nil {
-			if jsonfile, err := ioutil.ReadFile(*load_machine); err == nil {
+			if jsonfile, err := os.ReadFile(*load_machine); err == nil {
 				var machj procbuilder.Machine_json
 				if err := json.Unmarshal([]byte(jsonfile), &machj); err == nil {
 					mymachine = (&machj).Dejsoner()
@@ -249,7 +249,7 @@ func main() {
 		// Precessing assembly
 		if *inputAssembly != "" {
 			if _, err := os.Stat(*inputAssembly); err == nil {
-				if prog, err := ioutil.ReadFile(*inputAssembly); err == nil {
+				if prog, err := os.ReadFile(*inputAssembly); err == nil {
 					if prog, err := myarch.Assembler(prog); err == nil {
 						mymachine.Program = prog
 					} else {
@@ -447,7 +447,7 @@ func main() {
 				sbox = new(simbox.Simbox)
 				if _, err := os.Stat(*simboxFile); err == nil {
 					// Open the simbox file is exists
-					if simbox_json, err := ioutil.ReadFile(*simboxFile); err == nil {
+					if simbox_json, err := os.ReadFile(*simboxFile); err == nil {
 						if err := json.Unmarshal([]byte(simbox_json), sbox); err != nil {
 							panic(err)
 						}
