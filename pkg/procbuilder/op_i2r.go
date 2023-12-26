@@ -22,9 +22,9 @@ func (op I2r) Op_get_desc() string {
 }
 
 func (op I2r) Op_show_assembler(arch *Arch) string {
-	opbits := arch.Opcodes_bits()
-	inpbits := arch.Inputs_bits()
-	result := "i2r [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(inpbits) + "(Input)]	// Set a register to the value of the given input [" + strconv.Itoa(opbits+int(arch.R)+inpbits) + "]\n"
+	opBits := arch.Opcodes_bits()
+	inBits := arch.Inputs_bits()
+	result := "i2r [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(inBits) + "(Input)]	// Set a register to the value of the given input [" + strconv.Itoa(opBits+int(arch.R)+inBits) + "]\n"
 	return result
 }
 

@@ -34,7 +34,7 @@ func (op Jcmprio) Op_get_instruction_len(arch *Arch) int {
 
 func (op Jcmprio) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
 	result := ""
-	if arch.OnlyOne(op.Op_get_name(), []string{"cmpr", "jcmpl", "jcmpo", "jcmpa", "jcmprio", "jcmpria"}) {
+	if arch.OnlyOne(op.Op_get_name(), []string{"cmpr", "cmpv", "jcmpl", "jcmpo", "jcmpa", "jcmprio", "jcmpria", "jncmpl", "jncmpo", "jncmpa", "jncmprio", "jncmpria"}) {
 		result += "\treg cmpflag;\n"
 	}
 	return result
