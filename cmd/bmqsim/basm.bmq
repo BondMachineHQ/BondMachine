@@ -1,0 +1,8 @@
+%block code1 .sequential
+: file:/cdcsd/csdcsdcsd
+: cdscsd:432432
+: csdcsdcsd:43423432
+	basm    q0, q1, q2, ->, q0, q1, q2
+%endblock
+
+%meta bmdef global main:code1

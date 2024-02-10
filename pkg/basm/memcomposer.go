@@ -177,7 +177,7 @@ func memComposer(bi *BasmInstance) error {
 				if ramData != nil {
 					newSection := new(BasmSection)
 					newSection.sectionName = "ramdata" + cpNewSectionName
-					newSection.sectionType = sectRomData
+					newSection.sectionType = sectRamData
 					newSection.sectionBody = ramData.sectionBody.Copy()
 					bi.resolveSymbols(newSection, cpNewSectionName)
 					bi.sections[newSection.sectionName] = newSection

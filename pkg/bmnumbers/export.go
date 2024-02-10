@@ -103,6 +103,9 @@ func (n *BMNumber) ExportVerilogBinary() (string, error) {
 		result = result[1:]
 	}
 
+	for len(result) < n.bits {
+		result = "0" + result
+	}
 	result = strconv.Itoa(n.bits) + "'b" + result
 
 	return result, nil

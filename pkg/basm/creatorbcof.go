@@ -94,6 +94,7 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 		// - if the BM came from the CLI, and the BMinfo is provided, we have to use the CP id from the BMinfo file
 		// - if the BM came from the CLI, and the BMinfo is not provided, we will use the convention of the CP name in the form of "cpN" (where N is a number).
 
+		// Start with the instructions
 		// Search th ID in the BMinfo data
 		if bi.BMinfo != nil {
 			for id, name := range bi.BMinfo.CPNames {
@@ -110,12 +111,14 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 					cpPayload.SetSignature("cp" + strconv.Itoa(id)) // TODO: temporary name for the signature
 
 					prog := ""
-					for _, line := range bi.sections[ramCode].sectionBody.Lines {
-						prog += line.Operation.GetValue()
-						for _, arg := range line.Elements {
-							prog += " " + arg.GetValue()
+					if ramCode != "" {
+						for _, line := range bi.sections[ramCode].sectionBody.Lines {
+							prog += line.Operation.GetValue()
+							for _, arg := range line.Elements {
+								prog += " " + arg.GetValue()
+							}
+							prog += "\n"
 						}
-						prog += "\n"
 					}
 					// Get the machine
 					myMachine := bi.result
@@ -143,6 +146,22 @@ func (bi *BasmInstance) Assembler2BCOF() error {
 			}
 		}
 
+		// Continuing with the data
+		if ramData != "" {
+			for _, line := range bi.sections[ramData].sectionBody.Lines {
+				for _, arg := range line.Elements {
+					hexVal := arg.GetValue()
+					if n, err := bmnumbers.ImportString(hexVal); err == nil {
+						nS, _ := n.ExportBinaryNBits(int(rSizePad))
+						program.Slocs = append(program.Slocs, nS)
+					} else {
+						return err
+					}
+				}
+			}
+		}
+
+		// Put every line of the program (and data) in the payload
 		for _, line := range program.Slocs {
 			// Pad the line to the padded register size
 			for len(line) < int(rSizePad) {

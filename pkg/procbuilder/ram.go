@@ -52,7 +52,7 @@ func (ram *Ram) Write_verilog(conf *Config, mach *Machine, ram_module_name strin
 			}
 			num, _ := bmnumbers.ImportBytes(buff, int(mach.Rsize))
 			numV, _ := num.ExportVerilogBinary()
-			result += "		mem[" + strconv.Itoa(line) + "] <= " + numV + ";\n"
+			result += "		mem[" + strconv.Itoa(line) + "] = " + numV + ";\n"
 		}
 
 		result += "	end\n"

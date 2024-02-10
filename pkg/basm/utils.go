@@ -86,14 +86,14 @@ func object2Bytes(obj string, numeric bool) ([]string, error) {
 			b := bmNumber.GetBytes()
 			result := make([]string, len(b))
 			for i, ch := range b {
-				result[i] = fmt.Sprintf("0x%x", ch)
+				result[i] = fmt.Sprintf("0x%02x", ch)
 			}
 			return result, nil
 		}
 	} else {
 		result := make([]string, len(obj))
 		for i, ch := range obj {
-			result[i] = fmt.Sprintf("0x%x", ch)
+			result[i] = fmt.Sprintf("0x%02x", ch)
 		}
 		return result, nil
 	}
