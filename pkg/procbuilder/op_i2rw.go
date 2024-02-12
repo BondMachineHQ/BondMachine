@@ -303,6 +303,8 @@ func (Op I2rw) Op_instruction_verilog_extra_block(arch *Arch, flavor string, lev
 		result += pref + "\t\tif (" + strings.ToLower(objects[0]) + "_valid)\n"
 		result += pref + "\t\tbegin\n"
 		result += pref + "\t\t\t" + strings.ToLower(objects[0]) + "_recv <= #1 1'b1;\n"
+		result += pref + "\t\tend else begin\n"
+		result += pref + "\t\t\t" + strings.ToLower(objects[0]) + "_recv <= #1 1'b0;\n"
 		result += pref + "\t\tend\n"
 		result += pref + "\tend\n"
 

@@ -59,6 +59,8 @@ func (op R2owa) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor stri
 			result += "\treg " + strings.ToLower(Get_output_name(j)) + "_val;\n"
 		}
 
+		result += "\treg waitsm;\n"
+		result += "\tinitial waitsm = 1'b0;\n"
 		result += "\n"
 
 		for j := 0; j < int(arch.M); j++ {
@@ -133,11 +135,16 @@ func (op R2owa) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 
 			for j := 0; j < int(arch.M); j++ {
 				result += pref + "\t" + strings.ToUpper(Get_output_name(j)) + " : begin\n"
-
-				result += pref + "\t\t_aux" + strings.ToLower(Get_output_name(j)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
-				result += pref + "\t\tif (" + strings.ToLower(Get_output_name(j)) + "_received)\n"
-				result += pref + "\t\tbegin\n"
-				result += pref + NextInstruction(conf, arch, 3, "_pc + 1'b1")
+				result += pref + "\t\tif (waitsm == 1'b0) begin\n"
+				result += pref + "\t\t\tif (!" + strings.ToLower(Get_output_name(j)) + "_received) begin\n"
+				result += pref + "\t\t\t\twaitsm <= 1'b1;\n"
+				result += pref + "\t\t\tend\n"
+				result += pref + "\t\tend else begin\n"
+				result += pref + "\t\t\t_aux" + strings.ToLower(Get_output_name(j)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + ";\n"
+				result += pref + "\t\t\tif (" + strings.ToLower(Get_output_name(j)) + "_received) begin\n"
+				result += pref + NextInstruction(conf, arch, 4, "_pc + 1'b1")
+				result += pref + "\t\t\t\twaitsm <= 1'b0;\n"
+				result += pref + "\t\t\tend\n"
 				result += pref + "\t\tend\n"
 				result += pref + "\t\t$display(\"R2OWA " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_output_name(j)) + "\");\n"
 
@@ -304,7 +311,7 @@ func (Op R2owa) Op_instruction_verilog_extra_block(arch *Arch, flavor string, le
 		}
 
 		result += pref + "\t" + strings.ToUpper(objects[0]) + " : begin\n"
-		result += pref + "\t\t" + strings.ToLower(objects[0]) + "_val <= 1'b1;\n"
+		result += pref + "\t\tif (waitsm == 1'b1) " + strings.ToLower(objects[0]) + "_val <= 1'b1;\n"
 		result += pref + "\tend\n"
 
 		result += pref + "\tdefault: begin\n"
