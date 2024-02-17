@@ -150,3 +150,7 @@ func (bi *BMBuilder) RunBuilder() error {
 
 	return nil
 }
+
+func (bi *BMBuilder) ExportBasmBody() (*bmline.BasmBody, error) {
+	return nil, nil
+}
