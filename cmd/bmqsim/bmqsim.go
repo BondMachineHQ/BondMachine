@@ -55,15 +55,19 @@ func init() {
 
 func main() {
 	bld := new(bmbuilder.BMBuilder)
+	sim := new(bmqsim.BmQSimulator)
 
 	bld.BMBuilderInit()
+	sim.BmQSimulatorInit()
 
 	if *debug {
 		bld.SetDebug()
+		sim.SetDebug()
 	}
 
 	if *verbose {
 		bld.SetVerbose()
+		sim.SetVerbose()
 	}
 
 	startAssembling := false
@@ -110,6 +114,9 @@ func main() {
 	} else {
 
 		// Run the builder with a minimal set of passes
+
+		bld.UnsetActive("generatorsexec")
+
 		if err := bld.RunBuilder(); err != nil {
 			bld.Alert(err)
 			return
@@ -130,12 +137,13 @@ func main() {
 			body = v
 		}
 
+		fmt.Println("Quantum circuit:")
 		fmt.Println(body)
 
 		var mtx []*bmmatrix.BmMatrixSquareComplex
 
 		// Get the circuit matrices from the BasmBody
-		if matrices, err := bmqsim.QasmToBmMatrices(body); err != nil {
+		if matrices, err := sim.QasmToBmMatrices(body); err != nil {
 			bld.Alert(err)
 			return
 		} else {

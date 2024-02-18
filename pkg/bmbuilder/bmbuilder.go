@@ -152,5 +152,12 @@ func (bi *BMBuilder) RunBuilder() error {
 }
 
 func (bi *BMBuilder) ExportBasmBody() (*bmline.BasmBody, error) {
-	return nil, nil
+	// Get the main block
+	mainBlock := bi.global.GetMeta("main")
+	if mainBlock == "" {
+		return nil, fmt.Errorf("No main block found")
+	}
+
+	// Get the main block
+	return bi.blocks[mainBlock].blockBody, nil
 }

@@ -27,7 +27,7 @@ func getPassFunctionName() map[uint64]string {
 func IsOptionalPass() map[uint64]bool {
 	return map[uint64]bool{
 		passMetaExtractor:  false,
-		passGeneratorsExec: false,
+		passGeneratorsExec: true,
 	}
 }
 
