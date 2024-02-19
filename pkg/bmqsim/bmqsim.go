@@ -266,7 +266,13 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 
 	if sim.debug {
 		fmt.Println("swaps:", swaps)
-		swaps2baseSwaps(swap{0, 0}, len(sim.qbits))
+	}
+
+	for _, s := range swaps {
+		baseSwaps := swaps2baseSwaps(s, len(sim.qbits))
+		for _, bs := range baseSwaps {
+			result = bmmatrix.SwapRowsColsComplex(result, bs.s1, bs.s2)
+		}
 	}
 
 	return result, nil
@@ -274,9 +280,39 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 
 func swaps2baseSwaps(s swap, n int) []swap {
 	baseNum := uint64(1 << n)
-	fmt.Println("baseNum:", baseNum)
-	// TODO: implement
-	return nil
+	// fmt.Println("baseNum:", baseNum)
+
+	iDone := make(map[uint64]struct{})
+	result := make([]swap, 0)
+
+	s1 := s.s1
+	s2 := s.s2
+
+	pos1 := uint64(1 << s1)
+	pos2 := uint64(1 << s2)
+
+	// fmt.Println("pos1:", pos1)
+	// fmt.Println("pos2:", pos2)
+
+	for i := uint64(0); i < baseNum; i++ {
+		fmt.Println(i, int2bin(int(i), n), i&pos1>>s1, i&pos2>>s2)
+		if _, ok := iDone[i]; !ok {
+			if i&pos1>>s1 != i&pos2>>s2 {
+				num1 := i
+				num2 := i ^ pos1 ^ pos2
+				iDone[num1] = struct{}{}
+				iDone[num2] = struct{}{}
+				result = append(result, swap{int(num1), int(num2)})
+			}
+		}
+	}
+
+	return result
+}
+
+// Integer to binary string padded with zeros
+func int2bin(i int, n int) string {
+	return fmt.Sprintf("%0*b", n, i)
 }
 
 func (sim *BmQSimulator) MatrixFromOp(op string) (*bmmatrix.BmMatrixSquareComplex, error) {
