@@ -1,6 +1,6 @@
 package bmmatrix
 
-func Cnot() *BmMatrixSquareComplex {
+func CNot() *BmMatrixSquareComplex {
 	m := NewBmMatrixSquareComplex(4)
 	m.Data[0][0] = Complex32{1.0, 0.0}
 	m.Data[0][1] = Complex32{0.0, 0.0}

@@ -1,7 +1,8 @@
 %block code1 .sequential
-        qbits   q0, q1, q2
-        zero    q0, q1, q2
-        h       q1
+        qbits   q0, q1
+;        zero    q0, q1, q2
+;        h       q1
+        cx      q1, q0
         cx      q0, q1
 %endblock
 
