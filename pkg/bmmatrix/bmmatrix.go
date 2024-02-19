@@ -159,17 +159,19 @@ func SwapRowsColsComplex(a *BmMatrixSquareComplex, x, y int) *BmMatrixSquareComp
 		}
 	}
 
+	c := NewBmMatrixSquareComplex(a.N)
+
 	for i := 0; i < a.N; i++ {
 		for j := 0; j < a.N; j++ {
 			if j == x {
-				b.Data[i][j] = a.Data[i][y]
+				c.Data[i][j] = b.Data[i][y]
 			} else if j == y {
-				b.Data[i][j] = a.Data[i][x]
+				c.Data[i][j] = b.Data[i][x]
 			} else {
-				b.Data[i][j] = a.Data[i][j]
+				c.Data[i][j] = b.Data[i][j]
 			}
 		}
 	}
 
-	return b
+	return c
 }
