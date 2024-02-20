@@ -28,6 +28,7 @@ type BmMatrixSquareComplex struct {
 }
 
 func (m *BmMatrixSquareReal) String() string {
+	// TODO: implement a color function
 	str := ""
 	for i := 0; i < m.N; i++ {
 		substr := ""
@@ -47,25 +48,36 @@ func (m *BmMatrixSquareReal) String() string {
 	return str
 }
 
-func (m *BmMatrixSquareComplex) String() string {
+func (m *BmMatrixSquareComplex) StringColor(color func(...interface{}) string) string {
 	str := ""
 	for i := 0; i < m.N; i++ {
 		substr := ""
+		leng := 0
 		for j := 0; j < m.N; j++ {
-			substr += fmt.Sprintf("| %f + %fi ", m.Data[i][j].Real, m.Data[i][j].Imag)
+			sub := fmt.Sprintf(" %3.4f + %3.4fi ", m.Data[i][j].Real, m.Data[i][j].Imag)
+			leng = leng + len(sub) + 1
+			substr += color("|") + sub
+
 		}
 		sep := ""
-		for j := 0; j < len(substr)+1; j++ {
+		for j := 0; j < leng+1; j++ {
 			sep += "-"
 		}
-		str += sep + "\n"
-		str += substr + "|\n"
+		str += color(sep) + "\n"
+		str += substr + color("|") + "\n"
 		if i == m.N-1 {
-			str += sep + "\n"
+			str += color(sep) + "\n"
 		}
 	}
 
 	return str
+}
+
+func (m *BmMatrixSquareComplex) String() string {
+	f := func(in ...interface{}) string {
+		return fmt.Sprint(in...)
+	}
+	return m.StringColor(f)
 }
 
 // NewBmMatrixSquare creates a new BmMatrixSquared with the given size
@@ -173,5 +185,29 @@ func SwapRowsColsComplex(a *BmMatrixSquareComplex, x, y int) *BmMatrixSquareComp
 		}
 	}
 
+	return c
+}
+
+func MatrixProductReal(a, b *BmMatrixSquareReal) *BmMatrixSquareReal {
+	c := NewBmMatrixSquareReal(a.N)
+	for i := 0; i < a.N; i++ {
+		for j := 0; j < a.N; j++ {
+			for k := 0; k < a.N; k++ {
+				c.Data[i][j] += a.Data[i][k] * b.Data[k][j]
+			}
+		}
+	}
+	return c
+}
+
+func MatrixProductComplex(a, b *BmMatrixSquareComplex) *BmMatrixSquareComplex {
+	c := NewBmMatrixSquareComplex(a.N)
+	for i := 0; i < a.N; i++ {
+		for j := 0; j < a.N; j++ {
+			for k := 0; k < a.N; k++ {
+				c.Data[i][j] = Complex32Add(c.Data[i][j], Complex32Mul(a.Data[i][k], b.Data[k][j]))
+			}
+		}
+	}
 	return c
 }

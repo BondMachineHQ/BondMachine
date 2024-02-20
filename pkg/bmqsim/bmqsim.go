@@ -13,6 +13,7 @@ type BmQSimulator struct {
 	debug    bool
 	qbits    []string
 	qbitsNum map[string]int
+	Mtx      []*bmmatrix.BmMatrixSquareComplex
 }
 
 // BmQSimulatorInit initializes the BmQSimulator
@@ -62,10 +63,6 @@ func (sim *BmQSimulator) QasmToBmMatrices(qasm *bmline.BasmBody) ([]*bmmatrix.Bm
 	for i, line := range qasm.Lines {
 		op := line.Operation.GetValue()
 
-		if sim.debug {
-			fmt.Printf("Processing line %d: %s\n", i, line.String())
-		}
-
 		// Check if the operation is ready to form a matrix
 		nextOp := false
 
@@ -103,6 +100,11 @@ func (sim *BmQSimulator) QasmToBmMatrices(qasm *bmline.BasmBody) ([]*bmmatrix.Bm
 
 		// If the operation is ready to form a matrix, create the matrix
 		if nextOp {
+
+			if sim.debug {
+				fmt.Println(red("\tNew operation") + " (ready to form a matrix)")
+			}
+
 			// Create the matrix
 			if len(curOp) > 0 {
 				// Create the matrix
@@ -123,6 +125,12 @@ func (sim *BmQSimulator) QasmToBmMatrices(qasm *bmline.BasmBody) ([]*bmmatrix.Bm
 		// If the last line is not already been added to the last matrix, lets put it alone in a new matrix
 		// Otherwise (not the last or already done) we will put it in the current operations list and set the involved qbits into the currQbits map
 		if singleLast {
+
+			if sim.debug {
+				fmt.Printf("\tProcessing line %d: %s\n", i, line.String())
+				fmt.Println(red("\tNew operation") + " (ready to form a matrix)")
+			}
+
 			curOp = append(curOp, line)
 			// Create the matrix
 			if m, err := sim.BmMatrixFromOperation(curOp); err != nil {
@@ -134,6 +142,10 @@ func (sim *BmQSimulator) QasmToBmMatrices(qasm *bmline.BasmBody) ([]*bmmatrix.Bm
 			}
 
 		} else {
+			if sim.debug {
+				fmt.Printf("\tProcessing line %d: %s\n", i, line.String())
+			}
+
 			curOp = append(curOp, line)
 
 			// Include the qbits in the operation to the currQbits map
@@ -147,6 +159,7 @@ func (sim *BmQSimulator) QasmToBmMatrices(qasm *bmline.BasmBody) ([]*bmmatrix.Bm
 			}
 
 		}
+
 	}
 	return result, nil
 }
@@ -221,7 +234,7 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 					localOrder[i] = sim.qbitsNum[argName]
 				}
 
-				fmt.Println(localOrder, q)
+				//fmt.Println(localOrder, q)
 
 				for i, lq := range localOrder {
 					if lq != q {
@@ -230,7 +243,7 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 						// Add the swap to the list
 						swaps = append(swaps, swap{q, lq})
 						if sim.debug {
-							fmt.Printf("Swapping qbits %d and %d\n", q, lq)
+							//fmt.Printf("Swapping qbits %d and %d\n", q, lq)
 						}
 						// Swap the localOrder if needed
 						for j, lq2 := range localOrder {
@@ -241,7 +254,7 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 							}
 						}
 						if sim.debug {
-							fmt.Println("newLocalOrder:", localOrder)
+							//fmt.Println("newLocalOrder:", localOrder)
 						}
 
 					}
@@ -265,7 +278,7 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 	}
 
 	if sim.debug {
-		fmt.Println("swaps:", swaps)
+		//fmt.Println("swaps:", swaps)
 	}
 
 	for _, s := range swaps {
@@ -295,7 +308,7 @@ func swaps2baseSwaps(s swap, n int) []swap {
 	// fmt.Println("pos2:", pos2)
 
 	for i := uint64(0); i < baseNum; i++ {
-		fmt.Println(i, int2bin(int(i), n), i&pos1>>s1, i&pos2>>s2)
+		//fmt.Println(i, int2bin(int(i), n), i&pos1>>s1, i&pos2>>s2)
 		if _, ok := iDone[i]; !ok {
 			if i&pos1>>s1 != i&pos2>>s2 {
 				num1 := i
