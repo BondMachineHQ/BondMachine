@@ -6,6 +6,7 @@ import (
 	"log"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmbuilder"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
@@ -129,83 +130,82 @@ func main() {
 		}
 	}
 
-	if !startBuilding {
-		return
-	}
+	if startBuilding {
 
-	if *buildFullHardwareHardcoded != "" {
-		// Build a full hardware BM with hardcoded quantum circuit this is a special case incompatible with the rest of the modes
-		// Matrices won't be generated, the hardware will be built directly
+		if *buildFullHardwareHardcoded != "" {
+			// Build a full hardware BM with hardcoded quantum circuit this is a special case incompatible with the rest of the modes
+			// Matrices won't be generated, the hardware will be built directly
 
-		// Run the builder with the full set of passes
-		if err := bld.RunBuilder(); err != nil {
-			bld.Alert(err)
-			return
-		}
+			// Run the builder with the full set of passes
+			if err := bld.RunBuilder(); err != nil {
+				bld.Alert(err)
+				return
+			}
 
-		// TODO: Finish this
-		fmt.Println("Under construction")
-	} else {
-		// All the other modes run the builder with a minimal set of passes only to parse the quantum circuit
-		// and generate the matrices
-
-		bld.UnsetActive("generatorsexec")
-
-		if err := bld.RunBuilder(); err != nil {
-			bld.Alert(err)
-			return
-		}
-
-		if *debug {
-			fmt.Println(purple("BmBuilder completed"))
-		}
-
-		var body *bmline.BasmBody
-
-		if *debug {
-			fmt.Println(purple("Exporting circuit"))
-		}
-
-		// Export the BasmBody to generate the matrices
-		if v, err := bld.ExportBasmBody(); err != nil {
-			bld.Alert(err)
-			return
+			// TODO: Finish this
+			fmt.Println("Under construction")
 		} else {
-			body = v
-		}
+			// All the other modes run the builder with a minimal set of passes only to parse the quantum circuit
+			// and generate the matrices
 
-		if *debug {
-			fmt.Println(purple("Processing circuit to matrices"))
-		}
-		// Get the circuit matrices from the BasmBody
-		if matrices, err := sim.QasmToBmMatrices(body); err != nil {
-			bld.Alert(err)
-			return
-		} else {
-			sim.Mtx = make([]*bmmatrix.BmMatrixSquareComplex, len(matrices))
-			copy(sim.Mtx, matrices)
-		}
-	}
+			bld.UnsetActive("generatorsexec")
 
-	if *showMatrices {
-		if sim.Mtx == nil {
-			bld.Alert("No matrices to show")
-			return
-		} else {
-			for i, m := range sim.Mtx {
-				fmt.Println(green("Matrix:"), yellow(strconv.Itoa(i)))
-				fmt.Println(m.StringColor(green))
+			if err := bld.RunBuilder(); err != nil {
+				bld.Alert(err)
+				return
+			}
+
+			if *debug {
+				fmt.Println(purple("BmBuilder completed"))
+			}
+
+			var body *bmline.BasmBody
+
+			if *debug {
+				fmt.Println(purple("Exporting circuit"))
+			}
+
+			// Export the BasmBody to generate the matrices
+			if v, err := bld.ExportBasmBody(); err != nil {
+				bld.Alert(err)
+				return
+			} else {
+				body = v
+			}
+
+			if *debug {
+				fmt.Println(purple("Processing circuit to matrices"))
+			}
+			// Get the circuit matrices from the BasmBody
+			if matrices, err := sim.QasmToBmMatrices(body); err != nil {
+				bld.Alert(err)
+				return
+			} else {
+				sim.Mtx = make([]*bmmatrix.BmMatrixSquareComplex, len(matrices))
+				copy(sim.Mtx, matrices)
 			}
 		}
-	}
 
-	if *showCircuitMatrix {
-		mm := sim.Mtx[len(sim.Mtx)-1]
-		for i := len(sim.Mtx) - 2; i >= 0; i-- {
-			mm = bmmatrix.MatrixProductComplex(mm, sim.Mtx[i])
+		if *showMatrices {
+			if sim.Mtx == nil {
+				bld.Alert("No matrices to show")
+				return
+			} else {
+				for i, m := range sim.Mtx {
+					fmt.Println(green("Matrix:"), yellow(strconv.Itoa(i)))
+					fmt.Println(m.StringColor(green))
+				}
+			}
 		}
-		fmt.Println(green("Whole circuit matrix:"))
-		fmt.Println(mm.StringColor(green))
+
+		if *showCircuitMatrix {
+			mm := sim.Mtx[len(sim.Mtx)-1]
+			for i := len(sim.Mtx) - 2; i >= 0; i-- {
+				mm = bmmatrix.MatrixProductComplex(mm, sim.Mtx[i])
+			}
+			fmt.Println(green("Whole circuit matrix:"))
+			fmt.Println(mm.StringColor(green))
+		}
 	}
 
 	if *buildMatrixSeqHardcoded != "" {
@@ -214,7 +214,21 @@ func main() {
 
 		if *hardwareFlavorList {
 			// List of available hardware flavors for the selected operating mode
+			for t := range bmqsim.Templates {
+				if strings.HasPrefix(t, "seq_hardcoded_") {
+					fmt.Println(t)
+				}
+			}
 		} else if *hardwareFlavor != "" {
+			if startBuilding {
+				if _, ok := bmqsim.Templates[*hardwareFlavor]; ok {
+					fmt.Println(sim.ApplyTemplate(*hardwareFlavor))
+				} else {
+					bld.Alert("Hardware flavor not found")
+				}
+			} else {
+				bld.Alert("No quantum circuit to build the matrix sequence")
+			}
 		} else {
 			bld.Alert("Hardware flavor must be selected")
 		}

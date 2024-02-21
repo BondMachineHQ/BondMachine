@@ -323,11 +323,6 @@ func swaps2baseSwaps(s swap, n int) []swap {
 	return result
 }
 
-// Integer to binary string padded with zeros
-func int2bin(i int, n int) string {
-	return fmt.Sprintf("%0*b", n, i)
-}
-
 func (sim *BmQSimulator) MatrixFromOp(op string) (*bmmatrix.BmMatrixSquareComplex, error) {
 	switch op {
 	case "h", "H":
