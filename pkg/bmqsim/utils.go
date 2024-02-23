@@ -36,3 +36,12 @@ func white(in ...interface{}) string {
 	ins := fmt.Sprint(in...)
 	return "\033[97m" + ins + "\033[0m"
 }
+
+func StringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}

@@ -4,9 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmbuilder"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
@@ -24,14 +24,29 @@ var linearDataRange = flag.String("linear-data-range", "", "Load a linear data r
 // Build modes
 
 // 1
-var buildMatrixSeqHardcoded = flag.String("build-matrix-seq-hardcoded", "", "Build a matrix sequence BM with hardcoded quantum circuit")
+var buildMatrixSeqHardcoded = flag.Bool("build-matrix-seq-hardcoded", false, "Build a matrix sequence BM with hardcoded quantum circuit")
 
 // 2
-var buildMatrixSeq = flag.String("build-matrix-seq", "", "Build a matrix sequence BM with a loadable quantum circuit file")
-var buildMatrixSeqCompiled = flag.String("build-matrix-seq-compiled", "", "Build a binary for a matrix sequence BM")
+var buildMatrixSeq = flag.Bool("build-matrix-seq", false, "Build a matrix sequence BM with a loadable quantum circuit file")
+var buildMatrixSeqCompiled = flag.Bool("build-matrix-seq-compiled", false, "Build a binary for a matrix sequence BM")
 
 // 3
-var buildFullHardwareHardcoded = flag.String("build-full-hw-hardcoded", "", "Build a full hardware BM with hardcoded quantum circuit")
+var buildFullHardwareHardcoded = flag.Bool("build-full-hw-hardcoded", false, "Build a full hardware BM with hardcoded quantum circuit")
+
+// 4
+var softwareSimulation = flag.Bool("software-simulation", false, "Software simulation mode")
+var softwareSimulationInput = flag.String("software-simulation-input", "", "Software simulation mode input file")
+var softwareSimulationOutput = flag.String("software-simulation-output", "", "Software simulation mode output file")
+
+// Common options
+
+var buildApp = flag.Bool("build-app", false, "Build an hardware connected app")
+var appFlavor = flag.String("app-flavor", "", "App flavor for the selected operating mode")
+var appFlavorList = flag.Bool("app-flavor-list", false, "List of available app flavors")
+var appFile = flag.String("app-file", "a.out", "App file to be used as output")
+
+var basmFile = flag.String("save-basm", "a.out.basm", "Basm file to be used as output")
+var compiledFile = flag.String("compiled-file", "a.out.json", "Compiled file to be used as output")
 
 var hardwareFlavor = flag.String("hw-flavor", "", "Hardware flavor for the selected operating mode")
 var hardwareFlavorList = flag.Bool("hw-flavor-list", false, "List of available hardware flavors")
@@ -48,21 +63,23 @@ func init() {
 	// }
 
 	numOp := 0
-	if *buildFullHardwareHardcoded != "" {
+	if *buildFullHardwareHardcoded {
 		numOp++
 	}
-	if *buildMatrixSeqHardcoded != "" {
+	if *buildMatrixSeqHardcoded {
 		numOp++
 	}
-	if *buildMatrixSeq != "" {
+	if *buildMatrixSeq || *buildMatrixSeqCompiled {
 		numOp++
+	}
+	if *softwareSimulation {
+		numOp++
+	}
+	if numOp == 0 {
+		log.Fatal("No build mode selected")
 	}
 	if numOp > 1 {
-		log.Fatal("Only one build mode can be selected among: build-full-hw-hardcoded, build-matrix-seq, build-matrix-seq-hardcoded")
-	}
-
-	if *buildMatrixSeqCompiled != "" && numOp == 1 && *buildMatrixSeq == "" {
-		log.Fatal("A loadable quantum circuit file must be used alone or in combination with build-matrix-seq option")
+		log.Fatal("Only one build mode can be selected among: build-full-hw-hardcoded, build-matrix-seq(_compiled), build-matrix-seq-hardcoded, software-simulation")
 	}
 
 	if *linearDataRange != "" {
@@ -132,7 +149,7 @@ func main() {
 
 	if startBuilding {
 
-		if *buildFullHardwareHardcoded != "" {
+		if *buildFullHardwareHardcoded {
 			// Build a full hardware BM with hardcoded quantum circuit this is a special case incompatible with the rest of the modes
 			// Matrices won't be generated, the hardware will be built directly
 
@@ -208,21 +225,33 @@ func main() {
 		}
 	}
 
-	if *buildMatrixSeqHardcoded != "" {
+	if *buildMatrixSeqHardcoded {
 		// Build a matrix sequence BM with hardcoded quantum circuit
-		fmt.Println("Under construction")
+
+		modeTags := []string{"real"}
 
 		if *hardwareFlavorList {
 			// List of available hardware flavors for the selected operating mode
-			for t := range bmqsim.Templates {
-				if strings.HasPrefix(t, "seq_hardcoded_") {
-					fmt.Println(t)
+			for t := range bmqsim.HardwareFlavors {
+				flavorTags := bmqsim.HardwareFlavorsTags[t]
+				for _, tag := range modeTags {
+					if bmqsim.StringInSlice(tag, flavorTags) {
+						fmt.Println(t)
+					}
 				}
 			}
 		} else if *hardwareFlavor != "" {
 			if startBuilding {
-				if _, ok := bmqsim.Templates[*hardwareFlavor]; ok {
-					fmt.Println(sim.ApplyTemplate(*hardwareFlavor))
+				if _, ok := bmqsim.HardwareFlavors[*hardwareFlavor]; ok {
+					if sim.VerifyConditions(*hardwareFlavor) == nil {
+						if basmFileData, err := sim.ApplyTemplate(*hardwareFlavor); err != nil {
+							bld.Alert(err)
+						} else {
+							os.WriteFile(*basmFile, []byte(basmFileData), 0644)
+						}
+					} else {
+						bld.Alert("Hardware flavor not compatible with the quantum circuit")
+					}
 				} else {
 					bld.Alert("Hardware flavor not found")
 				}
@@ -234,7 +263,7 @@ func main() {
 		}
 	}
 
-	if *buildMatrixSeq != "" {
+	if *buildMatrixSeq || *buildMatrixSeqCompiled {
 		// Build a matrix sequence BM with a loadable quantum circuit file
 		fmt.Println("Under construction")
 
@@ -246,7 +275,7 @@ func main() {
 		}
 	}
 
-	if *buildMatrixSeqCompiled != "" {
+	if *softwareSimulation {
 		// Build a binary for a matrix sequence BM
 		fmt.Println("Under construction")
 
@@ -255,6 +284,40 @@ func main() {
 		} else if *hardwareFlavor != "" {
 		} else {
 			bld.Alert("Hardware flavor must be selected")
+		}
+	}
+
+	if *buildApp {
+		// Build an hardware connected app
+
+		modeTags := []string{"real"}
+
+		if *appFlavorList {
+			// List of available app flavors for the selected operating mode
+			for t := range bmqsim.AppFlavors {
+				flavorTags := bmqsim.AppFlavorsTags[t]
+				for _, tag := range modeTags {
+					if bmqsim.StringInSlice(tag, flavorTags) {
+						fmt.Println(t)
+					}
+				}
+			}
+		} else if *appFlavor != "" {
+			if startBuilding {
+				if _, ok := bmqsim.AppFlavors[*appFlavor]; ok {
+					if appFileData, err := sim.ApplyTemplate(*appFlavor); err != nil {
+						bld.Alert(err)
+					} else {
+						os.WriteFile(*appFile, []byte(appFileData), 0644)
+					}
+				} else {
+					bld.Alert("App flavor not found")
+				}
+			} else {
+				bld.Alert("No quantum circuit to build the matrix sequence")
+			}
+		} else {
+			bld.Alert("App flavor must be selected")
 		}
 	}
 }
