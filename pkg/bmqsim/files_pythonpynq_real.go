@@ -52,7 +52,7 @@ const (
     "# COSTANTS\n",
     "#SAMPLES = len(X_test)\n",
     " \n",
-    "BATCH_SIZE = 16  # SIZE OF THE BATCH TO SEND\n",
+    "BATCH_SIZE = {{ div 32 .MatrixRows }}  # SIZE OF THE BATCH TO SEND\n",
     "BM_INPUTS  = {{ .MatrixRows }}   # N. OF INPUTS OF THE BONDMACHINE MODULE \n",
     "BM_OUTPUTS = {{ .MatrixRows }}   # N. OF OUTPUTS OF THE BONDMACHINE MODULE\n",
     "PRECISION  = 32\n",

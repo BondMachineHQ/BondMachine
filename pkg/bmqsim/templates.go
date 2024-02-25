@@ -74,6 +74,9 @@ func (sim *BmQSimulator) createBasicTemplateData() *templateData {
 		"sum": func(a, b int) int {
 			return a + b
 		},
+		"div": func(a, b int) int {
+			return a / b
+		},
 	}
 	result.funcMap = funcMap
 	return result
