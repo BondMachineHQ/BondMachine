@@ -214,7 +214,7 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 			if argNumQBits == 1 {
 				// Single qbit operation
 				// Create the matrix
-				if matrix, err := sim.MatrixFromOp(op[fundLine].Operation.GetValue()); err != nil {
+				if matrix, err := sim.MatrixFromOp(op[fundLine]); err != nil {
 					return nil, fmt.Errorf("error creating matrix from operation: %v", err)
 				} else {
 					if result == nil {
@@ -264,7 +264,7 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 				}
 
 				// Create the matrix
-				if matrix, err := sim.MatrixFromOp(op[fundLine].Operation.GetValue()); err != nil {
+				if matrix, err := sim.MatrixFromOp(op[fundLine]); err != nil {
 					return nil, fmt.Errorf("error creating matrix from operation: %v", err)
 				} else {
 					if result == nil {
@@ -323,19 +323,33 @@ func swaps2baseSwaps(s swap, n int) []swap {
 	return result
 }
 
-func (sim *BmQSimulator) MatrixFromOp(op string) (*bmmatrix.BmMatrixSquareComplex, error) {
+func (sim *BmQSimulator) MatrixFromOp(line *bmline.BasmLine) (*bmmatrix.BmMatrixSquareComplex, error) {
+	op := line.Operation.GetValue()
+	op = strings.ToLower(op)
 	switch op {
-	case "h", "H":
+	case "h", "hadamard":
 		return bmmatrix.Hadamard(), nil
-	case "x", "X":
+	case "x", "paulix":
 		return bmmatrix.PauliX(), nil
-	case "y", "Y":
+	case "y", "pauliy":
 		return bmmatrix.PauliY(), nil
-	case "z", "Z":
+	case "z", "pauliz":
 		return bmmatrix.PauliZ(), nil
-	case "cx", "CX":
+	case "cx", "cnot", "xor":
 		return bmmatrix.CNot(), nil
-	case "zero", "ZERO":
+	case "s", "p", "phase":
+		return bmmatrix.S(), nil
+	case "xnor":
+		return bmmatrix.XNor(), nil
+	case "cz", "cphase", "csign", "cpf":
+		return bmmatrix.Cphase(), nil
+	case "dcnot":
+		return bmmatrix.Dcnot(), nil
+	case "swap":
+		return bmmatrix.Swap(), nil
+	case "iswap":
+		return bmmatrix.Iswap(), nil
+	case "zero":
 	// Ignore the zero operation
 	default:
 		return nil, fmt.Errorf("unknown operation %s", op)

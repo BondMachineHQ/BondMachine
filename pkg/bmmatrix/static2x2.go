@@ -51,3 +51,20 @@ func PauliZ() *BmMatrixSquareComplex {
 func Z() *BmMatrixSquareComplex {
 	return PauliZ()
 }
+
+func S() *BmMatrixSquareComplex {
+	m := NewBmMatrixSquareComplex(2)
+	m.Data[0][0] = Complex32{1.0, 0.0}
+	m.Data[0][1] = Complex32{0.0, 0.0}
+	m.Data[1][0] = Complex32{0.0, 0.0}
+	m.Data[1][1] = Complex32{0.0, 1.0}
+	return m
+}
+
+func P() *BmMatrixSquareComplex {
+	return S()
+}
+
+func Phase() *BmMatrixSquareComplex {
+	return S()
+}

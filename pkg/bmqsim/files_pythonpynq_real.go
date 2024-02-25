@@ -53,8 +53,8 @@ const (
     "#SAMPLES = len(X_test)\n",
     " \n",
     "BATCH_SIZE = 16  # SIZE OF THE BATCH TO SEND\n",
-    "BM_INPUTS  = 2   # N. OF INPUTS OF THE BONDMACHINE MODULE \n",
-    "BM_OUTPUTS = 2   # N. OF OUTPUTS OF THE BONDMACHINE MODULE\n",
+    "BM_INPUTS  = {{ .MatrixRows }}   # N. OF INPUTS OF THE BONDMACHINE MODULE \n",
+    "BM_OUTPUTS = {{ .MatrixRows }}   # N. OF OUTPUTS OF THE BONDMACHINE MODULE\n",
     "PRECISION  = 32\n",
     "\n",
     "INPUT_SHAPE  = (BATCH_SIZE, BM_INPUTS)\n",
@@ -77,7 +77,10 @@ const (
    "metadata": {},
    "outputs": [],
    "source": [
-    "random_array = np.random.randint(low=0, high=100, size=(16, 2))"
+    "input_array = np.zeros(shape=INPUT_SHAPE, dtype=np.float32)\n",
+    "# Set the zero state",
+    "input_array[0] = [1. {{- range $i := n 0 (dec .MatrixRows) }} ,0. {{ end }}]"
+
    ]
   },
   {
@@ -123,7 +126,7 @@ const (
    "metadata": {},
    "outputs": [],
    "source": [
-    "output_buffer"
+    "output_buffer[0]"
    ]
   },
   {
