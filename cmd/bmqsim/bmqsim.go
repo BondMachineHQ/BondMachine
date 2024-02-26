@@ -55,6 +55,9 @@ var hardwareFlavorList = flag.Bool("hw-flavor-list", false, "List of available h
 var showMatrices = flag.Bool("show-matrices", false, "Show the matrices")
 var showCircuitMatrix = flag.Bool("show-circuit-matrix", false, "Show the circuit matrix")
 
+var emitBMAPIMaps = flag.Bool("emit-bmapi-maps", false, "Emit the BMAPIMaps")
+var bmAPIMapsFile = flag.String("bmapi-maps-file", "bmapi.json", "BMAPIMaps file to be used as output")
+
 func init() {
 	flag.Parse()
 
@@ -223,6 +226,16 @@ func main() {
 			fmt.Println(green("Whole circuit matrix:"))
 			fmt.Println(mm.StringColor(green))
 		}
+
+		if *emitBMAPIMaps {
+			if fileData, err := sim.EmitBMAPIMaps(); err != nil {
+				bld.Alert(err)
+				return
+			} else {
+				os.WriteFile(*bmAPIMapsFile, []byte(fileData), 0644)
+			}
+		}
+
 	}
 
 	if *buildMatrixSeqHardcoded {

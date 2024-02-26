@@ -89,7 +89,7 @@ const (
    "metadata": {},
    "outputs": [],
    "source": [
-    "input_buffer[:] = random_array"
+    "input_buffer[:] = input_array"
    ]
   },
   {
@@ -98,7 +98,7 @@ const (
    "metadata": {},
    "outputs": [],
    "source": [
-    "input_buffer"
+    "input_buffer[0]"
    ]
   },
   {

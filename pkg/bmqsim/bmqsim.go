@@ -1,13 +1,18 @@
 package bmqsim
 
 import (
+	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmmatrix"
 )
 
+type IOmap struct {
+	Assoc map[string]string
+}
 type BmQSimulator struct {
 	verbose  bool
 	debug    bool
@@ -355,4 +360,22 @@ func (sim *BmQSimulator) MatrixFromOp(line *bmline.BasmLine) (*bmmatrix.BmMatrix
 		return nil, fmt.Errorf("unknown operation %s", op)
 	}
 	return nil, nil
+}
+
+func (sim *BmQSimulator) EmitBMAPIMaps() (string, error) {
+	if sim != nil && sim.qbits != nil {
+		ioNum := int(math.Pow(float64(2), float64(len(sim.qbits))))
+		newMap := new(IOmap)
+		newMap.Assoc = make(map[string]string)
+		for i := 0; i < ioNum; i++ {
+			newMap.Assoc[fmt.Sprintf("i%d", i)] = fmt.Sprintf("%d", i)
+			newMap.Assoc[fmt.Sprintf("o%d", i)] = fmt.Sprintf("%d", i)
+		}
+		if jData, err := json.Marshal(newMap); err != nil {
+			return "", fmt.Errorf("error marshalling the map: %v", err)
+		} else {
+			return string(jData), nil
+		}
+	}
+	return "", fmt.Errorf("no qbits defined")
 }
