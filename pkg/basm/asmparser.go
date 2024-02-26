@@ -141,7 +141,7 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 						for _, pair := range pairs {
 							keyVal := strings.Split(pair, ":")
 							if len(keyVal) < 2 {
-								return errors.New("Wrong format for entry: " + pair)
+								return errors.New("Wrong format for entry (1) : " + pair)
 							} else {
 								newSection.sectionBody.BasmMeta = newSection.sectionBody.SetMeta(keyVal[0], strings.Join(keyVal[1:], ":"))
 							}
@@ -190,7 +190,7 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 						for _, pair := range pairs {
 							keyVal := strings.Split(pair, ":")
 							if len(keyVal) < 2 {
-								return errors.New("Wrong format for entry: " + pair)
+								return errors.New("Wrong format for entry (2): " + pair)
 							} else {
 								newFragment.fragmentBody.BasmMeta = newFragment.fragmentBody.SetMeta(keyVal[0], strings.Join(keyVal[1:], ":"))
 							}
@@ -256,14 +256,18 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 					// Processing symbols
 					if strings.HasSuffix(operand, ":") {
 						newSymbol := strings.TrimSuffix(operand, ":")
-						if bi.isSymbolled != "" {
-							newSymbol += ":" + bi.isSymbolled
+						if newSymbol != "" {
+							if bi.isSymbolled != "" {
+								newSymbol += ":" + bi.isSymbolled
+							}
+							bi.isSymbolled = newSymbol
 						}
-						bi.isSymbolled = newSymbol
-						if bi.lineMeta != "" {
-							bi.lineMeta += "," + strings.Join(argS[1:], "")
-						} else {
-							bi.lineMeta = strings.Join(argS[1:], "")
+						if argN > 1 {
+							if bi.lineMeta != "" {
+								bi.lineMeta += "," + strings.Join(argS[1:], "")
+							} else {
+								bi.lineMeta = strings.Join(argS[1:], "")
+							}
 						}
 						if bi.debug {
 							fmt.Print(yellow(" --> Symbol set"))
@@ -309,20 +313,20 @@ func basmParser(bi *BasmInstance, s string, lineNo uint32) error {
 								newLine.BasmMeta = newLine.SetMeta("symbol", bi.isSymbolled)
 							}
 							if bi.lineMeta != "" {
-								if len(argS) > 1 {
-									pairs := getPairs(bi.lineMeta)
+								// if len(argS) > 1 {
+								pairs := getPairs(bi.lineMeta)
 
-									if len(pairs) > 0 {
-										for _, pair := range pairs {
-											keyVal := strings.Split(pair, ":")
-											if len(keyVal) < 2 {
-												return errors.New("Wrong format for entry: " + pair)
-											} else {
-												newLine.BasmMeta = newLine.SetMeta(keyVal[0], keyVal[1])
-											}
+								if len(pairs) > 0 {
+									for _, pair := range pairs {
+										keyVal := strings.Split(pair, ":")
+										if len(keyVal) < 2 {
+											return errors.New("Wrong format for entry (3): " + pair)
+										} else {
+											newLine.BasmMeta = newLine.SetMeta(keyVal[0], strings.Join(keyVal[1:], ":"))
 										}
 									}
 								}
+								// }
 							}
 							bi.isSymbolled = ""
 							bi.lineMeta = ""

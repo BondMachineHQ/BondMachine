@@ -68,7 +68,7 @@ func (fn *BondgoFunctions) Visit(n ast.Node) ast.Visitor {
 		inputs := make([]FunctArg, 0)
 		outputs := make([]FunctArg, 0)
 
-		//TODO Include here check for repeting names in input and outputs
+		// TODO Include here check for repeating names in input and outputs
 
 		if funcType.Params != nil { // Not really necessary
 			for _, param := range funcType.Params.List {

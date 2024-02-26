@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"io/ioutil"
 	"os"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
@@ -40,7 +39,7 @@ func main() {
 
 	// Load net from a JSON file
 	if *netFile != "" {
-		if netFileJSON, err := ioutil.ReadFile(*netFile); err == nil {
+		if netFileJSON, err := os.ReadFile(*netFile); err == nil {
 			if err := json.Unmarshal(netFileJSON, net); err != nil {
 				panic(err)
 			}

@@ -3,28 +3,28 @@ package basm
 import "errors"
 
 const (
-	passTemplateResolver      = uint64(1)
-	passMetadataInfer1        = uint64(2)
-	passMacroResolver         = uint64(4)
-	passCallResolver          = uint64(8)
-	passDynamicalInstructions = uint64(16)
-	passSymbolTagger1         = uint64(32)
-	passDataSections2Bytes    = uint64(64)
-	passMetadataInfer2        = uint64(128)
-	passFragmentAnalyzer      = uint64(256)
-	passFragmentOptimizer1    = uint64(512)
-	passFragmentPruner        = uint64(1024)
-	passFragmentComposer      = uint64(2048)
-	passMetadataInfer3        = uint64(4096)
-	passEntryPoints           = uint64(8192)
-	passTemplateFinalizer     = uint64(16384)
-	passMatcherResolver       = uint64(32768)
-	passSymbolTagger2         = uint64(65536)
-	passMemComposer           = uint64(131072)
-	passSectionCleaner        = uint64(262144)
-	passSymbolTagger3         = uint64(524288)
-	passSymbolsResolver       = uint64(1048576)
-	LAST_PASS                 = uint64(1048576)
+	passTemplateResolver = uint64(1) << iota
+	passMetadataInfer1
+	passMacroResolver
+	passCallResolver
+	passDynamicalInstructions
+	passSymbolTagger1
+	passDataSections2Bytes
+	passMetadataInfer2
+	passFragmentAnalyzer
+	passFragmentOptimizer1
+	passFragmentPruner
+	passFragmentComposer
+	passMetadataInfer3
+	passEntryPoints
+	passTemplateFinalizer
+	passMatcherResolver
+	passSymbolTagger2
+	passMemComposer
+	passSectionCleaner
+	passSymbolTagger3
+	passSymbolsResolver
+	LAST_PASS = passSymbolsResolver
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {

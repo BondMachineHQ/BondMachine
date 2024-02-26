@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
@@ -69,6 +70,30 @@ func dataSections2Bytes(bi *BasmInstance) error {
 						}
 						line.Elements = newElements
 						offset += len(decodedBytes)
+					}
+				case "dd":
+					if decodedBytes, err := dbDataConverter(dataValue); err != nil {
+						return err
+					} else {
+						newElements := make([]*bmline.BasmElement, 0)
+						currHex := ""
+						for i, obj := range decodedBytes {
+							if i%4 == 0 {
+								if i != 0 {
+									newArg := new(bmline.BasmElement)
+									newArg.SetValue("0x" + currHex)
+									newElements = append(newElements, newArg)
+									currHex = ""
+								}
+							}
+							currHex += strings.TrimPrefix(obj, "0x")
+						}
+						newArg := new(bmline.BasmElement)
+						newArg.SetValue("0x" + currHex)
+						newElements = append(newElements, newArg)
+
+						line.Elements = newElements
+						offset += len(newElements)
 					}
 				case "sym":
 					// The symbol is resolved in the next steps

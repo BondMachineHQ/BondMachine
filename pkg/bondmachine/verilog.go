@@ -458,10 +458,10 @@ func (bmach *Bondmachine) Write_verilog_main(conf *Config, module_name string, f
 				}
 			}
 		} else if connected > 1 {
-			result += "	assign " + strings.ToLower(bond.String()) + "_received = ( 1'b0 \n"
+			result += "	assign " + strings.ToLower(bond.String()) + "_received = ( 1'b1 \n"
 			for iiID, linked := range bmach.Links {
 				if linked == ioID {
-					result += "		| (" + strings.ToLower(bmach.Internal_inputs[iiID].String()) + "_received) \n"
+					result += "		& (" + strings.ToLower(bmach.Internal_inputs[iiID].String()) + "_received) \n"
 				}
 			}
 			result += "		);\n"
@@ -479,6 +479,66 @@ func (bmach *Bondmachine) Write_verilog_main(conf *Config, module_name string, f
 func (bmach *Bondmachine) Write_verilog_testbench(module_name string, flavor string, iomaps *IOmap, extramods []ExtraModule, sbox *simbox.Simbox) string {
 
 	result := ""
+	result += `
+module request(clk, reset, req, ack, impulse);
+    input clk;
+    input reset;
+    output reg req;
+    input ack;
+    input impulse;
+
+    reg state;
+
+    initial begin
+        state = 0;
+        req = 0;
+    end
+
+    always @(posedge clk) begin
+        if (reset) begin
+            state <= 0;
+        end else begin
+            case (state)
+                0: begin
+                    req <= 0;
+                    if (impulse) begin
+                        state <= 1;
+                    end
+                end
+                1: begin
+                    req <= 1;
+                    if (ack) begin
+                        state <= 0;
+                    end
+                end
+            endcase
+        end
+    end
+
+endmodule
+
+module unlock(clk, reset, valid, received);
+    input clk;
+    input reset;
+    input valid;
+    output reg received;
+
+    always @(posedge clk) begin
+        if (reset) begin
+	    received <= 0;
+	end else begin
+	    if (valid) begin
+		received <= 1;
+	    end
+	    else begin
+		received <= 0;
+	    end
+	end
+	end
+endmodule
+
+`
+
 	result += "module " + module_name + "_tb;\n"
 	result += "\n"
 	result += "	reg clk, reset;\n"
@@ -486,12 +546,17 @@ func (bmach *Bondmachine) Write_verilog_testbench(module_name string, flavor str
 
 	// The External_inputs connected are defined as input port
 	for i := 0; i < bmach.Inputs; i++ {
-		result += "	reg [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Input" + strconv.Itoa(i) + ";\n"
+		result += "	reg [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] i" + strconv.Itoa(i) + ";\n"
+		result += "	wire i" + strconv.Itoa(i) + "_valid;\n"
+		result += "	wire i" + strconv.Itoa(i) + "_received;\n"
+		result += "	reg i" + strconv.Itoa(i) + "_impulse;\n"
 	}
 
 	// The External_inputs connected are defined as input port
 	for i := 0; i < bmach.Outputs; i++ {
-		result += "	wire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
+		result += "	wire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] o" + strconv.Itoa(i) + ";\n"
+		result += "	wire o" + strconv.Itoa(i) + "_valid;\n"
+		result += "	wire o" + strconv.Itoa(i) + "_received;\n"
 	}
 
 	result += "\n"
@@ -500,45 +565,68 @@ func (bmach *Bondmachine) Write_verilog_testbench(module_name string, flavor str
 
 	// The External_inputs connected are defined as input port
 	for i := 0; i < bmach.Inputs; i++ {
-		result += ", Input" + strconv.Itoa(i)
+		result += ", i" + strconv.Itoa(i)
+		result += ", i" + strconv.Itoa(i) + "_valid"
+		result += ", i" + strconv.Itoa(i) + "_received"
 	}
 
 	// The External_inputs connected are defined as input port
 	for i := 0; i < bmach.Outputs; i++ {
-		result += ", Output" + strconv.Itoa(i)
+		result += ", o" + strconv.Itoa(i)
+		result += ", o" + strconv.Itoa(i) + "_valid"
+		result += ", o" + strconv.Itoa(i) + "_received"
 	}
 
 	result += ");\n\n"
+
+	for i := 0; i < bmach.Inputs; i++ {
+		result += "	request i" + strconv.Itoa(i) + "_req(\n"
+		result += "		.clk(clk),\n"
+		result += "		.reset(reset),\n"
+		result += "		.req(i" + strconv.Itoa(i) + "_valid),\n"
+		result += "		.ack(i" + strconv.Itoa(i) + "_received),\n"
+		result += "		.impulse(i" + strconv.Itoa(i) + "_impulse)\n"
+		result += "	);\n"
+	}
+
+	for i := 0; i < bmach.Outputs; i++ {
+		result += "	unlock o" + strconv.Itoa(i) + "_unlock(\n"
+		result += "		.clk(clk),\n"
+		result += "		.reset(reset),\n"
+		result += "		.valid(o" + strconv.Itoa(i) + "_valid),\n"
+		result += "		.received(o" + strconv.Itoa(i) + "_received)\n"
+		result += "	);\n"
+	}
+
+	result += "\talways #1 clk = ~clk;\n"
 
 	result += "\tinitial  begin\n"
 	result += "\t\t$dumpfile (\"working_dir/bondmachine.vcd\");\n"
 	result += "\t\t$dumpvars;\n"
 	result += "\tend\n"
 
+	result += "\tinitial begin\n"
+	result += "\t\tclk = 1'b0;\n"
+	result += "\t\treset = 1'b1;\n"
+
+	for i := 0; i < bmach.Inputs; i++ {
+		result += "\t\ti" + strconv.Itoa(i) + " = 1'b0;\n"
+	}
+
+	result += "\t\t#100;\n\n"
+	result += "\t\treset = 1'b0;\n"
+
+	for _, rule := range sbox.Rules {
+		if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_SET {
+			result += "\t\t#" + strconv.Itoa(int(rule.Tick)) + ";\n"
+			result += "\t\t" + rule.Object + " = " + rule.Extra + ";\n"
+			result += "\t\t" + rule.Object + "_impulse = 1'b1;\n"
+			result += "\t\t#4 " + rule.Object + "_impulse = 1'b0;\n"
+		}
+	}
+
 	result += "\n"
-	result += "\tinteger tickN;\n"
-	result += "\tlocalparam TICK=20;\n"
-	result += "\n"
-	result += "\talways\n"
-	result += "\t\tbegin\n"
-	result += "\t\tclk = 1;\n"
-	result += "\t\t#(TICK/2);\n"
-	result += "\t\tclk = 0;\n"
-	result += "\t\t#(TICK/2);\n"
-	result += "\n"
-	result += "\t\ttickN = tickN + 1;\n"
-	result += "\t\t$display(\"--------------Tick %d---------------\", tickN);\n"
-	result += "\tend\n"
-	result += "\n"
-	result += "\tinitial\n"
-	result += "\tbegin\n"
-	result += "\t\ttickN = 1;\n"
-	result += "\t\treset = 1;\n"
-	result += "\t\t#1;\n"
-	result += "\t\treset = 0;\n"
-	result += "\n"
-	result += "\t\t#(100 * TICK);\n"
-	result += "\n"
+	result += "\t\t#100000;\n"
 	result += "\t\t$finish;\n"
 	result += "\tend\n"
 	result += "endmodule\n"

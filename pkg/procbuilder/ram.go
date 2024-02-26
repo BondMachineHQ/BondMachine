@@ -52,7 +52,7 @@ func (ram *Ram) Write_verilog(conf *Config, mach *Machine, ram_module_name strin
 			}
 			num, _ := bmnumbers.ImportBytes(buff, int(mach.Rsize))
 			numV, _ := num.ExportVerilogBinary()
-			result += "		mem[" + strconv.Itoa(line) + "] <= " + numV + ";\n"
+			result += "		mem[" + strconv.Itoa(line) + "] = " + numV + ";\n"
 		}
 
 		result += "	end\n"
@@ -64,8 +64,8 @@ func (ram *Ram) Write_verilog(conf *Config, mach *Machine, ram_module_name strin
 	result += "		integer k; \n"
 	result += "		if (rst)\n"
 	result += "		begin \n"
-	result += "			for(k=0;k<" + strconv.Itoa(ram_depth) + ";k=k+1) \n"
-	result += "				mem[k] <= #1 " + strconv.Itoa(int(mach.Rsize)) + "'b0; \n"
+	//	result += "			for(k=0;k<" + strconv.Itoa(ram_depth) + ";k=k+1) \n"
+	//	result += "				mem[k] <= #1 " + strconv.Itoa(int(mach.Rsize)) + "'b0; \n"
 	result += "		end \n"
 	result += "		else if (wren)\n"
 	result += "			mem[addr] <= #1 din;\n"
