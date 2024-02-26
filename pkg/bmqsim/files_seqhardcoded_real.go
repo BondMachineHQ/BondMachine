@@ -82,7 +82,7 @@ endloop:
 %endsection
 
 %section mainram .ramdata
-{{- range $i := n 0 .NumGates }}
+{{- range $i := n 0 .MatrixRows }}
         res{{ $i }} dd 0f0
 {{- end }}
 %endsection

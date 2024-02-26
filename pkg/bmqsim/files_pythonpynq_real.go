@@ -52,7 +52,7 @@ const (
     "# COSTANTS\n",
     "#SAMPLES = len(X_test)\n",
     " \n",
-    "BATCH_SIZE = {{ div 32 .MatrixRows }}  # SIZE OF THE BATCH TO SEND\n",
+    "BATCH_SIZE = 16 # SIZE OF THE BATCH TO SEND\n",
     "BM_INPUTS  = {{ .MatrixRows }}   # N. OF INPUTS OF THE BONDMACHINE MODULE \n",
     "BM_OUTPUTS = {{ .MatrixRows }}   # N. OF OUTPUTS OF THE BONDMACHINE MODULE\n",
     "PRECISION  = 32\n",
@@ -78,7 +78,7 @@ const (
    "outputs": [],
    "source": [
     "input_array = np.zeros(shape=INPUT_SHAPE, dtype=np.float32)\n",
-    "# Set the zero state",
+    "# Set the zero state\n",
     "input_array[0] = [1. {{- range $i := n 0 (dec .MatrixRows) }} ,0. {{ end }}]"
 
    ]
