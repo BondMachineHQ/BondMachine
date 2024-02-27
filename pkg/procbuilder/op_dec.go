@@ -62,6 +62,15 @@ func (op Dec) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
+
+		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlyDestRegs)) {
+			cp := arch.Tag
+			req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:dec", T: bmreqs.ObjectSet, Name: "destregs", Value: Get_register_name(i), Op: bmreqs.OpCheck})
+			if req.Value == "false" {
+				continue
+			}
+		}
+
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 		result += "							_" + strings.ToLower(Get_register_name(i)) + " <= _" + strings.ToLower(Get_register_name(i)) + " - 1'b1;\n"
 		result += "							$display(\"DEC " + strings.ToUpper(Get_register_name(i)) + "\");\n"
@@ -187,6 +196,8 @@ func (Op Dec) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 	case "dec":
 		regNeed := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "dec", Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:dec", T: bmreqs.ObjectSet, Name: "destregs", Value: regNeed, Op: bmreqs.OpAdd})
 		return line, nil
 	}
 	return nil, errors.New("HL Assembly normalize failed")

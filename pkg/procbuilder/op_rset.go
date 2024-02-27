@@ -43,20 +43,29 @@ func (op Rset) Op_instruction_internal_state(arch *Arch, flavor string) string {
 
 func (op Rset) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
-	opbits := arch.Opcodes_bits()
+	opBits := arch.Opcodes_bits()
 
 	reg_num := 1 << arch.R
 
 	result := ""
 	result += "					RSET: begin\n"
 	if arch.R == 1 {
-		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opBits-1) + "])\n"
 	} else {
-		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opBits-1) + ":" + strconv.Itoa(rom_word-opBits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
+
+		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlyDestRegs)) {
+			cp := arch.Tag
+			req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:rset", T: bmreqs.ObjectSet, Name: "destregs", Value: Get_register_name(i), Op: bmreqs.OpCheck})
+			if req.Value == "false" {
+				continue
+			}
+		}
+
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "							_" + strings.ToLower(Get_register_name(i)) + " <= #1 current_instruction[" + strconv.Itoa(rom_word-opbits-1-int(arch.R)) + ":" + strconv.Itoa(rom_word-opbits-int(arch.Rsize)-int(arch.R)) + "];\n"
+		result += "							_" + strings.ToLower(Get_register_name(i)) + " <= #1 current_instruction[" + strconv.Itoa(rom_word-opBits-1-int(arch.R)) + ":" + strconv.Itoa(rom_word-opBits-int(arch.Rsize)-int(arch.R)) + "];\n"
 		result += "							$display(\"RSET " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
 		result += "						end\n"
 	}
@@ -209,10 +218,12 @@ func (Op Rset) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string,
 	case "rset":
 		regNeed := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:rset", T: bmreqs.ObjectSet, Name: "destregs", Value: regNeed, Op: bmreqs.OpAdd})
 		return line, nil
 	case "mov":
 		regNeed := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:rset", T: bmreqs.ObjectSet, Name: "destregs", Value: regNeed, Op: bmreqs.OpAdd})
 		line.Operation.SetValue("rset")
 		return line, nil
 	}

@@ -53,6 +53,15 @@ func (op Jz) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *
 		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
+
+		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlyDestRegs)) {
+			cp := arch.Tag
+			req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:jz", T: bmreqs.ObjectSet, Name: "destregs", Value: Get_register_name(i), Op: bmreqs.OpCheck})
+			if req.Value == "false" {
+				continue
+			}
+		}
+
 		result += "							" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 		result += "								if(_" + strings.ToLower(Get_register_name(i)) + " == 'b0) begin\n"
 		result += NextInstruction(conf, arch, 8, "current_instruction["+strconv.Itoa(rom_word-opbits-1-int(arch.R))+":"+strconv.Itoa(rom_word-opbits-int(arch.O)-int(arch.R))+"]")
@@ -226,6 +235,10 @@ func (Op Jz) HLAssemblerMatch(arch *Arch) []string {
 func (Op Jz) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
 	case "jz":
+		regNeed := line.Elements[0].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "jz", Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:jz", T: bmreqs.ObjectSet, Name: "destregs", Value: regNeed, Op: bmreqs.OpAdd})
 		return line, nil
 	}
 	return nil, errors.New("HL Assembly normalize failed")

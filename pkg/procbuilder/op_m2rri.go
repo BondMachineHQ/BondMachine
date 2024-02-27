@@ -91,6 +91,15 @@ func (op M2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 		result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < regNum; i++ {
+
+		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlyDestRegs)) {
+			cp := arch.Tag
+			req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:m2rri", T: bmreqs.ObjectSet, Name: "destregs", Value: Get_register_name(i), Op: bmreqs.OpCheck})
+			if req.Value == "false" {
+				continue
+			}
+		}
+
 		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
 		if arch.R == 1 {
@@ -100,6 +109,15 @@ func (op M2rri) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 		}
 
 		for j := 0; j < regNum; j++ {
+
+			if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlySrcRegs)) {
+				cp := arch.Tag
+				req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:m2rri", T: bmreqs.ObjectSet, Name: "sourceregs", Value: Get_register_name(j), Op: bmreqs.OpCheck})
+				if req.Value == "false" {
+					continue
+				}
+			}
+
 			result += "							" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
 
 			result += "								if (state_read_mem_m2rri == 1'b1) begin\n"
@@ -328,12 +346,18 @@ func (Op M2rri) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string
 		regDest := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regDest, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "m2rri", Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:m2rri", T: bmreqs.ObjectSet, Name: "destregs", Value: regDest, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:m2rri", T: bmreqs.ObjectSet, Name: "sourceregs", Value: regNeed, Op: bmreqs.OpAdd})
 		return line, nil
 	case "mov":
 		regDest := line.Elements[0].GetValue()
 		regNeed := line.Elements[1].GetMeta("ramregister")
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regDest, Op: bmreqs.OpAdd})
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "m2rri", Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:m2rri", T: bmreqs.ObjectSet, Name: "destregs", Value: regDest, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:m2rri", T: bmreqs.ObjectSet, Name: "sourceregs", Value: regNeed, Op: bmreqs.OpAdd})
 		if regDest != "" && regNeed != "" {
 			newLine := new(bmline.BasmLine)
 			newOp := new(bmline.BasmElement)
