@@ -36,7 +36,6 @@ func nth_assoc(assoc string, seq int) string {
 
 func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOmap, extramods []ExtraModule, sbox *simbox.Simbox) error {
 	if len(bmach.Domains) != 0 {
-
 		pConf := conf.ProcbuilderConfig()
 
 		// Check if the bmapi module is present, needed for the exclusion of the bondmachine_main module from the accelerators

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -241,7 +240,6 @@ func main() {
 	conf.HwOptimizations = 0
 	conf.Dotdetail = uint8(*dot_detail)
 	conf.CommentedVerilog = *commentedVerilog
-
 	if *bcofInFile != "" {
 		conf.BCOFEntry = new(bcof.BCOFEntry)
 		bcofBytes, err := os.ReadFile(*bcofInFile)
@@ -266,7 +264,7 @@ func main() {
 	var bmach *bondmachine.Bondmachine
 
 	if *bmInfoFile != "" {
-		if bmInfoJSON, err := ioutil.ReadFile(*bmInfoFile); err == nil {
+		if bmInfoJSON, err := os.ReadFile(*bmInfoFile); err == nil {
 			conf.BMinfo = new(bminfo.BMinfo)
 			if err := json.Unmarshal(bmInfoJSON, conf.BMinfo); err != nil {
 				panic(err)
@@ -277,7 +275,7 @@ func main() {
 	}
 
 	if *bmRequirementsFile != "" {
-		if bmRequirementsJSON, err := ioutil.ReadFile(*bmRequirementsFile); err == nil {
+		if bmRequirementsJSON, err := os.ReadFile(*bmRequirementsFile); err == nil {
 			reqs := new(bmreqs.ExportedReqs)
 			if err := json.Unmarshal(bmRequirementsJSON, reqs); err != nil {
 				panic(err)
@@ -293,7 +291,7 @@ func main() {
 	if *bondmachine_file != "" {
 		if _, err := os.Stat(*bondmachine_file); err == nil {
 			// Open the bondmachine file is exists
-			if bondmachine_json, err := ioutil.ReadFile(*bondmachine_file); err == nil {
+			if bondmachine_json, err := os.ReadFile(*bondmachine_file); err == nil {
 				var bmachj bondmachine.Bondmachine_json
 				if err := json.Unmarshal([]byte(bondmachine_json), &bmachj); err == nil {
 					bmach = (&bmachj).Dejsoner()
@@ -320,7 +318,7 @@ func main() {
 		if *create_verilog {
 			iomap := new(bondmachine.IOmap)
 			if *verilog_mapfile != "" {
-				if mapfile_json, err := ioutil.ReadFile(*verilog_mapfile); err == nil {
+				if mapfile_json, err := os.ReadFile(*verilog_mapfile); err == nil {
 					if err := json.Unmarshal([]byte(mapfile_json), iomap); err != nil {
 						panic(err)
 					}
@@ -368,7 +366,7 @@ func main() {
 
 				ethiomap := new(bondmachine.IOmap)
 				if *etherbond_mapfile != "" {
-					if mapfile_json, err := ioutil.ReadFile(*etherbond_mapfile); err == nil {
+					if mapfile_json, err := os.ReadFile(*etherbond_mapfile); err == nil {
 						if err := json.Unmarshal([]byte(mapfile_json), ethiomap); err != nil {
 							panic(err)
 						}
@@ -382,7 +380,7 @@ func main() {
 
 				macmap := new(etherbond.Macs)
 				if *etherbond_macfile != "" {
-					if macfile_json, err := ioutil.ReadFile(*etherbond_macfile); err == nil {
+					if macfile_json, err := os.ReadFile(*etherbond_macfile); err == nil {
 						if err := json.Unmarshal([]byte(macfile_json), macmap); err != nil {
 							panic(err)
 						}
@@ -424,7 +422,7 @@ func main() {
 
 				ethiomap := new(bondmachine.IOmap)
 				if *udpbond_mapfile != "" {
-					if mapfile_json, err := ioutil.ReadFile(*udpbond_mapfile); err == nil {
+					if mapfile_json, err := os.ReadFile(*udpbond_mapfile); err == nil {
 						if err := json.Unmarshal([]byte(mapfile_json), ethiomap); err != nil {
 							panic(err)
 						}
@@ -438,7 +436,7 @@ func main() {
 
 				macmap := new(udpbond.Ips)
 				if *udpbond_ipfile != "" {
-					if macfile_json, err := ioutil.ReadFile(*udpbond_ipfile); err == nil {
+					if macfile_json, err := os.ReadFile(*udpbond_ipfile); err == nil {
 						if err := json.Unmarshal([]byte(macfile_json), macmap); err != nil {
 							panic(err)
 						}
@@ -449,7 +447,7 @@ func main() {
 
 				netparams := new(bondmachine.NetParameters)
 				if *udpbond_netconfig != "" {
-					if netconfig_json, err := ioutil.ReadFile(*udpbond_netconfig); err == nil {
+					if netconfig_json, err := os.ReadFile(*udpbond_netconfig); err == nil {
 						if err := json.Unmarshal([]byte(netconfig_json), netparams); err != nil {
 							panic(err)
 						}
@@ -511,7 +509,7 @@ func main() {
 
 				//				ethiomap := new(bondmachine.IOmap)
 				//				if *udpbond_mapfile != "" {
-				//					if mapfile_json, err := ioutil.ReadFile(*udpbond_mapfile); err == nil {
+				//					if mapfile_json, err := os.ReadFile(*udpbond_mapfile); err == nil {
 				//						if err := json.Unmarshal([]byte(mapfile_json), ethiomap); err != nil {
 				//							panic(err)
 				//						}
@@ -562,7 +560,7 @@ func main() {
 
 				bmAPIMap := new(bondmachine.IOmap)
 				if *bmapiMapfile != "" {
-					if mapfileJSON, err := ioutil.ReadFile(*bmapiMapfile); err == nil {
+					if mapfileJSON, err := os.ReadFile(*bmapiMapfile); err == nil {
 						if err := json.Unmarshal([]byte(mapfileJSON), bmAPIMap); err != nil {
 							panic(err)
 						} else {
@@ -584,7 +582,7 @@ func main() {
 				uart := new(bondmachine.UartExtra)
 				uartMap := new(bondmachine.IOmap)
 				if *uartMapFile != "" {
-					if mapfileJSON, err := ioutil.ReadFile(*uartMapFile); err == nil {
+					if mapfileJSON, err := os.ReadFile(*uartMapFile); err == nil {
 						if err := json.Unmarshal([]byte(mapfileJSON), uartMap); err != nil {
 							panic(err)
 						} else {
@@ -643,7 +641,7 @@ func main() {
 					sbox = new(simbox.Simbox)
 					if _, err := os.Stat(*simbox_file); err == nil {
 						// Open the simbox file is exists
-						if simbox_json, err := ioutil.ReadFile(*simbox_file); err == nil {
+						if simbox_json, err := os.ReadFile(*simbox_file); err == nil {
 							if err := json.Unmarshal([]byte(simbox_json), sbox); err != nil {
 								panic(err)
 							}
@@ -670,7 +668,7 @@ func main() {
 		} else if &add_domains != nil && len(add_domains) != 0 {
 			for _, load_machine := range add_domains {
 				if _, err := os.Stat(load_machine); err == nil {
-					if jsonfile, err := ioutil.ReadFile(load_machine); err == nil {
+					if jsonfile, err := os.ReadFile(load_machine); err == nil {
 						var machj procbuilder.Machine_json
 						if err := json.Unmarshal([]byte(jsonfile), &machj); err == nil {
 							mymachine := (&machj).Dejsoner()
@@ -848,7 +846,7 @@ func main() {
 				sbox = new(simbox.Simbox)
 				if _, err := os.Stat(*simbox_file); err == nil {
 					// Open the simbox file is exists
-					if simbox_json, err := ioutil.ReadFile(*simbox_file); err == nil {
+					if simbox_json, err := os.ReadFile(*simbox_file); err == nil {
 						if err := json.Unmarshal([]byte(simbox_json), sbox); err != nil {
 							panic(err)
 						}
@@ -1165,7 +1163,6 @@ func main() {
 
 			}
 		}
-
 		// Write the bondmachine file
 		f, err := os.Create(*bondmachine_file)
 		check(err)

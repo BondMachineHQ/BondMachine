@@ -58,7 +58,7 @@ func (b *BCOFEntry) AddData(data *BCOFData) {
 
 func (b *BCOFEntry) SearchData(s string) *BCOFData {
 	for _, subEntry := range b.Data {
-		fmt.Println("subEntry: ", subEntry)
+		//fmt.Println("subEntry: ", subEntry)
 		if d := subEntry.GetLeaf(); d != nil {
 			//TODO
 		}

@@ -8,7 +8,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -565,7 +564,7 @@ func main() {
 			aafile := new(bondgo.Abs_assembly)
 
 			if _, err := os.Stat(*input_file); err == nil {
-				if jsonfile, err := ioutil.ReadFile(*input_file); err == nil {
+				if jsonfile, err := os.ReadFile(*input_file); err == nil {
 					if err := json.Unmarshal([]byte(jsonfile), aafile); err != nil {
 						panic(err)
 					}
