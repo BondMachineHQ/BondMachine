@@ -13,19 +13,23 @@ import (
 // full_hw_hardcoded
 
 var HardwareFlavors = map[string]string{
-	"seq_hardcoded_real": SeqHardcodedReal,
+	"seq_hardcoded_real":    SeqHardcodedReal,
+	"seq_hardcoded_complex": SeqHardcodedComplex,
 }
 
 var HardwareFlavorsTags = map[string][]string{
-	"seq_hardcoded_real": {"real"},
+	"seq_hardcoded_real":    {"real"},
+	"seq_hardcoded_complex": {"complex"},
 }
 
 var AppFlavors = map[string]string{
-	"python_pynq_real": PythonPynqReal,
+	"python_pynq_real":    PythonPynqReal,
+	"python_pynq_complex": PythonPynqComplex,
 }
 
 var AppFlavorsTags = map[string][]string{
-	"python_pynq_real": {"real"},
+	"python_pynq_real":    {"real"},
+	"python_pynq_complex": {"complex"},
 }
 
 type templateData struct {
@@ -71,11 +75,21 @@ func (sim *BmQSimulator) createBasicTemplateData() *templateData {
 			}
 			return result
 		},
+		"ns": func(start, end, step int) []int {
+			var result []int
+			for i := start; i < end; i += step {
+				result = append(result, i)
+			}
+			return result
+		},
 		"sum": func(a, b int) int {
 			return a + b
 		},
 		"div": func(a, b int) int {
 			return a / b
+		},
+		"mult": func(a, b int) int {
+			return a * b
 		},
 	}
 	result.funcMap = funcMap
@@ -117,6 +131,7 @@ func (sim *BmQSimulator) VerifyConditions(mode string) error {
 				}
 			}
 		}
+	case "seq_hardcoded_complex":
 	}
 	return nil
 }
