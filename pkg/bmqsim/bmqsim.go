@@ -362,9 +362,15 @@ func (sim *BmQSimulator) MatrixFromOp(line *bmline.BasmLine) (*bmmatrix.BmMatrix
 	return nil, nil
 }
 
-func (sim *BmQSimulator) EmitBMAPIMaps() (string, error) {
+func (sim *BmQSimulator) EmitBMAPIMaps(hwflavor string) (string, error) {
 	if sim != nil && sim.qbits != nil {
-		ioNum := int(math.Pow(float64(2), float64(len(sim.qbits))))
+		var ioNum int
+		switch hwflavor {
+		case "seq_hardcoded_real":
+			ioNum = int(math.Pow(float64(2), float64(len(sim.qbits))))
+		case "seq_hardcoded_complex":
+			ioNum = int(math.Pow(float64(2), float64(len(sim.qbits)))) * 2
+		}
 		newMap := new(IOmap)
 		newMap.Assoc = make(map[string]string)
 		for i := 0; i < ioNum; i++ {

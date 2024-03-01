@@ -228,11 +228,19 @@ func main() {
 		}
 
 		if *emitBMAPIMaps {
-			if fileData, err := sim.EmitBMAPIMaps(); err != nil {
-				bld.Alert(err)
-				return
+			if startBuilding && *hardwareFlavor != "" {
+				if _, ok := bmqsim.HardwareFlavors[*hardwareFlavor]; ok {
+					if fileData, err := sim.EmitBMAPIMaps(*hardwareFlavor); err != nil {
+						bld.Alert(err)
+						return
+					} else {
+						os.WriteFile(*bmAPIMapsFile, []byte(fileData), 0644)
+					}
+				} else {
+					bld.Alert("Hardware flavor not found")
+				}
 			} else {
-				os.WriteFile(*bmAPIMapsFile, []byte(fileData), 0644)
+				bld.Alert("No quantum circuit to build the BM API maps")
 			}
 		}
 
