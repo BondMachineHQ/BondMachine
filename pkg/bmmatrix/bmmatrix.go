@@ -211,3 +211,17 @@ func MatrixProductComplex(a, b *BmMatrixSquareComplex) *BmMatrixSquareComplex {
 	}
 	return c
 }
+
+func MatrixVectorProductComplex(a *BmMatrixSquareComplex, b []Complex32) ([]Complex32, error) {
+	if len(b) != a.N {
+		return nil, fmt.Errorf("MatrixVectorProductComplex: vector length does not match matrix size")
+	}
+	c := make([]Complex32, a.N)
+	for i := 0; i < a.N; i++ {
+		c[i] = Complex32{0, 0}
+		for j := 0; j < a.N; j++ {
+			c[i] = Complex32Add(c[i], Complex32Mul(a.Data[i][j], b[j]))
+		}
+	}
+	return c, nil
+}
