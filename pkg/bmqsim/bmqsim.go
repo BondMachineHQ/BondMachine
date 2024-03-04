@@ -10,6 +10,10 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmmatrix"
 )
 
+type StateArray struct {
+	Vector []bmmatrix.Complex32
+}
+
 type IOmap struct {
 	Assoc map[string]string
 }
@@ -19,6 +23,8 @@ type BmQSimulator struct {
 	qbits    []string
 	qbitsNum map[string]int
 	Mtx      []*bmmatrix.BmMatrixSquareComplex
+	Inputs   []StateArray
+	Outputs  []StateArray
 }
 
 // BmQSimulatorInit initializes the BmQSimulator
@@ -27,6 +33,14 @@ func (sim *BmQSimulator) BmQSimulatorInit() {
 	sim.debug = false
 	sim.qbits = make([]string, 0)
 	sim.qbitsNum = make(map[string]int)
+}
+
+func (sim *BmQSimulator) QbitsNum() int {
+	return len(sim.qbits)
+}
+
+func (sim *BmQSimulator) StateSize() int {
+	return int(math.Pow(2, float64(len(sim.qbits))))
 }
 
 func (sim *BmQSimulator) Dump() string {
@@ -215,7 +229,12 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 				result = bmmatrix.TensorProductComplex(result, ident)
 			}
 		} else {
-			argNumQBits := len(op[fundLine].Elements)
+			argNumQBits := 0
+			for _, arg := range op[fundLine].Elements {
+				if _, ok := sim.qbitsNum[arg.GetValue()]; ok {
+					argNumQBits++
+				}
+			}
 			if argNumQBits == 1 {
 				// Single qbit operation
 				// Create the matrix
@@ -233,16 +252,21 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 				// The order of the qbits in the operation is important, we need to reorder the qbits in the operation
 				// if they are not in sequence by swapping the qbits and then swapping them back after the matrix is created
 
-				localOrder := make([]int, argNumQBits)
+				localOrder := make([]int, len(op[fundLine].Elements))
 				for i, arg := range op[fundLine].Elements {
 					argName := arg.GetValue()
-					localOrder[i] = sim.qbitsNum[argName]
+					if _, ok := sim.qbitsNum[argName]; ok {
+						localOrder[i] = sim.qbitsNum[argName]
+					} else {
+						// Leaving out the arguments that are not qbits
+						localOrder[i] = -1
+					}
 				}
 
 				//fmt.Println(localOrder, q)
 
 				for i, lq := range localOrder {
-					if lq != q {
+					if lq != q && lq != -1 {
 						// Swap the qbits
 						localQBits[q], localQBits[lq] = localQBits[lq], localQBits[q]
 						// Add the swap to the list
@@ -342,8 +366,12 @@ func (sim *BmQSimulator) MatrixFromOp(line *bmline.BasmLine) (*bmmatrix.BmMatrix
 		return bmmatrix.PauliZ(), nil
 	case "cx", "cnot", "xor":
 		return bmmatrix.CNot(), nil
-	case "s", "p", "phase":
+	case "s", "p":
 		return bmmatrix.S(), nil
+	case "v", "sx":
+		return bmmatrix.Sx(), nil
+	case "t":
+		return bmmatrix.T(), nil
 	case "xnor":
 		return bmmatrix.XNor(), nil
 	case "cz", "cphase", "csign", "cpf":
@@ -354,6 +382,10 @@ func (sim *BmQSimulator) MatrixFromOp(line *bmline.BasmLine) (*bmmatrix.BmMatrix
 		return bmmatrix.Swap(), nil
 	case "iswap":
 		return bmmatrix.Iswap(), nil
+	case "phase", "ph":
+		return sim.Phase(line)
+	case "r":
+		return sim.P(line)
 	case "zero":
 	// Ignore the zero operation
 	default:
@@ -384,4 +416,36 @@ func (sim *BmQSimulator) EmitBMAPIMaps(hwflavor string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("no qbits defined")
+}
+
+func (sim *BmQSimulator) RunSoftwareSimulation() error {
+	// TODO Include the checks
+	sim.Outputs = make([]StateArray, len(sim.Inputs))
+	for i, input := range sim.Inputs {
+		if len(input.Vector) != sim.StateSize() {
+			return fmt.Errorf("input %d has %d vectors, expected %d", i, len(input.Vector), sim.StateSize())
+		}
+
+		curState := make([]bmmatrix.Complex32, sim.StateSize())
+		copy(curState, input.Vector)
+
+		for j, mtx := range sim.Mtx {
+			if mtx == nil {
+				return fmt.Errorf("matrix %d is nil", j)
+			}
+			if len(mtx.Data) != sim.StateSize() {
+				return fmt.Errorf("matrix %d has %d vectors, expected %d", j, len(mtx.Data), sim.StateSize())
+			}
+
+			if newState, err := bmmatrix.MatrixVectorProductComplex(mtx, curState); err != nil {
+				return fmt.Errorf("error running the software simulation: %v", err)
+			} else {
+				curState = newState
+			}
+		}
+
+		sim.Outputs[i] = StateArray{Vector: curState}
+
+	}
+	return nil
 }

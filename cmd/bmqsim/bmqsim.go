@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -35,8 +36,8 @@ var buildFullHardwareHardcoded = flag.Bool("build-full-hw-hardcoded", false, "Bu
 
 // 4
 var softwareSimulation = flag.Bool("software-simulation", false, "Software simulation mode")
-var softwareSimulationInput = flag.String("software-simulation-input", "", "Software simulation mode input file")
-var softwareSimulationOutput = flag.String("software-simulation-output", "", "Software simulation mode output file")
+var softwareSimulationInput = flag.String("software-simulation-input", "", "Software simulation mode input file. If not provided, the input will be zero-state")
+var softwareSimulationOutput = flag.String("software-simulation-output", "", "Software simulation mode output file, if not provided the output will be printed to stdout")
 
 // Common options
 
@@ -297,14 +298,52 @@ func main() {
 	}
 
 	if *softwareSimulation {
-		// Build a binary for a matrix sequence BM
-		fmt.Println("Under construction")
+		if startBuilding {
+			// Software simulation mode
+			if *softwareSimulationInput != "" {
+				// Load the input data from a json file
+				inputs := new([]bmqsim.StateArray)
+				if inputJSON, err := os.ReadFile(*softwareSimulationInput); err == nil {
+					if err := json.Unmarshal([]byte(inputJSON), inputs); err != nil {
+						panic(err)
+					}
+				} else {
+					panic(err)
+				}
+				sim.Inputs = *inputs
+			} else {
+				// Zero state
+				inputs := new(bmqsim.StateArray)
+				inputs.Vector = make([]bmmatrix.Complex32, sim.StateSize())
+				for i := range inputs.Vector {
+					if i == 0 {
+						inputs.Vector[i] = bmmatrix.Complex32{Real: 1, Imag: 0}
+					} else {
+						inputs.Vector[i] = bmmatrix.Complex32{Real: 0, Imag: 0}
+					}
+				}
+				sim.Inputs = make([]bmqsim.StateArray, 1)
+				sim.Inputs[0] = *inputs
+			}
 
-		if *hardwareFlavorList {
-			// List of available hardware flavors for the selected operating mode
-		} else if *hardwareFlavor != "" {
+			if err := sim.RunSoftwareSimulation(); err != nil {
+				bld.Alert(err)
+				return
+			}
+
+			// Save the output data to a json file or print it to stdout
+			if outputJSON, err := json.Marshal(sim.Outputs); err == nil {
+				if *softwareSimulationOutput != "" {
+					os.WriteFile(*softwareSimulationOutput, outputJSON, 0644)
+				} else {
+					fmt.Println(string(outputJSON))
+				}
+			} else {
+				panic(err)
+			}
+
 		} else {
-			bld.Alert("Hardware flavor must be selected")
+			bld.Alert("No quantum circuit to run the software simulation")
 		}
 	}
 
