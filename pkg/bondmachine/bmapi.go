@@ -188,7 +188,7 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 		}
 
 		switch flavor {
-		case "alveou50":
+		case "alveou50", "alveou55c":
 			// This is the generation of the directory for the kernel project
 			if _, err := os.Stat(bmapiModOutDir); os.IsNotExist(err) {
 				os.Mkdir(bmapiModOutDir, 0700)
