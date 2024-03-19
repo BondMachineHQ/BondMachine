@@ -25,11 +25,19 @@ var HardwareFlavorsTags = map[string][]string{
 var AppFlavors = map[string]string{
 	"python_pynq_real":    PythonPynqReal,
 	"python_pynq_complex": PythonPynqComplex,
+	"c_pynqapi_real":      CPynqApiReal,
+	"c_pynqapi_complex":   CPynqApiComplex,
+	"cpp_opencl_real":     CppOpenCLReal,
+	"cpp_opencl_complex":  CppOpenCLComplex,
 }
 
 var AppFlavorsTags = map[string][]string{
 	"python_pynq_real":    {"real"},
 	"python_pynq_complex": {"complex"},
+	"c_pynqapi_real":      {"real"},
+	"c_pynqapi_complex":   {"complex"},
+	"cpp_opencl_real":     {"real"},
+	"cpp_opencl_complex":  {"complex"},
 }
 
 type templateData struct {
@@ -126,7 +134,7 @@ func (sim *BmQSimulator) VerifyConditions(mode string) error {
 			for i := 0; i < m.N; i++ {
 				for j := 0; j < m.N; j++ {
 					if m.Data[i][j].Imag != 0 {
-						return fmt.Errorf("Complex numbers are not supported in this mode")
+						return fmt.Errorf("complex numbers are not supported in this mode")
 					}
 				}
 			}

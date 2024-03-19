@@ -250,7 +250,7 @@ func main() {
 	if *buildMatrixSeqHardcoded {
 		// Build a matrix sequence BM with hardcoded quantum circuit
 
-		modeTags := []string{"real"}
+		modeTags := []string{"real", "complex"}
 
 		if *hardwareFlavorList {
 			// List of available hardware flavors for the selected operating mode
@@ -350,7 +350,7 @@ func main() {
 	if *buildApp {
 		// Build an hardware connected app
 
-		modeTags := []string{"real"}
+		modeTags := []string{"real", "complex"}
 
 		if *appFlavorList {
 			// List of available app flavors for the selected operating mode
