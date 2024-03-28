@@ -23,7 +23,7 @@ int main() {
         float * d2=(float*)shared_memory_2.pointer;
 
         for (int i=0;i<TOTIN;i++) {
-                d2[i]=0;
+                d1[i]=0;
         }
   
         d1[0]=1.0;

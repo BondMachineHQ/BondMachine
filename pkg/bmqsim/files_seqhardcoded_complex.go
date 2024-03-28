@@ -16,7 +16,6 @@ mainloop:
 
 	{{"{{"}} .Params.multop {{"}}"}}	r0, r3
 	mov	r6, r0
-	{{"{{"}} .Params.multop {{"}}"}}	r6, r3
 	mov	r7, 0f-1
 	{{"{{"}} .Params.multop {{"}}"}}	r7, r5
 	{{"{{"}} .Params.multop {{"}}"}}	r7, r4
