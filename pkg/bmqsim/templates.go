@@ -13,13 +13,15 @@ import (
 // full_hw_hardcoded
 
 var HardwareFlavors = map[string]string{
-	"seq_hardcoded_real":    SeqHardcodedReal,
-	"seq_hardcoded_complex": SeqHardcodedComplex,
+	"seq_hardcoded_real":            SeqHardcodedReal,
+	"seq_hardcoded_complex":         SeqHardcodedComplex,
+	"seq_hardcoded_addtree_complex": SeqHardcodedAddTreeComplex,
 }
 
 var HardwareFlavorsTags = map[string][]string{
-	"seq_hardcoded_real":    {"real"},
-	"seq_hardcoded_complex": {"complex"},
+	"seq_hardcoded_real":            {"real"},
+	"seq_hardcoded_complex":         {"complex"},
+	"seq_hardcoded_addtree_complex": {"complex"},
 }
 
 var AppFlavors = map[string]string{

@@ -52,8 +52,8 @@ func check(e error) {
 
 type Bond struct {
 	Map_to uint8 // 0 Means a shell input, 1 a shell output, 2 a processor input, 3 a processor output
-	Res_id int   // The reasource id of a processor or external IO
-	Ext_id int   // The order within the resource if appliable
+	Res_id int   // The resource id of a processor or external IO
+	Ext_id int   // The order within the resource if applicable
 }
 
 //reorg {"name": "Config typedef", "descr": "Definition og the Config structure"}
