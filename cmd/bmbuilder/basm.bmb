@@ -1,0 +1,11 @@
+%block code1 .sequential
+: basmfiles:/home/mirko/Projects/BondMachine/cmd/bmbuilder/test.basm
+: cdscsd:432432
+: csdcsdcsd:43423432
+	basm
+: basmfiles:/home/mirko/Projects/BondMachine/cmd/bmbuilder/test.basm
+	basm
+%endblock
+
+%meta bmdef global main:code1
+%meta bmdef global registersize:16

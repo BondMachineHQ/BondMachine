@@ -25,6 +25,7 @@ type BMBuilder struct {
 	blocks        map[string]*BMBuilderBlock
 	global        *bmline.BasmElement
 	generators    map[string]Generator
+	result        *bondmachine.Bondmachine
 }
 
 // Sections and Macros
@@ -160,4 +161,8 @@ func (bi *BMBuilder) ExportBasmBody() (*bmline.BasmBody, error) {
 
 	// Get the main block
 	return bi.blocks[mainBlock].blockBody, nil
+}
+
+func (bi *BMBuilder) GetBondMachine() *bondmachine.Bondmachine {
+	return bi.result
 }

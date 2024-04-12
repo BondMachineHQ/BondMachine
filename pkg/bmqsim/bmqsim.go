@@ -400,7 +400,7 @@ func (sim *BmQSimulator) EmitBMAPIMaps(hwflavor string) (string, error) {
 		switch hwflavor {
 		case "seq_hardcoded_real":
 			ioNum = int(math.Pow(float64(2), float64(len(sim.qbits))))
-		case "seq_hardcoded_complex":
+		case "seq_hardcoded_complex", "seq_hardcoded_addtree_complex":
 			ioNum = int(math.Pow(float64(2), float64(len(sim.qbits)))) * 2
 		}
 		newMap := new(IOmap)

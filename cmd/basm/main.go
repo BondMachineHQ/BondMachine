@@ -117,7 +117,6 @@ func main() {
 	bi.BMinfo = new(bminfo.BMinfo)
 
 	if *bmInfoFile != "" {
-		bi.BMinfo = new(bminfo.BMinfo)
 		if bmInfoJSON, err := os.ReadFile(*bmInfoFile); err == nil {
 			if err := json.Unmarshal(bmInfoJSON, bi.BMinfo); err != nil {
 				panic(err)

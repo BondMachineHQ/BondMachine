@@ -1,0 +1,13 @@
+%section code1 .romtext iomode:async
+        entry _start    ; Entry point
+_start:
+	inc	r0
+	mov	o0, r0		
+	j 	_start
+
+%endsection
+
+%meta cpdef	cpu1	romcode: code1, ramsize:8
+%meta bmdef	global  registersize:8
+%meta ioatt	testio1 cp: cpu1, index:0, type:output
+%meta ioatt	testio1 cp: bm, index:0, type:output

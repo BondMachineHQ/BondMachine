@@ -117,18 +117,59 @@ endloop:
 {{- end }}
 {{- end }}
 
-{{- range $i := n 0 .MatrixRows }}
-%meta cpdef	add{{ $i }}	romcode: matrixaddel, execmode: ha, addop: addf
-{{- end }}
+{{/*
+{{- define "addline" -}}
+{{- $level := .level -}}
+{{- $prefix := .prefix -}}
+ 	{{- if eq $level 0 }}
+ %meta cpdef	add {{ $prefix }} romcode: matrixaddel, execmode: ha, addop: addf
+ 	{{- else -}}
+ 		{{- range $i := n 0 (pow $level 2) -}}
+ 			{{- template "addline" dict "level" (dec $level) "prefix" (printf "%s_%d" $prefix $i) -}}
+ 		{{- end -}}
+ 	{{- end -}}
+ {{- end -}}
+
+%meta cpdef	add{{- template "addline" dict "level" 3 "prefix" "g" -}}	romcode: matrixaddel, execmode: ha, addop: addf
+*/}}
+
+{{- range $r := n 0 .MatrixRows }}
+{{- range $i := n 0 $.Qbits }}
+{{- range $j := n 0 (pow 2 $i) }}
+%meta cpdef	add{{ $r }}_{{ $i }}_{{ $j }} romcode: matrixaddel, execmode: ha, addop: addf
+{{- end -}}
+{{- end -}}
+{{ end }}
 
 %meta cpdef	main	romcode: main, ramdata:mainram, execmode: ha
 
-{{- range $i := n 0 .MatrixRows }}
-{{- range $j := n 0 $.MatrixRows }}
-%meta ioatt	toadd{{ $i }}_{{ $j }}_r	cp: mult{{ $i }}_{{ $j }}, index:0, type:output
-%meta ioatt     toadd{{ $i }}_{{ $j }}_r	cp: add{{ $i }}, index:{{ mult 2 $j }}, type:input
-%meta ioatt	toadd{{ $i }}_{{ $j }}_i	cp: mult{{ $i }}_{{ $j }}, index:1, type:output
-%meta ioatt     toadd{{ $i }}_{{ $j }}_i	cp: add{{ $i }}, index:{{ (sum 1 (mult 2 $j)) }}, type:input
+{{- range $r := n 0 .MatrixRows }}
+{{- range $i := n 0 $.Qbits}}
+{{- range $j := ns 0 (pow 2 $i) 2 }}
+{{- if ne $i 0 }}
+%meta ioatt	addtree{{ $r }}_{{ $i }}_{{ $j }}_r	cp: add{{ $r }}_{{ $i }}_{{ $j }}, index:0, type:output
+%meta ioatt	addtree{{ $r }}_{{ $i }}_{{ $j }}_r	cp: add{{ $r }}_{{ dec $i }}_{{ div $j 2 }}, index:0, type:input
+%meta ioatt	addtree{{ $r }}_{{ $i }}_{{ $j }}_i	cp: add{{ $r }}_{{ $i }}_{{ $j }}, index:1, type:output
+%meta ioatt	addtree{{ $r }}_{{ $i }}_{{ $j }}_i	cp: add{{ $r }}_{{ dec $i }}_{{ div $j 2 }}, index:1, type:input
+%meta ioatt	addtree{{ $r }}_{{ $i }}_{{ inc $j }}_r	cp: add{{ $r }}_{{ $i }}_{{ inc $j }}, index:0, type:output
+%meta ioatt	addtree{{ $r }}_{{ $i }}_{{ inc $j }}_r	cp: add{{ $r }}_{{ dec $i }}_{{ div $j 2 }}, index:2, type:input
+%meta ioatt	addtree{{ $r }}_{{ $i }}_{{ inc $j }}_i	cp: add{{ $r }}_{{ $i }}_{{ inc $j }}, index:1, type:output
+%meta ioatt	addtree{{ $r }}_{{ $i }}_{{ inc $j }}_i	cp: add{{ $r }}_{{ dec $i }}_{{ div $j 2 }}, index:3, type:input
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{ end }}
+
+{{- range $r := n 0 .MatrixRows }}
+{{- range $j := ns 0 $.MatrixRows 2 }}
+%meta ioatt	toadd{{ $r }}_{{ $j }}_r	cp: mult{{ $r }}_{{ $j }}, index:0, type:output
+%meta ioatt     toadd{{ $r }}_{{ $j }}_r	cp: add{{ $r }}_{{ dec $.Qbits }}_{{ div $j 2 }}, index:0, type:input
+%meta ioatt	toadd{{ $r }}_{{ $j }}_i	cp: mult{{ $r }}_{{ $j }}, index:1, type:output
+%meta ioatt     toadd{{ $r }}_{{ $j }}_i	cp: add{{ $r }}_{{ dec $.Qbits }}_{{ div $j 2 }}, index:1, type:input
+%meta ioatt	toadd{{ $r }}_{{ inc $j }}_r	cp: mult{{ $r }}_{{ inc $j }}, index:0, type:output
+%meta ioatt     toadd{{ $r }}_{{ inc $j }}_r	cp: add{{ $r }}_{{ dec $.Qbits }}_{{ div $j 2 }}, index:2, type:input
+%meta ioatt	toadd{{ $r }}_{{ inc $j }}_i	cp: mult{{ $r }}_{{ inc $j }}, index:1, type:output
+%meta ioatt     toadd{{ $r }}_{{ inc $j }}_i	cp: add{{ $r }}_{{ dec $.Qbits }}_{{ div $j 2 }}, index:3, type:input
 {{- end }}
 {{- end }}
 
@@ -142,8 +183,8 @@ endloop:
 {{- end }}
 
 {{- range $i := n 0 .MatrixRows }}
-%meta ioatt     tomain{{ $i }}_r	cp: add{{ $i }}, index:0, type:output
-%meta ioatt     tomain{{ $i }}_i	cp: add{{ $i }}, index:1, type:output
+%meta ioatt     tomain{{ $i }}_r	cp: add{{ $i }}_0_0, index:0, type:output
+%meta ioatt     tomain{{ $i }}_i	cp: add{{ $i }}_0_0, index:1, type:output
 %meta ioatt     tomain{{ $i }}_r	cp: main, index:{{ sum (mult 2 $.MatrixRows) (mult 2 $i) }}, type:input
 %meta ioatt     tomain{{ $i }}_i	cp: main, index:{{ sum (mult 2 $.MatrixRows) (sum 1 (mult 2 $i)) }}, type:input
 {{- end }}
