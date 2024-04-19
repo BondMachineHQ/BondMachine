@@ -52,4 +52,11 @@ func TestPrint(t *testing.T) {
 	tpc := TensorProductComplex(c1, c2)
 	fmt.Println(tpc)
 
+	un := IdentityComplex(2)
+	h := Hadamard()
+	r := TensorProductComplex(un, h)
+	fmt.Println(r)
+	r1 := TensorProductComplex(h, un)
+	fmt.Println(r1)
+
 }
