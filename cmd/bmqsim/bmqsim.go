@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmbuilder"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
@@ -16,6 +17,18 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmqsim"
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 )
+
+type qbitSwaps []string
+
+func (q *qbitSwaps) String() string {
+	return fmt.Sprintf("%v", *q)
+}
+func (i *qbitSwaps) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
+var swaps qbitSwaps
 
 var verbose = flag.Bool("v", false, "Verbose")
 var debug = flag.Bool("d", false, "Verbose")
@@ -60,6 +73,7 @@ var emitBMAPIMaps = flag.Bool("emit-bmapi-maps", false, "Emit the BMAPIMaps")
 var bmAPIMapsFile = flag.String("bmapi-maps-file", "bmapi.json", "BMAPIMaps file to be used as output")
 
 func init() {
+	flag.Var(&swaps, "swap", "Swap qbits in the circuit")
 	flag.Parse()
 
 	// if *debug {
@@ -224,6 +238,17 @@ func main() {
 			for i := len(sim.Mtx) - 2; i >= 0; i-- {
 				mm = bmmatrix.MatrixProductComplex(mm, sim.Mtx[i])
 			}
+
+			if len(swaps) > 0 {
+				for _, swap := range swaps {
+					swap1s := strings.Split(swap, ",")[0]
+					swap2s := strings.Split(swap, ",")[1]
+					swap1, _ := strconv.Atoi(swap1s)
+					swap2, _ := strconv.Atoi(swap2s)
+					mm = sim.SwapQbits(mm, swap1, swap2)
+				}
+			}
+
 			fmt.Println(green("Whole circuit matrix:"))
 			fmt.Println(mm.StringColor(green))
 		}
