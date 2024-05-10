@@ -160,7 +160,7 @@ func (c *Config) ProcbuilderConfig() *procbuilder.Config {
 	return result
 }
 
-func (b *Bond) String() string {
+func (b Bond) String() string {
 	result := ""
 	if b.Map_to == BMINPUT {
 		result += "i" + strconv.Itoa(b.Res_id)

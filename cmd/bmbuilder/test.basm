@@ -1,6 +1,7 @@
 %section code1 .romtext iomode:async
         entry _start    ; Entry point
 _start:
+	mov	r0, i0
 	inc	r0
 	mov	o0, r0		
 	j 	_start
@@ -11,3 +12,5 @@ _start:
 %meta bmdef	global  registersize:8
 %meta ioatt	testio1 cp: cpu1, index:0, type:output
 %meta ioatt	testio1 cp: bm, index:0, type:output
+%meta ioatt	testio2 cp: cpu1, index:0, type:input
+%meta ioatt	testio2 cp: bm, index:0, type:input

@@ -58,5 +58,63 @@ func (bi *BMBuilder) BuildBondMachine() error {
 }
 
 func (bi *BMBuilder) BuildSequentialBlock(block *BMBuilderBlock) error {
+	if bi.debug {
+		fmt.Println("\t" + green("Building Sequential block"))
+	}
+
+	BMNum := len(block.blockBMs)
+	if BMNum == 0 {
+		return errors.New("no BMs in the block")
+	}
+
+	if BMNum == 1 {
+		bi.result = block.blockBMs[0]
+		return nil
+	}
+
+	bm1 := block.blockBMs[0]
+
+	for i := 1; i < BMNum; i++ {
+		bm2 := block.blockBMs[i]
+
+		if bm1.Outputs != bm2.Inputs {
+			return errors.New("BM outputs and inputs do not match")
+		}
+
+		con := new(BMConnections)
+		con.Links = make([]BMLink, 0)
+
+		// Set the bm1 inputs as final inputs
+		for j := 0; j < bm1.Inputs; j++ {
+			e1 := BMEndPoint{BType: FinalBMInput, BNum: j}
+			e2 := BMEndPoint{BType: FirstBMInput, BNum: j}
+			con.Links = append(con.Links, BMLink{E1: e1, E2: e2})
+		}
+
+		// Set the bm1 to bm2 connections
+		for j := 0; j < bm1.Outputs; j++ {
+			e1 := BMEndPoint{BType: FirstBMOutput, BNum: j}
+			e2 := BMEndPoint{BType: SecondBMInput, BNum: j}
+			con.Links = append(con.Links, BMLink{E1: e1, E2: e2})
+		}
+
+		// Set the bm2 outputs as final outputs
+		for j := 0; j < bm2.Outputs; j++ {
+			e1 := BMEndPoint{BType: SecondBMOutput, BNum: j}
+			e2 := BMEndPoint{BType: FinalBMOutput, BNum: j}
+			con.Links = append(con.Links, BMLink{E1: e1, E2: e2})
+		}
+
+		// Merge the two bondmachines
+		if bm, err := bi.BMMerge(bm1, bm2, con); err == nil {
+			bm1 = bm
+		} else {
+			return err
+		}
+
+	}
+
+	bi.result = bm1
+
 	return nil
 }
