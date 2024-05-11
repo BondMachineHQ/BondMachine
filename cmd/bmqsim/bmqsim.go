@@ -59,6 +59,7 @@ var appFlavor = flag.String("app-flavor", "", "App flavor for the selected opera
 var appFlavorList = flag.Bool("app-flavor-list", false, "List of available app flavors")
 var appFile = flag.String("app-file", "a.out", "App file to be used as output")
 
+var bmFile = flag.String("save-bondmachine", "bondmachine.json", "Bondmachine file to be used as output")
 var basmFile = flag.String("save-basm", "a.out.basm", "Basm file to be used as output")
 var compiledFile = flag.String("compiled-file", "a.out.json", "Compiled file to be used as output")
 
@@ -177,8 +178,20 @@ func main() {
 				return
 			}
 
-			// TODO: Finish this
-			fmt.Println("Under construction")
+			var outF string
+			if *bmFile != "" {
+				outF = *bmFile
+			} else {
+				outF = "bondmachine.json"
+			}
+
+			bMach := bld.GetBondMachine()
+
+			// Write the bondmachine file (TODO rewrite)
+			f, _ := os.Create(outF)
+			defer f.Close()
+			b, _ := json.Marshal(bMach.Jsoner())
+			f.WriteString(string(b))
 		} else {
 			// All the other modes run the builder with a minimal set of passes only to parse the quantum circuit
 			// and generate the matrices

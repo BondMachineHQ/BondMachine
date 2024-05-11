@@ -363,7 +363,6 @@ func (bld *BMBuilder) BMMerge(bm1 *bondmachine.Bondmachine, bm2 *bondmachine.Bon
 			}
 		case bondmachine.CPINPUT:
 			origIntIn := intInMap[i]
-			fmt.Println(i, intInMap)
 			switch origIntIn.originBM {
 			case 1:
 				origIntOut := bm1.Links[origIntIn.originID]
@@ -439,8 +438,6 @@ func (bld *BMBuilder) BMMerge(bm1 *bondmachine.Bondmachine, bm2 *bondmachine.Bon
 		}
 
 	}
-
-	// TODO: Implement the merge logic
 
 	return result, nil
 }
