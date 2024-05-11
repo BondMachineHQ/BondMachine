@@ -20,7 +20,7 @@ var linearDataRange = flag.String("linear-data-range", "", "Load a linear data r
 
 // Build modes
 
-var bmFile = flag.String("save-basm", "a.out.json", "Save the BM file")
+var bmFile = flag.String("save-bondmachine", "a.out.json", "Save the BM file")
 
 var emitBMAPIMaps = flag.Bool("emit-bmapi-maps", false, "Emit the BMAPIMaps")
 var bmAPIMapsFile = flag.String("bmapi-maps-file", "bmapi.json", "BMAPIMaps file to be used as output")
