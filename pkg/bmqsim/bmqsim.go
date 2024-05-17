@@ -417,8 +417,8 @@ func (sim *BmQSimulator) MatrixFromOp(line *bmline.BasmLine) (*bmmatrix.BmMatrix
 		return sim.Phase(line)
 	case "r":
 		return sim.P(line)
-	case "zero":
-	// Ignore the zero operation
+	case "zero", "input":
+	// Ignore the zero and the input operations
 	default:
 		return nil, fmt.Errorf("unknown operation %s", op)
 	}
