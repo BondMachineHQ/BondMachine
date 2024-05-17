@@ -29,6 +29,33 @@ func PhaseShift(phase float32) *BmMatrixSquareComplex {
 	return m
 }
 
+func RX(phase float32) *BmMatrixSquareComplex {
+	m := NewBmMatrixSquareComplex(2)
+	m.Data[0][0] = Complex32{float32(math.Cos(float64(phase / 2))), 0.0}
+	m.Data[0][1] = Complex32{0.0, -float32(math.Sin(float64(phase / 2)))}
+	m.Data[1][0] = Complex32{0.0, -float32(math.Sin(float64(phase / 2)))}
+	m.Data[1][1] = Complex32{float32(math.Cos(float64(phase / 2))), 0.0}
+	return m
+}
+
+func RY(phase float32) *BmMatrixSquareComplex {
+	m := NewBmMatrixSquareComplex(2)
+	m.Data[0][0] = Complex32{float32(math.Cos(float64(phase / 2))), 0.0}
+	m.Data[0][1] = Complex32{-float32(math.Sin(float64(phase / 2))), 0.0}
+	m.Data[1][0] = Complex32{float32(math.Sin(float64(phase / 2))), 0.0}
+	m.Data[1][1] = Complex32{float32(math.Cos(float64(phase / 2))), 0.0}
+	return m
+}
+
+func RZ(phase float32) *BmMatrixSquareComplex {
+	m := NewBmMatrixSquareComplex(2)
+	m.Data[0][0] = Complex32{float32(math.Cos(-float64(phase / 2))), float32(math.Sin(-float64(phase / 2)))}
+	m.Data[0][1] = Complex32{0.0, 0.0}
+	m.Data[1][0] = Complex32{0.0, 0.0}
+	m.Data[1][1] = Complex32{float32(math.Cos(float64(phase / 2))), float32(math.Sin(float64(phase / 2)))}
+	return m
+}
+
 func T() *BmMatrixSquareComplex {
 	return PhaseShift(math.Pi / 4)
 }

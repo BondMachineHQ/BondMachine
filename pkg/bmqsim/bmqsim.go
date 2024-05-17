@@ -417,6 +417,12 @@ func (sim *BmQSimulator) MatrixFromOp(line *bmline.BasmLine) (*bmmatrix.BmMatrix
 		return sim.Phase(line)
 	case "r":
 		return sim.P(line)
+	case "rx":
+		return sim.RX(line)
+	case "ry":
+		return sim.RY(line)
+	case "rz":
+		return sim.RZ(line)
 	case "zero", "input":
 	// Ignore the zero and the input operations
 	default:
