@@ -27,8 +27,10 @@ func generatorsExec(b *BMBuilder) error {
 			fmt.Println(yellow("\tGenerating block: " + bName))
 		}
 
+		b.currentBlock = bName
+
 		// Allocate the BMs array for the block
-		block.blockBMs = make([]*bondmachine.Bondmachine, len(block.blockBody.Lines))
+		block.blockBMs = make([]*bondmachine.Bondmachine, 0)
 
 		metaData := new(bmline.BasmElement)
 		metaData.SetValue("metadata")
@@ -43,7 +45,7 @@ func generatorsExec(b *BMBuilder) error {
 
 		// Loop over the lines
 		body := block.blockBody
-		for i, line := range body.Lines {
+		for _, line := range body.Lines {
 			operand := line.Operation.GetValue()
 
 			if g, ok := b.generators[operand]; !ok {
@@ -55,7 +57,7 @@ func generatorsExec(b *BMBuilder) error {
 				if bm, err := g(b, metaData, line); err != nil {
 					return err
 				} else {
-					block.blockBMs[i] = bm
+					block.blockBMs = append(block.blockBMs, bm)
 				}
 			}
 		}

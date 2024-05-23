@@ -71,36 +71,47 @@ func BasmGenerator(b *BMBuilder, e *bmline.BasmElement, l *bmline.BasmLine) (*bo
 
 	startAssembling := false
 
-	if l.GetMeta("basmfiles") == "" {
-		return nil, fmt.Errorf("No BASM files to assemble")
+	if l.GetMeta("basmfiles") == "" && l.GetMeta("basmcode") == "" {
+		return nil, fmt.Errorf("no BASM code to assemble")
 	}
 
-	basmFiles := strings.Split(l.GetMeta("basmfiles"), ":")
+	if l.GetMeta("basmfiles") != "" {
+		basmFiles := strings.Split(l.GetMeta("basmfiles"), ":")
 
-	for _, asmFile := range basmFiles {
+		for _, asmFile := range basmFiles {
+			startAssembling = true
+
+			// Get the file extension
+			ext := filepath.Ext(asmFile)
+
+			switch ext {
+
+			case ".basm":
+				err := bi.ParseAssemblyDefault(asmFile)
+				if err != nil {
+					return nil, errors.New("Error while parsing file" + err.Error())
+				}
+			case ".ll":
+				err := bi.ParseAssemblyLLVM(asmFile)
+				if err != nil {
+					return nil, errors.New("Error while parsing file" + err.Error())
+				}
+			default:
+				// Default is .basm
+				err := bi.ParseAssemblyDefault(asmFile)
+				if err != nil {
+					return nil, errors.New("Error while parsing file" + err.Error())
+				}
+			}
+		}
+	}
+
+	if l.GetMeta("basmcode") != "" {
+		basmCode := l.GetMeta("basmcode")
 		startAssembling = true
-
-		// Get the file extension
-		ext := filepath.Ext(asmFile)
-
-		switch ext {
-
-		case ".basm":
-			err := bi.ParseAssemblyDefault(asmFile)
-			if err != nil {
-				return nil, errors.New("Error while parsing file" + err.Error())
-			}
-		case ".ll":
-			err := bi.ParseAssemblyLLVM(asmFile)
-			if err != nil {
-				return nil, errors.New("Error while parsing file" + err.Error())
-			}
-		default:
-			// Default is .basm
-			err := bi.ParseAssemblyDefault(asmFile)
-			if err != nil {
-				return nil, errors.New("Error while parsing file" + err.Error())
-			}
+		err := bi.ParseAssemblyStringDefault(basmCode)
+		if err != nil {
+			return nil, errors.New("Error while parsing BASM code" + err.Error())
 		}
 	}
 

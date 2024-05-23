@@ -11,6 +11,10 @@ func (bi *BasmInstance) ParseAssemblyDefault(filePath string) error {
 	return bi.ParseAssemblyFile(filePath, basmParser)
 }
 
+func (bi *BasmInstance) ParseAssemblyStringDefault(text string) error {
+	return bi.ParseAssemblyString(text, basmParser)
+}
+
 // ParseAssemblyFile opens the actual assembly file and call a parse function on every line with the underline BasmInstance loaded
 func (bi *BasmInstance) ParseAssemblyFile(filePath string, parseFunction func(*BasmInstance, string, uint32) error) error {
 	inputFile, err := os.Open(filePath)

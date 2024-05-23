@@ -20,6 +20,7 @@ type BMBuilder struct {
 	debug         bool
 	isWithinBlock string
 	isSymbolled   string
+	currentBlock  string
 	passes        uint64
 	lineMeta      string
 	blocks        map[string]*BMBuilderBlock
@@ -59,6 +60,7 @@ func (bld *BMBuilder) BMBuilderInit() {
 	generators["h"] = HadamardGenerator
 	generators["cx"] = CnotGenerator
 	generators["zero"] = ZeroGenerator
+	generators["maxpool"] = MaxPoolGenerator
 
 	bld.generators = generators
 
