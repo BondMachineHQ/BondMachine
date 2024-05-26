@@ -11,6 +11,7 @@ import (
 
 func MaxPoolGenerator(b *BMBuilder, e *bmline.BasmElement, l *bmline.BasmLine) (*bondmachine.Bondmachine, error) {
 	// Pay attention to the following: This code works only if the Generator function is called on a sequential block
+	// TODO Include here a check and error if the Generator function is called outside a sequential block
 
 	var mpNum int
 	if len(l.Elements) != 1 {
