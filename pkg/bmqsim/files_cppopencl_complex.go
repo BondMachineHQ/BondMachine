@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
 	        for (int i = 0; i < BM_OUTPUT; i++) {
 	                std::cout << source_output[i] << std::endl;
-
+                }
         }
         return 0;
 }
