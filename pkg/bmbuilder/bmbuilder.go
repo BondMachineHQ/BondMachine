@@ -13,6 +13,7 @@ const (
 )
 
 type Generator func(*BMBuilder, *bmline.BasmElement, *bmline.BasmLine) (*bondmachine.Bondmachine, error)
+type Connector func(*BMBuilder, *bmline.BasmElement, *bmline.BasmLine) (*BMConnections, error)
 
 // The instance
 type BMBuilder struct {
@@ -26,6 +27,7 @@ type BMBuilder struct {
 	blocks        map[string]*BMBuilderBlock
 	global        *bmline.BasmElement
 	generators    map[string]Generator
+	connectors    map[string]Connector
 	result        *bondmachine.Bondmachine
 }
 
@@ -36,6 +38,7 @@ type BMBuilderBlock struct {
 	blockType uint8
 	blockBody *bmline.BasmBody
 	blockBMs  []*bondmachine.Bondmachine
+	blockConn []*BMConnections // It is a len(blockBMs) + 1 length array
 }
 
 func (bld *BMBuilder) BMBuilderInit() {
@@ -62,7 +65,11 @@ func (bld *BMBuilder) BMBuilderInit() {
 	generators["zero"] = ZeroGenerator
 	generators["maxpool"] = MaxPoolGenerator
 
+	connectors := make(map[string]Connector)
+	connectors["connector"] = ConnectorDefault
+
 	bld.generators = generators
+	bld.connectors = connectors
 
 }
 

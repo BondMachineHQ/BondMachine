@@ -48,9 +48,7 @@ func generatorsExec(b *BMBuilder) error {
 		for _, line := range body.Lines {
 			operand := line.Operation.GetValue()
 
-			if g, ok := b.generators[operand]; !ok {
-				return fmt.Errorf("Generator for operation %s not found", operand)
-			} else {
+			if g, ok := b.generators[operand]; ok {
 				if b.debug {
 					fmt.Println(yellow("\t\tGenerating bm from line: " + fmt.Sprint(line) + " with" + fmt.Sprint(metaData)))
 				}
@@ -58,9 +56,41 @@ func generatorsExec(b *BMBuilder) error {
 					return err
 				} else {
 					block.blockBMs = append(block.blockBMs, bm)
+					if len(block.blockConn) < len(block.blockBMs) {
+						block.blockConn = append(block.blockConn, nil)
+					}
+					continue
 				}
 			}
+
+			if c, ok := b.connectors[operand]; ok {
+				if len(block.blockConn) > len(block.blockBMs) {
+					return fmt.Errorf("Connector cannot be called one after another, it should be called after a BM")
+				}
+				if b.debug {
+					fmt.Println(yellow("\t\tConnecting bm from line: " + fmt.Sprint(line) + " with" + fmt.Sprint(metaData)))
+				}
+				if conn, err := c(b, metaData, line); err != nil {
+					return err
+				} else {
+					block.blockConn = append(block.blockConn, conn)
+					continue
+				}
+			}
+			return fmt.Errorf("Unknown operation: %s", operand)
 		}
+
+		if len(block.blockConn) == len(block.blockBMs) {
+			block.blockConn = append(block.blockConn, nil)
+		}
+
+		if b.debug {
+			fmt.Println(yellow("\tBlock: " + bName + " has been generated"))
+			fmt.Println(yellow("\t\tBMs: " + fmt.Sprint(block.blockBMs)))
+			fmt.Println(yellow("\t\tConns: " + fmt.Sprint(block.blockConn)))
+
+		}
+
 	}
 
 	return nil
