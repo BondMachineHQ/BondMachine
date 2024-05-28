@@ -45,6 +45,7 @@ func generatorsExec(b *BMBuilder) error {
 
 		// Loop over the lines
 		body := block.blockBody
+		var connDelay *bmline.BasmLine
 		for _, line := range body.Lines {
 			operand := line.Operation.GetValue()
 
@@ -56,32 +57,44 @@ func generatorsExec(b *BMBuilder) error {
 					return err
 				} else {
 					block.blockBMs = append(block.blockBMs, bm)
-					if len(block.blockConn) < len(block.blockBMs) {
-						block.blockConn = append(block.blockConn, nil)
+					if len(block.blockConn) < len(block.blockBMs)-1 {
+						if connDelay == nil {
+							// Fill with the default connector if it is not defined
+							block.blockConn = append(block.blockConn, nil)
+						} else {
+							connOperand := connDelay.Operation.GetValue()
+							if c, ok := b.connectors[connOperand]; ok {
+								if b.debug {
+									fmt.Println(yellow("\t\tGenerating connector from line: " + fmt.Sprint(connDelay) + " with" + fmt.Sprint(metaData)))
+								}
+								if conn, err := c(b, metaData, connDelay); err != nil {
+									return err
+								} else {
+									block.blockConn = append(block.blockConn, conn)
+								}
+							} else {
+								return fmt.Errorf("unknown connector: %s", connOperand)
+							}
+							connDelay = nil
+						}
 					}
 					continue
 				}
 			}
 
-			if c, ok := b.connectors[operand]; ok {
-				if len(block.blockConn) > len(block.blockBMs) {
+			if _, ok := b.connectors[operand]; ok {
+				if connDelay != nil {
 					return fmt.Errorf("Connector cannot be called one after another, it should be called after a BM")
 				}
-				if b.debug {
-					fmt.Println(yellow("\t\tConnecting bm from line: " + fmt.Sprint(line) + " with" + fmt.Sprint(metaData)))
-				}
-				if conn, err := c(b, metaData, line); err != nil {
-					return err
-				} else {
-					block.blockConn = append(block.blockConn, conn)
-					continue
-				}
+				connDelay = line
+				continue
 			}
-			return fmt.Errorf("Unknown operation: %s", operand)
+
+			return fmt.Errorf("unknown operation: %s", operand)
 		}
 
-		if len(block.blockConn) == len(block.blockBMs) {
-			block.blockConn = append(block.blockConn, nil)
+		if connDelay != nil {
+			return fmt.Errorf("Connector cannot be called as last line in the block")
 		}
 
 		if b.debug {

@@ -76,33 +76,37 @@ func (bi *BMBuilder) BuildSequentialBlock(block *BMBuilderBlock) error {
 
 	for i := 1; i < BMNum; i++ {
 		bm2 := block.blockBMs[i]
+		con := block.blockConn[i-1]
 
-		if bm1.Outputs != bm2.Inputs {
-			return errors.New("BM outputs and inputs do not match")
-		}
+		// The connections are not defined, so we need to create them using the default connector
+		if con == nil {
+			if bm1.Outputs != bm2.Inputs {
+				return errors.New("BM outputs and inputs do not match")
+			}
 
-		con := new(BMConnections)
-		con.Links = make([]BMLink, 0)
+			con = new(BMConnections)
+			con.Links = make([]BMLink, 0)
 
-		// Set the bm1 inputs as final inputs
-		for j := 0; j < bm1.Inputs; j++ {
-			e1 := BMEndPoint{BType: FinalBMInput, BNum: j}
-			e2 := BMEndPoint{BType: FirstBMInput, BNum: j}
-			con.Links = append(con.Links, BMLink{E1: e1, E2: e2})
-		}
+			// Set the bm1 inputs as final inputs
+			for j := 0; j < bm1.Inputs; j++ {
+				e1 := BMEndPoint{BType: FinalBMInput, BNum: j}
+				e2 := BMEndPoint{BType: FirstBMInput, BNum: j}
+				con.Links = append(con.Links, BMLink{E1: e1, E2: e2})
+			}
 
-		// Set the bm1 to bm2 connections
-		for j := 0; j < bm1.Outputs; j++ {
-			e1 := BMEndPoint{BType: FirstBMOutput, BNum: j}
-			e2 := BMEndPoint{BType: SecondBMInput, BNum: j}
-			con.Links = append(con.Links, BMLink{E1: e1, E2: e2})
-		}
+			// Set the bm1 to bm2 connections
+			for j := 0; j < bm1.Outputs; j++ {
+				e1 := BMEndPoint{BType: FirstBMOutput, BNum: j}
+				e2 := BMEndPoint{BType: SecondBMInput, BNum: j}
+				con.Links = append(con.Links, BMLink{E1: e1, E2: e2})
+			}
 
-		// Set the bm2 outputs as final outputs
-		for j := 0; j < bm2.Outputs; j++ {
-			e1 := BMEndPoint{BType: SecondBMOutput, BNum: j}
-			e2 := BMEndPoint{BType: FinalBMOutput, BNum: j}
-			con.Links = append(con.Links, BMLink{E1: e1, E2: e2})
+			// Set the bm2 outputs as final outputs
+			for j := 0; j < bm2.Outputs; j++ {
+				e1 := BMEndPoint{BType: SecondBMOutput, BNum: j}
+				e2 := BMEndPoint{BType: FinalBMOutput, BNum: j}
+				con.Links = append(con.Links, BMLink{E1: e1, E2: e2})
+			}
 		}
 
 		// Merge the two bondmachines
