@@ -1500,6 +1500,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	var icebreakerLedsModuleParams map[string]string
 	icebreakerLedsModuleMapped := ""
 
+	icefunLedsModule := false
+	var icefunLedsModuleParams map[string]string
+	icefunLedsModuleMapped := ""
+
 	ps2KeyboardModule := false
 	var ps2KeyboardParams map[string]string
 	ps2KeyboardMapped := ""
@@ -1569,6 +1573,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			//} else {
 			//// TODO proper error handling
 			//}
+		}
+		if mod.Get_Name() == "icefun_leds" {
+			icefunLedsModule = true
+			icefunLedsModuleParams = mod.Get_Params().Params
 		}
 		if mod.Get_Name() == "ps2keyboard" {
 			ps2KeyboardModule = true
@@ -1665,6 +1673,21 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		result += "\toutput led3,\n"
 		result += "\toutput led4,\n"
 		result += "\toutput led5,\n"
+	}
+
+	if icefunLedsModule {
+		result += "\toutput led0,\n"
+		result += "\toutput led1,\n"
+		result += "\toutput led2,\n"
+		result += "\toutput led3,\n"
+		result += "\toutput led4,\n"
+		result += "\toutput led5,\n"
+		result += "\toutput led6,\n"
+		result += "\toutput led7,\n"
+		result += "\toutput lcol1,\n"
+		result += "\toutput lcol2,\n"
+		result += "\toutput lcol3,\n"
+		result += "\toutput lcol4,\n"
 	}
 
 	if ps2KeyboardModule {
@@ -1882,6 +1905,13 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				resolved_io[oname] = "icebreaker_module"
 				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
 				icebreakerLedsModuleMapped = "Output" + strconv.Itoa(i)
+			}
+		}
+		if icefunLedsModule {
+			if oname == icefunLedsModuleParams["mapped_output"] {
+				resolved_io[oname] = "icefun_module"
+				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
+				icefunLedsModuleMapped = "Output" + strconv.Itoa(i)
 			}
 		}
 	}
@@ -2162,6 +2192,11 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 
 	if icebreakerLedsModule {
 		result += "\tassign {led1, led2, led3, led4, led5} = " + icebreakerLedsModuleMapped + "[4:0];\n"
+	}
+
+	if icefunLedsModule {
+		result += "\tassign {led0, led1, led2, led3, led4, led5, led6, led7} = " + icefunLedsModuleMapped + "[7:0] ^ 8'hff;\n"
+		result += "\tassign {lcol1, lcol2, lcol3, lcol4} = 4'b0111;\n"
 	}
 
 	if vgatext800x600Module {

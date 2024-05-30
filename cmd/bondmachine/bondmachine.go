@@ -162,6 +162,9 @@ var basys3_7segment_map = flag.String("basys3-7segment-map", "", "Basys3 7 segme
 var iceBreakerLeds = flag.Bool("icebreaker-leds", false, "Icebreaker leds support")
 var iceBreakerLedsMap = flag.String("icebreaker-leds-map", "", "Icebreaker leds mappings")
 
+var iceFunLeds = flag.Bool("icefun-leds", false, "IceFun leds support")
+var iceFunLedsMap = flag.String("icefun-leds-map", "", "IceFun leds mappings")
+
 var vgatext = flag.Bool("vgatext", false, "Multi CP VGA Textual support")
 var vgatextFlavor = flag.String("vgatext-flavor", "800x600", "VGA Textual flavor. currently supported: 800x600")
 var vgatextFonts = flag.String("vgatext-fonts", "", "VGA Textual fonts file")
@@ -605,6 +608,12 @@ func main() {
 				IBL := new(bondmachine.IcebreakerLeds)
 				IBL.MappedOutput = *iceBreakerLedsMap
 				extramodules = append(extramodules, IBL)
+			}
+
+			if *iceFunLeds {
+				IFL := new(bondmachine.IceFunLeds)
+				IFL.MappedOutput = *iceFunLedsMap
+				extramodules = append(extramodules, IFL)
 			}
 
 			// Inclusion of PS2 keyboard extra module
