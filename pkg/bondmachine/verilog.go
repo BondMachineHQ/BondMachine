@@ -1504,6 +1504,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	var icefunLedsModuleParams map[string]string
 	icefunLedsModuleMapped := ""
 
+	ice40Lp1kModule := false
+	var ice40Lp1kModuleParams map[string]string
+	ice40Lp1kModuleMapped := ""
+
 	ps2KeyboardModule := false
 	var ps2KeyboardParams map[string]string
 	ps2KeyboardMapped := ""
@@ -1577,6 +1581,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		if mod.Get_Name() == "icefun_leds" {
 			icefunLedsModule = true
 			icefunLedsModuleParams = mod.Get_Params().Params
+		}
+		if mod.Get_Name() == "ice40lp1k_leds" {
+			ice40Lp1kModule = true
+			ice40Lp1kModuleParams = mod.Get_Params().Params
 		}
 		if mod.Get_Name() == "ps2keyboard" {
 			ps2KeyboardModule = true
@@ -1688,6 +1696,13 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		result += "\toutput lcol2,\n"
 		result += "\toutput lcol3,\n"
 		result += "\toutput lcol4,\n"
+	}
+
+	if ice40Lp1kModule {
+		result += "\toutput led0,\n"
+		result += "\toutput led1,\n"
+		result += "\toutput led2,\n"
+		result += "\toutput led3,\n"
 	}
 
 	if ps2KeyboardModule {
@@ -1912,6 +1927,13 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				resolved_io[oname] = "icefun_module"
 				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
 				icefunLedsModuleMapped = "Output" + strconv.Itoa(i)
+			}
+		}
+		if ice40Lp1kModule {
+			if oname == ice40Lp1kModuleParams["mapped_output"] {
+				resolved_io[oname] = "ice40lp1k_module"
+				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
+				ice40Lp1kModuleMapped = "Output" + strconv.Itoa(i)
 			}
 		}
 	}
@@ -2197,6 +2219,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	if icefunLedsModule {
 		result += "\tassign {led0, led1, led2, led3, led4, led5, led6, led7} = " + icefunLedsModuleMapped + "[7:0] ^ 8'hff;\n"
 		result += "\tassign {lcol1, lcol2, lcol3, lcol4} = 4'b0111;\n"
+	}
+
+	if ice40Lp1kModule {
+		result += "\tassign {led0, led1, led2, led3} = " + ice40Lp1kModuleMapped + "[3:0];\n"
 	}
 
 	if vgatext800x600Module {

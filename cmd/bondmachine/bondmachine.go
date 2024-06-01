@@ -165,6 +165,9 @@ var iceBreakerLedsMap = flag.String("icebreaker-leds-map", "", "Icebreaker leds 
 var iceFunLeds = flag.Bool("icefun-leds", false, "IceFun leds support")
 var iceFunLedsMap = flag.String("icefun-leds-map", "", "IceFun leds mappings")
 
+var Ice40Lp1kLeds = flag.Bool("ice40lp1k-leds", false, "Ice40lp1k leds support")
+var Ice40Lp1kLedsMap = flag.String("ice40lp1k-leds-map", "", "Ice40lp1k leds mappings")
+
 var vgatext = flag.Bool("vgatext", false, "Multi CP VGA Textual support")
 var vgatextFlavor = flag.String("vgatext-flavor", "800x600", "VGA Textual flavor. currently supported: 800x600")
 var vgatextFonts = flag.String("vgatext-fonts", "", "VGA Textual fonts file")
@@ -613,6 +616,12 @@ func main() {
 			if *iceFunLeds {
 				IFL := new(bondmachine.IceFunLeds)
 				IFL.MappedOutput = *iceFunLedsMap
+				extramodules = append(extramodules, IFL)
+			}
+
+			if *Ice40Lp1kLeds {
+				IFL := new(bondmachine.Ice40Lp1kLeds)
+				IFL.MappedOutput = *Ice40Lp1kLedsMap
 				extramodules = append(extramodules, IFL)
 			}
 
