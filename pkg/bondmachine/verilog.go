@@ -2213,7 +2213,13 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	}
 
 	if icebreakerLedsModule {
+		result += "\treg icebreaker_valid;\n"
+		result += "\talways @ (posedge clk) begin\n"
+		result += "\t\ticebreaker_valid <= " + icebreakerLedsModuleMapped + "_valid;\n"
+		result += "\tend\n"
+
 		result += "\tassign {led1, led2, led3, led4, led5} = " + icebreakerLedsModuleMapped + "[4:0];\n"
+		result += "\tassign " + icebreakerLedsModuleMapped + "_received = icebreaker_valid;\n"
 	}
 
 	if icefunLedsModule {
