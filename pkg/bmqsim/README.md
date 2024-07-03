@@ -1,5 +1,3 @@
-# bmqsim
-
 ![bmqsim](bmqsim.png)
 
 bmqsim is part of BondMachine project. It is a library and a CLI tool to produce HDL code and test benches to simulate a quantum computer on FPGA using the BondMachine architecture framework. It also provides a sotfware simulator to be used in a CPU.
