@@ -1,5 +1,3 @@
-# bmnumbers
-
 bmstack is part of BondMachine project. bmnumbers is both a command line tool to convert or cast numbers to and from different formats and a library to do the same. It is used within the BondMachine every time numbers are handled.
 
 ## Supported number types
