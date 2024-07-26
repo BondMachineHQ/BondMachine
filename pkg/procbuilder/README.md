@@ -7,18 +7,18 @@ This command performs various operations based on the provided flags. It can cre
 
 The two main workflows for the `procbuilder` command are:
 
-- **Loading an existing CP** and program from JSON files, inspecting the CP and program
+- **Loading an existing CP** and program from JSON files, inspecting the CP and program. Using the CP to generate HDL code.
 
 - **Creating a new CP**, adding instructions to the CP, assembling a program, disassembling the program and saving the machine state to a JSON file
 
 ### Loading an Existing CP and Program
 
-The flag to load an existing CP and program is `load_machine`. If this flag is set to a non-empty string, the command checks if a file with the specified name exists. If the file exists, the command reads the machine state from the file and initializes the CP and program with the read data. If any errors occur during file operations or JSON unmarshaling, the command panics.
+The flag to load an existing CP and program is `load-machine`. If this flag is set to a non-empty string, the command checks if a file with the specified name exists. If the file exists, the command reads the machine state from the file and initializes the CP and program with the read data. If any errors occur during file operations or JSON unmarshaling, the command panics.
 
 ### TODO - Finish this section
 
 ### Creating a New CP and Program
 
-The flags to create a new CP and program are `save_machine`. It is used to save the machine state to a JSON file. If this flag is set to a non-empty string, the command saves the machine state to a JSON file with the specified name.
+The flags to create a new CP and program are `save-machine`. It is used to save the machine state to a JSON file. If this flag is set to a non-empty string, the command saves the machine state to a JSON file with the specified name.
 
 ### TODO - Finish this section
