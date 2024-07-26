@@ -12,7 +12,7 @@ Unlike standard architectures where software has to fit processors static constr
 
 BondMachines can be created in several ways: manually with its building tools, with a set of API that target specific problems and with a set of higher level [**tools**](https://www.bondmachine.it/intro/tools) that can create architectures from a description of the problem. These tools range from an **assembler** and a dedicated **compiler** to a set of application that can be used to map **Machine Learning** and **Quantum Computing** problems to the architecture.
 
-BondMachines can be connected together with a custon ethernet protocol called **etherbond**. Distributed clusters of heterogeneous multicore can be built this way.
+BondMachines can be connected together with a custom ethernet protocol called **etherbond**. Distributed clusters of heterogeneous multicore can be built this way.
 
 Ultimately the produced BondMachines can be simulated, used as computer applications or translated to RTL code and used in hardware (for example using FPGAs).
 
