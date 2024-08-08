@@ -1,0 +1,21 @@
+; Ths function go to a new line
+; r0: x position within the screen (video textual memory vtm0)
+%fragment newline default_out:vtm0 default_height:16 default_width:16
+        nop
+        mov     r1, {{ .Params.height }}
+        mov     r2, {{ .Params.width }}
+        mult    r1, r2 ; this is the start cell of the last line
+        jlt     r0, r1, dontscroll
+scroll:
+
+dontscroll:
+        nop
+;        mov     r2, {{ .Params.mem }}:[r0]
+;        jz      r2, end
+;        mov     {{ .Params.out }}:[r1], r2
+;        inc     r0
+;        inc     r1
+;        j putchar
+end:
+        nop
+%endfragment

@@ -788,6 +788,16 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 
 		params := make([]choiceParams, len(romAlts)*len(ramAlts))
 
+		if bi.debug {
+
+			fmt.Println("\t\t - " + green("ROM data: ") + yellow(romData))
+			fmt.Println("\t\t - " + green("RAM data: ") + yellow(ramData))
+			fmt.Println("\t\t - " + green("ROM alternatives: ") + yellow(strings.Join(romAlts, ", ")))
+			fmt.Println("\t\t - " + green("RAM alternatives: ") + yellow(strings.Join(ramAlts, ", ")))
+			fmt.Println("\t\t - " + green("ROM data alternatives: ") + yellow(strings.Join(romDataAlts, ", ")))
+			fmt.Println("\t\t - " + green("RAM data alternatives: ") + yellow(strings.Join(ramDataAlts, ", ")))
+		}
+
 		for ii, romAlt := range romAlts {
 			for jj, ramAlt := range ramAlts {
 
@@ -799,13 +809,20 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 				groupName := ""
 				if strings.HasPrefix(romAlt, "romcode") {
 					groupName = romAlt[7:]
-				}
-				if strings.HasPrefix(ramAlt, "ramcode") {
+				} else if strings.HasPrefix(ramAlt, "ramcode") {
 					if groupName != ramAlt[7:] {
 						groupName = ""
 					}
 				} else {
 					groupName = ""
+				}
+
+				if bi.debug {
+					if groupName == "" {
+						fmt.Println("\t\t\t - " + green("no common group name"))
+					} else {
+						fmt.Println("\t\t\t - " + green("group name: ") + yellow(groupName))
+					}
 				}
 
 				if groupName != "" {
@@ -932,33 +949,58 @@ func (bi *BasmInstance) CodeChoice(rSize uint8, i int, sh string) error {
 				fmt.Println("\t\t - " + green("Chosen code: ") + yellow(ci) + green(" - ") + yellow(cj))
 			}
 
+			romGroupName := ""
+
 			if ci != "" {
 				cp.SetMeta("romcode", ci)
-				if cp.GetMeta("romdata") == "" {
-					guessName := ""
-					if strings.HasPrefix(ci, "romcode") {
-						guessName = "romdata" + ci[7:]
+				if strings.HasPrefix(ci, "romcode") {
+					romGroupName = ci[7:]
+				}
+			}
+
+			ramGroupName := ""
+
+			if cj != "" {
+				cp.SetMeta("ramcode", cj)
+				if strings.HasPrefix(cj, "ramcode") {
+					ramGroupName = cj[7:]
+				}
+			}
+
+			if cp.GetMeta("romdata") == "" {
+				chk := false
+				if romGroupName != "" {
+					if stringInSlice("romdata"+romGroupName, romDataAlts) {
+						cp.SetMeta("romdata", "romdata"+romGroupName)
+						cp.RmMeta("romdataalternatives")
+						chk = true
 					}
-					if stringInSlice(guessName, romDataAlts) {
-						cp.SetMeta("romdata", guessName)
+				}
+				if !chk && ramGroupName != "" {
+					if stringInSlice("romdata"+ramGroupName, romDataAlts) {
+						cp.SetMeta("romdata", "romdata"+ramGroupName)
 						cp.RmMeta("romdataalternatives")
 					}
 				}
 			}
 
-			if cj != "" {
-				cp.SetMeta("ramcode", cj)
-				if cp.GetMeta("ramdata") == "" {
-					guessName := ""
-					if strings.HasPrefix(cj, "ramcode") {
-						guessName = "ramdata" + cj[7:]
+			if cp.GetMeta("ramdata") == "" {
+				chk := false
+				if ramGroupName != "" {
+					if stringInSlice("ramdata"+ramGroupName, ramDataAlts) {
+						cp.SetMeta("ramdata", "ramdata"+ramGroupName)
+						cp.RmMeta("ramdataalternatives")
+						chk = true
 					}
-					if stringInSlice(guessName, ramDataAlts) {
-						cp.SetMeta("ramdata", guessName)
+				}
+				if !chk && romGroupName != "" {
+					if stringInSlice("ramdata"+romGroupName, ramDataAlts) {
+						cp.SetMeta("ramdata", "ramdata"+romGroupName)
 						cp.RmMeta("ramdataalternatives")
 					}
 				}
 			}
+
 			cp.RmMeta("romalternatives")
 			cp.RmMeta("ramalternatives")
 			return nil

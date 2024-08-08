@@ -1,0 +1,15 @@
+; Ths function writes a string to the screen
+; r0: pointer to the null terminated string (es: mov r0, rom:message)
+; r2: x position within the screen (video textual memory vtm0)
+%fragment putline default_mem:rom default_out:vtm0
+        nop
+putchar:
+        mov     r1, {{ .Params.mem }}:[r0]
+        jz      r1, end
+        mov     {{ .Params.out }}:[r2], r1
+        inc     r0
+        inc     r2
+        j putchar
+end:
+        nop
+%endfragment

@@ -1,0 +1,18 @@
+; r0: starting position within the memory
+%fragment sync default_out:vtm0 default_height:16 default_width:16 default_mem:ram
+        nop
+        mov     r1, {{ .Params.height }}
+        mov     r2, {{ .Params.width }}
+        mult    r1, r2
+        mov     r2, 0
+syncchar:
+        mov     r3, {{ .Params.mem }}:[r0]
+        mov     {{ .Params.out }}:[r2], r3
+        inc     r0
+        inc     r2
+        dec     r1
+        jz      r1, end
+        j       syncchar
+end:
+        nop
+%endfragment
