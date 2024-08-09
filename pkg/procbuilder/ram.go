@@ -37,25 +37,28 @@ func (ram *Ram) Write_verilog(conf *Config, mach *Machine, ram_module_name strin
 	result += "\n"
 	if conf != nil && conf.BCOFEntry != nil {
 		data := conf.BCOFEntry.SearchData("cp" + mach.Arch.Tag)
+		// If the data is found, write the memory initialization block for the BCOF format
+		// Othervise, the memory will be initialized to 0
+		if data != nil {
+			// Compute the register size padded to 8 bit multiples (the BCOF format requires bytes)
+			expBytes := (int(mach.Rsize) + 7) / 8
+			expLines := len(data.Payload) / expBytes
 
-		// Compute the register size padded to 8 bit multiples (the BCOF format requires bytes)
-		expBytes := (int(mach.Rsize) + 7) / 8
-		expLines := len(data.Payload) / expBytes
+			buff := make([]byte, expBytes)
 
-		buff := make([]byte, expBytes)
+			result += "	initial begin\n"
 
-		result += "	initial begin\n"
-
-		for line := 0; line < expLines; line++ {
-			for b := 0; b < expBytes; b++ {
-				buff[b] = data.Payload[line*expBytes+b]
+			for line := 0; line < expLines; line++ {
+				for b := 0; b < expBytes; b++ {
+					buff[b] = data.Payload[line*expBytes+b]
+				}
+				num, _ := bmnumbers.ImportBytes(buff, int(mach.Rsize))
+				numV, _ := num.ExportVerilogBinary()
+				result += "		mem[" + strconv.Itoa(line) + "] = " + numV + ";\n"
 			}
-			num, _ := bmnumbers.ImportBytes(buff, int(mach.Rsize))
-			numV, _ := num.ExportVerilogBinary()
-			result += "		mem[" + strconv.Itoa(line) + "] = " + numV + ";\n"
-		}
 
-		result += "	end\n"
+			result += "	end\n"
+		}
 	}
 	result += "	// Memory Write Block  \n"
 	result += "	// Write Operation we = 1 \n"

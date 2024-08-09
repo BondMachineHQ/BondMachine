@@ -52,7 +52,7 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 			}
 		}
 
-		//Instatiation of the Processor
+		//Instantiation of the Processor
 		for i, dom_id := range bmach.Processors {
 
 			ri := new(procbuilder.RuntimeInfo)
@@ -105,7 +105,6 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 				check(err)
 				f.Close()
 			}
-
 			if int(dom.L) != 0 {
 				if _, err := os.Stat(arch_names["ram"] + ".v"); os.IsNotExist(err) {
 					f, err := os.Create(arch_names["ram"] + ".v")

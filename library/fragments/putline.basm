@@ -1,6 +1,6 @@
 ; Ths function writes a string to the screen
-; r0: pointer to the null terminated string (es: mov r0, rom:message)
-; r2: x position within the screen (video textual memory vtm0)
+; r0: pointer to the null terminated string within the "mem" memory (es: mov r0, rom:message)
+; r2: x position within the "out" memory (for example: video textual memory vtm0)
 %fragment putline default_mem:rom default_out:vtm0
         nop
 putchar:

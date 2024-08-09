@@ -362,7 +362,7 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 		result += "	(* KEEP = \"TRUE\" *) reg [" + strconv.Itoa(int(arch.L)-1) + ":0] _pc;		// Program counter\n"
 	}
 	result += "\n"
-	result += "	// The number of registers are 2^R, two letters and an unserscore as identifier , maximum R=8 and 265 rigisters\n"
+	result += "	// The number of registers are 2^R, two letters and an underscore as identifier , maximum R=8 and 265 rigisters\n"
 
 	for i := 0; i < reg_num; i++ {
 		result += "	(* KEEP = \"TRUE\" *) reg [" + strconv.Itoa(regsize-1) + ":0] _" + strings.ToLower(Get_register_name(i)) + ";\n"
