@@ -11,8 +11,8 @@ require (
 	github.com/tfriedel6/canvas v0.12.1
 	github.com/x448/float16 v0.8.4
 	github.com/yuin/gopher-lua v1.1.1
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
-	google.golang.org/protobuf v1.34.1
+	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
+	google.golang.org/protobuf v1.34.2
 )
 
 require (
@@ -26,9 +26,9 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/veandco/go-sdl2 v0.4.0 // indirect
 	golang.org/x/image v0.14.0 // indirect
-	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/tools v0.21.0 // indirect
+	golang.org/x/mod v0.20.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/tools v0.24.0 // indirect
 )
