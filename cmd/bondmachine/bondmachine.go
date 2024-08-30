@@ -127,13 +127,13 @@ var etherbond_macfile = flag.String("etherbond-macfile", "", "File mapping the b
 
 var use_udpbond = flag.Bool("use-udpbond", false, "Build including udpbond support")
 var udpbond_flavor = flag.String("udpbond-flavor", "esp8266", "Choose the type of network device. currently supported: esp8266.")
-var udpbond_mapfile = flag.String("udpbond-mapfile", "", "File mapping the bondmachine IO the udpbond.")
+var bondirectMapfile = flag.String("udpbond-mapfile", "", "File mapping the bondmachine IO the udpbond.")
 var udpbond_ipfile = flag.String("udpbond-ipfile", "", "File mapping the bondmachine peers to IP addresses.")
 var udpbond_netconfig = flag.String("udpbond-netconfig", "", "JSON file containing the network configuration for udpbond")
 
 var use_bondirect = flag.Bool("use-bondirect", false, "Build including bondirect support")
 var bondirect_flavor = flag.String("bondirect-flavor", "basic", "Choose the type of bondirect device. currently supported: basic.")
-var bondirect_mesh = flag.String("bondirect-mesh", "", "Bondirect mesh File ")
+var bondirectMesh = flag.String("bondirect-mesh", "", "Bondirect mesh File ")
 var bondirect_mapfile = flag.String("bondirect-mapfile", "", "File mapping the bondmachine IO the bondirect.")
 
 var usebmapi = flag.Bool("use-bmapi", false, "Build a BMAPI interface")
@@ -427,8 +427,8 @@ func main() {
 				}
 
 				ethiomap := new(bondmachine.IOmap)
-				if *udpbond_mapfile != "" {
-					if mapfile_json, err := os.ReadFile(*udpbond_mapfile); err == nil {
+				if *bondirectMapfile != "" {
+					if mapfile_json, err := os.ReadFile(*bondirectMapfile); err == nil {
 						if err := json.Unmarshal([]byte(mapfile_json), ethiomap); err != nil {
 							panic(err)
 						}
@@ -494,17 +494,17 @@ func main() {
 				bdir.Flavor = *bondirect_flavor
 
 				if *cluster_spec != "" {
-					//					if cluster, err := bondirect.UnmarshallCluster(config, *cluster_spec); err != nil {
-					//						panic(err)
-					//					} else {
-					///						bdir.Cluster = cluster
-					//					}
+					if cluster, err := bondirect.UnmarshallCluster(config, *cluster_spec); err != nil {
+						panic(err)
+					} else {
+						bdir.Cluster = cluster
+					}
 				} else {
 					panic("A Cluster spec file is needed")
 				}
 
-				if *bondirect_mesh != "" {
-					if mesh, err := bondirect.UnmarshallMesh(config, *bondirect_mesh); err != nil {
+				if *bondirectMesh != "" {
+					if mesh, err := bondirect.UnmarshallMesh(config, *bondirectMesh); err != nil {
 						panic(err)
 					} else {
 						bdir.Mesh = mesh
@@ -513,19 +513,20 @@ func main() {
 					panic("A Mesh spec file is needed")
 				}
 
-				//				ethiomap := new(bondmachine.IOmap)
-				//				if *udpbond_mapfile != "" {
-				//					if mapfile_json, err := os.ReadFile(*udpbond_mapfile); err == nil {
-				//						if err := json.Unmarshal([]byte(mapfile_json), ethiomap); err != nil {
-				//							panic(err)
-				//						}
-				//					} else {
-				//						panic(err)
-				//					}
-				//
-				//				} else {
-				//					panic(errors.New("Udpbond Mapfile needed"))
-				//				}
+				bmdirmap := new(bondmachine.IOmap)
+				if *bondirectMapfile != "" {
+					if mapfileJSON, err := os.ReadFile(*bondirectMapfile); err == nil {
+						if err := json.Unmarshal([]byte(mapfileJSON), bmdirmap); err != nil {
+							panic(err)
+						}
+					} else {
+						panic(err)
+					}
+
+				} else {
+					panic(errors.New("bondirect mapfile needed"))
+				}
+
 				//
 				//				udpb.PeerID = uint32(*peer_id)
 				//				if ipst, ok := macmap.Assoc["peer_"+strconv.Itoa(*peer_id)]; ok {

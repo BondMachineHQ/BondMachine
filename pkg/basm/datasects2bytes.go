@@ -3,6 +3,7 @@ package basm
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -57,8 +58,8 @@ func dataSections2Bytes(bi *BasmInstance) error {
 				dataValue := line.Elements[1].GetValue()
 				line.Operation.BasmMeta = line.Operation.BasmMeta.SetMeta("offset", fmt.Sprintf("%d", offset))
 
-				switch dataOperator {
-				case "db":
+				re := regexp.MustCompile("^db$")
+				if re.MatchString(dataOperator) {
 					if decodedBytes, err := dbDataConverter(dataValue); err != nil {
 						return err
 					} else {
@@ -71,7 +72,32 @@ func dataSections2Bytes(bi *BasmInstance) error {
 						line.Elements = newElements
 						offset += len(decodedBytes)
 					}
-				case "dd":
+					continue
+				}
+
+				re = regexp.MustCompile("^(?P<num>[0-9]+):db$")
+				if re.MatchString(dataOperator) {
+					if decodedBytes, err := dbDataConverter(dataValue); err != nil {
+						return err
+					} else {
+						numS := re.ReplaceAllString(dataOperator, "${num}")
+						num, _ := strconv.Atoi(numS)
+						decoded := len(decodedBytes)
+						newElements := make([]*bmline.BasmElement, num*decoded)
+						for i, obj := range decodedBytes {
+							for j := 0; j < num; j++ {
+								newArg := new(bmline.BasmElement)
+								newArg.SetValue(obj)
+								newElements[j*decoded+i] = newArg
+							}
+						}
+						line.Elements = newElements
+						offset += num * len(decodedBytes)
+					}
+					continue
+				}
+				re = regexp.MustCompile("^dd$")
+				if re.MatchString(dataOperator) {
 					if decodedBytes, err := dbDataConverter(dataValue); err != nil {
 						return err
 					} else {
@@ -95,7 +121,10 @@ func dataSections2Bytes(bi *BasmInstance) error {
 						line.Elements = newElements
 						offset += len(newElements)
 					}
-				case "sym":
+					continue
+				}
+				re = regexp.MustCompile("^sym$")
+				if re.MatchString(dataOperator) {
 					// The symbol is resolved in the next steps
 					newElements := make([]*bmline.BasmElement, 1)
 					newArg := new(bmline.BasmElement)
@@ -104,11 +133,11 @@ func dataSections2Bytes(bi *BasmInstance) error {
 					line.Elements = newElements
 					// the amount of bytes is not known yet, anyway, the symbol will be stored in a single cell so the offset is incremented by 1
 					offset += 1
-				case "equ":
-					// TODO: finish this and the other data operators
-				default:
-					return errors.New("Unknown data operator " + dataOperator)
+					continue
 				}
+				//	case "equ":
+				// TODO: finish this and the other data operators
+				return errors.New("Unknown data operator " + dataOperator)
 			}
 
 			if section.sectionType == sectRomData {

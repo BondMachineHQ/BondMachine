@@ -9,6 +9,7 @@ putchar:
         mov     {{ .Params.out }}:[r2], r1
         inc     r0
         inc     r2
+        inc     r4
         j putchar
 end:
         nop

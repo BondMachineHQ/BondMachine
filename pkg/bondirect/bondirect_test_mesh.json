@@ -1,41 +1,46 @@
 {
-  "Adjacency": {
-    "peer0": ["wire0", "wire1"],
-    "peer1": ["wire2"],
-    "peer2": []
-  },
-  "Nodes": {
-    "peer0": {
-       "Data" : {}
-    },
-    "peer1": {
-       "Data" : {}
-    },
-    "peer2": {
-       "Data" : {}
-    }
-  },
-  "Edges": {
-    "wire0": {
-       "From": "peer0",
-       "To": "peer1",
-       "Wires": 1,
-       "Clock": 10,
-       "Data" : {}
-    },
-    "wire1": {
-       "From": "peer0",
-       "To": "peer2",
-       "Wires": 1,
-       "Clock": 10,
-       "Data" : {}
-    },
-    "wire2": {
-       "From": "peer1",
-       "To": "peer2",
-       "Wires": 2,
-       "Clock": 10,
-       "Data" : {}
-    }
-  }
+   "Adjacency": {
+      "peer0": [
+         "wire0",
+         "wire1"
+      ],
+      "peer1": [
+         "wire2"
+      ],
+      "peer2": []
+   },
+   "Nodes": {
+      "peer0": {
+         "Data": {}
+      },
+      "peer1": {
+         "Data": {}
+      },
+      "peer2": {
+         "Data": {}
+      }
+   },
+   "Edges": {
+      "wire0": {
+         "From": "peer0",
+         "To": "peer1",
+         "Wires": 1,
+         "Clock": 10,
+         "Data": {}
+      },
+      "wire1": {
+         "From": "peer0",
+         "To": "peer2",
+         "Wires": 1,
+         "Clock": 10,
+         "Data": {}
+      },
+      "wire2": {
+         "From": "peer1",
+         "To": "peer2",
+         "Wires": 2,
+         "Clock": 10,
+         "Data": {}
+      }
+   }
 }

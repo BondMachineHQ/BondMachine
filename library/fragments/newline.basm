@@ -1,17 +1,38 @@
 ; Ths function go to a new line
-; r0: x position within the screen (video textual memory vtm0)
+; r0: pointer to the memory start (0 for vtm0) 
+; r2: x position within the memory (video textual memory vtm0 or similar)
 %fragment newline default_out:vtm0 default_height:16 default_width:16
-        nop
         mov     r1, {{ .Params.height }}
         dec     r1
-        mov     r2, {{ .Params.width }}
-        mult    r1, r2 ; this is the start cell of the last line
-        jlt     r0, r1, dontscroll
+        mov     r3, {{ .Params.width }}
+        mult    r1, r3 ; this is the start cell of the last line
+        mov     r3, r2
+        sub     r3, r0 ; this is the current cell (offset from the start)
+        cmprlt  r3, r1 ; if the current cell is less than the start of the last line don't scroll
+        jcmp    dontscroll ; at this point r3 is the offset from the start of the memory, r1 is the current cell (no offset)
 scroll:
 
 dontscroll:
-        nop
-;        j putchar
+        ; find out the next line position
+        mov     r1, 0
+        mov     r4, {{ .Params.width }}
+findnextline:
+        inc     r1
+        mov     r5, r1
+        mult    r5, r4
+        cmprlt  r5, r3
+        jcmp    findnextline
+        mov     r1, 0x20
+fillblank:
+        inc     r3
+        cmpr    r5, r3
+        jcmp    end
+        mov     r6, r3
+        add     r6, r0
+        mov     {{ .Params.out }}:[r6], r1
+        j       fillblank
 end:
-        nop
+        inc     r6
+        mov     r2, r6
+        mov     r4, r3
 %endfragment

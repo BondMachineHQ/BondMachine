@@ -2,17 +2,16 @@ package bondirect
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 )
 
 func UnmarshallMesh(c *Config, mesh_file string) (*Mesh, error) {
 
-	clus := new(Mesh)
+	cluster := new(Mesh)
 
 	if _, err := os.Stat(mesh_file); err == nil {
-		if jsonfile, err := ioutil.ReadFile(mesh_file); err == nil {
-			if err := json.Unmarshal([]byte(jsonfile), clus); err != nil {
+		if jsonFile, err := os.ReadFile(mesh_file); err == nil {
+			if err := json.Unmarshal([]byte(jsonFile), cluster); err != nil {
 				return nil, err
 			}
 		} else {
@@ -22,16 +21,16 @@ func UnmarshallMesh(c *Config, mesh_file string) (*Mesh, error) {
 		return nil, err
 	}
 
-	return clus, nil
+	return cluster, nil
 }
 
 func UnmarshallCluster(c *Config, cluster_file string) (*Cluster, error) {
 
-	clus := new(Cluster)
+	cluster := new(Cluster)
 
 	if _, err := os.Stat(cluster_file); err == nil {
-		if jsonfile, err := ioutil.ReadFile(cluster_file); err == nil {
-			if err := json.Unmarshal([]byte(jsonfile), clus); err != nil {
+		if jsonFile, err := os.ReadFile(cluster_file); err == nil {
+			if err := json.Unmarshal([]byte(jsonFile), cluster); err != nil {
 				return nil, err
 			}
 		} else {
@@ -41,5 +40,5 @@ func UnmarshallCluster(c *Config, cluster_file string) (*Cluster, error) {
 		return nil, err
 	}
 
-	return clus, nil
+	return cluster, nil
 }

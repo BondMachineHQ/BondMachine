@@ -1,14 +1,16 @@
-; Ths reads a string from the keyboard the is supposed to be connected to i0
+; This reads a string from the keyboard the is supposed to be connected to kbd
 ; r0 pointer to the buffer beginning (es: mov r0, ram:buff)
 ; r2: pointer to the start of the memory where the string will be stored, it will be updated and it will point to the end
-%fragment readline default_out:vtm0
+%fragment readline default_out:vtm0 default_kbd:i0 default_feedout:vtm0 default_feedreg:r4
 	rsets8	r3, 13
 getchar:
-	i2rw	r1, i0
+	i2rw	r1, {{ .Params.kbd }}
 	cmpr	r1, r3
 	jcmp	end
         mov     {{ .Params.out }}:[r2], r1
 	mov	ram:[r0], r1
+	mov	{{ .Params.feedout }}:[{{ .Params.feedreg }}], r1
+	inc	{{ .Params.feedreg }}
         inc     r0
         inc     r2
         j getchar

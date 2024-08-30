@@ -55,6 +55,7 @@ func init() {
 	Allopcodes = append(Allopcodes, Clc{})
 	Allopcodes = append(Allopcodes, Clr{})
 	Allopcodes = append(Allopcodes, Cmpr{})
+	Allopcodes = append(Allopcodes, Cmprlt{})
 	Allopcodes = append(Allopcodes, Cpy{})
 	Allopcodes = append(Allopcodes, Cset{})
 	Allopcodes = append(Allopcodes, Dec{})
