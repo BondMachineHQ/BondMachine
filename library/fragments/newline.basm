@@ -4,6 +4,7 @@
 %fragment newline default_out:vtm0 default_height:16 default_width:16
         mov     r1, {{ .Params.height }}
         dec     r1
+        dec     r1
         mov     r3, {{ .Params.width }}
         mult    r1, r3 ; this is the start cell of the last line
         mov     r3, r2
@@ -22,14 +23,14 @@ findnextline:
         mult    r5, r4
         cmprlt  r5, r3
         jcmp    findnextline
-        mov     r1, 0x20
+        mov     r1, 0x49
 fillblank:
-        inc     r3
         cmpr    r5, r3
         jcmp    end
         mov     r6, r3
         add     r6, r0
         mov     {{ .Params.out }}:[r6], r1
+        inc     r3
         j       fillblank
 end:
         inc     r6
