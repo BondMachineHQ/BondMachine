@@ -5,11 +5,11 @@
         nop
 putchar:
         mov     r1, {{ .Params.mem }}:[r0]
-        jz      r1, end
         mov     {{ .Params.out }}:[r2], r1
         inc     r0
         inc     r2
         inc     r4
+        jz      r1, end
         j putchar
 end:
         nop

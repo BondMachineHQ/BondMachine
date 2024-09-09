@@ -4,7 +4,6 @@
 %fragment newline default_out:vtm0 default_height:16 default_width:16
         mov     r1, {{ .Params.height }}
         dec     r1
-        dec     r1
         mov     r3, {{ .Params.width }}
         mult    r1, r3 ; this is the start cell of the last line
         mov     r3, r2
@@ -12,7 +11,22 @@
         cmprlt  r3, r1 ; if the current cell is less than the start of the last line don't scroll
         jcmp    dontscroll ; at this point r3 is the offset from the start of the memory, r1 is the current cell (no offset)
 scroll:
-
+        mov     r4, r0
+        mov     r5, {{ .Params.width }}
+        add     r4, r5 ; This is the source
+        mov     r5, r0 ; This is the destination
+scrollloop:
+        mov     r6, {{ .Params.out }}:[r4]
+        mov     {{ .Params.out }}:[r5], r6
+        inc     r5
+        inc     r4
+        cmpr    r4, r2
+        jcmp    scrollloopdone
+        j       scrollloop
+scrollloopdone:
+        mov     r5, {{ .Params.width }}
+        sub     r2, r5
+        sub     r3, r5
 dontscroll:
         ; find out the next line position
         mov     r1, 0
@@ -23,15 +37,29 @@ findnextline:
         mult    r5, r4
         cmprlt  r5, r3
         jcmp    findnextline
-        mov     r1, 0x49
+        mov     r1, 0x00
 fillblank:
         cmpr    r5, r3
-        jcmp    end
+        jcmp    fillblank2prep
         mov     r6, r3
         add     r6, r0
         mov     {{ .Params.out }}:[r6], r1
         inc     r3
         j       fillblank
+fillblank2prep:
+        mov     r5, {{ .Params.width }}
+        mov     r4, {{ .Params.height }}
+        mult    r4, r5
+        dec     r4
+        mov     r5, r3
+fillblank2:
+        cmpr    r5, r4
+        jcmp    end
+        mov     r7, r5
+        add     r7, r0
+        mov     {{ .Params.out }}:[r7], r1
+        inc     r5
+        j       fillblank2
 end:
         inc     r6
         mov     r2, r6

@@ -5,14 +5,14 @@
 	rsets8	r3, 13
 getchar:
 	i2rw	r1, {{ .Params.kbd }}
-	cmpr	r1, r3
-	jcmp	end
         mov     {{ .Params.out }}:[r2], r1
 	mov	ram:[r0], r1
 	mov	{{ .Params.feedout }}:[{{ .Params.feedreg }}], r1
 	inc	{{ .Params.feedreg }}
         inc     r0
         inc     r2
+	cmpr	r1, r3
+	jcmp	end
         j getchar
 end:
 	mov	r1, 0

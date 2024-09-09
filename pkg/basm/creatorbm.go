@@ -480,6 +480,17 @@ outer:
 
 	myArch.Op = opCodes
 
+	threads := 0
+	if cp.GetMeta("threaded") != "" {
+		if value, err := strconv.Atoi(cp.GetMeta("threaded")); err == nil {
+			threads = value
+		} else {
+			return nil, err
+		}
+	}
+
+	myArch.Threaded = threads
+
 	// TODO: check how it is used and if it is needed, eventually remove or substitute with the merge of the two lists
 	bi.rg.Clone("/code:romtexts/sections:"+romCode, "/bm:cps/id:"+strconv.Itoa(procid))
 

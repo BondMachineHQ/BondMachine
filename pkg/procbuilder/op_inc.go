@@ -52,15 +52,19 @@ func (Op Inc) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 func (op Inc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
-
+	tabsNum := 5
 	reg_num := 1 << arch.R
 
 	result := ""
-	result += "					INC: begin\n"
+	result += tabs(tabsNum) + "INC: begin\n"
+	if th := ThreadInstructionStart(conf, arch, tabsNum+1); th != "" {
+		result += th
+		tabsNum++
+	}
 	if arch.R == 1 {
-		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
 	} else {
-		result += "						case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
 	}
 	for i := 0; i < reg_num; i++ {
 
@@ -71,14 +75,18 @@ func (op Inc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 				continue
 			}
 		}
-		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-		result += "							_" + strings.ToLower(Get_register_name(i)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + " + 1'b1;\n"
-		result += "							$display(\"INC " + strings.ToUpper(Get_register_name(i)) + "\");\n"
-		result += "						end\n"
+		result += tabs(tabsNum+1) + strings.ToUpper(Get_register_name(i)) + " : begin\n"
+		result += tabs(tabsNum+2) + "_" + strings.ToLower(Get_register_name(i)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + " + 1'b1;\n"
+		result += tabs(tabsNum+2) + "$display(\"INC " + strings.ToUpper(Get_register_name(i)) + "\");\n"
+		result += tabs(tabsNum+1) + "end\n"
 	}
-	result += "						endcase\n"
-	result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
-	result += "					end\n"
+	result += tabs(tabsNum+1) + "endcase\n"
+	result += NextInstruction(conf, arch, tabsNum+1, "_pc + 1'b1")
+	if th := ThreadInstructionEnd(conf, arch, tabsNum); th != "" {
+		result += th
+		tabsNum--
+	}
+	result += tabs(tabsNum) + "end\n"
 	return result
 }
 

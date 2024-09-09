@@ -9,6 +9,7 @@ import (
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmstack"
 )
 
 const (
@@ -17,12 +18,13 @@ const (
 
 // The CPU
 type Conproc struct {
-	CpID  uint32
-	Rsize uint8
-	R     uint8 // Number of n-bit registers
-	N     uint8 // Number of n-bit inputs
-	M     uint8 // Number of n-bit outputs
-	Op    []Opcode
+	CpID     uint32
+	Rsize    uint8
+	R        uint8 // Number of n-bit registers
+	N        uint8 // Number of n-bit inputs
+	M        uint8 // Number of n-bit outputs
+	Op       []Opcode
+	Threaded int
 }
 
 type Config struct {
@@ -115,7 +117,7 @@ func (proc *Conproc) Write_opcodes_verilog() string {
 	opbits := proc.Opcodes_bits()
 
 	result := ""
-	result += "			// Opcodes in the istructions, lenght accourding the number of the selected.\n"
+	result += "			// Opcodes in the instructions, length according the number of the selected.\n"
 
 	for i, op := range proc.Op {
 		if i == 0 {
@@ -132,6 +134,95 @@ func (proc *Conproc) Write_opcodes_verilog() string {
 	}
 
 	result += "\n"
+	return result
+}
+func ThreadInstructionStart(conf *Config, arch *Arch, tabs int) string {
+	result := ""
+	tabS := ""
+	for i := 0; i < tabs; i++ {
+		tabS += "\t"
+	}
+	switch arch.Modes[0] {
+	case "ha":
+		if arch.Threaded > 0 {
+			regNum := 1 << arch.R
+			threadStack := "threadStack" + strconv.Itoa(arch.Threaded)
+			sm := threadStack + "SM"
+			result += tabS + "if (nicecount == 8'b0) begin\n"
+			result += tabS + "\tcase (" + sm + ")\n"
+			result += tabS + "\tCTXEXE: begin\n"
+			result += tabS + "\t\t" + sm + " <= CTXSEND;\n"
+			result += tabS + "\t\tprovpc <= _pc;\n"
+			result += tabS + "\tend\n"
+			result += tabS + "\tCTXSEND: begin\n"
+			// result += tabS + "\t\tif (" + threadStack + "empty) begin\n"
+			// result += tabS + "\t\t\t" + sm + " <= CTXEXE;\n"
+			// result += tabS + "\t\t\tnicecount <= nice;\n"
+			// result += tabS + "\t\tend\n"
+			// result += tabS + "\t\telse begin\n"
+			result += tabS + "\t\t\tif (!" + threadStack + "senderAck) begin\n"
+			regList := ""
+			for i := 0; i < regNum; i++ {
+				regList += "_" + strings.ToLower(Get_register_name(i)) + ", "
+			}
+			result += tabS + "\t\t\t\t" + threadStack + "senderData <= {ThreadID, 1'b0, provpc, " + regList + "nice};\n"
+			result += tabS + "\t\t\t\t" + threadStack + "senderWrite <= 1'b1;\n"
+			result += tabS + "\t\t\t\t" + sm + " <= CTXWSEND;\n"
+			// result += tabS + "\t\t\tend\n"
+			result += tabS + "\t\tend\n"
+			result += tabS + "\tend\n"
+			result += tabS + "\tCTXWSEND: begin\n"
+			result += tabS + "\t\tif (" + threadStack + "senderAck) begin\n"
+			result += tabS + "\t\t\t" + threadStack + "senderWrite <= 1'b0;\n"
+			result += tabS + "\t\t\t" + sm + " <= CTXREQNEW;\n"
+			result += tabS + "\t\tend\n"
+			result += tabS + "\tend\n"
+			result += tabS + "\tCTXREQNEW: begin\n"
+			result += tabS + "\t\t" + threadStack + "receiverRead <= 1'b1;\n"
+			result += tabS + "\t\t" + sm + " <= CTXNEW;\n"
+			result += tabS + "\tend\n"
+			result += tabS + "\tCTXNEW: begin\n"
+			result += tabS + "\t\tif (" + threadStack + "receiverAck && " + threadStack + "receiverRead) begin\n"
+			result += tabS + "\t\t\t" + threadStack + "receiverRead <= 1'b0;\n"
+			result += tabS + "\t\t\t{ThreadID, dummy_source, provpc, " + regList + "nice} <= " + threadStack + "receiverData;\n"
+			result += tabS + "\t\t\t" + sm + " <= CTXCHKNICE;\n"
+			result += tabS + "\t\tend\n"
+			result += tabS + "\tend\n"
+			result += tabS + "\tCTXCHKNICE: begin\n"
+			result += tabS + "\t\tif (nice == 8'b0) begin\n"
+			result += tabS + "\t\t\t" + sm + " <= CTXSEND;\n"
+			result += tabS + "\t\tend\n"
+			result += tabS + "\t\telse begin\n"
+			result += tabS + "\t\t\t" + sm + " <= CTXEXE;\n"
+			result += tabS + "\t\t\tnicecount <= nice;\n"
+			result += tabS + "\t\t\t_pc <= provpc;\n"
+			result += tabS + "\t\tend\n"
+			result += tabS + "\tend\n"
+			result += tabS + "\tendcase\n"
+			result += tabS + "end\n"
+			result += tabS + "else begin\n"
+			result += tabS + "\tnicecount <= nicecount - 1;\n"
+		}
+	case "hy":
+	case "vn":
+	}
+	return result
+}
+
+func ThreadInstructionEnd(conf *Config, arch *Arch, tabs int) string {
+	result := ""
+	tabS := ""
+	for i := 0; i < tabs; i++ {
+		tabS += "\t"
+	}
+	switch arch.Modes[0] {
+	case "ha":
+		if arch.Threaded > 0 {
+			result += tabS + "end\n"
+		}
+	case "hy":
+	case "vn":
+	}
 	return result
 }
 
@@ -366,6 +457,105 @@ func (proc *Conproc) Write_verilog(conf *Config, arch *Arch, processor_module_na
 
 	for i := 0; i < reg_num; i++ {
 		result += "	(* KEEP = \"TRUE\" *) reg [" + strconv.Itoa(regsize-1) + ":0] _" + strings.ToLower(Get_register_name(i)) + ";\n"
+	}
+
+	// Multithreading
+	if proc.Threaded > 0 {
+
+		result += "\n"
+		result += "	// Threaded processor\n"
+		result += "\n"
+
+		pcBits := 0
+		sourceBit := 0
+		switch arch.Modes[0] {
+		case "ha":
+			pcBits = int(arch.O)
+			sourceBit = 0
+		case "hy":
+			if arch.L > arch.O {
+				pcBits = int(arch.L)
+			} else {
+				pcBits = int(arch.O)
+			}
+			sourceBit = 1
+		case "vn":
+			pcBits = int(arch.L)
+			sourceBit = 1
+		}
+
+		depth := strconv.Itoa(proc.Threaded)
+		thIDBits := Needed_bits(proc.Threaded)
+		regNum := 1 << proc.R
+		regBits := regNum * regsize
+
+		// threadStack is the name of the thread stack TODO
+		threadStack := "threadStack" + depth
+		// datasize is:
+		// - the bits to store the thread id
+		// - the bits to store the code source
+		// - the bits to store the PC
+		// - the bits to store the registers
+		// - the bits to store the nice (8 bits)
+
+		result += "\treg[" + strconv.Itoa(thIDBits-1) + ":0] ThreadID;\n"
+		result += "\treg[7:0] nice;\n"
+		result += "\treg[7:0] nicecount;\n"
+		result += "\treg dummy_source;\n"
+		result += "\treg[" + strconv.Itoa(pcBits-1) + ":0] provpc;\n"
+		result += "\n"
+		dataSize := thIDBits + sourceBit + pcBits + regBits + 8
+		result += "	reg [2:0] " + threadStack + "SM;\n"
+		result += "	localparam	CTXSEND = 3'b000,\n" // Context switch send the current thread to the stack
+		result += "			CTXWSEND = 3'b001,\n"         // Wait for the stack to send the current thread
+		result += "			CTXREQNEW = 3'b010,\n"        // Request a new thread from the stack
+		result += "			CTXNEW = 3'b011,\n"           // New thread from the stack received
+		result += "			CTXCHKNICE = 3'b100,\n"       // Check if the nice is 0
+		result += "			CTXEXE = 3'b101;\n"           // Execute the thread
+
+		result += "\n"
+		result += "\treg [" + strconv.Itoa(dataSize-1) + ":0] " + threadStack + "senderData;\n"
+		result += "\treg " + threadStack + "senderWrite;\n"
+		result += "\twire " + threadStack + "senderAck;\n"
+		result += "\n"
+		result += "\twire [" + strconv.Itoa(dataSize-1) + ":0] " + threadStack + "receiverData;\n"
+		result += "\treg " + threadStack + "receiverRead;\n"
+		result += "\twire " + threadStack + "receiverAck;\n"
+		result += "\n"
+		result += "\twire " + threadStack + "empty;\n"
+		result += "\twire " + threadStack + "full;\n"
+		result += "\n"
+		result += "\t" + threadStack + " " + threadStack + "_inst (\n"
+		result += "\t\t.clk(clock_signal),\n"
+		result += "\t\t.reset(reset_signal),\n"
+		result += "\t\t.senderData(" + threadStack + "senderData),\n"
+		result += "\t\t.senderWrite(" + threadStack + "senderWrite),\n"
+		result += "\t\t.senderAck(" + threadStack + "senderAck),\n"
+		result += "\t\t.receiverData(" + threadStack + "receiverData),\n"
+		result += "\t\t.receiverRead(" + threadStack + "receiverRead),\n"
+		result += "\t\t.receiverAck(" + threadStack + "receiverAck),\n"
+		result += "\t\t.empty(" + threadStack + "empty),\n"
+		result += "\t\t.full(" + threadStack + "full)\n"
+		result += "\t);\n"
+		result += "\n"
+		result += "initial begin\n"
+		result += "	" + threadStack + "SM <= CTXEXE;\n"
+		result += "\tnice <= 8'b00000100;\n"
+		result += "\tnicecount <= 8'b00000100;\n"
+		result += "end\n"
+
+		s := bmstack.CreateBasicStack()
+		s.ModuleName = threadStack
+		s.DataSize = dataSize
+		s.Depth = proc.Threaded
+		s.MemType = "FIFO"
+		s.Senders = []string{"sender"}
+		s.Receivers = []string{"receiver"}
+
+		f, _ := os.Create(threadStack + "stack.v")
+		r, _ := s.WriteHDL()
+		f.WriteString(r)
+		f.Close()
 	}
 
 	// modes handling

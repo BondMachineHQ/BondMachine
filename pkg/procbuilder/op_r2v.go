@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -23,6 +24,7 @@ func (op R2v) Op_get_desc() string {
 
 func (op R2v) Op_show_assembler(arch *Arch) string {
 	opbits := arch.Opcodes_bits()
+	fmt.Println(arch.Shared_constraints)
 	result := "r2v [" + strconv.Itoa(int(arch.R)) + "(Reg)] [ 8 (RAM address)]	// " + op.Op_get_desc() + " [" + strconv.Itoa(opbits+int(arch.R)+8) + "]\n"
 	return result
 }
@@ -82,6 +84,22 @@ func (op R2v) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 
+	boxes := soLists("vtextmem", arch.Shared_constraints, 5)
+	vtmBits := 8
+	vtmBitsS := "7"
+
+loop:
+	for _, box := range boxes {
+		if box[0] == arch.Tag {
+			memWidth, _ := strconv.Atoi(box[3])
+			memHeight, _ := strconv.Atoi(box[4])
+			memDepth := memWidth * memHeight
+			vtmBits = Needed_bits(memDepth)
+			vtmBitsS = strconv.Itoa(vtmBits - 1)
+			break loop
+		}
+	}
+
 	reg_num := 1 << arch.R
 
 	// This is always the first module if present
@@ -126,7 +144,7 @@ func (op R2v) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 	for i := 0; i < reg_num; i++ {
 		result += "				" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 		result += "					vtm0_wren_i <= 1'b1;\n"
-		result += "					vtm0_addr_i[7:0] <= current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-8) + "];\n"
+		result += "					vtm0_addr_i[" + vtmBitsS + ":0] <= current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)-vtmBits) + "];\n"
 		result += "					vtm0_din_i[7:0] <= _" + strings.ToLower(Get_register_name(i)) + "[7:0];\n"
 		result += "					$display(\"R2V " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
 		result += "				end\n"
@@ -146,8 +164,19 @@ func (op R2v) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 func (op R2v) Assembler(arch *Arch, words []string) (string, error) {
 	opbits := arch.Opcodes_bits()
 	rom_word := arch.Max_word()
-	ramdepth := 8
-
+	ramDepth := 8
+	boxes := soLists("vtextmem", arch.Shared_constraints, 5)
+loop:
+	for _, box := range boxes {
+		if box[0] == arch.Tag {
+			memWidth, _ := strconv.Atoi(box[3])
+			memHeight, _ := strconv.Atoi(box[4])
+			memDepth := memWidth * memHeight
+			ramDepth = Needed_bits(memDepth)
+			break loop
+		}
+	}
+	// fmt.Println("ramDepth", ramDepth)
 	reg_num := 1 << arch.R
 
 	if len(words) != 2 {
@@ -167,12 +196,12 @@ func (op R2v) Assembler(arch *Arch, words []string) (string, error) {
 	}
 
 	if partial, err := Process_number(words[1]); err == nil {
-		result += zeros_prefix(ramdepth, partial)
+		result += zeros_prefix(ramDepth, partial)
 	} else {
 		return "", Prerror{err.Error()}
 	}
 
-	for i := opbits + int(arch.R) + ramdepth; i < rom_word; i++ {
+	for i := opbits + int(arch.R) + ramDepth; i < rom_word; i++ {
 		result += "0"
 	}
 

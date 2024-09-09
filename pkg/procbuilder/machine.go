@@ -25,6 +25,7 @@ type Machine_json struct {
 	Op                 []string
 	Slocs              []string
 	Vars               []string
+	Threaded           int
 }
 
 var Allopcodes []Opcode
@@ -127,6 +128,7 @@ func init() {
 	Allopcodes = append(Allopcodes, Sbc{})
 	Allopcodes = append(Allopcodes, Sub{})
 	Allopcodes = append(Allopcodes, T2r{})
+	Allopcodes = append(Allopcodes, Tsp{})
 	Allopcodes = append(Allopcodes, U2r{})
 	Allopcodes = append(Allopcodes, Wrd{})
 	Allopcodes = append(Allopcodes, Wwr{})
@@ -192,6 +194,7 @@ func (mach *Machine) Jsoner() *Machine_json {
 	for i, val := range mach.Op {
 		result.Op[i] = val.Op_get_name()
 	}
+	result.Threaded = mach.Threaded
 	return result
 }
 
@@ -228,6 +231,7 @@ func (machj *Machine_json) Dejsoner() *Machine {
 			}
 		}
 	}
+	result.Threaded = machj.Threaded
 	return result
 }
 

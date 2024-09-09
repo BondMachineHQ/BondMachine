@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"unsafe"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
@@ -72,6 +73,14 @@ func zeros_suffix(num int, value string) string {
 	result := value
 	for i := 0; i < num-len(value); i++ {
 		result = result + "0"
+	}
+	return result
+}
+
+func tabs(num int) string {
+	result := ""
+	for i := 0; i < num; i++ {
+		result = result + "\t"
 	}
 	return result
 }
@@ -225,4 +234,29 @@ func Int32FromBits(f uint32) int32 {
 
 func Int64FromBits(f uint64) int64 {
 	return *(*int64)(unsafe.Pointer(&f))
+}
+
+func soLists(t string, sharedConstrains string, num int) [][]string {
+	if sharedConstrains != "" {
+		constraints := strings.Split(sharedConstrains, ",")
+		for _, constraint := range constraints {
+			values := strings.Split(constraint, ":")
+			soName := values[0]
+			if soName == t {
+				args := values[1:]
+				if len(args)%num == 0 {
+					result := make([][]string, len(args)/num)
+					for i := 0; i < len(args)/num; i++ {
+						result[i] = make([]string, num)
+						for j := 0; j < num; j++ {
+							result[i][j] = args[i*num+j]
+						}
+					}
+					return result
+				}
+			}
+		}
+	}
+
+	return nil
 }

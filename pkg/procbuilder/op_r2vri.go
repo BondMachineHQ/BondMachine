@@ -75,6 +75,22 @@ func (op R2vri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 
+	boxes := soLists("vtextmem", arch.Shared_constraints, 5)
+	vtmBits := 8
+	vtmBitsS := "7"
+
+loop:
+	for _, box := range boxes {
+		if box[0] == arch.Tag {
+			memWidth, _ := strconv.Atoi(box[3])
+			memHeight, _ := strconv.Atoi(box[4])
+			memDepth := memWidth * memHeight
+			vtmBits = Needed_bits(memDepth)
+			vtmBitsS = strconv.Itoa(vtmBits - 1)
+			break loop
+		}
+	}
+
 	reg_num := 1 << arch.R
 
 	// This is always the last module if present
@@ -118,7 +134,7 @@ func (op R2vri) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 		for j := 0; j < reg_num; j++ {
 			result += "						" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
 			result += "							vtm0_wren_i <= 1'b1;\n"
-			result += "							vtm0_addr_i[7:0] <= _" + strings.ToLower(Get_register_name(j)) + "[7:0];\n"
+			result += "							vtm0_addr_i[" + vtmBitsS + ":0] <= _" + strings.ToLower(Get_register_name(j)) + "[" + vtmBitsS + ":0];\n"
 			result += "							vtm0_din_i[7:0] <= _" + strings.ToLower(Get_register_name(i)) + "[7:0];\n"
 			result += "							$display(\"R2VRI " + strings.ToUpper(Get_register_name(i)) + " \",_" + strings.ToLower(Get_register_name(i)) + ");\n"
 			result += "						end\n"
