@@ -117,27 +117,27 @@ func (op Tsp) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 
 		result += tabs(tabsNum+2) + strings.ToUpper(Get_register_name(i)) + " : begin\n"
 
-		result += tabs(tabsNum+2) + "\tcase (" + sm + ")\n"
-		result += tabs(tabsNum+2) + "\tCTXEXE: begin\n"
-		result += tabs(tabsNum+2) + "\t\t" + sm + " <= CTXSEND;\n"
-		result += tabs(tabsNum+2) + "\t\tprovpc <= current_instruction[" + strconv.Itoa(romWord-opBits-1-int(arch.R)) + ":" + strconv.Itoa(romWord-opBits-int(locationBits)-int(arch.R)) + "];\n"
+		result += tabs(tabsNum+3) + "case (" + sm + ")\n"
+		result += tabs(tabsNum+3) + "CTXEXE: begin\n"
+		result += tabs(tabsNum+4) + sm + " <= CTXSEND;\n"
+		result += tabs(tabsNum+4) + "provpc <= current_instruction[" + strconv.Itoa(romWord-opBits-1-int(arch.R)) + ":" + strconv.Itoa(romWord-opBits-int(locationBits)-int(arch.R)) + "];\n"
 
-		result += tabs(tabsNum+2) + "\tend\n"
-		result += tabs(tabsNum+2) + "\tCTXSEND: begin\n"
-		result += tabs(tabsNum+2) + "\t\t\tif (!" + threadStack + "senderAck) begin\n"
+		result += tabs(tabsNum+3) + "end\n"
+		result += tabs(tabsNum+3) + "CTXSEND: begin\n"
+		result += tabs(tabsNum+5) + "if (!" + threadStack + "senderAck) begin\n"
 		regList := ""
 		for j := 0; j < regNum; j++ {
 			regList += "_" + strings.ToLower(Get_register_name(j)) + ", "
 		}
-		result += tabs(tabsNum+2) + "\t\t\t\t" + threadStack + "senderData <= {ThreadID, 1'b0, provpc, " + regList + "current_instruction[" + strconv.Itoa(romWord-opBits-1-int(arch.R)-int(locationBits)) + ":" + strconv.Itoa(romWord-opBits-int(locationBits)-int(arch.R)-8) + "]};\n"
-		result += tabs(tabsNum+2) + "\t\t\t\t" + threadStack + "senderWrite <= 1'b1;\n"
-		result += tabs(tabsNum+2) + "\t\t\t\t" + sm + " <= CTXWSEND;\n"
-		result += tabs(tabsNum+2) + "\t\t\tend\n"
-		result += tabs(tabsNum+2) + "\t\tend\n"
-		result += tabs(tabsNum+2) + "\tCTXWSEND: begin\n"
-		result += tabs(tabsNum+2) + "\t\tif (" + threadStack + "senderAck) begin\n"
-		result += tabs(tabsNum+2) + "\t\t\t" + threadStack + "senderWrite <= 1'b0;\n"
-		result += tabs(tabsNum+2) + "\t\t\t" + sm + " <= CTXEXE;\n"
+		result += tabs(tabsNum+6) + threadStack + "senderData <= {ThreadID, 1'b0, provpc, " + regList + "current_instruction[" + strconv.Itoa(romWord-opBits-1-int(arch.R)-int(locationBits)) + ":" + strconv.Itoa(romWord-opBits-int(locationBits)-int(arch.R)-8) + "]};\n"
+		result += tabs(tabsNum+6) + threadStack + "senderWrite <= 1'b1;\n"
+		result += tabs(tabsNum+6) + sm + " <= CTXWSEND;\n"
+		result += tabs(tabsNum+5) + "end\n"
+		result += tabs(tabsNum+4) + "end\n"
+		result += tabs(tabsNum+3) + "CTXWSEND: begin\n"
+		result += tabs(tabsNum+4) + "if (" + threadStack + "senderAck) begin\n"
+		result += tabs(tabsNum+5) + threadStack + "senderWrite <= 1'b0;\n"
+		result += tabs(tabsNum+5) + sm + " <= CTXEXE;\n"
 		result += NextInstruction(conf, arch, tabsNum+5, "_pc + 1'b1")
 
 		result += tabs(tabsNum+2) + "\t\tend\n"
