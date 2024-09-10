@@ -11,4 +11,4 @@ One or more .basm files contain the code to be compiled in an existing BM or to 
 
 The options are:
 
-[directives](directives)
+[directives](directives.md)
