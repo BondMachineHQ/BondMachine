@@ -5,7 +5,7 @@ Basm is very different from traditional assemblers. In the default case, the tar
 
 One or more .basm files contain the code to be compiled in an existing BM or to produce a suitable one. Basm files not only contain the code but also the metadatas that are used to define the architecture. The metadatas are used to define the SOs, the CPs and the BM itself. The metadatas are defined by using the %meta directives. 
 
-The page [Basm File Structure](docbasmfile.md) contains a detailed description of the structure of a .basm file. The page [Basm Instructions](docinstructions.md) contains a detailed description how to write instructions and I/O objects in a .basm file. The page [Basm Internals](docinternals.md) contains information about the internals of the assembler. The single instructions documentation is available in the [BASM Assembly Reference](docs/).
+The page [Basm File Structure](docbasmfile.md) contains a detailed description of the structure of a .basm file. The page [Basm Instructions](docinstructions.md) contains a detailed description how to write instructions and I/O objects in a .basm file. The page [Basm Internals](docinternals.md) contains information about the internals of the assembler. The single instructions documentation is available in the [BASM Assembly Reference](reference/).
 
 ## __Usage__ ##
 
