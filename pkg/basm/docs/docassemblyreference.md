@@ -1,0 +1,1 @@
+[inc](inc.md): register incrementation by 1
