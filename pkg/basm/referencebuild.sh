@@ -99,7 +99,7 @@ echo "" >> ./reference/matrix.md
 for i in `ls ../procbuilder/op_* | sort`
 do
 	opname=`basename $i | cut -d_ -f2- | cut -d. -f1`
-	echo -n "| $opname |" >> ./reference/matrix.md
+	echo -n "| [$opname]($opname.md) |" >> ./reference/matrix.md
 	for feature in "${!SupportArray[@]}"
 	do
 		valueok="false"
@@ -149,7 +149,7 @@ echo "" >> ./reference/matrix.md
 for i in `ls ../procbuilder/dynop_* | sort`
 do
 	opname=`basename $i | cut -d_ -f2- | cut -d. -f1`
-	echo -n "| $opname |" >> ./reference/matrix.md
+	echo -n "| [$opname]($opname.md) |" >> ./reference/matrix.md
 	for feature in "${!SupportArrayDyn[@]}"
 	do
 		valueok="false"
