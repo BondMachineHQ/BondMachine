@@ -1,4 +1,6 @@
-# Support Matrix for Instructions
+# Support Matrix
+
+## Support Matrix for Static Instructions
 
 | Instruction | ciao | ciaoff |
 | --- | --- | --- |
@@ -94,7 +96,7 @@
 | xnor | - | - |
 | xor | - | - |
 
-# Support Matrix for Dynamical Instructions
+## Support Matrix for Dynamical Instructions
 
 | Instruction |
 | --- |

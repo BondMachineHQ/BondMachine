@@ -76,7 +76,9 @@ do
 done
 
 cat > ./reference/matrix.md << EOF
-# Support Matrix for Instructions
+# Support Matrix
+
+## Support Matrix for Static Instructions
 
 EOF
 
@@ -125,7 +127,7 @@ done
 
 cat >> ./reference/matrix.md << EOF
 
-# Support Matrix for Dynamical Instructions
+## Support Matrix for Dynamical Instructions
 
 EOF
 
