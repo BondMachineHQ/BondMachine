@@ -22,6 +22,8 @@ func (op Not) Op_get_desc() string {
 }
 
 func (op Not) Op_show_assembler(arch *Arch) string {
+	// "reference": {"support_ciao": "ciao2"}
+	// "reference": {"ciao2": "ciao2"}
 	opbits := arch.Opcodes_bits()
 	result := "not [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(int(arch.R)) + "(Reg)]	// Set a register to the logical and of its value with another register [" + strconv.Itoa(opbits+int(arch.R)+int(arch.R)) + "]\n"
 	return result

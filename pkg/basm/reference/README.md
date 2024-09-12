@@ -107,3 +107,7 @@ pseudo-instructions as well. The pseudo-instructions are not listed here.
 [linear_quantizer](linear_quantizer.md)
 [rsets](rsets.md)
 [stack](stack.md)
+
+Not all instructions are fully supported by the BondMachine project. Some instructions are in the process of being implemented.
+The support matrix for the instructions is available [here](matrix.md).
+
