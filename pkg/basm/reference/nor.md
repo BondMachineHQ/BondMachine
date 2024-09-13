@@ -1,2 +1,10 @@
-Name nor
-Support Simulation 
+# nor
+
+**Instruction**: nor
+
+**Length**: 
+
+**Description**:
+
+         
+

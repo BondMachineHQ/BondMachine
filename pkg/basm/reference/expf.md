@@ -1,2 +1,10 @@
-Name expf
-Support Simulation 
+# expf
+
+**Instruction**: expf
+
+**Length**: 
+
+**Description**:
+
+         
+

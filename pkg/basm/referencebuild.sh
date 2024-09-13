@@ -13,8 +13,16 @@ pseudo-instructions as well. The pseudo-instructions are not listed here.
 EOF
 
 cat > /tmp/opcodetemplate << EOF
-Name {{ name }}
-Support Simulation {{ sim }}
+# {{ name }}
+
+**Instruction**: {{ name }}
+
+**Length**: {{ length }}
+
+**Description**:
+
+{{ desc }} {{ desc1 }} {{ desc2 }} {{ desc3 }} {{ desc4 }} {{ desc5 }} {{ desc6 }} {{ desc7 }} {{ desc8 }} {{ desc9 }}
+
 EOF
 
 cat > /tmp/dynoptemplate << EOF
@@ -78,8 +86,17 @@ done
 cat > ./reference/matrix.md << EOF
 # Support Matrix
 
-This matrix shows the support of the instructions in the BondMachine project. For each instruction, the
-support for each feature is shown. The possible support values are shwon below:
+The following tables show the feature support of the instructions and the dynamical instruction in the BondMachine project.
+For each of them the support of the features is shown.
+
+The features are the following:
+| Feature | Description |
+| --- | --- |
+| hdl | The instruction can be translated to hardware description language |
+| gosim | The instruction can be simulated in the Go-based simulator |
+
+The possible support values are shown below:
+
 | Value | Meaning |
 | --- | --- |
 | ![ok](iconok.png) | The feature is fully implemented |
@@ -123,6 +140,9 @@ do
 				case $value in
 					"ok") value="![ok](iconok.png)" ;;
 					"no") value="![no](iconno.png)" ;;
+					"testing") value="![testing](icontesting.png)" ;;
+					"partial") value="![partial](iconpartial.png)" ;;
+					"notapplicable") value="![notapplicable](iconnotapplicable.png)" ;;
 				esac
 				echo -n " $value |" >> ./reference/matrix.md
 				valueok="true"
@@ -175,8 +195,11 @@ do
 			then
 				value=`jq -r ".$key" <<<"$ijson"`
 				case $value in
-					"ok") value="<i class=\"fa-solid fa-square-check\"></i>" ;;
-					"no") value="no" ;;
+					"ok") value="![ok](iconok.png)" ;;
+					"no") value="![no](iconno.png)" ;;
+					"testing") value="![testing](icontesting.png)" ;;
+					"partial") value="![partial](iconpartial.png)" ;;
+					"notapplicable") value="![notapplicable](iconnotapplicable.png)" ;;
 				esac
 				echo -n " $value |" >> ./reference/matrix.md
 				valueok="true"

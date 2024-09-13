@@ -1,2 +1,10 @@
-Name xnor
-Support Simulation 
+# xnor
+
+**Instruction**: xnor
+
+**Length**: 
+
+**Description**:
+
+         
+

@@ -1,2 +1,10 @@
-Name xor
-Support Simulation 
+# xor
+
+**Instruction**: xor
+
+**Length**: 
+
+**Description**:
+
+         
+

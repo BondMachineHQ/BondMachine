@@ -1,2 +1,10 @@
-Name adc
-Support Simulation 
+# adc
+
+**Instruction**: adc
+
+**Length**: 
+
+**Description**:
+
+         
+

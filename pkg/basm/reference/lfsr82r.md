@@ -1,2 +1,10 @@
-Name lfsr82r
-Support Simulation 
+# lfsr82r
+
+**Instruction**: lfsr82r
+
+**Length**: 
+
+**Description**:
+
+         
+

@@ -19,19 +19,21 @@ func (op Inc) Op_get_name() string {
 }
 
 func (op Inc) Op_get_desc() string {
-	// "reference": {"desc":"Increment a register by 1"}
+	// "reference": {"desc":"The INC instruction increments a register by 1. It assumes that the register is a positive integer and it will overflow to 0 if the maximum value is reached."}
+	// "reference": {"desc1": "The length of the register is defined by the architecture."}
 	return "Increment a register by 1"
 }
 
 func (op Inc) Op_show_assembler(arch *Arch) string {
-	opbits := arch.Opcodes_bits()
-	result := "inc [" + strconv.Itoa(int(arch.R)) + "(Reg)]	// Increment a register by 1 [" + strconv.Itoa(opbits+int(arch.R)) + "]\n"
+	opBits := arch.Opcodes_bits()
+	result := "inc [" + strconv.Itoa(int(arch.R)) + "(Reg)]	// Increment a register by 1 [" + strconv.Itoa(opBits+int(arch.R)) + "]\n"
 	return result
 }
 
 func (op Inc) Op_get_instruction_len(arch *Arch) int {
-	opbits := arch.Opcodes_bits()
-	return opbits + int(arch.R) // The bits for the opcode + bits for a register
+	// "reference": {"length": "opBits + regBits"}
+	opBits := arch.Opcodes_bits()
+	return opBits + int(arch.R) // The bits for the opcode + bits for a register
 }
 
 func (op Inc) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
@@ -51,7 +53,7 @@ func (Op Inc) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 }
 
 func (op Inc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
-	// "reference": {"support_HDL":"ok"}
+	// "reference": {"support_hdl":"ok"}
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 	tabsNum := 5
@@ -97,7 +99,7 @@ func (op Inc) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 }
 
 func (op Inc) Assembler(arch *Arch, words []string) (string, error) {
-	opbits := arch.Opcodes_bits()
+	opBits := arch.Opcodes_bits()
 	rom_word := arch.Max_word()
 
 	reg_num := 1 << arch.R
@@ -118,7 +120,7 @@ func (op Inc) Assembler(arch *Arch, words []string) (string, error) {
 		return "", Prerror{"Unknown register name " + words[0]}
 	}
 
-	for i := opbits + int(arch.R); i < rom_word; i++ {
+	for i := opBits + int(arch.R); i < rom_word; i++ {
 		result += "0"
 	}
 
@@ -132,6 +134,7 @@ func (op Inc) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Inc) Simulate(vm *VM, instr string) error {
+	// "reference": {"support_gosim":"ok"}
 	reg_bits := vm.Mach.R
 	reg := get_id(instr[:reg_bits])
 	switch vm.Mach.Rsize {

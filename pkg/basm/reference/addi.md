@@ -1,2 +1,10 @@
-Name addi
-Support Simulation 
+# addi
+
+**Instruction**: addi
+
+**Length**: 
+
+**Description**:
+
+         
+

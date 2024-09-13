@@ -1,2 +1,10 @@
-Name addf16
-Support Simulation 
+# addf16
+
+**Instruction**: addf16
+
+**Length**: 
+
+**Description**:
+
+         
+
