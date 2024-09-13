@@ -23,7 +23,6 @@ func (op Wwr) Op_get_desc() string {
 }
 
 func (op Wwr) Op_show_assembler(arch *Arch) string {
-	// "reference": {"support_ciaoff": "cdcd"}
 	opBits := arch.Opcodes_bits()
 	chanBits := arch.Shared_bits("channel")
 	result := "wwr [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(chanBits) + "(Channel)]	// Want write from a register to a channel  [" + strconv.Itoa(opBits+int(arch.R)+chanBits) + "]\n"

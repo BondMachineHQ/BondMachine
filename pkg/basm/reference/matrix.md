@@ -2,99 +2,99 @@
 
 ## Support Matrix for Static Instructions
 
-| Instruction | ciao | ciaoff |
-| --- | --- | --- |
-| [adc](adc.md) | - | - |
-| [add](add.md) | - | - |
-| [addf](addf.md) | - | - |
-| [addf16](addf16.md) | - | - |
-| [addi](addi.md) | - | - |
-| [addp](addp.md) | - | - |
-| [and](and.md) | - | - |
-| [chc](chc.md) | - | - |
-| [chw](chw.md) | - | - |
-| [cil](cil.md) | - | - |
-| [cilc](cilc.md) | - | - |
-| [cir](cir.md) | - | - |
-| [cirn](cirn.md) | - | - |
-| [clc](clc.md) | - | - |
-| [clr](clr.md) | - | - |
-| [cmpr](cmpr.md) | - | - |
-| [cmprlt](cmprlt.md) | - | - |
-| [cmpv](cmpv.md) | - | - |
-| [cpy](cpy.md) | - | - |
-| [cset](cset.md) | - | - |
-| [dec](dec.md) | - | - |
-| [div](div.md) | - | - |
-| [divf](divf.md) | - | - |
-| [divf16](divf16.md) | - | - |
-| [divp](divp.md) | - | - |
-| [dpc](dpc.md) | - | - |
-| [expf](expf.md) | - | - |
-| [hit](hit.md) | - | - |
-| [hlt](hlt.md) | - | - |
-| [i2r](i2r.md) | - | - |
-| [i2rw](i2rw.md) | - | - |
-| [inc](inc.md) | - | - |
-| [incc](incc.md) | - | - |
-| [j](j.md) | - | - |
-| [ja](ja.md) | - | - |
-| [jc](jc.md) | - | - |
-| [jcmpa](jcmpa.md) | - | - |
-| [jcmpl](jcmpl.md) | - | - |
-| [jcmpo](jcmpo.md) | - | - |
-| [jcmpria](jcmpria.md) | - | - |
-| [jcmprio](jcmprio.md) | - | - |
-| [je](je.md) | - | - |
-| [jgt0f](jgt0f.md) | - | - |
-| [jo](jo.md) | - | - |
-| [jri](jri.md) | - | - |
-| [jria](jria.md) | - | - |
-| [jrio](jrio.md) | - | - |
-| [jz](jz.md) | - | - |
-| [k2r](k2r.md) | - | - |
-| [lfsr82r](lfsr82r.md) | - | - |
-| [m2r](m2r.md) | - | - |
-| [m2rri](m2rri.md) | - | - |
-| [mod](mod.md) | - | - |
-| [mulc](mulc.md) | - | - |
-| [mult](mult.md) | - | - |
-| [multf](multf.md) | - | - |
-| [multf16](multf16.md) | - | - |
-| [multp](multp.md) | - | - |
-| [nand](nand.md) | - | - |
-| [nop](nop.md) | - | - |
-| [nor](nor.md) | - | - |
-| [not](not.md) | ciao2 | - |
-| [or](or.md) | - | - |
-| [q2r](q2r.md) | - | - |
-| [r2m](r2m.md) | - | - |
-| [r2mri](r2mri.md) | - | - |
-| [r2o](r2o.md) | - | - |
-| [r2owa](r2owa.md) | - | - |
-| [r2owaa](r2owaa.md) | - | - |
-| [r2q](r2q.md) | - | - |
-| [r2s](r2s.md) | - | - |
-| [r2t](r2t.md) | - | - |
-| [r2u](r2u.md) | - | - |
-| [r2v](r2v.md) | - | - |
-| [r2vri](r2vri.md) | - | - |
-| [ro2r](ro2r.md) | - | - |
-| [ro2rri](ro2rri.md) | - | - |
-| [rsc](rsc.md) | - | - |
-| [rset](rset.md) | - | - |
-| [s2r](s2r.md) | - | - |
-| [saj](saj.md) | - | - |
-| [sbc](sbc.md) | - | - |
-| [sic](sic.md) | - | - |
-| [sub](sub.md) | - | - |
-| [t2r](t2r.md) | - | - |
-| [tsp](tsp.md) | - | - |
-| [u2r](u2r.md) | - | - |
-| [wrd](wrd.md) | - | - |
-| [wwr](wwr.md) | - | cdcd |
-| [xnor](xnor.md) | - | - |
-| [xor](xor.md) | - | - |
+| Instruction | HDL |
+| --- | --- |
+| [adc](adc.md) | - |
+| [add](add.md) | - |
+| [addf](addf.md) | - |
+| [addf16](addf16.md) | - |
+| [addi](addi.md) | - |
+| [addp](addp.md) | - |
+| [and](and.md) | - |
+| [chc](chc.md) | - |
+| [chw](chw.md) | - |
+| [cil](cil.md) | - |
+| [cilc](cilc.md) | - |
+| [cir](cir.md) | - |
+| [cirn](cirn.md) | - |
+| [clc](clc.md) | - |
+| [clr](clr.md) | - |
+| [cmpr](cmpr.md) | - |
+| [cmprlt](cmprlt.md) | - |
+| [cmpv](cmpv.md) | - |
+| [cpy](cpy.md) | - |
+| [cset](cset.md) | - |
+| [dec](dec.md) | - |
+| [div](div.md) | - |
+| [divf](divf.md) | - |
+| [divf16](divf16.md) | - |
+| [divp](divp.md) | - |
+| [dpc](dpc.md) | - |
+| [expf](expf.md) | - |
+| [hit](hit.md) | - |
+| [hlt](hlt.md) | - |
+| [i2r](i2r.md) | - |
+| [i2rw](i2rw.md) | - |
+| [inc](inc.md) | ok |
+| [incc](incc.md) | - |
+| [j](j.md) | - |
+| [ja](ja.md) | - |
+| [jc](jc.md) | - |
+| [jcmpa](jcmpa.md) | - |
+| [jcmpl](jcmpl.md) | - |
+| [jcmpo](jcmpo.md) | - |
+| [jcmpria](jcmpria.md) | - |
+| [jcmprio](jcmprio.md) | - |
+| [je](je.md) | - |
+| [jgt0f](jgt0f.md) | - |
+| [jo](jo.md) | - |
+| [jri](jri.md) | - |
+| [jria](jria.md) | - |
+| [jrio](jrio.md) | - |
+| [jz](jz.md) | - |
+| [k2r](k2r.md) | - |
+| [lfsr82r](lfsr82r.md) | - |
+| [m2r](m2r.md) | - |
+| [m2rri](m2rri.md) | - |
+| [mod](mod.md) | - |
+| [mulc](mulc.md) | - |
+| [mult](mult.md) | - |
+| [multf](multf.md) | - |
+| [multf16](multf16.md) | - |
+| [multp](multp.md) | - |
+| [nand](nand.md) | - |
+| [nop](nop.md) | - |
+| [nor](nor.md) | - |
+| [not](not.md) | - |
+| [or](or.md) | - |
+| [q2r](q2r.md) | - |
+| [r2m](r2m.md) | - |
+| [r2mri](r2mri.md) | - |
+| [r2o](r2o.md) | - |
+| [r2owa](r2owa.md) | - |
+| [r2owaa](r2owaa.md) | - |
+| [r2q](r2q.md) | - |
+| [r2s](r2s.md) | - |
+| [r2t](r2t.md) | - |
+| [r2u](r2u.md) | - |
+| [r2v](r2v.md) | - |
+| [r2vri](r2vri.md) | - |
+| [ro2r](ro2r.md) | - |
+| [ro2rri](ro2rri.md) | - |
+| [rsc](rsc.md) | - |
+| [rset](rset.md) | - |
+| [s2r](s2r.md) | - |
+| [saj](saj.md) | - |
+| [sbc](sbc.md) | - |
+| [sic](sic.md) | - |
+| [sub](sub.md) | - |
+| [t2r](t2r.md) | - |
+| [tsp](tsp.md) | - |
+| [u2r](u2r.md) | - |
+| [wrd](wrd.md) | - |
+| [wwr](wwr.md) | - |
+| [xnor](xnor.md) | - |
+| [xor](xor.md) | - |
 
 ## Support Matrix for Dynamical Instructions
 

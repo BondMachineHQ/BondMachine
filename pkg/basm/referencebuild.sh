@@ -160,6 +160,10 @@ do
 			if [[ "$key" == "support_$feature" ]]
 			then
 				value=`jq -r ".$key" <<<"$ijson"`
+				case $value in
+					"ok") value="<i class=\"fa-solid fa-square-check\"></i>" ;;
+					"no") value="no" ;;
+				esac
 				echo -n " $value |" >> ./reference/matrix.md
 				valueok="true"
 				break

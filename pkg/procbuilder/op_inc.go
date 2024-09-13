@@ -19,6 +19,7 @@ func (op Inc) Op_get_name() string {
 }
 
 func (op Inc) Op_get_desc() string {
+	// "reference": {"desc":"Increment a register by 1"}
 	return "Increment a register by 1"
 }
 
@@ -50,6 +51,7 @@ func (Op Inc) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 }
 
 func (op Inc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+	// "reference": {"support_HDL":"ok"}
 	rom_word := arch.Max_word()
 	opbits := arch.Opcodes_bits()
 	tabsNum := 5
