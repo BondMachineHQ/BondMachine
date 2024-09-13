@@ -113,7 +113,7 @@ do
 			then
 				value=`jq -r ".$key" <<<"$ijson"`
 				case $value in
-					"ok") value="a href=\"#\" style=\"$style\">ok</a>" ;;
+					"ok") value="<a href=\"#\" style=\"$style\">ok</a>" ;;
 					"no") value="no" ;;
 				esac
 				echo -n " $value |" >> ./reference/matrix.md
