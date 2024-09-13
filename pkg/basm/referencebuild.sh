@@ -1,5 +1,7 @@
 #!/bin/bash
 
+style="background:linear-gradient(to bottom, #77b55a 5%, #72b352 100%); background-color:#77b55a; border:2px solid #4b8f29; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:14px; font-weight:bold; padding:6px 20px; text-decoration:none;"
+
 cat > ./reference/README.md << EOF
 # Assembly Reference
 
@@ -111,7 +113,7 @@ do
 			then
 				value=`jq -r ".$key" <<<"$ijson"`
 				case $value in
-					"ok") value="<i class=\"fa-solid fa-square-check\"></i>" ;;
+					"ok") value="a href=\"#\" style=\"$style\">ok</a>" ;;
 					"no") value="no" ;;
 				esac
 				echo -n " $value |" >> ./reference/matrix.md
