@@ -42,7 +42,24 @@ cat > /tmp/opcodetemplate << EOF
 EOF
 
 cat > /tmp/dynoptemplate << EOF
-Name {{ name }}
+# {{ name }}
+
+**Instruction Group**: {{ name }}
+
+{{#length}}
+**Length**: {{ length }}
+{{/length}}
+
+{{#desc}}
+**Description**:
+
+{{ desc }} {{ desc1 }} {{ desc2 }} {{ desc3 }} {{ desc4 }} {{ desc5 }} {{ desc6 }} {{ desc7 }} {{ desc8 }} {{ desc9 }}
+{{/desc}}
+
+{{#snippet}}
+**Snippet**:
+
+{{/snippet}}
 EOF
 
 declare -A SupportArray
@@ -109,6 +126,18 @@ do
 	unset IFS
 	# echo $YAMLDATA
 	echo $YAMLDATA | mustache /tmp/dynoptemplate > ./reference/$opname.md
+	if [[ "`jq .snippet <<<\"$YAMLDATA\"`" != "null" ]]
+	then
+		SNAME=`jq -r .snippet <<<"$YAMLDATA"`
+		TITLE=`cat $WEBDIR/snippets/$SNAME/title`
+		CODE=`cat $WEBDIR/snippets/$SNAME/code`
+		DESC=`cat $WEBDIR/snippets/$SNAME/desc`
+		echo "\`\`\`asm" >> ./reference/$opname.md
+		echo "$CODE" >> ./reference/$opname.md
+		echo "\`\`\`" >> ./reference/$opname.md
+		echo "" >> ./reference/$opname.md
+		echo "$DESC" >> ./reference/$opname.md
+	fi
 done
 
 cat > ./reference/matrix.md << EOF

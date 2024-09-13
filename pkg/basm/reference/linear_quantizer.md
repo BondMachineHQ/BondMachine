@@ -1,1 +1,6 @@
-Name linear_quantizer
+# linear_quantizer
+
+**Instruction Group**: linear_quantizer
+
+
+

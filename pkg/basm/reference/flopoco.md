@@ -1,1 +1,6 @@
-Name flopoco
+# flopoco
+
+**Instruction Group**: flopoco
+
+
+
