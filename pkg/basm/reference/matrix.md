@@ -35,7 +35,7 @@
 | [hlt](hlt.md) | - |
 | [i2r](i2r.md) | - |
 | [i2rw](i2rw.md) | - |
-| [inc](inc.md) | ok |
+| [inc](inc.md) | <i class="fa-solid fa-square-check"></i> |
 | [incc](incc.md) | - |
 | [j](j.md) | - |
 | [ja](ja.md) | - |
