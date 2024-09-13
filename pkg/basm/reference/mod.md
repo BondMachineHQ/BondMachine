@@ -2,9 +2,6 @@
 
 **Instruction**: mod
 
-**Length**: 
 
-**Description**:
 
-         
 

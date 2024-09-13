@@ -2,9 +2,6 @@
 
 **Instruction**: multp
 
-**Length**: 
 
-**Description**:
 
-         
 

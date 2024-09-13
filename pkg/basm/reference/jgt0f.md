@@ -2,9 +2,6 @@
 
 **Instruction**: jgt0f
 
-**Length**: 
 
-**Description**:
 
-         
 

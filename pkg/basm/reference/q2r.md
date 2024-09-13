@@ -2,9 +2,6 @@
 
 **Instruction**: q2r
 
-**Length**: 
 
-**Description**:
 
-         
 

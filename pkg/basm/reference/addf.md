@@ -2,9 +2,6 @@
 
 **Instruction**: addf
 
-**Length**: 
 
-**Description**:
 
-         
 

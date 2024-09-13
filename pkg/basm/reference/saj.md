@@ -2,9 +2,6 @@
 
 **Instruction**: saj
 
-**Length**: 
 
-**Description**:
 
-         
 

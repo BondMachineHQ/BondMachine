@@ -2,9 +2,6 @@
 
 **Instruction**: jrio
 
-**Length**: 
 
-**Description**:
 
-         
 

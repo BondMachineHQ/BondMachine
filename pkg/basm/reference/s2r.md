@@ -2,9 +2,6 @@
 
 **Instruction**: s2r
 
-**Length**: 
 
-**Description**:
 
-         
 

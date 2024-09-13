@@ -2,9 +2,6 @@
 
 **Instruction**: cmpv
 
-**Length**: 
 
-**Description**:
 
-         
 

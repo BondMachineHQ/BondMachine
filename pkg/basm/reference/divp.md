@@ -2,9 +2,6 @@
 
 **Instruction**: divp
 
-**Length**: 
 
-**Description**:
 
-         
 

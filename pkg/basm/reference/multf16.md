@@ -2,9 +2,6 @@
 
 **Instruction**: multf16
 
-**Length**: 
 
-**Description**:
 
-         
 

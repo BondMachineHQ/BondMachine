@@ -2,9 +2,6 @@
 
 **Instruction**: mulc
 
-**Length**: 
 
-**Description**:
 
-         
 

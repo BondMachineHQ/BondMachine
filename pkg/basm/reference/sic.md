@@ -2,9 +2,6 @@
 
 **Instruction**: sic
 
-**Length**: 
 
-**Description**:
 
-         
 

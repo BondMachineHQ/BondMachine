@@ -2,9 +2,6 @@
 
 **Instruction**: wrd
 
-**Length**: 
 
-**Description**:
 
-         
 

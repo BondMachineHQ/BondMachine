@@ -2,9 +2,6 @@
 
 **Instruction**: hit
 
-**Length**: 
 
-**Description**:
 
-         
 

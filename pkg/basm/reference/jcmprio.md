@@ -2,9 +2,6 @@
 
 **Instruction**: jcmprio
 
-**Length**: 
 
-**Description**:
 
-         
 

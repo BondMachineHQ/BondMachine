@@ -2,9 +2,6 @@
 
 **Instruction**: multf
 
-**Length**: 
 
-**Description**:
 
-         
 

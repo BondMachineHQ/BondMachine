@@ -2,9 +2,6 @@
 
 **Instruction**: mult
 
-**Length**: 
 
-**Description**:
 
-         
 

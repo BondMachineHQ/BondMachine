@@ -2,9 +2,6 @@
 
 **Instruction**: r2u
 
-**Length**: 
 
-**Description**:
 
-         
 

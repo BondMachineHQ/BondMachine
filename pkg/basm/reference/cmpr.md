@@ -2,9 +2,6 @@
 
 **Instruction**: cmpr
 
-**Length**: 
 
-**Description**:
 
-         
 

@@ -1,5 +1,12 @@
 #!/bin/bash
 
+WEBDIR=$1
+if [[ "$WEBDIR" == "" ]]
+then
+	echo "Usage: $0 <webdir>"
+	exit 1
+fi
+
 cat > ./reference/README.md << EOF
 # Assembly Reference
 
@@ -17,11 +24,20 @@ cat > /tmp/opcodetemplate << EOF
 
 **Instruction**: {{ name }}
 
+{{#length}}
 **Length**: {{ length }}
+{{/length}}
 
+{{#desc}}
 **Description**:
 
 {{ desc }} {{ desc1 }} {{ desc2 }} {{ desc3 }} {{ desc4 }} {{ desc5 }} {{ desc6 }} {{ desc7 }} {{ desc8 }} {{ desc9 }}
+{{/desc}}
+
+{{#snippet}}
+**Snippet**:
+
+{{/snippet}}
 
 EOF
 
@@ -50,7 +66,19 @@ do
 	done
 	unset IFS
 	# echo $YAMLDATA
-	echo $YAMLDATA | mustache /tmp/opcodetemplate > ./reference/$opname.md 
+	echo $YAMLDATA | mustache /tmp/opcodetemplate > ./reference/$opname.md
+	if [[ "`jq .snippet <<<\"$YAMLDATA\"`" != "null" ]]
+	then
+		SNAME=`jq -r .snippet <<<"$YAMLDATA"`
+		TITLE=`cat $WEBDIR/snippets/$SNAME/title`
+		CODE=`cat $WEBDIR/snippets/$SNAME/code`
+		DESC=`cat $WEBDIR/snippets/$SNAME/desc`
+		echo "\`\`\`asm" >> ./reference/$opname.md
+		echo "$CODE" >> ./reference/$opname.md
+		echo "\`\`\`" >> ./reference/$opname.md
+		echo "" >> ./reference/$opname.md
+		echo "$DESC" >> ./reference/$opname.md
+	fi
 done
 
 cat >> ./reference/README.md << EOF

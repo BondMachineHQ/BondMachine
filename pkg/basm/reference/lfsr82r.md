@@ -2,9 +2,6 @@
 
 **Instruction**: lfsr82r
 
-**Length**: 
 
-**Description**:
 
-         
 

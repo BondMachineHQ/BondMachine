@@ -2,9 +2,6 @@
 
 **Instruction**: sub
 
-**Length**: 
 
-**Description**:
 
-         
 

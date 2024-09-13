@@ -15,6 +15,7 @@ import (
 type Inc struct{}
 
 func (op Inc) Op_get_name() string {
+	// "reference": {"snippet": "inc"}
 	return "inc"
 }
 

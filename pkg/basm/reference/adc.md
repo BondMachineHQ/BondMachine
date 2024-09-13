@@ -2,9 +2,6 @@
 
 **Instruction**: adc
 
-**Length**: 
 
-**Description**:
 
-         
 

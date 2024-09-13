@@ -2,9 +2,6 @@
 
 **Instruction**: cpy
 
-**Length**: 
 
-**Description**:
 
-         
 

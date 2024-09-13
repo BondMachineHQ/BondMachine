@@ -2,9 +2,6 @@
 
 **Instruction**: clr
 
-**Length**: 
 
-**Description**:
 
-         
 

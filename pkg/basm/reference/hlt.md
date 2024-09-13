@@ -2,9 +2,6 @@
 
 **Instruction**: hlt
 
-**Length**: 
 
-**Description**:
 
-         
 

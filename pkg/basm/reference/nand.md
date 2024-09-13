@@ -2,9 +2,6 @@
 
 **Instruction**: nand
 
-**Length**: 
 
-**Description**:
 
-         
 

@@ -2,9 +2,6 @@
 
 **Instruction**: jz
 
-**Length**: 
 
-**Description**:
 
-         
 

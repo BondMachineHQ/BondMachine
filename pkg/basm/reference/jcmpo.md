@@ -2,9 +2,6 @@
 
 **Instruction**: jcmpo
 
-**Length**: 
 
-**Description**:
 
-         
 

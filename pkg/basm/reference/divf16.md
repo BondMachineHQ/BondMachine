@@ -2,9 +2,6 @@
 
 **Instruction**: divf16
 
-**Length**: 
 
-**Description**:
 
-         
 

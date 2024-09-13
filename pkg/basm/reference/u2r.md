@@ -2,9 +2,6 @@
 
 **Instruction**: u2r
 
-**Length**: 
 
-**Description**:
 
-         
 

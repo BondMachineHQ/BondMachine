@@ -2,9 +2,6 @@
 
 **Instruction**: expf
 
-**Length**: 
 
-**Description**:
 
-         
 

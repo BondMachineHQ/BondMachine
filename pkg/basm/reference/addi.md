@@ -2,9 +2,6 @@
 
 **Instruction**: addi
 
-**Length**: 
 
-**Description**:
 
-         
 

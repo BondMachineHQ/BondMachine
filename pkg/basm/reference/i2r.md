@@ -2,9 +2,6 @@
 
 **Instruction**: i2r
 
-**Length**: 
 
-**Description**:
 
-         
 

@@ -2,9 +2,6 @@
 
 **Instruction**: ro2r
 
-**Length**: 
 
-**Description**:
 
-         
 

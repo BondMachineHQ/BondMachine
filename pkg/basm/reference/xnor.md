@@ -2,9 +2,6 @@
 
 **Instruction**: xnor
 
-**Length**: 
 
-**Description**:
 
-         
 

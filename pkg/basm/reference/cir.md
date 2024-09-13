@@ -2,9 +2,6 @@
 
 **Instruction**: cir
 
-**Length**: 
 
-**Description**:
 
-         
 

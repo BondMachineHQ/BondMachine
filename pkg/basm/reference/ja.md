@@ -2,9 +2,6 @@
 
 **Instruction**: ja
 
-**Length**: 
 
-**Description**:
 
-         
 

@@ -2,9 +2,6 @@
 
 **Instruction**: chc
 
-**Length**: 
 
-**Description**:
 
-         
 

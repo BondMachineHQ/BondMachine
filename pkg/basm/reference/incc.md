@@ -2,9 +2,6 @@
 
 **Instruction**: incc
 
-**Length**: 
 
-**Description**:
 
-         
 

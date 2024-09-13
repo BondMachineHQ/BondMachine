@@ -2,9 +2,6 @@
 
 **Instruction**: jcmpa
 
-**Length**: 
 
-**Description**:
 
-         
 

@@ -2,9 +2,6 @@
 
 **Instruction**: jcmpl
 
-**Length**: 
 
-**Description**:
 
-         
 

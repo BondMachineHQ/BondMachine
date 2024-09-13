@@ -2,9 +2,6 @@
 
 **Instruction**: r2q
 
-**Length**: 
 
-**Description**:
 
-         
 

@@ -2,9 +2,6 @@
 
 **Instruction**: addp
 
-**Length**: 
 
-**Description**:
 
-         
 

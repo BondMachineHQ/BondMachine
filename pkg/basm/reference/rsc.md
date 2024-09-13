@@ -2,9 +2,6 @@
 
 **Instruction**: rsc
 
-**Length**: 
 
-**Description**:
 
-         
 

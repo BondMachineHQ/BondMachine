@@ -2,9 +2,6 @@
 
 **Instruction**: divf
 
-**Length**: 
 
-**Description**:
 
-         
 

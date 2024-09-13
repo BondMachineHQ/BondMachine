@@ -2,9 +2,6 @@
 
 **Instruction**: cset
 
-**Length**: 
 
-**Description**:
 
-         
 

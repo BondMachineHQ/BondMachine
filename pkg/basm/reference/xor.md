@@ -2,9 +2,6 @@
 
 **Instruction**: xor
 
-**Length**: 
 
-**Description**:
 
-         
 

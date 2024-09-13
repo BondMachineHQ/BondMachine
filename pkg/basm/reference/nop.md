@@ -2,9 +2,6 @@
 
 **Instruction**: nop
 
-**Length**: 
 
-**Description**:
 
-         
 

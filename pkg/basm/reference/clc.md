@@ -2,9 +2,6 @@
 
 **Instruction**: clc
 
-**Length**: 
 
-**Description**:
 
-         
 

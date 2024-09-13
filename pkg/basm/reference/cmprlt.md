@@ -2,9 +2,6 @@
 
 **Instruction**: cmprlt
 
-**Length**: 
 
-**Description**:
 
-         
 

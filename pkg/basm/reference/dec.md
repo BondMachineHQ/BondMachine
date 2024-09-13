@@ -2,9 +2,6 @@
 
 **Instruction**: dec
 
-**Length**: 
 
-**Description**:
 
-         
 
