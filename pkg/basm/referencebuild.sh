@@ -78,6 +78,16 @@ done
 cat > ./reference/matrix.md << EOF
 # Support Matrix
 
+This matrix shows the support of the instructions in the BondMachine project. For each instruction, the
+support for each feature is shown. The possible support values are shwon below:
+| Value | Meaning |
+| --- | --- |
+| ![ok](iconok.png) | The feature is fully implemented |
+| ![no](iconno.png) | The feature is not yet implemented |
+| |[testing](icontesting.png) | The feature is being tested |
+| ![partial](iconpartial.png) | The feature is partially implemented |
+| ![notapplicable](iconnotapplicable.png) | The feature is not applicable to the instruction |
+
 ## Support Matrix for Static Instructions
 
 EOF
