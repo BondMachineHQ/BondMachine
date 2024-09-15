@@ -143,14 +143,19 @@ done
 cat > ./reference/matrix.md << EOF
 # Support Matrix
 
-The following tables show the feature support of the instructions and the dynamical instruction in the BondMachine project.
+The following tables show the feature state in term of level of development for each instruction and instruction group.
 For each of them the support of the features is shown.
 
 The features are the following:
 | Feature | Description |
 | --- | --- |
 | hdl | The instruction can be translated to hardware description language |
+| asm | The instruction can be assembled by the assembler |
+| disasm | The instruction can be disassembled by the disassembler |
+| hlasm | The instruction can be assembled by the high-level assembler (Basm) |
+| asmmeta | The instruction has metadata for the assembler |
 | gosim | The instruction can be simulated in the Go-based simulator |
+| hdlsim | The instruction can be simulated in the hardware description language simulator |
 
 The possible support values are shown below:
 

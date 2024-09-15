@@ -37,7 +37,7 @@ func (op Inc) Op_get_instruction_len(arch *Arch) int {
 	return opBits + int(arch.R) // The bits for the opcode + bits for a register
 }
 
-func (op Inc) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
+func (op Inc) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
 	return ""
 }
 
@@ -55,10 +55,10 @@ func (Op Inc) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 
 func (op Inc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	// "reference": {"support_hdl":"ok"}
-	rom_word := arch.Max_word()
-	opbits := arch.Opcodes_bits()
+	romWord := arch.Max_word()
+	opBits := arch.Opcodes_bits()
 	tabsNum := 5
-	reg_num := 1 << arch.R
+	regNum := 1 << arch.R
 
 	result := ""
 	result += tabs(tabsNum) + "INC: begin\n"
@@ -67,13 +67,14 @@ func (op Inc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 		tabsNum++
 	}
 	if arch.R == 1 {
-		result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + "])\n"
+		result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + "])\n"
 	} else {
-		result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(rom_word-opbits-1) + ":" + strconv.Itoa(rom_word-opbits-int(arch.R)) + "])\n"
+		result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)) + "])\n"
 	}
-	for i := 0; i < reg_num; i++ {
+	for i := 0; i < regNum; i++ {
 
 		if IsHwOptimizationSet(conf.HwOptimizations, HwOptimizations(OnlyDestRegs)) {
+			// "reference": {"hwoptimizations": "OnlyDestRegs"}
 			cp := arch.Tag
 			req := rg.Requirement(bmreqs.ReqRequest{Node: "/bm:cps/id:" + cp + "/opcodes:inc", T: bmreqs.ObjectSet, Name: "destregs", Value: Get_register_name(i), Op: bmreqs.OpCheck})
 			if req.Value == "false" {
@@ -100,17 +101,18 @@ func (op Inc) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 }
 
 func (op Inc) Assembler(arch *Arch, words []string) (string, error) {
+	// "reference": {"support_asm": "ok"}
 	opBits := arch.Opcodes_bits()
-	rom_word := arch.Max_word()
+	romWord := arch.Max_word()
 
-	reg_num := 1 << arch.R
+	regNum := 1 << arch.R
 
 	if len(words) != 1 {
-		return "", Prerror{"Wrong arguments number"}
+		return "", errors.New("wrong arguments number")
 	}
 
 	result := ""
-	for i := 0; i < reg_num; i++ {
+	for i := 0; i < regNum; i++ {
 		if words[0] == strings.ToLower(Get_register_name(i)) {
 			result += zeros_prefix(int(arch.R), get_binary(i))
 			break
@@ -118,10 +120,10 @@ func (op Inc) Assembler(arch *Arch, words []string) (string, error) {
 	}
 
 	if result == "" {
-		return "", Prerror{"Unknown register name " + words[0]}
+		return "", errors.New("unknown register name " + words[0])
 	}
 
-	for i := opBits + int(arch.R); i < rom_word; i++ {
+	for i := opBits + int(arch.R); i < romWord; i++ {
 		result += "0"
 	}
 
@@ -129,8 +131,9 @@ func (op Inc) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Inc) Disassembler(arch *Arch, instr string) (string, error) {
-	reg_id := get_id(instr[:arch.R])
-	result := strings.ToLower(Get_register_name(reg_id))
+	// "reference": {"support_disasm": "ok"}
+	regID := get_id(instr[:arch.R])
+	result := strings.ToLower(Get_register_name(regID))
 	return result, nil
 }
 
@@ -177,24 +180,12 @@ func (Op Inc) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([
 }
 
 func (Op Inc) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
-	seq, types := Sequence_to_0(words[0])
-	if len(seq) > 0 && types == O_REGISTER {
-
-		result := make([]UsageNotify, 2)
-		newnot0 := UsageNotify{C_OPCODE, "inc", I_NIL}
-		result[0] = newnot0
-		newnot1 := UsageNotify{C_REGSIZE, S_NIL, len(seq)}
-		result[1] = newnot1
-
-		return result, nil
-	}
-
-	return []UsageNotify{}, errors.New("wrong register")
+	return []UsageNotify{}, errors.New("function obsolete")
 }
 
-func (Op Inc) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
+func (Op Inc) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockName string, objects []string) string {
 	result := ""
-	switch blockname {
+	switch blockName {
 	default:
 		result = ""
 	}
@@ -202,6 +193,7 @@ func (Op Inc) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 }
 
 func (Op Inc) HLAssemblerMatch(arch *Arch) []string {
+	// "reference": {"support_hlasm": "ok"}
 	result := make([]string, 0)
 	result = append(result, "inc::*--type=reg")
 	return result
@@ -218,11 +210,9 @@ func (Op Inc) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
-func (Op Inc) ExtraFiles(arch *Arch) ([]string, []string) {
-	return []string{}, []string{}
-}
 
 func (Op Inc) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	// "reference": {"support_asmeta": "ok"}
 	switch line.Operation.GetValue() {
 	case "inc":
 		regDst := line.Elements[0].GetValue()
@@ -234,4 +224,8 @@ func (Op Inc) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) 
 		}
 	}
 	return nil, nil
+}
+
+func (Op Inc) ExtraFiles(arch *Arch) ([]string, []string) {
+	return []string{}, []string{}
 }
