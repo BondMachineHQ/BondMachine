@@ -55,6 +55,7 @@ func (Op Inc) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 
 func (op Inc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	// "reference": {"support_hdl":"ok"}
+	// "reference": {"support_mt":"ok"}
 	romWord := arch.Max_word()
 	opBits := arch.Opcodes_bits()
 	tabsNum := 5
