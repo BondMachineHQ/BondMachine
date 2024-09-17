@@ -4,4 +4,4 @@ BM Builder is a library that generates a BondMachine architecture file from a se
 
 ## Generators
 
-[maxpool](docsmaxpool.md)
+ - [Maxpool generator](docsmaxpool.md)
