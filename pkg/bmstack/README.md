@@ -1,3 +1,5 @@
+# BMStack
+
 bmstack is part of BondMachine project. Within the project It is used to create stacks and queues distributed among several BondMachine cores. due to its generality it can also be used as standalone tool to produce HDL shared stacks and queues to be used in other projects.
 The HDL code is build using golang templates that creates the code starting from the following data structure. The comments describe the meaning of each field.
 
