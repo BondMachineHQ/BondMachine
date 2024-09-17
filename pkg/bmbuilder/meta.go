@@ -123,6 +123,7 @@ func (bi *BMBuilder) filteredMetaAdd(el *bmline.BasmElement, key string, value s
 		switch key {
 		case "main":
 		case "registersize":
+		case "datatype":
 		default:
 			return errors.New("Unknown global %meta: " + key)
 		}
