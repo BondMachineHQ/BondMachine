@@ -1,0 +1,3 @@
+# Maxpool Generator
+
+The maxpool generator is a generator that generates a maxpool layer in the neural network. The maxpool layer is a layer that is used to downsample the input data. It works by taking the maximum value of a set of values in a window and outputting that value. The maxpool layer is used to reduce the size of the input data, which can help to reduce the number of parameters in the network and speed up training.
