@@ -301,6 +301,11 @@ func fragmentComposer(bi *BasmInstance) error {
 
 				for _, line := range fCopy.fragmentBody.Lines {
 					newLine := copyLine(line)
+					if firstLine {
+						newLine.BasmMeta = newLine.BasmMeta.SetMeta("symbol", "_start")
+						bi.symbols["rom."+newSection.sectionName+"._start"] = 0
+						firstLine = false
+					}
 					newSection.sectionBody.Lines = append(newSection.sectionBody.Lines, newLine)
 				}
 
