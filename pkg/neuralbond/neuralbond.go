@@ -265,8 +265,8 @@ func (n *TrainedNet) WriteBasm() (string, error) {
 				}
 			}
 			c.List[weightFI] = "weight"
-			result += fmt.Sprintf("%%meta filinkdef up%s type:fi\n", weightFI)
-			result += fmt.Sprintf("%%meta filinkdef down%s type:fi\n", weightFI)
+			result += fmt.Sprintf("%%meta filinkdef up%s type:fl\n", weightFI)
+			result += fmt.Sprintf("%%meta filinkdef down%s type:fl\n", weightFI)
 			result += fmt.Sprintf("%%meta filinkatt down%s fi:%s, type:input, index:0\n", weightFI, weightFI)
 			result += fmt.Sprintf("%%meta filinkatt down%s fi:%s, type:output, index:0\n", weightFI, downNode)
 			result += fmt.Sprintf("%%meta filinkatt up%s fi:%s, type:input, index:%d\n", weightFI, upNode, weight.RelPosUp)
