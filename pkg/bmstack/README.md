@@ -199,7 +199,7 @@ stack_tb.v:142: $finish called at 1304000 (1ps)
 $ gtkwave bmstack.vcd
 ```
 
-![Sim](sim.png)
+![Sim](../../pkg/bmstack/sim.png)
 
 The simulation shows the stack in action. The stack is filled with 6 values and then the values are popped by the receivers. The values are distributed among the two receivers as expected. Alongside the values pushed and popped, the simulation also shows some internal signals of the stack.
 
