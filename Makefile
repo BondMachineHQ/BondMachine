@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .PHONY: all
 all:
-	make -C cmd installall
+	@make --no-print-directory -C cmd all
 
 .PHONY: align
 align:
