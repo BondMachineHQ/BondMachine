@@ -25,7 +25,7 @@ require (
 	github.com/mewmew/float v0.0.0-20201204173432-505706aa38fa // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/veandco/go-sdl2 v0.4.0 // indirect
-	golang.org/x/image v0.14.0 // indirect
+	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
