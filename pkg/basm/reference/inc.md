@@ -30,4 +30,4 @@ loop:
 %meta bmdef	global registersize:8                   ; Define the register size of the BM to 8 bits
 ```
 
-INC example
+An example of the INC instruction. Here, used to implement a simple counter.

@@ -51,7 +51,7 @@ func (Op Nop) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 
 func (op Nop) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	// "reference": {"support_hdl":"ok"}
-	// "reference": {"support_mt":"test"}
+	// "reference": {"support_mt":"testing"}
 	tabsNum := 5
 
 	result := ""
@@ -92,7 +92,7 @@ func (op Nop) Disassembler(arch *Arch, instr string) (string, error) {
 
 // The simulation does nothing
 func (op Nop) Simulate(vm *VM, instr string) error {
-	// "reference": {"support_sim":"ok"}
+	// "reference": {"support_gosim":"ok"}
 	vm.Pc = vm.Pc + 1
 	return nil
 }
@@ -154,5 +154,6 @@ func (Op Nop) ExtraFiles(arch *Arch) ([]string, []string) {
 }
 
 func (Op Nop) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	// "reference": {"support_asmmeta":"ok"}
 	return nil, nil
 }

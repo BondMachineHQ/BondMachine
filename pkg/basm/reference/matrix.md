@@ -27,7 +27,7 @@ The possible support values are shown below:
 
 ## Support Matrix for Static Instructions
 
-| Instruction | disasm | gosim | mt | hlasm | sim | hdl | asmeta | asm |
+| Instruction | disasm | asmmeta | gosim | mt | hlasm | hdl | asmeta | asm |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [adc](adc.md) | - | - | - | - | - | - | - | - |
 | [add](add.md) | - | - | - | - | - | - | - | - |
@@ -60,7 +60,7 @@ The possible support values are shown below:
 | [hlt](hlt.md) | - | - | - | - | - | - | - | - |
 | [i2r](i2r.md) | - | - | - | - | - | - | - | - |
 | [i2rw](i2rw.md) | - | - | - | - | - | - | - | - |
-| [inc](inc.md) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | - | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) |
+| [inc](inc.md) | ![ok](iconok.png) | - | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) |
 | [incc](incc.md) | - | - | - | - | - | - | - | - |
 | [j](j.md) | - | - | - | - | - | - | - | - |
 | [ja](ja.md) | - | - | - | - | - | - | - | - |
@@ -88,7 +88,7 @@ The possible support values are shown below:
 | [multf16](multf16.md) | - | - | - | - | - | - | - | - |
 | [multp](multp.md) | - | - | - | - | - | - | - | - |
 | [nand](nand.md) | - | - | - | - | - | - | - | - |
-| [nop](nop.md) | ![ok](iconok.png) | - | test | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | - | ![ok](iconok.png) |
+| [nop](nop.md) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![testing](icontesting.png) | ![ok](iconok.png) | ![ok](iconok.png) | - | ![ok](iconok.png) |
 | [nor](nor.md) | - | - | - | - | - | - | - | - |
 | [not](not.md) | - | - | - | - | - | - | - | - |
 | [or](or.md) | - | - | - | - | - | - | - | - |
