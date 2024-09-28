@@ -154,6 +154,6 @@ func (Op Nop) ExtraFiles(arch *Arch) ([]string, []string) {
 }
 
 func (Op Nop) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
-	// "reference": {"support_asmmeta":"ok"}
+	// "reference": {"support_asmeta":"ok"}
 	return nil, nil
 }
