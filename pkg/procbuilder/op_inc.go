@@ -181,7 +181,7 @@ func (Op Inc) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([
 }
 
 func (Op Inc) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
-	return []UsageNotify{}, errors.New("function obsolete")
+	return []UsageNotify{}, errors.New("obsolete")
 }
 
 func (Op Inc) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockName string, objects []string) string {

@@ -9,7 +9,7 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
-// The Nop opcode is both a basic instruction and a template for other instructions.
+// The Nop opcode is a no operation instruction
 type Nop struct{}
 
 func (op Nop) Op_get_name() string {
@@ -17,16 +17,18 @@ func (op Nop) Op_get_name() string {
 }
 
 func (op Nop) Op_get_desc() string {
+	// "reference": {"desc":"The NOP instruction does nothing. It is used to fill the instruction memory with no operation instructions. And waste a clock cycle."}
 	return "No operation"
 }
 
 func (op Nop) Op_show_assembler(arch *Arch) string {
-	opbits := arch.Opcodes_bits()
-	result := "nop [" + strconv.Itoa(opbits) + "]	// No operation [" + strconv.Itoa(opbits) + "]\n"
+	opBits := arch.Opcodes_bits()
+	result := "nop [" + strconv.Itoa(opBits) + "]	// No operation [" + strconv.Itoa(opBits) + "]\n"
 	return result
 }
 
 func (op Nop) Op_get_instruction_len(arch *Arch) int {
+	// "reference": {"length": "opBits"}
 	opBits := arch.Opcodes_bits()
 	return opBits
 }
@@ -48,12 +50,23 @@ func (Op Nop) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 }
 
 func (op Nop) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
-	result := ""
-	result += "					NOP: begin\n"
-	result += "						$display(\"NOP\");\n"
-	result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
-	result += "					end\n"
+	// "reference": {"support_hdl":"ok"}
+	// "reference": {"support_mt":"test"}
+	tabsNum := 5
 
+	result := ""
+	result += tabs(tabsNum) + "NOP: begin\n"
+	if th := ThreadInstructionStart(conf, arch, tabsNum+1); th != "" {
+		result += th
+		tabsNum++
+	}
+	result += tabs(tabsNum+1) + "$display(\"NOP\");\n"
+	result += NextInstruction(conf, arch, tabsNum+1, "_pc + 1'b1")
+	if th := ThreadInstructionEnd(conf, arch, tabsNum); th != "" {
+		result += th
+		tabsNum--
+	}
+	result += tabs(tabsNum) + "end\n"
 	return result
 }
 
@@ -62,21 +75,24 @@ func (op Nop) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 }
 
 func (op Nop) Assembler(arch *Arch, words []string) (string, error) {
-	opbits := arch.Opcodes_bits()
-	rom_word := arch.Max_word()
+	// "reference": {"support_asm":"ok"}
+	opBits := arch.Opcodes_bits()
+	romWord := arch.Max_word()
 	result := ""
-	for i := opbits; i < rom_word; i++ {
+	for i := opBits; i < romWord; i++ {
 		result += "0"
 	}
 	return result, nil
 }
 
 func (op Nop) Disassembler(arch *Arch, instr string) (string, error) {
+	// "reference": {"support_disasm":"ok"}
 	return "", nil
 }
 
 // The simulation does nothing
 func (op Nop) Simulate(vm *VM, instr string) error {
+	// "reference": {"support_sim":"ok"}
 	vm.Pc = vm.Pc + 1
 	return nil
 }
@@ -103,21 +119,19 @@ func (Op Nop) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([
 }
 
 func (Op Nop) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
-	result := make([]UsageNotify, 1)
-	newnot := UsageNotify{C_OPCODE, "nop", I_NIL}
-	result[0] = newnot
-	return result, nil
+	return []UsageNotify{}, errors.New("obsolete")
 }
 
-func (Op Nop) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
+func (Op Nop) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockName string, objects []string) string {
 	result := ""
-	switch blockname {
+	switch blockName {
 	default:
 		result = ""
 	}
 	return result
 }
 func (Op Nop) HLAssemblerMatch(arch *Arch) []string {
+	// "reference": {"support_hlasm":"ok"}
 	result := make([]string, 2)
 	result[0] = "nop"
 	result[1] = "noop"
@@ -126,9 +140,11 @@ func (Op Nop) HLAssemblerMatch(arch *Arch) []string {
 func (Op Nop) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
 	case "nop":
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "nop", Op: bmreqs.OpAdd})
 		return line, nil
 	case "noop":
 		line.Operation.SetValue("nop")
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "nop", Op: bmreqs.OpAdd})
 		return line, nil
 	}
 	return nil, errors.New("HL Assembly normalize failed")
