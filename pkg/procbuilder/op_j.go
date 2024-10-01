@@ -19,6 +19,8 @@ func (op J) Op_get_name() string {
 }
 
 func (op J) Op_get_desc() string {
+	// "reference": {"desc": "The J "}
+
 	return "Jump to a program location"
 }
 
@@ -201,10 +203,7 @@ func (Op J) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]s
 }
 
 func (Op J) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
-	result := make([]UsageNotify, 1)
-	newnot := UsageNotify{C_OPCODE, "j", I_NIL}
-	result[0] = newnot
-	return result, nil
+	return nil, errors.New("obsolete")
 }
 
 func (Op J) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
