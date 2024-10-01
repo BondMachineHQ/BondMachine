@@ -123,11 +123,11 @@ The possible support values are shown below:
 
 ## Support Matrix for Dynamical Instructions
 
-| Instruction |
-| --- |
-| [call](call.md) |
-| [fixed_point](fixed_point.md) |
-| [flopoco](flopoco.md) |
-| [linear_quantizer](linear_quantizer.md) |
-| [rsets](rsets.md) |
-| [stack](stack.md) |
+| Instruction | disasm | gosim | asm |
+| --- | --- | --- | --- |
+| [call](call.md) | - | - | - |
+| [fixed_point](fixed_point.md) | - | - | - |
+| [flopoco](flopoco.md) | ![ok](iconok.png) | ![notapplicable](iconnotapplicable.png) | ![ok](iconok.png) |
+| [linear_quantizer](linear_quantizer.md) | - | - | - |
+| [rsets](rsets.md) | - | - | - |
+| [stack](stack.md) | - | - | - |
