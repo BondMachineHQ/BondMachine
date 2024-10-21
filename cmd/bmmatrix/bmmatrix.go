@@ -17,6 +17,7 @@ var registerSize = flag.Int("register-size", 32, "Number of bits per register (n
 var dataType = flag.String("data-type", "float32", "bmnumbers data types")
 
 var saveBasm = flag.String("save-basm", "", "Create a basm file")
+var expression = flag.String("expression", "", "Expression to evaluate")
 
 var neuronLibPath = flag.String("neuron-lib-path", "", "Path to the neuron library to use")
 
@@ -100,8 +101,14 @@ func main() {
 		}
 	}
 
-	mo := new(bmmatrix.MatrixOpertions)
+	mo := new(bmmatrix.MatrixOperations)
 	mo.RegisterSize = *registerSize
+
+	if *expression != "" {
+		mo.Expression = *expression
+	} else {
+		panic("No expression specified")
+	}
 
 	switch *iomode {
 	case "async":
@@ -110,6 +117,10 @@ func main() {
 		mo.IOMode = bmmatrix.SYNC
 	default:
 		panic("Unknown IO mode")
+	}
+
+	if err := mo.RunEngine(); err != nil {
+		panic(err)
 	}
 
 	if *saveBasm != "" {

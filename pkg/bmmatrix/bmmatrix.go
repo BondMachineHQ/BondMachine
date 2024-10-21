@@ -21,9 +21,11 @@ type Config struct {
 	TypePrefix    string
 }
 
-type MatrixOpertions struct {
+type MatrixOperations struct {
 	RegisterSize int
 	IOMode       uint8
+	Expression   string
+	Result       string
 	*Config
 }
 
