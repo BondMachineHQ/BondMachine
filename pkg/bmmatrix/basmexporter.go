@@ -3,48 +3,47 @@ package bmmatrix
 import (
 	"errors"
 	"fmt"
-	"strconv"
 
 	mel3program "github.com/mmirko/mel/pkg/mel3program"
 )
 
-type Evaluator struct {
+type BasmExporter struct {
 	*mel3program.Mel3Object
 	error
 	Result *mel3program.Mel3Program
 }
 
-func EvaluatorCreator() mel3program.Mel3Visitor {
-	return new(Evaluator)
+func BasmExporterCreator() mel3program.Mel3Visitor {
+	return new(BasmExporter)
 }
 
-func (ev *Evaluator) GetName() string {
-	return "m3number"
+func (ev *BasmExporter) GetName() string {
+	return "m3bmmatrix"
 }
 
-func (ev *Evaluator) GetMel3Object() *mel3program.Mel3Object {
+func (ev *BasmExporter) GetMel3Object() *mel3program.Mel3Object {
 	return ev.Mel3Object
 }
 
-func (ev *Evaluator) SetMel3Object(mel3o *mel3program.Mel3Object) {
+func (ev *BasmExporter) SetMel3Object(mel3o *mel3program.Mel3Object) {
 	ev.Mel3Object = mel3o
 }
 
-func (ev *Evaluator) GetError() error {
+func (ev *BasmExporter) GetError() error {
 	return ev.error
 }
 
-func (ev *Evaluator) GetResult() *mel3program.Mel3Program {
+func (ev *BasmExporter) GetResult() *mel3program.Mel3Program {
 	return ev.Result
 }
 
-func (ev *Evaluator) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3Visitor {
+func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3Visitor {
 
 	debug := ev.Config.Debug
 
 	if debug {
-		fmt.Println("m3number enter: ", in_prog)
-		defer fmt.Println("m3number exit")
+		fmt.Println("m3bmmatrix enter: ", in_prog)
+		defer fmt.Println("m3bmmatrix exit")
 	}
 
 	checkEv := mel3program.ProgMux(ev, in_prog)
@@ -78,60 +77,54 @@ func (ev *Evaluator) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3Vis
 		switch in_prog.LibraryID {
 		case MYLIBID:
 			switch in_prog.ProgramID {
-			case ADD, SUB, MULT, DIV:
+			case MATRIXMULT:
 				if arg_num == 2 {
-					res0 := evaluators[0].GetResult()
-					res1 := evaluators[1].GetResult()
-					value0 := ""
-					if res0 != nil && res0.LibraryID == libraryId && res0.ProgramID == M3NUMBERCONST {
-						value0 = res0.ProgramValue
-					} else {
-						ev.error = errors.New("wrong argument type")
-						return nil
-					}
+					// res0 := evaluators[0].GetResult()
+					// res1 := evaluators[1].GetResult()
+					// value0 := ""
+					// if res0 != nil && res0.LibraryID == libraryId && res0.ProgramID == MATRIX {
+					// 	value0 = res0.ProgramValue
+					// } else {
+					// 	ev.error = errors.New("wrong argument type")
+					// 	return nil
+					// }
 
-					value1 := ""
-					if res1 != nil && res1.LibraryID == libraryId && res1.ProgramID == M3NUMBERCONST {
-						value1 = res1.ProgramValue
-					} else {
-						ev.error = errors.New("wrong argument type")
-						return nil
-					}
+					// value1 := ""
+					// if res1 != nil && res1.LibraryID == libraryId && res1.ProgramID == MATRIX {
+					// 	value1 = res1.ProgramValue
+					// } else {
+					// 	ev.error = errors.New("wrong argument type")
+					// 	return nil
+					// }
 
 					opResult := ""
 
-					if value0n64, err := strconv.ParseFloat(value0, 32); err == nil {
-						if value1n64, err := strconv.ParseFloat(value1, 32); err == nil {
-							value0n := float32(value0n64)
-							value1n := float32(value1n64)
+					// if value0n64, err := strconv.ParseFloat(value0, 32); err == nil {
+					// 	if value1n64, err := strconv.ParseFloat(value1, 32); err == nil {
+					// 		value0n := float32(value0n64)
+					// 		value1n := float32(value1n64)
 
-							var opResultN float32
+					// 		var opResultN float32
 
-							switch in_prog.ProgramID {
-							case ADD:
-								opResultN = value0n + value1n
-							case SUB:
-								opResultN = value0n - value1n
-							case MULT:
-								opResultN = value0n * value1n
-							case DIV:
-								opResultN = value0n / value1n
-							}
+					// 		switch in_prog.ProgramID {
+					// 		case MULT:
+					// 			opResultN = value0n * value1n
+					// 		}
 
-							opResult = strconv.FormatFloat(float64(opResultN), 'E', -1, 32)
+					// 		opResult = strconv.FormatFloat(float64(opResultN), 'E', -1, 32)
 
-						} else {
-							ev.error = errors.New("convert to number failed")
-							return nil
-						}
-					} else {
-						ev.error = errors.New("convert to number failed")
-						return nil
-					}
+					// 	} else {
+					// 		ev.error = errors.New("convert to number failed")
+					// 		return nil
+					// 	}
+					// } else {
+					// 	ev.error = errors.New("convert to number failed")
+					// 	return nil
+					// }
 
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
-					result.ProgramID = M3NUMBERCONST
+					result.ProgramID = MATRIXCONST
 					result.ProgramValue = opResult
 					result.NextPrograms = nil
 					ev.Result = result
@@ -150,7 +143,7 @@ func (ev *Evaluator) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3Vis
 		switch in_prog.LibraryID {
 		case MYLIBID:
 			switch in_prog.ProgramID {
-			case M3NUMBERCONST:
+			case MATRIXCONST:
 				switch in_prog.ProgramValue {
 				default:
 					result := new(mel3program.Mel3Program)
@@ -171,7 +164,7 @@ func (ev *Evaluator) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3Vis
 	return ev
 }
 
-func (ev *Evaluator) Inspect() string {
+func (ev *BasmExporter) Inspect() string {
 	obj := ev.GetMel3Object()
 	implementations := obj.Implementation
 	if ev.error == nil {

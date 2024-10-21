@@ -11,19 +11,19 @@ func TestM3numberImporter(t *testing.T) {
 
 	fmt.Println("---- Test: M3number importer ----")
 
-	a := new(M3numberMe3li)
+	a := new(M3BasmMatrix)
 	var ep *mel.EvolutionParameters
 	a.MelInit(nil, ep)
 
 	istrings := []string{
 		`
-m3numberconst(54)
+m(54)
 
 `,
 		`
-add(
-	m3numberconst(3),
-	m3numberconst(1)
+mult(
+	m(3),
+	m(1)
 )
 
 `}
