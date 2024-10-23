@@ -57,7 +57,7 @@ type M3BasmMatrix struct {
 
 // ********* Mel interface
 
-// The Mel entry point for M3uintMe3li
+// The Mel entry point for M3BasmMatrix
 func (prog *M3BasmMatrix) MelInit(c *mel.MelConfig, ep *mel.EvolutionParameters) {
 	implementations := make(map[uint16]*mel3program.Mel3Implementation)
 	implementations[MYLIBID] = &Implementation
@@ -85,7 +85,7 @@ type M3MatrixInfo struct {
 
 // ********* Mel interface
 
-// The Mel entry point for M3uintMe3li
+// The Mel entry point for M3MatrixInfo
 func (prog *M3MatrixInfo) MelInit(c *mel.MelConfig, ep *mel.EvolutionParameters) {
 	implementations := make(map[uint16]*mel3program.Mel3Implementation)
 	implementations[MYLIBID] = &Implementation

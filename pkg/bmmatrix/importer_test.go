@@ -7,7 +7,7 @@ import (
 	"github.com/mmirko/mel/pkg/mel"
 )
 
-func TestM3numberImporter(t *testing.T) {
+func TestImporter(t *testing.T) {
 
 	fmt.Println("---- Test: M3number importer ----")
 

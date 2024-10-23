@@ -1,8 +1,11 @@
 package bmmatrix
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"regexp"
 
 	mel3program "github.com/mmirko/mel/pkg/mel3program"
 )
@@ -79,54 +82,43 @@ func (ev *MatrixInfo) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3Vi
 			switch in_prog.ProgramID {
 			case MATRIXMULT:
 				if arg_num == 2 {
-					// res0 := evaluators[0].GetResult()
-					// res1 := evaluators[1].GetResult()
-					// value0 := ""
-					// if res0 != nil && res0.LibraryID == libraryId && res0.ProgramID == M3NUMBERCONST {
-					// 	value0 = res0.ProgramValue
-					// } else {
-					// 	ev.error = errors.New("wrong argument type")
-					// 	return nil
-					// }
+					res0 := evaluators[0].GetResult()
+					res1 := evaluators[1].GetResult()
+					value0 := ""
+					if res0 != nil && res0.LibraryID == libraryId && res0.ProgramID == MATRIXCONST {
+						value0 = res0.ProgramValue
+					} else {
+						ev.error = errors.New("wrong argument type")
+						return nil
+					}
 
-					// value1 := ""
-					// if res1 != nil && res1.LibraryID == libraryId && res1.ProgramID == M3NUMBERCONST {
-					// 	value1 = res1.ProgramValue
-					// } else {
-					// 	ev.error = errors.New("wrong argument type")
-					// 	return nil
-					// }
+					value1 := ""
+					if res1 != nil && res1.LibraryID == libraryId && res1.ProgramID == MATRIXCONST {
+						value1 = res1.ProgramValue
+					} else {
+						ev.error = errors.New("wrong argument type")
+						return nil
+					}
 
 					opResult := ""
 
-					// if value0n64, err := strconv.ParseFloat(value0, 32); err == nil {
-					// 	if value1n64, err := strconv.ParseFloat(value1, 32); err == nil {
-					// 		value0n := float32(value0n64)
-					// 		value1n := float32(value1n64)
-
-					// 		var opResultN float32
-
-					// 		switch in_prog.ProgramID {
-					// 		case ADD:
-					// 			opResultN = value0n + value1n
-					// 		case SUB:
-					// 			opResultN = value0n - value1n
-					// 		case MULT:
-					// 			opResultN = value0n * value1n
-					// 		case DIV:
-					// 			opResultN = value0n / value1n
-					// 		}
-
-					// 		opResult = strconv.FormatFloat(float64(opResultN), 'E', -1, 32)
-
-					// 	} else {
-					// 		ev.error = errors.New("convert to number failed")
-					// 		return nil
-					// 	}
-					// } else {
-					// 	ev.error = errors.New("convert to number failed")
-					// 	return nil
-					// }
+					values0 := regexp.MustCompile(`^ref:([0-9]+):([0-9]+)$`)
+					values1 := regexp.MustCompile(`^ref:([0-9]+):([0-9]+)$`)
+					if values0.MatchString(value0) && values1.MatchString(value1) {
+						row0 := values0.FindStringSubmatch(value0)[1]
+						col0 := values0.FindStringSubmatch(value0)[2]
+						row1 := values1.FindStringSubmatch(value1)[1]
+						col1 := values1.FindStringSubmatch(value1)[2]
+						if col0 == row1 {
+							opResult = fmt.Sprintf("ref:%s:%s", row0, col1)
+						} else {
+							ev.error = errors.New("wrong argument, matrix dimensions do not match")
+							return nil
+						}
+					} else {
+						ev.error = errors.New("wrong argument, matrix dimensions do not match")
+						return nil
+					}
 
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
@@ -150,16 +142,81 @@ func (ev *MatrixInfo) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3Vi
 		case MYLIBID:
 			switch in_prog.ProgramID {
 			case MATRIXCONST:
-				switch in_prog.ProgramValue {
-				default:
+				m := in_prog.ProgramValue
+				ref := regexp.MustCompile(`^ref:([0-9]+):([0-9]+)$`)
+				// Match an alredy ref matrix
+				if ref.MatchString(m) {
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
-					result.ProgramID = programId
-					result.ProgramValue = in_prog.ProgramValue
+					result.ProgramID = MATRIXCONST
+					result.ProgramValue = m
 					result.NextPrograms = nil
 					ev.Result = result
 					return nil
 				}
+
+				in := regexp.MustCompile(`^in:([a-zA-Z0-9]+):([0-9]+):([0-9]+)$`)
+				// Match an inpput matrix
+				if in.MatchString(m) {
+					result := new(mel3program.Mel3Program)
+					result.LibraryID = libraryId
+					result.ProgramID = MATRIXCONST
+					// Replace in with ref
+					result.ProgramValue = "ref:" + in.FindStringSubmatch(m)[2] + ":" + in.FindStringSubmatch(m)[3]
+					result.NextPrograms = nil
+					ev.Result = result
+					return nil
+				}
+
+				// Match a matrix json file (a file m exists in the filesystem)
+				fileName := m
+				rowM := true
+				rowMajor := regexp.MustCompile(`^rowmajor:(.+)$`)
+				if rowMajor.MatchString(m) {
+					fileName = rowMajor.FindStringSubmatch(m)[1]
+				}
+				colMajor := regexp.MustCompile(`^colmajor:(.+)$`)
+				if colMajor.MatchString(m) {
+					fileName = colMajor.FindStringSubmatch(m)[1]
+					rowM = false
+				}
+
+				if _, err := os.Stat(fileName); err == nil {
+					// Load the file
+					file, err := os.ReadFile(fileName)
+					if err == nil {
+						// Unmarshal the file
+						var matrix [][]float64
+						err = json.Unmarshal(file, &matrix)
+						if err == nil {
+							major := len(matrix)
+							minor := len(matrix[0])
+							for i := 1; i < major; i++ {
+								if len(matrix[i]) != minor {
+									ev.error = errors.New("matrix rows have different length")
+									return nil
+								}
+							}
+							result := new(mel3program.Mel3Program)
+							result.LibraryID = libraryId
+							result.ProgramID = MATRIXCONST
+							if rowM {
+								result.ProgramValue = fmt.Sprintf("ref:%d:%d", major, minor)
+							} else {
+								result.ProgramValue = fmt.Sprintf("ref:%d:%d", minor, major)
+							}
+							result.NextPrograms = nil
+							ev.Result = result
+							return nil
+						}
+					}
+				}
+
+				ev.error = errors.New("wrong argument")
+				return nil
+			default:
+				ev.error = errors.New("unknown ProgramID")
+				return nil
 			}
 		default:
 			ev.error = errors.New("unknown LibraryID")
