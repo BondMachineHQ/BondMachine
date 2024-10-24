@@ -14,7 +14,7 @@ func TestBasmExporter(t *testing.T) {
 	c.Debug = false
 	a.MelInit(c, ep)
 
-	tests := []string{"m(t)", "m(t)"}
+	tests := []string{"m(T.json)", "m(T.json)"}
 
 	for i, iString := range tests {
 

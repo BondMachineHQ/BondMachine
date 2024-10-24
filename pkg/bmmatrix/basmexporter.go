@@ -1,20 +1,51 @@
 package bmmatrix
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"regexp"
+	"strconv"
 
 	mel3program "github.com/mmirko/mel/pkg/mel3program"
 )
+
+const (
+	MINPUT = uint8(0) + iota
+	MSTD
+	MREF
+)
+
+// Every list (in the lisp sense) has a listInfo struct and a listId (a unique identifier)
+type listInfo struct {
+	listId   uint64
+	listName string
+	mType    uint8
+	rows     int
+	cols     int
+	values   [][]float64
+}
+
+type lists struct {
+	lists map[uint64]listInfo
+}
 
 type BasmExporter struct {
 	*mel3program.Mel3Object
 	error
 	Result *mel3program.Mel3Program
+	*lists
+	listId uint64
 }
 
 func BasmExporterCreator() mel3program.Mel3Visitor {
-	return new(BasmExporter)
+	result := new(BasmExporter)
+	l := new(lists)
+	l.lists = make(map[uint64]listInfo)
+	result.lists = l
+	result.listId = 0
+	return result
 }
 
 func (ev *BasmExporter) GetName() string {
@@ -79,48 +110,10 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 			switch in_prog.ProgramID {
 			case MATRIXMULT:
 				if arg_num == 2 {
-					// res0 := evaluators[0].GetResult()
-					// res1 := evaluators[1].GetResult()
-					// value0 := ""
-					// if res0 != nil && res0.LibraryID == libraryId && res0.ProgramID == MATRIX {
-					// 	value0 = res0.ProgramValue
-					// } else {
-					// 	ev.error = errors.New("wrong argument type")
-					// 	return nil
-					// }
-
-					// value1 := ""
-					// if res1 != nil && res1.LibraryID == libraryId && res1.ProgramID == MATRIX {
-					// 	value1 = res1.ProgramValue
-					// } else {
-					// 	ev.error = errors.New("wrong argument type")
-					// 	return nil
-					// }
+					evaluators[0].GetResult()
+					evaluators[1].GetResult()
 
 					opResult := ""
-
-					// if value0n64, err := strconv.ParseFloat(value0, 32); err == nil {
-					// 	if value1n64, err := strconv.ParseFloat(value1, 32); err == nil {
-					// 		value0n := float32(value0n64)
-					// 		value1n := float32(value1n64)
-
-					// 		var opResultN float32
-
-					// 		switch in_prog.ProgramID {
-					// 		case MULT:
-					// 			opResultN = value0n * value1n
-					// 		}
-
-					// 		opResult = strconv.FormatFloat(float64(opResultN), 'E', -1, 32)
-
-					// 	} else {
-					// 		ev.error = errors.New("convert to number failed")
-					// 		return nil
-					// 	}
-					// } else {
-					// 	ev.error = errors.New("convert to number failed")
-					// 	return nil
-					// }
 
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
@@ -144,16 +137,112 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 		case MYLIBID:
 			switch in_prog.ProgramID {
 			case MATRIXCONST:
-				switch in_prog.ProgramValue {
-				default:
+				ev.listId++
+
+				m := in_prog.ProgramValue
+				ref := regexp.MustCompile(`^ref:([0-9]+):([0-9]+)$`)
+				// Match an alredy ref matrix
+				if ref.MatchString(m) {
+					rowsS := ref.FindStringSubmatch(m)[1]
+					colsS := ref.FindStringSubmatch(m)[2]
+					rows, _ := strconv.Atoi(rowsS)
+					cols, _ := strconv.Atoi(colsS)
+					lInfo := listInfo{listId: ev.listId, listName: "", mType: MREF, rows: rows, cols: cols, values: nil}
+					ev.lists.lists[ev.listId] = lInfo
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
-					result.ProgramID = programId
-					result.ProgramValue = in_prog.ProgramValue
+					result.ProgramID = MATRIXCONST
+					result.ProgramValue = m
 					result.NextPrograms = nil
 					ev.Result = result
 					return nil
 				}
+
+				in := regexp.MustCompile(`^in:([a-zA-Z0-9]+):([0-9]+):([0-9]+)$`)
+				// Match an inpput matrix
+				if in.MatchString(m) {
+					rowsS := in.FindStringSubmatch(m)[2]
+					colsS := in.FindStringSubmatch(m)[3]
+					name := in.FindStringSubmatch(m)[1]
+					rows, _ := strconv.Atoi(rowsS)
+					cols, _ := strconv.Atoi(colsS)
+					lInfo := listInfo{listId: ev.listId, listName: name, mType: MINPUT, rows: rows, cols: cols, values: nil}
+					ev.lists.lists[ev.listId] = lInfo
+					result := new(mel3program.Mel3Program)
+					result.LibraryID = libraryId
+					result.ProgramID = MATRIXCONST
+					result.ProgramValue = m
+					result.NextPrograms = nil
+					ev.Result = result
+					return nil
+				}
+
+				// Match a matrix json file (a file m exists in the filesystem)
+				fileName := m
+				rowM := true
+				rowMajor := regexp.MustCompile(`^rowmajor:(.+)$`)
+				if rowMajor.MatchString(m) {
+					fileName = rowMajor.FindStringSubmatch(m)[1]
+				}
+				colMajor := regexp.MustCompile(`^colmajor:(.+)$`)
+				if colMajor.MatchString(m) {
+					fileName = colMajor.FindStringSubmatch(m)[1]
+					rowM = false
+				}
+
+				if _, err := os.Stat(fileName); err == nil {
+					// Load the file
+					file, err := os.ReadFile(fileName)
+					if err == nil {
+						// Unmarshal the file
+						var matrix [][]float64
+						err = json.Unmarshal(file, &matrix)
+						if err == nil {
+							major := len(matrix)
+							minor := len(matrix[0])
+							for i := 1; i < major; i++ {
+								if len(matrix[i]) != minor {
+									ev.error = errors.New("matrix rows have different length")
+									return nil
+								}
+							}
+							if rowM {
+								lInfo := listInfo{listId: ev.listId, listName: "", mType: MSTD, rows: major, cols: minor, values: matrix}
+								ev.lists.lists[ev.listId] = lInfo
+							} else {
+								invMatrix := make([][]float64, minor)
+								for i := 0; i < minor; i++ {
+									invMatrix[i] = make([]float64, major)
+								}
+								for i := 0; i < major; i++ {
+									for j := 0; j < minor; j++ {
+										invMatrix[j][i] = matrix[i][j]
+									}
+								}
+								lInfo := listInfo{listId: ev.listId, listName: "", mType: MSTD, rows: minor, cols: major, values: invMatrix}
+								ev.lists.lists[ev.listId] = lInfo
+							}
+							result := new(mel3program.Mel3Program)
+							result.LibraryID = libraryId
+							result.ProgramID = MATRIXCONST
+							if rowM {
+								result.ProgramValue = fmt.Sprintf("ref:%d:%d", major, minor)
+							} else {
+								result.ProgramValue = fmt.Sprintf("ref:%d:%d", minor, major)
+							}
+							result.NextPrograms = nil
+							ev.Result = result
+							fmt.Println(ev.lists.lists[ev.listId])
+							return nil
+						}
+					}
+				}
+
+				ev.error = errors.New("wrong argument")
+				return nil
+			default:
+				ev.error = errors.New("unknown ProgramID")
+				return nil
 			}
 		default:
 			ev.error = errors.New("unknown LibraryID")
