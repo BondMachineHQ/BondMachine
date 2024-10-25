@@ -28,24 +28,31 @@ type listInfo struct {
 }
 
 type lists struct {
-	lists map[uint64]listInfo
+	ls map[uint64]listInfo
 }
 
 type BasmExporter struct {
 	*mel3program.Mel3Object
 	error
 	Result *mel3program.Mel3Program
+}
+
+type exporterEnv struct {
 	*lists
 	listId uint64
 }
 
-func BasmExporterCreator() mel3program.Mel3Visitor {
-	result := new(BasmExporter)
+func newExporterEnv() exporterEnv {
+	result := new(exporterEnv)
 	l := new(lists)
-	l.lists = make(map[uint64]listInfo)
+	l.ls = make(map[uint64]listInfo)
 	result.lists = l
 	result.listId = 0
-	return result
+	return *result
+}
+
+func BasmExporterCreator() mel3program.Mel3Visitor {
+	return new(BasmExporter)
 }
 
 func (ev *BasmExporter) GetName() string {
@@ -84,7 +91,27 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 	}
 
 	obj := ev.GetMel3Object()
+	env := (*obj.Environment).(exporterEnv)
+	if debug {
+		fmt.Printf("Get Mel3Object at %p\n", obj)
+		fmt.Printf("env at %p\n", &env)
+	}
+
+	listId := env.listId + 1
+	env.listId = listId
 	implementations := obj.Implementation
+
+	defer func() {
+		if debug {
+			fmt.Printf("Put env at %p\n", &env)
+			fmt.Printf("Put Mel3Object at %p\n", obj)
+		}
+
+		var envi interface{}
+		envi = env
+		obj.Environment = &envi
+		ev.SetMel3Object(obj)
+	}()
 
 	programId := in_prog.ProgramID
 	libraryId := in_prog.LibraryID
@@ -137,7 +164,6 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 		case MYLIBID:
 			switch in_prog.ProgramID {
 			case MATRIXCONST:
-				ev.listId++
 
 				m := in_prog.ProgramValue
 				ref := regexp.MustCompile(`^ref:([0-9]+):([0-9]+)$`)
@@ -147,8 +173,8 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 					colsS := ref.FindStringSubmatch(m)[2]
 					rows, _ := strconv.Atoi(rowsS)
 					cols, _ := strconv.Atoi(colsS)
-					lInfo := listInfo{listId: ev.listId, listName: "", mType: MREF, rows: rows, cols: cols, values: nil}
-					ev.lists.lists[ev.listId] = lInfo
+					lInfo := listInfo{listId: listId, listName: "", mType: MREF, rows: rows, cols: cols, values: nil}
+					env.lists.ls[listId] = lInfo
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
 					result.ProgramID = MATRIXCONST
@@ -166,8 +192,8 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 					name := in.FindStringSubmatch(m)[1]
 					rows, _ := strconv.Atoi(rowsS)
 					cols, _ := strconv.Atoi(colsS)
-					lInfo := listInfo{listId: ev.listId, listName: name, mType: MINPUT, rows: rows, cols: cols, values: nil}
-					ev.lists.lists[ev.listId] = lInfo
+					lInfo := listInfo{listId: listId, listName: name, mType: MINPUT, rows: rows, cols: cols, values: nil}
+					env.lists.ls[listId] = lInfo
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
 					result.ProgramID = MATRIXCONST
@@ -207,8 +233,8 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 								}
 							}
 							if rowM {
-								lInfo := listInfo{listId: ev.listId, listName: "", mType: MSTD, rows: major, cols: minor, values: matrix}
-								ev.lists.lists[ev.listId] = lInfo
+								lInfo := listInfo{listId: listId, listName: "", mType: MSTD, rows: major, cols: minor, values: matrix}
+								env.lists.ls[listId] = lInfo
 							} else {
 								invMatrix := make([][]float64, minor)
 								for i := 0; i < minor; i++ {
@@ -219,8 +245,8 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 										invMatrix[j][i] = matrix[i][j]
 									}
 								}
-								lInfo := listInfo{listId: ev.listId, listName: "", mType: MSTD, rows: minor, cols: major, values: invMatrix}
-								ev.lists.lists[ev.listId] = lInfo
+								lInfo := listInfo{listId: listId, listName: "", mType: MSTD, rows: minor, cols: major, values: invMatrix}
+								env.lists.ls[listId] = lInfo
 							}
 							result := new(mel3program.Mel3Program)
 							result.LibraryID = libraryId
@@ -232,7 +258,7 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 							}
 							result.NextPrograms = nil
 							ev.Result = result
-							fmt.Println(ev.lists.lists[ev.listId])
+							fmt.Println(env.lists.ls[listId])
 							return nil
 						}
 					}
