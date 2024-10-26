@@ -7,7 +7,7 @@ require (
 	github.com/goccy/go-graphviz v0.1.3
 	github.com/llir/llvm v0.3.6
 	github.com/mdlayher/raw v0.1.0
-	github.com/mmirko/mel v0.0.0-20241021200913-9e9dc4656737
+	github.com/mmirko/mel v0.0.0-20241025070902-81728f75ca68
 	github.com/tfriedel6/canvas v0.12.1
 	github.com/x448/float16 v0.8.4
 	github.com/yuin/gopher-lua v1.1.1
