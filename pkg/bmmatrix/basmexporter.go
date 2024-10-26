@@ -91,7 +91,7 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 	}
 
 	obj := ev.GetMel3Object()
-	env := (*obj.Environment).(exporterEnv)
+	env := (obj.Environment).(exporterEnv)
 	if debug {
 		fmt.Printf("Get Mel3Object at %p\n", obj)
 		fmt.Printf("env at %p\n", &env)
@@ -100,6 +100,9 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 	listId := env.listId + 1
 	env.listId = listId
 	implementations := obj.Implementation
+	var envI interface{} = env
+	obj.Environment = envI
+	ev.SetMel3Object(obj)
 
 	defer func() {
 		if debug {
@@ -107,10 +110,10 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 			fmt.Printf("Put Mel3Object at %p\n", obj)
 		}
 
-		var envi interface{}
-		envi = env
-		obj.Environment = &envi
+		var envI interface{} = env
+		obj.Environment = envI
 		ev.SetMel3Object(obj)
+		fmt.Println(env.ls)
 	}()
 
 	programId := in_prog.ProgramID
@@ -136,11 +139,51 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 		case MYLIBID:
 			switch in_prog.ProgramID {
 			case MATRIXMULT:
+				if debug {
+					fmt.Println("MATRIXMULT")
+				}
 				if arg_num == 2 {
-					evaluators[0].GetResult()
-					evaluators[1].GetResult()
+					res0 := evaluators[0].GetResult()
+					res1 := evaluators[1].GetResult()
+					value0 := ""
+					if res0 != nil && res0.LibraryID == libraryId && res0.ProgramID == MATRIXCONST {
+						value0 = res0.ProgramValue
+					} else {
+						ev.error = errors.New("wrong argument type")
+						return nil
+					}
+
+					value1 := ""
+					if res1 != nil && res1.LibraryID == libraryId && res1.ProgramID == MATRIXCONST {
+						value1 = res1.ProgramValue
+					} else {
+						ev.error = errors.New("wrong argument type")
+						return nil
+					}
 
 					opResult := ""
+
+					values0 := regexp.MustCompile(`^ref:([0-9]+):([0-9]+)$`)
+					values1 := regexp.MustCompile(`^ref:([0-9]+):([0-9]+)$`)
+					if values0.MatchString(value0) && values1.MatchString(value1) {
+						row0 := values0.FindStringSubmatch(value0)[1]
+						col0 := values0.FindStringSubmatch(value0)[2]
+						row1 := values1.FindStringSubmatch(value1)[1]
+						col1 := values1.FindStringSubmatch(value1)[2]
+						if col0 == row1 {
+							rows, _ := strconv.Atoi(row0)
+							cols, _ := strconv.Atoi(col1)
+							lInfo := listInfo{listId: listId, listName: "", mType: MREF, rows: rows, cols: cols, values: nil}
+							env.lists.ls[listId] = lInfo
+							opResult = fmt.Sprintf("ref:%s:%s", row0, col1)
+						} else {
+							ev.error = errors.New("wrong argument, matrix dimensions do not match")
+							return nil
+						}
+					} else {
+						ev.error = errors.New("wrong argument, matrix dimensions do not match")
+						return nil
+					}
 
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
@@ -164,7 +207,9 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 		case MYLIBID:
 			switch in_prog.ProgramID {
 			case MATRIXCONST:
-
+				if debug {
+					fmt.Println("MATRIXCONST")
+				}
 				m := in_prog.ProgramValue
 				ref := regexp.MustCompile(`^ref:([0-9]+):([0-9]+)$`)
 				// Match an alredy ref matrix
@@ -197,7 +242,8 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
 					result.ProgramID = MATRIXCONST
-					result.ProgramValue = m
+					// Replace in with ref
+					result.ProgramValue = "ref:" + in.FindStringSubmatch(m)[2] + ":" + in.FindStringSubmatch(m)[3]
 					result.NextPrograms = nil
 					ev.Result = result
 					return nil
@@ -258,7 +304,6 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 							}
 							result.NextPrograms = nil
 							ev.Result = result
-							fmt.Println(env.lists.ls[listId])
 							return nil
 						}
 					}
