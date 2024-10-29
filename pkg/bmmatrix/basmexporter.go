@@ -39,7 +39,8 @@ type BasmExporter struct {
 
 type exporterEnv struct {
 	*lists
-	listId uint64
+	listId   uint64
+	basmCode string
 }
 
 func newExporterEnv() exporterEnv {
@@ -160,6 +161,8 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 						ev.error = errors.New("wrong argument type")
 						return nil
 					}
+
+					// templ := ev.createBasicTemplateData2M()
 
 					opResult := ""
 

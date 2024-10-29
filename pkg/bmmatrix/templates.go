@@ -13,33 +13,20 @@ type templateData1M struct {
 }
 
 type templateData2M struct {
-	Mtx1    [][]float32
-	Mtx2    [][]float32
+	Mtx1    [][]string
+	Mtx2    [][]string
 	funcMap template.FuncMap
 }
 
 func (exp *BasmExporter) createBasicTemplateData1M() *templateData1M {
 	result := new(templateData1M)
-	// result.Mtx = make([][]float32, result.NumGates)
-	// for g, m := range sim.Mtx {
-	// 	result.MtxReal[g] = make([][]float32, m.N)
-	// 	result.MtxImag[g] = make([][]float32, m.N)
-	// 	for i := 0; i < m.N; i++ {
-	// 		result.MtxReal[g][i] = make([]float32, m.N)
-	// 		result.MtxImag[g][i] = make([]float32, m.N)
-	// 		for j := 0; j < m.N; j++ {
-	// 			result.MtxReal[g][i][j] = m.Data[i][j].Real
-	// 			result.MtxImag[g][i][j] = m.Data[i][j].Imag
-	// 		}
-	// 	}
-	// }
-
 	result.funcMap = getFuncMap()
 	return result
 }
 
 func (exp *BasmExporter) createBasicTemplateData2M() *templateData2M {
 	result := new(templateData2M)
+	result.funcMap = getFuncMap()
 	return result
 }
 
@@ -96,9 +83,8 @@ func getFuncMap() template.FuncMap {
 	return funcMap
 }
 
-func (exp *BasmExporter) ApplyTemplate1M() (string, error) {
-	templateData := exp.createBasicTemplateData1M()
-	t, err := template.New("mult").Funcs(templateData.funcMap).Parse(templateMult)
+func (exp *BasmExporter) ApplyTemplate1M(templateData *templateData1M, templateObj string) (string, error) {
+	t, err := template.New("mult").Funcs(templateData.funcMap).Parse(templateObj)
 	if err != nil {
 		return "", err
 	}
@@ -110,9 +96,8 @@ func (exp *BasmExporter) ApplyTemplate1M() (string, error) {
 	return f.String(), nil
 }
 
-func (exp *BasmExporter) ApplyTemplate2M() (string, error) {
-	templateData := exp.createBasicTemplateData2M()
-	t, err := template.New("mult").Funcs(templateData.funcMap).Parse(templateMult)
+func (exp *BasmExporter) ApplyTemplate2M(templateData *templateData2M, templateObj string) (string, error) {
+	t, err := template.New("mult").Funcs(templateData.funcMap).Parse(templateObj)
 	if err != nil {
 		return "", err
 	}

@@ -1,6 +1,7 @@
 package bmmatrix
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mmirko/mel/pkg/mel"
@@ -33,4 +34,6 @@ func TestBasmExporter(t *testing.T) {
 		}
 
 	}
+
+	fmt.Println(a.Mel3Object.Environment.(exporterEnv).basmCode)
 }
