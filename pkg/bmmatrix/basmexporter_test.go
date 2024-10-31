@@ -35,5 +35,5 @@ func TestBasmExporter(t *testing.T) {
 
 	}
 
-	fmt.Println(a.Mel3Object.Environment.(exporterEnv).basmCode)
+	fmt.Println(*(a.Mel3Object.Environment.(exporterEnv).basmCode))
 }
