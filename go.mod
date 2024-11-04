@@ -1,6 +1,6 @@
 module github.com/BondMachineHQ/BondMachine
 
-go 1.22
+go 1.22.0
 
 require (
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10
