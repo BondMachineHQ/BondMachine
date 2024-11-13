@@ -13,9 +13,11 @@ type templateData1M struct {
 }
 
 type templateData2M struct {
-	Mtx1    [][]string
-	Mtx2    [][]string
-	funcMap template.FuncMap
+	Mtx1       [][]string
+	Mtx2       [][]string
+	MatrixRows int // Temp
+	NumGates   int // Temp
+	funcMap    template.FuncMap
 }
 
 func (exp *BasmExporter) createBasicTemplateData1M() *templateData1M {
@@ -83,8 +85,8 @@ func getFuncMap() template.FuncMap {
 	return funcMap
 }
 
-func (exp *BasmExporter) ApplyTemplate1M(templateData *templateData1M, templateObj string) (string, error) {
-	t, err := template.New("mult").Funcs(templateData.funcMap).Parse(templateObj)
+func (exp *BasmExporter) ApplyTemplate1M(templateData *templateData1M, templateName string, templateObj string) (string, error) {
+	t, err := template.New(templateName).Funcs(templateData.funcMap).Parse(templateObj)
 	if err != nil {
 		return "", err
 	}
@@ -96,8 +98,8 @@ func (exp *BasmExporter) ApplyTemplate1M(templateData *templateData1M, templateO
 	return f.String(), nil
 }
 
-func (exp *BasmExporter) ApplyTemplate2M(templateData *templateData2M, templateObj string) (string, error) {
-	t, err := template.New("mult").Funcs(templateData.funcMap).Parse(templateObj)
+func (exp *BasmExporter) ApplyTemplate2M(templateData *templateData2M, templateName string, templateObj string) (string, error) {
+	t, err := template.New(templateName).Funcs(templateData.funcMap).Parse(templateObj)
 	if err != nil {
 		return "", err
 	}

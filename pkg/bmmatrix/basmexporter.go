@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	MINPUT = uint8(0) + iota
-	MSTD
-	MREF
+	MINPUT = uint8(0) + iota // Input matrix
+	MSTD                     // Standard matrix with values
+	MREF                     // Reference to a matrix, there is not values but it depends other matrix
 )
 
 // Every list (in the lisp sense) has a listInfo struct and a listId (a unique identifier)
@@ -137,66 +137,123 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 			evaluators[i].Visit(prog)
 		}
 
-		switch in_prog.LibraryID {
-		case MYLIBID:
-			switch in_prog.ProgramID {
-			case MATRIXMULT:
-				if debug {
-					fmt.Println("Processing MATRIXMULT")
+		if arg_num == 2 {
+			res0 := evaluators[0].GetResult()
+			res1 := evaluators[1].GetResult()
+			var value0 string
+			var lInfo0 listInfo
+			if res0 != nil && res0.LibraryID == libraryId && res0.ProgramID == MATRIXCONST {
+				value0 = res0.ProgramValue
+				if _, lI, err := getMatrixData(value0, 0); err == nil {
+					lInfo0 = lI
+				} else {
+					ev.error = err
+					return nil
 				}
-				if arg_num == 2 {
-					res0 := evaluators[0].GetResult()
-					res1 := evaluators[1].GetResult()
-					var value0 string
-					var lInfo0 listInfo
-					if res0 != nil && res0.LibraryID == libraryId && res0.ProgramID == MATRIXCONST {
-						value0 = res0.ProgramValue
-						if _, lI, err := getMatrixData(value0, 0); err == nil {
-							lInfo0 = lI
-						} else {
-							ev.error = err
-							return nil
-						}
-					} else {
-						ev.error = errors.New("wrong argument type")
-						return nil
+			} else {
+				ev.error = errors.New("wrong argument type")
+				return nil
+			}
+
+			var value1 string
+			var lInfo1 listInfo
+			if res1 != nil && res1.LibraryID == libraryId && res1.ProgramID == MATRIXCONST {
+				value1 = res1.ProgramValue
+				if _, lI, err := getMatrixData(value1, 0); err == nil {
+					lInfo1 = lI
+				} else {
+					ev.error = err
+					return nil
+				}
+			} else {
+				ev.error = errors.New("wrong argument type")
+				return nil
+			}
+
+			opResult := ""
+
+			col0 := strconv.Itoa(lInfo0.cols)
+			row0 := strconv.Itoa(lInfo0.rows)
+			col1 := strconv.Itoa(lInfo1.cols)
+			row1 := strconv.Itoa(lInfo1.rows)
+
+			if col0 == row1 {
+				rowS, _ := strconv.Atoi(row0)
+				colS, _ := strconv.Atoi(col1)
+				lInfo := listInfo{listId: listId, listName: "", mType: MREF, rows: rowS, cols: colS, values: nil}
+				env.lists.ls[listId] = lInfo
+				opResult = fmt.Sprintf("ref:%s:%s", row0, col1)
+			} else {
+				ev.error = errors.New("wrong argument, matrix dimensions do not match")
+				return nil
+			}
+
+			*env.basmCode += fmt.Sprintf("; entering MATRIXMULT with %s and %s\n", value0, value1)
+
+			templ := ev.createBasicTemplateData2M()
+
+			templ.Mtx1 = make([][]string, lInfo0.rows)
+			switch lInfo0.mType {
+			case MSTD:
+				for i := 0; i < lInfo0.rows; i++ {
+					templ.Mtx1[i] = make([]string, lInfo0.cols)
+					for j := 0; j < lInfo0.cols; j++ {
+						templ.Mtx1[i][j] = fmt.Sprintf("%f", lInfo0.values[i][j])
+					}
+				}
+			case MINPUT, MREF:
+				label := strconv.Itoa(int(lInfo0.listId))
+				if lInfo0.mType == MINPUT {
+					label = "in_" + lInfo0.listName + "_" + label
+				} else {
+					label = "ref_" + label
+				}
+				for i := 0; i < lInfo0.rows; i++ {
+					templ.Mtx1[i] = make([]string, lInfo0.cols)
+					for j := 0; j < lInfo0.cols; j++ {
+						templ.Mtx1[i][j] = fmt.Sprintf("%s_el_%d_%d", label, i, j)
+					}
+				}
+			}
+
+			templ.Mtx2 = make([][]string, lInfo1.rows)
+			switch lInfo1.mType {
+			case MSTD:
+				for i := 0; i < lInfo1.rows; i++ {
+					templ.Mtx2[i] = make([]string, lInfo1.cols)
+					for j := 0; j < lInfo1.cols; j++ {
+						templ.Mtx2[i][j] = fmt.Sprintf("%f", lInfo1.values[i][j])
+					}
+				}
+			case MINPUT, MREF:
+				label := strconv.Itoa(int(lInfo1.listId))
+				if lInfo1.mType == MINPUT {
+					label = "in_" + lInfo1.listName + "_" + label
+				} else {
+					label = "ref_" + label
+				}
+				for i := 0; i < lInfo1.rows; i++ {
+					templ.Mtx2[i] = make([]string, lInfo1.cols)
+					for j := 0; j < lInfo1.cols; j++ {
+						templ.Mtx2[i][j] = fmt.Sprintf("%s_el_%d_%d", label, i, j)
+					}
+				}
+			}
+
+			switch in_prog.LibraryID {
+			case MYLIBID:
+				switch in_prog.ProgramID {
+				case MATRIXMULT:
+					if debug {
+						fmt.Println("Processing MATRIXMULT")
 					}
 
-					var value1 string
-					var lInfo1 listInfo
-					if res1 != nil && res1.LibraryID == libraryId && res1.ProgramID == MATRIXCONST {
-						value1 = res1.ProgramValue
-						if _, lI, err := getMatrixData(value1, 0); err == nil {
-							lInfo1 = lI
-						} else {
-							ev.error = err
-							return nil
-						}
+					if code, err := ev.ApplyTemplate2M(templ, "mult", templateMult); err == nil {
+						*env.basmCode += code
 					} else {
-						ev.error = errors.New("wrong argument type")
+						ev.error = err
 						return nil
 					}
-
-					opResult := ""
-
-					col0 := strconv.Itoa(lInfo0.cols)
-					row0 := strconv.Itoa(lInfo0.rows)
-					col1 := strconv.Itoa(lInfo1.cols)
-					row1 := strconv.Itoa(lInfo1.rows)
-
-					if col0 == row1 {
-						rowS, _ := strconv.Atoi(row0)
-						colS, _ := strconv.Atoi(col1)
-						lInfo := listInfo{listId: listId, listName: "", mType: MREF, rows: rowS, cols: colS, values: nil}
-						env.lists.ls[listId] = lInfo
-						opResult = fmt.Sprintf("ref:%s:%s", row0, col1)
-					} else {
-						ev.error = errors.New("wrong argument, matrix dimensions do not match")
-						return nil
-					}
-
-					*env.basmCode += fmt.Sprintf("; entering MATRIXMULT with %s and %s\n", value0, value1)
-					// templ := ev.createBasicTemplateData2M()
 
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
@@ -205,15 +262,16 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 					result.NextPrograms = nil
 					ev.Result = result
 					return nil
-				} else {
-					ev.error = errors.New("wrong argument number")
+				default:
+					ev.error = errors.New("unknown LibraryID")
 					return nil
 				}
 			}
-		default:
-			ev.error = errors.New("unknown LibraryID")
-			return nil
 		}
+
+		ev.error = errors.New("wrong number of arguments")
+		return nil
+
 	} else {
 
 		switch in_prog.LibraryID {

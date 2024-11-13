@@ -4,7 +4,6 @@ const (
 	templateMult = `%section matrixmulel .romtext iomode:sync
         entry _start    ; Entry point
 _start:
-	rset	r2, {{ .NumGates }} ; the number of matrices
 	rset	r1, 0 ; counter
 mainloop:
 	jz	r2, _start

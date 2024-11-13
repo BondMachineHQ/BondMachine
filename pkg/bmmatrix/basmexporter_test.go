@@ -27,7 +27,9 @@ func TestBasmExporter(t *testing.T) {
 		}
 
 		a.MelStringImport(iString)
-		a.Compute()
+		if err := a.Compute(); err != nil {
+			t.Errorf("Error in Compute: %s", err)
+		}
 		if a.Inspect() != tests[i+1] {
 			// a.MelDump(nil)
 			t.Errorf("Expected %s, got %s", tests[i+1], a.Inspect())
