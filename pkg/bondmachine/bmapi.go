@@ -133,6 +133,28 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 			"sub": func(i, j int) int {
 				return i - j
 			},
+			"mod": func(i, j int) int {
+				return i % j
+			},
+			"div": func(i, j int) int {
+        		return i / j
+    		},
+			"mul": func(i, j int) int {
+				return i * j
+			},
+			"rangeSlice": func(start, end int) []int {
+				var result []int
+				for i := start; i < end; i++ {
+					result = append(result, i)
+				}
+				return result
+			},
+			"index": func(arr []string, i int) string {
+				if i < len(arr) {
+					return arr[i]
+				}
+				return ""
+			},
 		}
 
 		// This fields are temporarely hardcoded, in the future could be get from the command line
@@ -208,7 +230,7 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 			vFiles["krnl_bondmachine_rtl_counter.sv"] = krnlBondmachineRTLCounter
 			vFiles["krnl_bondmachine_rtl_int.sv"] = krnlBondmachineRTLInt
 			if bmapiFlavorVersion == "basic" {
-				vFiles["bmaccelerator_v1_0.v"] = basicAXIStream
+				vFiles["bmaccelerator_v1_0.v"] = basicAXIStreamBram
 			} else if bmapiFlavorVersion == "optimized" {
 				vFiles["bmaccelerator_v1_0.v"] = optimizedAXIStream
 			} else {
@@ -237,7 +259,7 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 		case "zedboard", "ebaz4205", "zc702":
 			vFiles := make(map[string]string)
 			if bmapiFlavorVersion == "basic" {
-				vFiles["axistream.v"] = basicAXIStream
+				vFiles["axistream.v"] = basicAXIStreamBram
 			} else if bmapiFlavorVersion == "optimized" {
 				vFiles["axistream.v"] = optimizedAXIStream
 			} else {

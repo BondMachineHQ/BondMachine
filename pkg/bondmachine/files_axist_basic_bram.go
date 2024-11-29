@@ -45,9 +45,19 @@ const (
 	reg        mst_exec_state;     
 	wire       fifo_wren;
 	reg        fifo_full_flag;
-	reg [{{ .CountersBits }}:0] write_pointer;
 	reg        writes_done;
     wire       test;
+	reg [31:0] read_pointer;
+	reg [31:0] read_pointer_output;
+
+	reg [31:0] read_state;
+	reg [31:0] out_read_state;
+	reg  [31:0] outputs_counter = 0;
+    reg  [31:0] outputs_counter_incr = 0;
+	reg  [31:0] outputs_counter_pointer = 0;
+    reg  [31:0] stream_output_counter = 0;
+	reg  [31:0] maxfifoloopcounter = 0;
+	reg [31:0] write_pointer;
 
 	assign s00_axis_tready	= axis_tready;
 
@@ -93,7 +103,6 @@ const (
 	  else begin
 	  if(!s00_axis_aresetn)
 	    begin
-	      write_pointer <= 0;
 	      writes_done <= 1'b0;
 	    end  
 	  else
@@ -115,19 +124,14 @@ const (
 
 	assign fifo_wren = s00_axis_tvalid && axis_tready;
 
-    reg  [{{ .CountersBits }}:0] maxfifoloopcounter = 0;
-
 	(* ram_style = "block" *)
     reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo [0 : NUMBER_OF_INPUTS-1];
 
-	reg [31:0] write_pointer;
-	reg [31:0] read_pointer;
-	reg [31:0] read_pointer_output;
+	(* ram_style = "block" *)
+    reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo_backup [0 : NUMBER_OF_INPUTS-1];
 
-	reg [1:0] read_state;
-	reg [1:0] out_read_state;
 
-    always @( posedge s00_axis_aclk )
+	always @( posedge s00_axis_aclk )
     begin
 		if (tx_done) begin
 	       maxfifoloopcounter <= 0;
@@ -138,8 +142,8 @@ const (
 				stream_data_fifo[write_pointer] <= s00_axis_tdata;
           end
           else if (precision == 16) begin
-				stream_data_fifo[write_pointer][15:0]   <= s00_axis_tdata[15:0];
-				stream_data_fifo[write_pointer][31:16]  <= s00_axis_tdata[31:16];
+		  	stream_data_fifo[write_pointer][15:0]   <= s00_axis_tdata[15:0];
+			stream_data_fifo_backup[write_pointer][15:0]  <= s00_axis_tdata[31:16];
           end
         end   
      end    
@@ -160,15 +164,10 @@ const (
     reg  	axis_tvalid_delay;
     wire  	axis_tlast;
     reg  	axis_tlast_delay;
-    reg [C_M00_AXIS_TDATA_WIDTH-1 : 0] 	stream_data_out;
     wire  	tx_en;
+	reg [C_M00_AXIS_TDATA_WIDTH-1 : 0] 	stream_data_out;
 	reg  	tx_done;
     wire     bm_done;
-
-    reg  [{{ .CountersBits }}:0] outputs_counter = 0;
-    reg  [{{ .CountersBits }}:0] outputs_counter_incr = 0;
-	reg  [{{ .CountersBits }}:0] outputs_counter_pointer = 0;
-    reg  [{{ .CountersBits }}:0] stream_output_counter = 0;
 
 	(* ram_style = "block" *)
     reg  [(C_S00_AXIS_TDATA_WIDTH)-1:0] output_stream_data_fifo [0 : NUMBER_OF_OUTPUTS-1];
@@ -335,10 +334,12 @@ const (
             outputs_counter <= 0;
             outputs_counter_incr <= 0;
 			outputs_counter_pointer <= 0;
-			o0_received_r <= 1'b0;
-			o0_valid_r <= 1'b0;
-			o1_received_r <= 1'b0;
-			o1_valid_r <= 1'b0;
+			{{- if .Outputs }}
+            {{- range $i, $output := .Outputs }}           
+			{{ $output }}_received_r <= 32'b0;
+            {{ $output }}_valid_r <= 32'b0;            
+			{{- end }}
+            {{- end }}
 			read_pointer <= 1'b0;
 			read_pointer_output  <= 1'b0;
 			output_mutex <= 1;
@@ -351,25 +352,25 @@ const (
 				end
 				else if (send == 2'b01) begin
 
-					if (precision == 32) begin
+					{{ if eq $.Rsize 32 }}
 						case (read_state)
 
 							{{- if .Inputs }}
 							{{- $inputsLen := len .Inputs }}
 							{{- range $i, $input := .Inputs }}
 							{{- if ne (inc $i) $inputsLen }}
-							2'd{{ $i }}: begin
+							32'd{{ $i }}: begin
 								{{ $input }}_r <= stream_data_fifo[outputs_counter+{{ $i }}];
 								read_pointer <= read_pointer + 1;	
-								{{ $input }}_valid_r <= 1'b1;
-								read_state <= 2'd{{ (inc $i) }};
+								//{{ $input }}_valid_r <= 1'b1;
+								read_state <= 32'd{{ (inc $i) }};
 							end
 							{{- else }}
-							2'd{{ $i }}: begin
+							32'd{{ $i }}: begin
 								{{ $input }}_r <= stream_data_fifo[outputs_counter+{{ $i }}];
 								read_pointer <= read_pointer + 1;	
-								{{ $input }}_valid_r <= 1'b1;
-								read_state <= 2'd0;
+								//{{ $input }}_valid_r <= 1'b1;
+								read_state <= 32'd0;
 							end
 							{{- end }}
 							{{- end }}
@@ -377,60 +378,51 @@ const (
 						endcase
 
 						if (read_pointer >= (bminputs-1)) begin
+							{{- if .Inputs }}
+							{{- $inputsLen := len .Inputs }}
+							{{- range $i, $input := .Inputs }}
+							{{ $input }}_valid_r <= 1'b1;
+							{{- end }}
+							{{- end }}
 							read_pointer <= 0;
 							send <= 2'b10;
 						end
-					end
-					else if (precision == 16) begin
+
+					{{- end }}
+					{{ if eq $.Rsize 16 }}
 						case (read_state)
 
 							{{- if .Inputs }}
 							{{- $inputsLen := len .Inputs }}
 							{{- range $i, $input := .Inputs }}
-							{{- if ne (inc $i) $inputsLen }}
-							2'd{{ $i }}: begin
-								if (input_reader == 1) begin
-									{{ $input }}_r <= stream_data_fifo[input_reader_index][15:0];
-									input_reader <= input_reader + 1;
-								end
-								else begin 
-									{{ $input }}_r <= stream_data_fifo[input_reader_index][31:16];
-									input_reader <= 1;
-									input_reader_index <= input_reader_index + 1;
-								end
-
-								read_pointer <= read_pointer + 1;
-								{{ $input }}_valid_r <= 1'b1;
-								read_state <= 2'd{{ (inc $i) }};
-							end
-							{{- else }}
-							2'd{{ $i }}: begin
-								if (input_reader == 1) begin
-									{{ $input }}_r <= stream_data_fifo[input_reader_index][15:0];
-									input_reader <= input_reader + 1;
-								end
-								else begin 
-									{{ $input }}_r <= stream_data_fifo[input_reader_index][31:16];
-									input_reader <= 1;
-									input_reader_index <= input_reader_index + 1;
-								end
+							
+							32'd{{ $i }}: begin
+								{{- if eq (mod $i 2) 0 }}
+									{{ $input }}_r <= stream_data_fifo[outputs_counter+{{ div $i 2 }}];
+								{{- else }}
+									{{ $input }}_r <= stream_data_fifo_backup[outputs_counter+{{ div $i 2 }}];
+								{{- end }}
 								
-								read_pointer <= read_pointer + 1;
-								{{ $input }}_valid_r <= 1'b1;
-								read_state <= 2'd0;
+								read_pointer <= read_pointer + 1;	
+								read_state <= 32'd{{ (inc $i) }};
 							end
+
 							{{- end }}
 							{{- end }}
-							{{- end }}
-						
 						endcase
 						
 						if (read_pointer >= (bminputs-1)) begin
+							read_state <= 32'd0;
 							read_pointer <= 0;
 							send <= 2'b10;
+							{{- if .Inputs }}
+							{{- $inputsLen := len .Inputs }}
+							{{- range $i, $input := .Inputs }}
+							{{ $input }}_valid_r <= 1'b1;
+							{{- end }}
+							{{- end }}
 						end
-					end
-
+					{{- end }}
 				end
 				else if (send == 2'b10) begin
 					 if (
@@ -463,23 +455,23 @@ const (
 							{{- $outputsLen := len .Outputs }}
 							{{- range $i, $output := .Outputs }}
 							{{- if ne (inc $i) $outputsLen }}
-							2'd{{ $i }}: begin
+							32'd{{ $i }}: begin
 								if ( {{ $output }}_valid && !{{ $output }}_received_r) begin
 									{{ $output }}_valid_r <= 1'b1;
 									{{ $output }}_received_r <= 1'b1;
 									output_stream_data_fifo[read_pointer_output] <= {{ $output }};
 									read_pointer_output <= read_pointer_output + 1;
-									out_read_state <= 2'd{{ (inc $i) }};
+									out_read_state <= 32'd{{ (inc $i) }};
 								end
 							end
 							{{- else }}
-							2'd{{ $i }}: begin
+							32'd{{ $i }}: begin
 								if ( {{ $output }}_valid && !{{ $output }}_received_r) begin
 									{{ $output }}_valid_r <= 1'b1;
 									{{ $output }}_received_r <= 1'b1;
 									output_stream_data_fifo[read_pointer_output] <= {{ $output }};
 									read_pointer_output <= read_pointer_output + 1;
-									out_read_state <= 2'd0;
+									out_read_state <= 32'd0;
 								end
 							end
 							{{- end }}
@@ -494,7 +486,7 @@ const (
 							{{- $outputsLen := len .Outputs }}
 							{{- range $i, $output := .Outputs }}
 							{{- if ne (inc $i) $outputsLen }}
-							2'd{{ $i }}: begin
+							32'd{{ $i }}: begin
 								if ( {{ $output }}_valid && !{{ $output }}_received_r) begin
 									{{ $output }}_valid_r <= 1'b1;
 									{{ $output }}_received_r <= 1'b1;
@@ -505,7 +497,7 @@ const (
 										output_stream_data_fifo[read_pointer_output][31:16] <= {{ $output }};
 									end
 									
-									out_read_state <= 2'd{{ (inc $i) }};
+									out_read_state <= 32'd{{ (inc $i) }};
 									
 									if (output_mutex == 2) begin
 										read_pointer_output <= read_pointer_output + 1;
@@ -517,7 +509,7 @@ const (
 								end
 							end
 							{{- else }}
-							2'd{{ $i }}: begin
+							32'd{{ $i }}: begin
 								if ( {{ $output }}_valid && !{{ $output }}_received_r) begin
 									{{ $output }}_valid_r <= 1'b1;
 									{{ $output }}_received_r <= 1'b1;
@@ -528,7 +520,7 @@ const (
 										output_stream_data_fifo[read_pointer_output][31:16] <= {{ $output }};
 									end
 									
-									out_read_state <= 2'd0;
+									out_read_state <= 32'd0;
 									
 									if (output_mutex == 2) begin
 										read_pointer_output <= read_pointer_output + 1;
