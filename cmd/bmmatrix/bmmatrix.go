@@ -59,6 +59,8 @@ func main() {
 		// panic("No neuron library path specified")
 	}
 
+	config.Params = make(map[string]interface{})
+
 	if *dataType != "" {
 		found := false
 		for _, tpy := range bmnumbers.AllTypes {

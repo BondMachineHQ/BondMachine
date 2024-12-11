@@ -1,130 +1,52 @@
 package bmmatrix
 
 const (
-	templateMult = `%section matrixmulel .romtext iomode:sync
-        entry _start    ; Entry point
+	templateMult = `
+{{- range $i := n 0 (rows .Mtx1) }}
+{{- range $j := n 0 (cols $.Mtx2) }}
+{{- range $k := n 0 (cols $.Mtx1) }}
+%section mult_{{ $i }}_{{ $j }}_{{ $k }} .romtext iomode:{{ $.Iomode }}
+	entry _start    ; Entry point
 _start:
-	rset	r1, 0 ; counter
-mainloop:
-	jz	r2, _start
-	mov	r3, ram:[r1]
+	mov	r1, {{"{{"}} .Params.typeprefix {{"}}"}}{{ index $.Mtx1 $i $k }}
+loop:
 	mov	r0, i0
-	{{"{{"}} .Params.multop {{"}}"}}	r0, r3
+	{{"{{"}} .Params.multop {{"}}"}}	r0, r1
 	mov	o0, r0
-	dec	r2
-	inc	r1
-	j mainloop
-	mov	ram:[r1], r0
+	j loop
 %endsection
 
-{{- range $i := n 0 .MatrixRows }}
-{{- range $j := n 0 $.MatrixRows }}
-%section matrixelement{{ $i }}_{{ $j }} .ramdata
-{{- range $k := n 0 $.NumGates }}
-	step{{ $k }} dd 0f{{ index (index (index $.MtxReal $k) $i) $j }}
-{{- end }}
-%endsection
+%meta cpdef	mult{{ $i }}_{{ $j }}_{{ $k }}	romcode: mult_{{ $i }}_{{ $j }}_{{ $k }}, execmode: ha, typeprefix:0f, multop:mult
+
+%meta iodef     toadd{{ $i }}_{{ $j }}_{{ $k }} type:io
+%meta ioatt	toadd{{ $i }}_{{ $j }}_{{ $k }} cp:mult{{ $i }}_{{ $j }}_{{ $k }}, type:output, index:0
+%meta ioatt	toadd{{ $i }}_{{ $j }}_{{ $k }} cp:add{{ $i }}_{{ $j }}, type:input, index:  {{ $k }}
+
+
+%meta iodef     fromin{{ $i }}_{{ $j }}_{{ $k }} type:io
+%meta ioatt	fromin{{ $i }}_{{ $j }}_{{ $k }} cp:mult{{ $i }}_{{ $j }}_{{ $k }}, type:input, index:0
+%meta ioatt	fromin{{ $i }}_{{ $j }}_{{ $k }} cp:bm, type:input, index: {{ sum (mult $j (cols $.Mtx2) ) $k }}
+
 {{ end }}
-{{- end }}
 
-
-%section matrixaddel .romtext iomode:sync
-        entry _start    ; Entry point
+%section add_{{ $i }}_{{ $j }} .romtext iomode:{{ $.Iomode }}
+	entry _start    ; Entry point
 _start:
 	clr	r1
-{{- range $i := n 0 .MatrixRows }}
-	mov	r0, i{{ $i }}
+{{- range $k := n 0 (cols $.Mtx1) }}
+	mov	r0, i{{ $k }}
 	{{"{{"}} .Params.addop {{"}}"}}	r1, r0
 {{- end }}
 	mov	o0, r1
 	j _start
 %endsection
 
-%section main .romtext iomode:sync
-	entry _start    ; Entry point
-_start:
+%meta cpdef	add{{ $i }}_{{ $j }}	romcode: add_{{ $i }}_{{ $j }}, execmode: ha, addop:add, typeprefix:0f
 
-	clr	r1
-{{- range $i := n 0 .MatrixRows }}
-	mov r0, i{{ $i }}
-	mov ram:[r1], r0
-	inc r1
-{{- end }}
-	rset	r2, {{ .NumGates }} ; the number of matrices
-mainloop:
-	jz	r2, endloop
-
-	clr r1
-{{- range $i := n 0 .MatrixRows }}
-	mov r0, ram:[r1]
-	mov o{{ sum $.MatrixRows $i }}, r0
-	inc r1
-{{- end }}
-
-	clr	r1
-{{- range $i := n 0 .MatrixRows }}
-	mov r0, i{{ sum $.MatrixRows $i }}
-	mov ram:[r1], r0
-	inc r1
-{{- end }}
-	dec r2
-	j mainloop
-
-endloop:
-	clr r1
-{{- range $i := n 0 .MatrixRows }}	
-	mov r0, ram:[r1]
-	mov o{{ $i }}, r0
-	inc r1
-{{- end }}
-	j _start
-%endsection
-
-%section mainram .ramdata
-{{- range $i := n 0 .MatrixRows }}
-        res{{ $i }} dd 0f0
-{{- end }}
-%endsection
-
-{{- range $i := n 0 .MatrixRows }}
-{{- range $j := n 0 $.MatrixRows }}
-%meta cpdef	mult{{ $i }}_{{ $j }}	romcode: matrixmulel, ramdata: matrixelement{{ $i }}_{{ $j }}, execmode: ha, multop: multf
-{{- end }}
-{{- end }}
-
-{{- range $i := n 0 .MatrixRows }}
-%meta cpdef	add{{ $i }}	romcode: matrixaddel, execmode: ha, addop: addf
-{{- end }}
-
-%meta cpdef	main	romcode: main, ramdata:mainram, execmode: ha
-
-{{- range $i := n 0 .MatrixRows }}
-{{- range $j := n 0 $.MatrixRows }}
-%meta ioatt	toadd{{ $i }}_{{ $j }}	cp: mult{{ $i }}_{{ $j }}, index:0, type:output
-%meta ioatt     toadd{{ $i }}_{{ $j }}	cp: add{{ $i }}, index:{{ $j }}, type:input
-{{- end }}
-{{- end }}
-
-{{- range $i := n 0 .MatrixRows }}
-{{- range $j := n 0 $.MatrixRows }}
-%meta ioatt     tomult{{ $i }}_{{ $j }}	cp: main, index:{{ sum $.MatrixRows $j }}, type:output
-%meta ioatt     tomult{{ $i }}_{{ $j }}	cp: mult{{ $i }}_{{ $j }}, index:0, type:input
-{{- end }}
-{{- end }}
-
-{{- range $i := n 0 .MatrixRows }}
-%meta ioatt     tomain{{ $i }}	cp: add{{ $i }}, index:0, type:output
-%meta ioatt     tomain{{ $i }}	cp: main, index:{{ sum $.MatrixRows $i }}, type:input
-{{- end }}
-
-{{- range $i := n 0 .MatrixRows }}
-%meta ioatt     bmi{{ $i }}	cp: main, index:{{ $i }}, type:input
-%meta ioatt     bmi{{ $i }}	cp: bm, index:{{ $i }}, type:input
-{{- end }}
-
-{{- range $i := n 0 .MatrixRows }}
-%meta ioatt     bmo{{ $i }}	cp: main, index:{{ $i }}, type:output
-%meta ioatt     bmo{{ $i }}	cp: bm, index:{{ $i }}, type:output
+%meta iodef     toout{{ $i }}_{{ $j }} type:io
+%meta ioatt	toout{{ $i }}_{{ $j }} cp:add{{ $i }}_{{ $j }}, type:output, index:0
+%meta ioatt	toout{{ $i }}_{{ $j }} cp:bm, type:output, index: {{ sum (mult $i (cols $.Mtx2) ) $j }}
+{{ end }}
 {{- end }}
 
 %meta bmdef	global registersize:32

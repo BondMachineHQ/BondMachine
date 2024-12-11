@@ -188,9 +188,12 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 				return nil
 			}
 
-			*env.basmCode += fmt.Sprintf("; entering MATRIXMULT with %s and %s\n", value0, value1)
+			// *env.basmCode += fmt.Sprintf("; entering MATRIXMULT with %s and %s\n", value0, value1)
 
 			templ := ev.createBasicTemplateData2M()
+
+			// TODO hardcode iomode
+			templ.Iomode = "async"
 
 			templ.Mtx1 = make([][]string, lInfo0.rows)
 			switch lInfo0.mType {
@@ -239,6 +242,7 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 					}
 				}
 			}
+			fmt.Println(templ)
 
 			switch in_prog.LibraryID {
 			case MYLIBID:
@@ -247,7 +251,6 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 					if debug {
 						fmt.Println("Processing MATRIXMULT")
 					}
-
 					if code, err := ev.ApplyTemplate2M(templ, "mult", templateMult); err == nil {
 						*env.basmCode += code
 					} else {
@@ -285,7 +288,7 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 					ev.error = err
 					return nil
 				} else {
-					*env.basmCode += fmt.Sprintf("; entering MATRIXCONST with %s\n", m)
+					// *env.basmCode += fmt.Sprintf("; entering MATRIXCONST with %s\n", m)
 					env.lists.ls[listId] = lInfo
 					result := new(mel3program.Mel3Program)
 					result.LibraryID = libraryId
@@ -331,7 +334,7 @@ func getMatrixData(programValue string, listId uint64) (string, listInfo, error)
 		cols, _ := strconv.Atoi(colsS)
 		lInfo := listInfo{listId: listId, listName: name, mType: MINPUT, rows: rows, cols: cols, values: nil}
 		// Replace in with ref
-		newM := "ref:" + in.FindStringSubmatch(m)[2] + ":" + in.FindStringSubmatch(m)[3]
+		newM := "in:" + name + ":" + rowsS + ":" + colsS
 		return newM, lInfo, nil
 	}
 	// Match a matrix json file (a file m exists in the filesystem)
@@ -379,9 +382,9 @@ func getMatrixData(programValue string, listId uint64) (string, listInfo, error)
 				}
 				var newM string
 				if rowM {
-					newM = fmt.Sprintf("ref:%d:%d", major, minor)
+					newM = fmt.Sprintf("rowmajor:%s", fileName)
 				} else {
-					newM = fmt.Sprintf("ref:%d:%d", minor, major)
+					newM = fmt.Sprintf("colmajor:%s", fileName)
 				}
 				return newM, lInfo, nil
 			}

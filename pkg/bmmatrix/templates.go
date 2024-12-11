@@ -9,15 +9,15 @@ import (
 
 type templateData1M struct {
 	Mtx     [][]float32
+	Iomode  string
 	funcMap template.FuncMap
 }
 
 type templateData2M struct {
-	Mtx1       [][]string
-	Mtx2       [][]string
-	MatrixRows int // Temp
-	NumGates   int // Temp
-	funcMap    template.FuncMap
+	Mtx1    [][]string
+	Mtx2    [][]string
+	Iomode  string
+	funcMap template.FuncMap
 }
 
 func (exp *BasmExporter) createBasicTemplateData1M() *templateData1M {
@@ -66,6 +66,12 @@ func getFuncMap() template.FuncMap {
 		},
 		"pow": func(a, b int) int {
 			return int(math.Pow(float64(a), float64(b)))
+		},
+		"rows": func(a [][]string) int {
+			return len(a)
+		},
+		"cols": func(a [][]string) int {
+			return len(a[0])
 		},
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {
 			if len(values)%2 != 0 {
