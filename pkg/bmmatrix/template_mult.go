@@ -16,7 +16,7 @@ loop:
 	j loop
 %endsection
 
-%meta cpdef	mult{{ $i }}_{{ $j }}_{{ $k }}	romcode: mult_{{ $i }}_{{ $j }}_{{ $k }}, execmode: ha, typeprefix:0f, multop:mult
+%meta cpdef	mult{{ $i }}_{{ $j }}_{{ $k }}	romcode: mult_{{ $i }}_{{ $j }}_{{ $k }}, execmode: ha, typeprefix:0f, multop:multf
 
 %meta iodef     toadd{{ $i }}_{{ $j }}_{{ $k }} type:io
 %meta ioatt	toadd{{ $i }}_{{ $j }}_{{ $k }} cp:mult{{ $i }}_{{ $j }}_{{ $k }}, type:output, index:0
@@ -25,7 +25,7 @@ loop:
 
 %meta iodef     fromin{{ $i }}_{{ $j }}_{{ $k }} type:io
 %meta ioatt	fromin{{ $i }}_{{ $j }}_{{ $k }} cp:mult{{ $i }}_{{ $j }}_{{ $k }}, type:input, index:0
-%meta ioatt	fromin{{ $i }}_{{ $j }}_{{ $k }} cp:bm, type:input, index: {{ sum (mult $j (cols $.Mtx2) ) $k }}
+%meta ioatt	fromin{{ $i }}_{{ $j }}_{{ $k }} cp:bm, type:input, index: {{ sum (mult $k (cols $.Mtx2) ) $j }}
 
 {{ end }}
 
@@ -41,7 +41,7 @@ _start:
 	j _start
 %endsection
 
-%meta cpdef	add{{ $i }}_{{ $j }}	romcode: add_{{ $i }}_{{ $j }}, execmode: ha, addop:add, typeprefix:0f
+%meta cpdef	add{{ $i }}_{{ $j }}	romcode: add_{{ $i }}_{{ $j }}, execmode: ha, addop:addf, typeprefix:0f
 
 %meta iodef     toout{{ $i }}_{{ $j }} type:io
 %meta ioatt	toout{{ $i }}_{{ $j }} cp:add{{ $i }}_{{ $j }}, type:output, index:0
