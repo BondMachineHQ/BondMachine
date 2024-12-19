@@ -16,7 +16,7 @@ loop:
 	j loop
 %endsection
 
-%meta cpdef	mult{{ $i }}_{{ $j }}_{{ $k }}	romcode: mult_{{ $i }}_{{ $j }}_{{ $k }}, execmode: ha, typeprefix:0f, multop:multf
+%meta cpdef	mult{{ $i }}_{{ $j }}_{{ $k }}	romcode: mult_{{ $i }}_{{ $j }}_{{ $k }}, execmode: ha, typeprefix:{{ $.TypePrefix }}, multop: {{ $.Multop }}
 
 %meta iodef     toadd{{ $i }}_{{ $j }}_{{ $k }} type:io
 %meta ioatt	toadd{{ $i }}_{{ $j }}_{{ $k }} cp:mult{{ $i }}_{{ $j }}_{{ $k }}, type:output, index:0
@@ -41,7 +41,7 @@ _start:
 	j _start
 %endsection
 
-%meta cpdef	add{{ $i }}_{{ $j }}	romcode: add_{{ $i }}_{{ $j }}, execmode: ha, addop:addf, typeprefix:0f
+%meta cpdef	add{{ $i }}_{{ $j }}	romcode: add_{{ $i }}_{{ $j }}, execmode: ha, typeprefix: {{ $.TypePrefix }}, addop: {{ $.Addop }}
 
 %meta iodef     toout{{ $i }}_{{ $j }} type:io
 %meta ioatt	toout{{ $i }}_{{ $j }} cp:add{{ $i }}_{{ $j }}, type:output, index:0
@@ -49,6 +49,6 @@ _start:
 {{ end }}
 {{- end }}
 
-%meta bmdef	global registersize:32
+%meta bmdef	global registersize: {{ .RegisterSize }}
 `
 )

@@ -8,16 +8,26 @@ import (
 )
 
 type templateData1M struct {
-	Mtx     [][]float32
-	Iomode  string
-	funcMap template.FuncMap
+	Mtx          [][]float32
+	Iomode       string
+	RegisterSize int
+	DataType     string
+	TypePrefix   string
+	Multop       string
+	Addop        string
+	funcMap      template.FuncMap
 }
 
 type templateData2M struct {
-	Mtx1    [][]string
-	Mtx2    [][]string
-	Iomode  string
-	funcMap template.FuncMap
+	Mtx1         [][]string
+	Mtx2         [][]string
+	Iomode       string
+	RegisterSize int
+	DataType     string
+	TypePrefix   string
+	Multop       string
+	Addop        string
+	funcMap      template.FuncMap
 }
 
 func (exp *BasmExporter) createBasicTemplateData1M() *templateData1M {

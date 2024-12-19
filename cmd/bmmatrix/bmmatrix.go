@@ -105,6 +105,10 @@ func main() {
 
 	mo := new(bmmatrix.MatrixOperations)
 	mo.RegisterSize = *registerSize
+	mo.DataType = *dataType
+	mo.TypePrefix = config.Params["typeprefix"].(string)
+	mo.Addop = config.Params["addop"].(string)
+	mo.Multop = config.Params["multop"].(string)
 
 	if *expression != "" {
 		mo.Expression = *expression

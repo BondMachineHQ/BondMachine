@@ -7,7 +7,7 @@ import (
 func (mo *MatrixOperations) RunEngine() error {
 
 	a := new(M3BasmMatrix)
-	var env interface{} = newExporterEnv()
+	var env interface{} = newExporterEnv(mo)
 	a.Mel3Object.Environment = env
 
 	var ep *mel.EvolutionParameters

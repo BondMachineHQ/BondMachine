@@ -23,8 +23,12 @@ type Config struct {
 
 type MatrixOperations struct {
 	RegisterSize int
+	DataType     string
+	TypePrefix   string
 	IOMode       uint8
 	Expression   string
+	Multop       string
+	Addop        string
 	Result       string
 	*Config
 }

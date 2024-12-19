@@ -39,14 +39,16 @@ type BasmExporter struct {
 
 type exporterEnv struct {
 	*lists
+	*MatrixOperations
 	listId   uint64
 	basmCode *string
 }
 
-func newExporterEnv() exporterEnv {
+func newExporterEnv(mo *MatrixOperations) exporterEnv {
 	result := new(exporterEnv)
 	l := new(lists)
 	l.ls = make(map[uint64]listInfo)
+	result.MatrixOperations = mo
 	result.lists = l
 	result.listId = 0
 	result.basmCode = new(string)
@@ -192,8 +194,17 @@ func (ev *BasmExporter) Visit(in_prog *mel3program.Mel3Program) mel3program.Mel3
 
 			templ := ev.createBasicTemplateData2M()
 
-			// TODO hardcode iomode
-			templ.Iomode = "async"
+			switch env.MatrixOperations.IOMode {
+			case ASYNC:
+				templ.Iomode = "async"
+			case SYNC:
+				templ.Iomode = "sync"
+			}
+
+			templ.TypePrefix = env.MatrixOperations.TypePrefix
+			templ.RegisterSize = env.MatrixOperations.RegisterSize
+			templ.Multop = env.MatrixOperations.Multop
+			templ.Addop = env.MatrixOperations.Addop
 
 			templ.Mtx1 = make([][]string, lInfo0.rows)
 			switch lInfo0.mType {
