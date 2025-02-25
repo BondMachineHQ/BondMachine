@@ -1,0 +1,4 @@
+%fragment multnum template:true resin:r0 resout:r0
+	rset	r1, {{.Params.number}}
+	{{.Params.multop}}	r0, r1
+%endfragment

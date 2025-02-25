@@ -1,0 +1,3 @@
+%fragment add template:true resin:r0:r1 resout:r0
+	{{.Params.addop}}	r0, r1
+%endfragment
