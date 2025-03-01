@@ -1,0 +1,9 @@
+[submodule "apps/flexpy"]
+	path = apps/flexpy
+	url = git@github.com:BondMachineHQ/flexpy.git
+[submodule "apps/simbatch"]
+	path = apps/simbatch
+	url = git@github.com:BondMachineHQ/simbatch.git
+[submodule "apps/bmhelper"]
+	path = apps/bmhelper
+	url = git@github.com:BondMachineHQ/bmhelper.git
