@@ -7,3 +7,6 @@
 [submodule "apps/bmhelper"]
 	path = apps/bmhelper
 	url = git@github.com:BondMachineHQ/bmhelper.git
+[submodule "apps/bmregression"]
+	path = apps/bmregression
+	url = git@github.com:BondMachineHQ/bmregression.git
