@@ -1,4 +1,3 @@
-;TODO
 ; addition of two real numbers passed as arguments
 ; r0 is the real part of the first number
 ; r1 is the real part of the second number
