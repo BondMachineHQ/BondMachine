@@ -1,4 +1,0 @@
-%fragment addnum template:true resin:r0 resout:r0
-	rset	r1, {{.Params.number}}
-	{{.Params.addop}}	r0, r1
-%endfragment
