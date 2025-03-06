@@ -1,8 +1,9 @@
-; TODO
-; addition of two real numbers one passed as an argument and the other as an immediate value
-; r0 is the real part of the argument
+; addition of an immaginary number passed as an argument and the other as a complex immediate value
+; r0 is the imaginary part of the number passed as an argument
 ; {{ .Params.numberreal }} is the real part of the immediate value
-%fragment addargimagnumfull template:true resin:r0 resout:r0:r1
-	mov r1, {{ .Params.numberreal }}
-	{{ .Params.addop }}	r0, r1
+; {{ .Params.numberimag }} is the imaginary part of the immediate value
+%fragment addargimagnumfull template:true template_setop:rset resin:r0 resout:r1:r0
+	{{ .Params.setop }} 	r2, {{ .Params.numberimag }}
+	{{ .Params.addop }} 	r0, r2
+	{{ .Params.setop }} 	r1, {{ .Params.numberreal }}
 %endfragment

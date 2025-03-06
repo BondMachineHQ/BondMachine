@@ -1,7 +1,8 @@
 ; TODO
-; addition of two real numbers passed as arguments
+; addition of a complex number passed as argument to a real number passed as argument
 ; r0 is the real part of the first number
-; r1 is the real part of the second number
-%fragment addargfullargreal template:true resin:r0:r1:r2 resout:r0:r1:r2:r3
-	{{ .Params.addop }}	r0, r1
+; r1 is the imaginary part of the first number
+; r2 is the real part of the second number
+%fragment addargfullargreal template:true resin:r0:r1:r2 resout:r0:r1
+	{{ .Params.addop }}	r0, r2
 %endfragment

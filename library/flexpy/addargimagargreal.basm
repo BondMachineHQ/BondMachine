@@ -1,7 +1,5 @@
-; TODO
-; addition of a real and an imaginary number passed as arguments
+; addition of an immaginary number passed as first argument and a real number passed as second argument
 ; r0 is the immaginary part of the first number
 ; r1 is the real part of the second number
-%fragment addargimagargreal template:true resin:r0:r1 resout:r0:r1:r2:r3
-	{{ .Params.addop }}	r0, r1
+%fragment addargimagargreal template:true resin:r0:r1 resout:r1:r0
 %endfragment

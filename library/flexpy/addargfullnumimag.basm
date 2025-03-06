@@ -1,8 +1,8 @@
-; TODO
-; addition of two real numbers one passed as an argument and the other as an immediate value
+; addition of a complex number passed as argument to an immediate immaginary number
 ; r0 is the real part of the argument
-; {{ .Params.numberreal }} is the real part of the immediate value
-%fragment addargfullnumimag template:true resin:r0:r1 resout:r0:r1
-	mov r1, {{ .Params.numberreal }}
-	{{ .Params.addop }}	r0, r1
+; r1 is the imaginary part of the argument
+; {{ .Params.numberimag }} is the immaginary part of the number to add
+%fragment addargfullnumimag template:true default_setop:rset resin:r0:r1 resout:r0:r1
+	{{ .Params.setop }}	r2, {{ .Params.numberreal }}
+	{{ .Params.addop }}	r1, r2
 %endfragment

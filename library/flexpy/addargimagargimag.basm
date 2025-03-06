@@ -1,4 +1,3 @@
-; TODO
 ; addition of two immaginary numbers passed as arguments
 ; r0 is the immaginary part of the first number
 ; r1 is the immaginary part of the second number
