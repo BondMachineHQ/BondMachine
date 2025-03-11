@@ -1,4 +1,3 @@
-; TODO
 ; addition of a complex number passed as argument to a real number passed as argument
 ; r0 is the real part of the first number
 ; r1 is the imaginary part of the first number

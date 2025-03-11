@@ -1,0 +1,4 @@
+; immaginary number
+%fragment numimag template:true default_setop:rset resout:r0
+	{{ .Params.setop }}	r0, {{ .Params.numberimag }}
+%endfragment
