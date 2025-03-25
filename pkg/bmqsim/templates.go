@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
+	"strings"
 	"text/template"
 )
 
@@ -160,6 +162,38 @@ func (sim *BmQSimulator) VerifyConditions(mode string) error {
 			}
 		}
 	case "seq_hardcoded_complex":
+	}
+	return nil
+}
+
+func (sim *BmQSimulator) ApplyTemplateHLS(flavor string, bundle string) error {
+	allTemplates := map[string]string{
+		"Makefile":       HLSMakefile,
+		"run_hls.tcl":    HLSRunHlsTcl,
+		"circuit.py":     HLSPythonPynq,
+		"src/circuit.cc": HLSCircuitCC,
+		"src/circuit.h":  HLSCircuitH,
+	}
+
+	templateData := sim.createBasicTemplateData()
+	for fileLoc, data := range allTemplates {
+		t, err := template.New("template").Funcs(templateData.funcMap).Parse(data)
+		if err != nil {
+			return err
+		}
+		var f bytes.Buffer
+		err = t.Execute(&f, *templateData)
+		if err != nil {
+			return err
+		}
+
+		filePath := fmt.Sprintf("%s/%s", bundle, fileLoc)
+
+		// Create directory if it doesn't exist
+		os.MkdirAll(strings.Join(strings.Split(filePath, "/")[:len(strings.Split(filePath, "/"))-1], "/"), 0755)
+
+		// Output to file
+		os.WriteFile(filePath, f.Bytes(), 0644)
 	}
 	return nil
 }
