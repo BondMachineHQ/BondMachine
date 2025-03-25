@@ -350,7 +350,7 @@ func main() {
 		} else if *hardwareFlavor != "" {
 			if *hardwareFlavor == "standard" {
 				if *bundleDir != "" {
-					if err := sim.ApplyTemplateHLS(*hardwareFlavor, *bundleDir); err != nil {
+					if err := sim.ApplyTemplateBundle(*hardwareFlavor, *bundleDir); err != nil {
 						bld.Alert(err)
 					}
 				} else {

@@ -166,12 +166,12 @@ func (sim *BmQSimulator) VerifyConditions(mode string) error {
 	return nil
 }
 
-func (sim *BmQSimulator) ApplyTemplateHLS(flavor string, bundle string) error {
+func (sim *BmQSimulator) ApplyTemplateBundle(flavor string, bundle string) error {
 	allTemplates := map[string]string{
 		"Makefile":       HLSMakefile,
 		"run_hls.tcl":    HLSRunHlsTcl,
-		"circuit.py":     HLSPythonPynq,
-		"src/circuit.cc": HLSCircuitCC,
+		"circuit.py":     HLSPythonPynqReal,
+		"src/circuit.cc": HLSCircuitCCReal,
 		"src/circuit.h":  HLSCircuitH,
 	}
 

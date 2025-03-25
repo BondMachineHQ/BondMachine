@@ -1,7 +1,7 @@
 package bmqsim
 
 const (
-	HLSPythonPynq = `import pynq
+	HLSPythonPynqReal = `import pynq
 import numpy as np 
 from pynq import allocate
 import time
@@ -12,13 +12,13 @@ print(keys)
 
 
 circuit = ol.circuit_1
-dimension = 4
+dimension = {{ .MatrixRows }}
 
 
 z_buf = allocate(shape=(dimension) , dtype=np.float32)
-
-z_buf[:] = np.asarray([1, 0, 0, 0], dtype=np.float32)
-
+z_buf[0] = 1.0
+for i in range(1, dimension):
+    z_buf[i] = 0.0
 
 start_fpga = time.time()
 
@@ -31,7 +31,6 @@ print("\nRisultato FPGA:  " , z_buf, "\n")
 end_fpga = time.time()
 fpga_time = end_fpga - start_fpga
 print(f"FPGA completed in {fpga_time:.6f} seconds.\n")
-
 
 try:
     ol.free()
