@@ -10,3 +10,9 @@
 [submodule "apps/bmregression"]
 	path = apps/bmregression
 	url = git@github.com:BondMachineHQ/bmregression.git
+[submodule "apps/flexpytester"]
+	path = apps/flexpytester
+	url = git@github.com:BondMachineHQ/flexpytester.git
+[submodule "apps/pybondmachine"]
+	path = apps/pybondmachine
+	url = git@github.com:BondMachineHQ/pybondmachine.git
