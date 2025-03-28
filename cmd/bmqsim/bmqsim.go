@@ -31,7 +31,7 @@ func (i *qbitSwaps) Set(value string) error {
 var swaps qbitSwaps
 
 var verbose = flag.Bool("v", false, "Verbose")
-var debug = flag.Bool("d", false, "Verbose")
+var debug = flag.Bool("d", false, "Debug")
 
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
@@ -53,7 +53,7 @@ var softwareSimulationInput = flag.String("software-simulation-input", "", "Soft
 var softwareSimulationOutput = flag.String("software-simulation-output", "", "Software simulation mode output file, if not provided the output will be printed to stdout")
 
 // 5
-var buildMatrixSeqHLS = flag.Bool("build-matrix-seq-hls", false, "Build a matrix sequence HLS code")
+var buildMatrixSeqHLS = flag.Bool("build-matrix-seq-hls", false, "Build a matrix sequence HLS code with hardcoded quantum circuit")
 
 // Common options
 
@@ -344,20 +344,38 @@ func main() {
 
 	if *buildMatrixSeqHLS {
 		// Build a matrix sequence HLS code
+		modeTags := []string{"real", "complex"}
+
 		if *hardwareFlavorList {
 			// List of available hardware flavors for the selected operating mode
-			fmt.Println("standard")
+			for t := range bmqsim.HLSFlavors {
+				flavorTags := bmqsim.HLSFlavorsTags[t]
+				for _, tag := range modeTags {
+					if bmqsim.StringInSlice(tag, flavorTags) {
+						fmt.Println(t)
+					}
+				}
+			}
 		} else if *hardwareFlavor != "" {
-			if *hardwareFlavor == "standard" {
-				if *bundleDir != "" {
-					if err := sim.ApplyTemplateBundle(*hardwareFlavor, *bundleDir); err != nil {
-						bld.Alert(err)
+			// The output of this mode is a bundle directory
+			if *bundleDir == "" {
+				bld.Alert("Bundle directory must be provided")
+				return
+			}
+			if startBuilding {
+				if _, ok := bmqsim.HLSFlavors[*hardwareFlavor]; ok {
+					if sim.VerifyConditions(*hardwareFlavor) == nil {
+						if err := sim.ApplyTemplateBundle(*hardwareFlavor, *bundleDir); err != nil {
+							bld.Alert(err)
+						}
+					} else {
+						bld.Alert("Hardware flavor not compatible with the quantum circuit")
 					}
 				} else {
-					bld.Alert("Bundle directory must be provided")
+					bld.Alert("Hardware flavor not found")
 				}
 			} else {
-				bld.Alert("Hardware flavor not found")
+				bld.Alert("No quantum circuit to build the matrix sequence")
 			}
 		} else {
 			bld.Alert("Hardware flavor must be selected")

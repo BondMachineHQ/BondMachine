@@ -10,6 +10,11 @@ import (
 	"text/template"
 )
 
+const (
+	HLSRealBundle = uint8(0) + iota
+	HLSComplexBundle
+)
+
 // Modes:
 // seq_hardcoded
 // seq
@@ -43,6 +48,16 @@ var AppFlavorsTags = map[string][]string{
 	"c_pynqapi_complex":   {"complex"},
 	"cpp_opencl_real":     {"real"},
 	"cpp_opencl_complex":  {"complex"},
+}
+
+var HLSFlavors = map[string]uint8{
+	"seq_hardcoded_real":    HLSRealBundle,
+	"seq_hardcoded_complex": HLSComplexBundle,
+}
+
+var HLSFlavorsTags = map[string][]string{
+	"seq_hardcoded_real":    {"real"},
+	"seq_hardcoded_complex": {"complex"},
 }
 
 type templateData struct {
@@ -167,12 +182,26 @@ func (sim *BmQSimulator) VerifyConditions(mode string) error {
 }
 
 func (sim *BmQSimulator) ApplyTemplateBundle(flavor string, bundle string) error {
-	allTemplates := map[string]string{
-		"Makefile":       HLSMakefile,
-		"run_hls.tcl":    HLSRunHlsTcl,
-		"circuit.py":     HLSPythonPynqReal,
-		"src/circuit.cc": HLSCircuitCCReal,
-		"src/circuit.h":  HLSCircuitH,
+	var allTemplates map[string]string
+	switch flavor {
+	case "seq_hardcoded_real":
+		allTemplates = map[string]string{
+			"Makefile":       HLSMakefile,
+			"run_hls.tcl":    HLSRunHlsTcl,
+			"circuit.py":     HLSPythonPynqReal,
+			"src/circuit.cc": HLSCircuitCCReal,
+			"src/circuit.h":  HLSCircuitH,
+		}
+	case "seq_hardcoded_complex":
+		allTemplates = map[string]string{
+			"Makefile":       HLSMakefile,
+			"run_hls.tcl":    HLSRunHlsTcl,
+			"circuit.py":     HLSPythonPynqComplex,
+			"src/circuit.cc": HLSCircuitCCComplex,
+			"src/circuit.h":  HLSCircuitH,
+		}
+	default:
+		return fmt.Errorf("unsupported flavor: %s", flavor)
 	}
 
 	templateData := sim.createBasicTemplateData()
