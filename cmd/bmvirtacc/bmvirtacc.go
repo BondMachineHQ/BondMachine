@@ -12,7 +12,7 @@ import (
 )
 
 var verbose = flag.Bool("v", false, "Verbose")
-var debug = flag.Bool("d", false, "Verbose")
+var debug = flag.Bool("d", false, "Debug")
 
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
