@@ -81,6 +81,8 @@ func (d Float32) ShowInstructions() map[string]string {
 	result["multop"] = "multf"
 	result["divop"] = "divf"
 	result["addop"] = "addf"
+	// Temporary
+	result["powop"] = "multf"
 	return result
 }
 

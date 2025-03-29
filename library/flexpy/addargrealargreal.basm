@@ -1,0 +1,6 @@
+; addition of two real numbers passed as arguments
+; r0 is the real part of the first number
+; r1 is the real part of the second number
+%fragment addargrealargreal template:true resin:r0:r1 resout:r0
+	{{ .Params.addop }}	r0, r1
+%endfragment

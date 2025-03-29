@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -25,6 +26,8 @@ var useFiles = flag.Bool("use-files", false, "Load files instead of command line
 var serve = flag.Bool("serve", false, "Serve as REST API")
 
 var getPrefix = flag.String("get-prefix", "", "Get prefix from type")
+var getInstructions = flag.String("get-instructions", "", "Get hardware instructions from type")
+var getSize = flag.String("get-size", "", "Get size from type")
 var OmitPrefix = flag.Bool("omit-prefix", false, "Omit prefix")
 
 // Custom types
@@ -53,6 +56,28 @@ func main() {
 			log.Fatal("Error: Unknown type")
 		} else {
 			fmt.Println(v.ShowPrefix())
+		}
+	} else if *getInstructions != "" {
+		if _, err := bmnumbers.EventuallyCreateType(*getInstructions, nil); err != nil {
+			log.Fatal(err)
+		}
+		if v := bmnumbers.GetType(*getInstructions); v == nil {
+			log.Fatal("Error: Unknown type")
+		} else {
+			if instructions, err := json.Marshal(v.ShowInstructions()); err != nil {
+				log.Fatal(err)
+			} else {
+				fmt.Println(string(instructions))
+			}
+		}
+	} else if *getSize != "" {
+		if _, err := bmnumbers.EventuallyCreateType(*getSize, nil); err != nil {
+			log.Fatal(err)
+		}
+		if v := bmnumbers.GetType(*getSize); v == nil {
+			log.Fatal("Error: Unknown type")
+		} else {
+			fmt.Println(v.GetSize())
 		}
 	} else if *serve {
 		bmnumbers.Serve(conf)

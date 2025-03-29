@@ -1,0 +1,6 @@
+; addition of a real number passed as an argument and an immaginary number passed as an immediate value
+; r0 is the real part of the argument
+; {{ .Params.numberimag }} is the imaginary part of the immediate value
+%fragment addargrealnumimag template:true default_setop:rset resin:r0 resout:r0:r1
+	{{ .Params.setop }} r1, {{ .Params.numberimag }}
+%endfragment

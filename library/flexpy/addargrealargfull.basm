@@ -1,0 +1,7 @@
+; addition of a real and a complex number passed as arguments
+; r0 is the real part of the first number
+; r1 is the real part of the second number
+; r2 is the imaginary part of the second number
+%fragment addargrealargfull template:true resin:r0:r1:r2 resout:r0:r2
+	{{ .Params.addop }}	r0, r1
+%endfragment
