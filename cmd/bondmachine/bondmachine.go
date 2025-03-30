@@ -876,6 +876,7 @@ func main() {
 
 			}
 
+			// Build the simulation VM
 			vm := new(bondmachine.VM)
 			vm.Bmach = bmach
 			err := vm.Init()
@@ -941,12 +942,23 @@ func main() {
 
 			var oldRecordC *[]string
 
+			// Main simulation loop, tick by tick
 			for i := uint64(0); i < uint64(*simInteractions); i++ {
+
+				// Manage the valid/recv states og the inputs
+				for inIdx, inRecv := range vm.InputsRecv {
+					if inRecv {
+						vm.InputsValid[inIdx] = false
+					}
+				}
 
 				// This will get actions eventually to do on this tick
 				if act, exist_actions := sdrive.AbsSet[i]; exist_actions {
 					for k, val := range act {
 						*sdrive.Injectables[k] = val
+						if inIdx, ok := sdrive.NeedValid[k]; ok {
+							vm.InputsValid[inIdx] = true
+						}
 					}
 				}
 
@@ -966,6 +978,15 @@ func main() {
 
 				result, err := vm.Step(sconfig)
 				check(err)
+
+				// Manage the valid/recv states og the outputs
+				for outIdx, outValid := range vm.OutputsValid {
+					if outValid {
+						vm.OutputsRecv[outIdx] = true
+					} else {
+						vm.OutputsRecv[outIdx] = false
+					}
+				}
 
 				fmt.Print(result)
 
@@ -1170,8 +1191,24 @@ func main() {
 					}
 				}
 
+				// Manage the valid/recv states og the inputs
+				for inIdx, inRecv := range vm.InputsRecv {
+					if inRecv {
+						vm.InputsValid[inIdx] = false
+					}
+				}
+
 				_, err := vm.Step(sconfig)
 				check(err)
+
+				// Manage the valid/recv states og the outputs
+				for outIdx, outValid := range vm.OutputsValid {
+					if outValid {
+						vm.OutputsRecv[outIdx] = true
+					} else {
+						vm.OutputsRecv[outIdx] = false
+					}
+				}
 
 				if *emu_interactions != 0 {
 					if *verbose {
