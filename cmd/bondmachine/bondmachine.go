@@ -945,7 +945,7 @@ func main() {
 			// Main simulation loop, tick by tick
 			for i := uint64(0); i < uint64(*simInteractions); i++ {
 
-				// Manage the valid/recv states og the inputs
+				// Manage the valid/recv states of the inputs
 				for inIdx, inRecv := range vm.InputsRecv {
 					if inRecv {
 						vm.InputsValid[inIdx] = false
