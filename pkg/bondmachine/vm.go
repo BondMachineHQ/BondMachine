@@ -539,8 +539,10 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 					if ipos == -1 {
 						ipos = len(inj)
 						inj = append(inj, loc)
-						if regexp.MustCompile("^i(?P<input>[0-9]+)$").MatchString(rule.Object) {
-							inIdxS := regexp.MustCompile("^i(?P<input>[0-9]+)$").ReplaceAllString(rule.Object, "${input}")
+
+						re := regexp.MustCompile("^i(?P<input>[0-9]+)$")
+						if re.MatchString(rule.Object) {
+							inIdxS := re.ReplaceAllString(rule.Object, "${input}")
 							inIdx, err := strconv.Atoi(inIdxS)
 							if err != nil {
 								return err
@@ -636,6 +638,7 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 	}
 
 	sd.Injectables = inj
+	sd.NeedValid = needValid
 	sd.AbsSet = absset
 	sd.PerSet = perset
 	return nil
