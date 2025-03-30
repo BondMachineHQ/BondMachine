@@ -1191,7 +1191,7 @@ func main() {
 					}
 				}
 
-				// Manage the valid/recv states og the inputs
+				// Manage the valid/recv states of the inputs
 				for inIdx, inRecv := range vm.InputsRecv {
 					if inRecv {
 						vm.InputsValid[inIdx] = false
