@@ -979,7 +979,7 @@ func main() {
 				result, err := vm.Step(sconfig)
 				check(err)
 
-				// Manage the valid/recv states og the outputs
+				// Manage the valid/recv states of the outputs
 				for outIdx, outValid := range vm.OutputsValid {
 					if outValid {
 						vm.OutputsRecv[outIdx] = true
