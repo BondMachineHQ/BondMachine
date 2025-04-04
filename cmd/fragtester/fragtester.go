@@ -11,10 +11,10 @@ import (
 var verbose = flag.Bool("v", false, "Verbose")
 var debug = flag.Bool("d", false, "Debug")
 
-var registerSize = flag.Int("register-size", 32, "Number of bits per register (n-bit)")
 var dataType = flag.String("data-type", "float32", "bmnumbers data types")
 
 var saveBasm = flag.String("save-basm", "", "Create a basm file")
+var saveExpression = flag.String("save-expression", "", "Create a expression file")
 
 var neuronLibPath = flag.String("neuron-lib-path", "", "Path to the neuron library to use")
 var fragmentFile = flag.String("fragment-file", "", "Name of the fragment file")
@@ -24,14 +24,17 @@ func init() {
 	if *saveBasm == "" {
 		*saveBasm = "out.basm"
 	}
+	if *saveExpression == "" {
+		*saveExpression = "expression.py"
+	}
 }
 
 func main() {
 
-	config := fragtester.NewConfig()
+	ft := fragtester.NewFragTester()
 
 	if *neuronLibPath != "" {
-		config.NeuronLibPath = *neuronLibPath
+		ft.NeuronLibPath = *neuronLibPath
 	} else {
 		panic("No neuron library path specified")
 	}
@@ -41,11 +44,13 @@ func main() {
 		for _, tpy := range bmnumbers.AllTypes {
 			if tpy.GetName() == *dataType {
 				for opType, opName := range tpy.ShowInstructions() {
-					config.Params[opType] = opName
+					ft.Params[opType] = opName
+					ft.OpString += ", " + opType + ":" + opName
 				}
-				config.DataType = *dataType
-				config.TypePrefix = tpy.ShowPrefix()
-				config.Params["typeprefix"] = tpy.ShowPrefix()
+				ft.DataType = *dataType
+				ft.TypePrefix = tpy.ShowPrefix()
+				ft.Params["typeprefix"] = tpy.ShowPrefix()
+				ft.RegisterSize = tpy.GetSize()
 				found = true
 				break
 			}
@@ -56,11 +61,13 @@ func main() {
 					for _, tpy := range bmnumbers.AllTypes {
 						if tpy.GetName() == *dataType {
 							for opType, opName := range tpy.ShowInstructions() {
-								config.Params[opType] = opName
+								ft.Params[opType] = opName
+								ft.OpString += ", " + opType + ":" + opName
 							}
-							config.DataType = *dataType
-							config.TypePrefix = tpy.ShowPrefix()
-							config.Params["typeprefix"] = tpy.ShowPrefix()
+							ft.DataType = *dataType
+							ft.TypePrefix = tpy.ShowPrefix()
+							ft.Params["typeprefix"] = tpy.ShowPrefix()
+							ft.RegisterSize = tpy.GetSize()
 							break
 						}
 					}
@@ -73,7 +80,7 @@ func main() {
 			}
 		}
 	} else {
-		if config.DataType == "" {
+		if ft.DataType == "" {
 			panic("No data type specified")
 		}
 	}
@@ -83,15 +90,27 @@ func main() {
 		if file, err := os.ReadFile(*neuronLibPath + "/" + *fragmentFile); err != nil {
 			panic(err)
 		} else {
-			config.AnalyzeFragment(string(file))
+			ft.AnalyzeFragment(string(file))
 		}
 	} else {
 		panic("No fragment file specified")
 	}
 
+	if !ft.Valid {
+		os.Exit(1)
+	}
+
 	if *saveBasm != "" {
-		if basmFile, err := config.WriteBasm(); err == nil {
+		if basmFile, err := ft.WriteBasm(); err == nil {
 			os.WriteFile(*saveBasm, []byte(basmFile), 0644)
+		} else {
+			panic(err)
+		}
+	}
+
+	if *saveExpression != "" {
+		if expressionFile, err := ft.WriteSympy(); err == nil {
+			os.WriteFile(*saveExpression, []byte(expressionFile), 0644)
 		} else {
 			panic(err)
 		}
