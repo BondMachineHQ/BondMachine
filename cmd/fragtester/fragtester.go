@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/fragtester"
@@ -12,6 +13,10 @@ var verbose = flag.Bool("v", false, "Verbose")
 var debug = flag.Bool("d", false, "Debug")
 
 var dataType = flag.String("data-type", "float32", "bmnumbers data types")
+
+var describe = flag.Bool("describe", false, "Describe the fragment without running it")
+
+var sequence = flag.Int("seq", 0, "Sequence to run")
 
 var saveBasm = flag.String("save-basm", "", "Create a basm file")
 var saveExpression = flag.String("save-expression", "", "Create a expression file")
@@ -32,6 +37,13 @@ func init() {
 func main() {
 
 	ft := fragtester.NewFragTester()
+
+	if *verbose {
+		ft.Verbose = true
+	}
+	if *debug {
+		ft.Debug = true
+	}
 
 	if *neuronLibPath != "" {
 		ft.NeuronLibPath = *neuronLibPath
@@ -98,6 +110,16 @@ func main() {
 
 	if !ft.Valid {
 		os.Exit(1)
+	}
+
+	if *describe {
+		ft.DescribeFragment()
+		os.Exit(0)
+	}
+
+	seq := ft.Sequences()
+	if *sequence >= seq {
+		panic("Invalid sequence: " + strconv.Itoa(*sequence))
 	}
 
 	if *saveBasm != "" {
