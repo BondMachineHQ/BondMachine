@@ -20,6 +20,7 @@ var sequence = flag.Int("seq", 0, "Sequence to run")
 
 var saveBasm = flag.String("save-basm", "", "Create a basm file")
 var saveExpression = flag.String("save-expression", "", "Create a expression file")
+var saveStatistics = flag.String("save-statistics", "", "Create a statistics file")
 
 var neuronLibPath = flag.String("neuron-lib-path", "", "Path to the neuron library to use")
 var fragmentFile = flag.String("fragment-file", "", "Name of the fragment file")
@@ -31,6 +32,9 @@ func init() {
 	}
 	if *saveExpression == "" {
 		*saveExpression = "expression.py"
+	}
+	if *saveStatistics == "" {
+		*saveStatistics = "statistics.json"
 	}
 }
 
@@ -122,6 +126,8 @@ func main() {
 		panic("Invalid sequence: " + strconv.Itoa(*sequence))
 	}
 
+	ft.ApplySequence(*sequence)
+
 	if *saveBasm != "" {
 		if basmFile, err := ft.WriteBasm(); err == nil {
 			os.WriteFile(*saveBasm, []byte(basmFile), 0644)
@@ -133,6 +139,14 @@ func main() {
 	if *saveExpression != "" {
 		if expressionFile, err := ft.WriteSympy(); err == nil {
 			os.WriteFile(*saveExpression, []byte(expressionFile), 0644)
+		} else {
+			panic(err)
+		}
+	}
+
+	if *saveStatistics != "" {
+		if statisticsFile, err := ft.WriteStatistics(); err == nil {
+			os.WriteFile(*saveStatistics, []byte(statisticsFile), 0644)
 		} else {
 			panic(err)
 		}

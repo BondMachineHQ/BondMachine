@@ -15,10 +15,12 @@ type FragTester struct {
 	Params        map[string]string
 	Ranges        map[string][]float32
 	Instances     map[string][]string
+	Vars          []string
 	OpString      string
 	Debug         bool
 	Verbose       bool
 	Name          string
+	NameSuffix    string
 	Inputs        []string
 	Outputs       []string
 	Sympy         string
@@ -33,10 +35,12 @@ func NewFragTester() *FragTester {
 		Params:        make(map[string]string),
 		Ranges:        make(map[string][]float32),
 		Instances:     make(map[string][]string),
+		Vars:          make([]string, 0),
 		OpString:      "",
 		Debug:         false,
 		Verbose:       false,
 		Name:          "",
+		NameSuffix:    "",
 		Inputs:        make([]string, 0),
 		Outputs:       make([]string, 0),
 		Sympy:         "",
@@ -65,6 +69,7 @@ func (ft *FragTester) AnalyzeFragment(fragment string) error {
 			for i := fromF; i < toF; i += stepF {
 				ft.Ranges[param] = append(ft.Ranges[param], float32(i))
 			}
+			ft.Vars = append(ft.Vars, param)
 			continue
 		}
 		re = regexp.MustCompile(`^;fragtester\s+instance\s+(?P<param>\w+)\s+(?P<seq>\S+)$`)
@@ -79,6 +84,7 @@ func (ft *FragTester) AnalyzeFragment(fragment string) error {
 				}
 				ft.Instances[param] = append(ft.Instances[param], v)
 			}
+			ft.Vars = append(ft.Vars, param)
 			continue
 		}
 		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resin>resin:[\w:]+).+(?P<resout>resout:[\w:]+)$`)
@@ -112,9 +118,61 @@ func (ft *FragTester) Sequences() int {
 	return seq
 }
 
+func (ft *FragTester) ApplySequence(seq int) {
+	rank := len(ft.Ranges) + len(ft.Instances)
+	shape := make([]int, rank)
+	for i, v := range ft.Vars {
+		if _, ok := ft.Ranges[v]; ok {
+			shape[i] = len(ft.Ranges[v])
+		}
+		if _, ok := ft.Instances[v]; ok {
+			shape[i] = len(ft.Instances[v])
+		}
+	}
+	// fmt.Println("Shape:", shape)
+	pos := make([]int, rank)
+	for i := range rank {
+		pos[i] = 0
+	}
+	for i := 0; i < seq; i++ {
+		// fmt.Println("Pos:", pos)
+		ft.nextPos(&pos, &shape)
+	}
+
+	for i, v := range ft.Vars {
+		if _, ok := ft.Ranges[v]; ok {
+			ft.Params[v] = fmt.Sprintf("%f", ft.Ranges[v][pos[i]])
+			ft.OpString += fmt.Sprintf(", %s:%s", v, ft.Params[v])
+		}
+		if _, ok := ft.Instances[v]; ok {
+			ft.Params[v] = ft.Instances[v][pos[i]]
+			ft.OpString += fmt.Sprintf(", %s:%s", v, ft.Params[v])
+			ft.NameSuffix += fmt.Sprintf("-%s-%s", v, ft.Params[v])
+		}
+	}
+	// fmt.Println("Params:", ft.Params)
+}
+
+func (ft *FragTester) nextPos(pos *[]int, shape *[]int) {
+	var next int
+	for next = 0; next < len(*pos); next++ {
+		if (*pos)[next] < (*shape)[next]-1 {
+			break
+		}
+	}
+	if next == len(*pos) {
+		return
+	}
+	(*pos)[next]++
+	for i := 0; i < next; i++ {
+		(*pos)[i] = 0
+	}
+}
+
 func (ft *FragTester) DescribeFragment() {
 	fmt.Printf("Name: %s\n", ft.Name)
 	fmt.Printf("Sequences: %d\n", ft.Sequences())
+	fmt.Println("Vars:", strings.Join(ft.Vars, ", "))
 	fmt.Printf("Ranges:\n")
 	for param, rng := range ft.Ranges {
 		fmt.Printf("  %s: ", param)
@@ -163,5 +221,10 @@ func (ft *FragTester) WriteBasm() (string, error) {
 func (ft *FragTester) WriteSympy() (string, error) {
 	result := ""
 	result += ft.Sympy
+	return result, nil
+}
+
+func (ft *FragTester) WriteStatistics() (string, error) {
+	result := "{\"" + ft.Name + ft.NameSuffix + "\": 1}\n"
 	return result, nil
 }
