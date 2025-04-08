@@ -65,6 +65,7 @@ func main() {
 				}
 				ft.DataType = *dataType
 				ft.TypePrefix = tpy.ShowPrefix()
+				ft.OpString += ", prefix:" + tpy.ShowPrefix()
 				ft.Params["typeprefix"] = tpy.ShowPrefix()
 				ft.RegisterSize = tpy.GetSize()
 				found = true
@@ -82,6 +83,7 @@ func main() {
 							}
 							ft.DataType = *dataType
 							ft.TypePrefix = tpy.ShowPrefix()
+							ft.OpString += ", prefix:" + tpy.ShowPrefix()
 							ft.Params["typeprefix"] = tpy.ShowPrefix()
 							ft.RegisterSize = tpy.GetSize()
 							break

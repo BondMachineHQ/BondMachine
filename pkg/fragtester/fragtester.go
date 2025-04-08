@@ -170,7 +170,28 @@ func (ft *FragTester) nextPos(pos *[]int, shape *[]int) {
 }
 
 func (ft *FragTester) DescribeFragment() {
-	fmt.Printf("Name: %s\n", ft.Name)
+	keyColor := yellow
+	fmt.Printf(keyColor("Name")+": %s\n", ft.Name)
+	fmt.Printf(keyColor("Register size")+": %d\n", ft.RegisterSize)
+	fmt.Printf(keyColor("Data type")+": %s\n", ft.DataType)
+	fmt.Printf(keyColor("Type prefix")+": %s\n", ft.TypePrefix)
+	fmt.Printf(keyColor("Params") + ":\n")
+	for param, value := range ft.Params {
+		fmt.Printf("  %s: ", param)
+		if strings.Contains(value, ",") {
+			for i, v := range strings.Split(value, ",") {
+				v = strings.TrimSpace(v)
+				if i == len(strings.Split(value, ","))-1 {
+					fmt.Printf("%s", v)
+				} else {
+					fmt.Printf("%s, ", v)
+				}
+			}
+		} else {
+			fmt.Printf("%s", value)
+		}
+		fmt.Printf("\n")
+	}
 	fmt.Printf("Sequences: %d\n", ft.Sequences())
 	fmt.Println("Vars:", strings.Join(ft.Vars, ", "))
 	fmt.Printf("Ranges:\n")
@@ -199,7 +220,12 @@ func (ft *FragTester) DescribeFragment() {
 	}
 	fmt.Printf("Inputs: %s\n", strings.Join(ft.Inputs, ", "))
 	fmt.Printf("Outputs: %s\n", strings.Join(ft.Outputs, ", "))
-	fmt.Printf("Sympy:\n", ft.Sympy, "\n")
+	fmt.Print("Sympy:\n")
+	for _, line := range strings.Split(ft.Sympy, "\n") {
+		if line != "" {
+			fmt.Printf("  %s\n", line)
+		}
+	}
 }
 
 func (ft *FragTester) WriteBasm() (string, error) {
@@ -219,9 +245,11 @@ func (ft *FragTester) WriteBasm() (string, error) {
 }
 
 func (ft *FragTester) WriteSympy() (string, error) {
-	result := ""
-	result += ft.Sympy
-	return result, nil
+	if result, err := ft.ApplyTemplate(); err != nil {
+		return "", err
+	} else {
+		return result, nil
+	}
 }
 
 func (ft *FragTester) WriteStatistics() (string, error) {

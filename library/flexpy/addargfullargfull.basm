@@ -1,5 +1,7 @@
-;fragtester range numberreal arange(-5,5,2)
-;fragtester instance numberreal2 4,5,6,7
+;fragtester
+;nofragtester range numberreal arange(-5,5,2)
+;nofragtester instance numberreal2 4,5,6,7
+;nofragtester instance nfumberreal2 4,5,6,7
 ;sympy from sympy import *
 ;sympy x = Symbol('x', real=False)
 ;sympy y = Symbol('y', real=False)
