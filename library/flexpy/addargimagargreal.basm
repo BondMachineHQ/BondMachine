@@ -1,3 +1,15 @@
+;fragtester
+;sympy from sympy import *
+;sympy x = Symbol('x', real=True)
+;sympy y = Symbol('y', real=True)
+;sympy symbols = [x,y]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
+;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = y + x * I
 ; addition of an immaginary number passed as first argument and a real number passed as second argument
 ; r0 is the immaginary part of the first number
 ; r1 is the real part of the second number
