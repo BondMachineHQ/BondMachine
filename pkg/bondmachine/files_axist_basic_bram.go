@@ -28,6 +28,7 @@ const (
     /*
         NOW START THE AXIS SLAVE SECTION
     */
+
  
     localparam samples = {{ .Samples }}; // number of samples that I expect from the client
     localparam bminputs = {{ .InputNum }};  // number of bminputs for each sample (or bminputs)
@@ -121,20 +122,21 @@ const (
 	      end
 	end 
  
- 
+
+	localparam NUM_WORDS = NUMBER_OF_INPUTS / (C_S00_AXIS_TDATA_WIDTH / precision);
 	assign fifo_wren = s00_axis_tvalid && axis_tready;
  
 	(* ram_style = "block" *)
-    reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo [0 : (NUMBER_OF_INPUTS/precision)];
+    reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo [0 : NUM_WORDS - 1];
  
 	(* ram_style = "block" *)
-    reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo_backup [0 : (NUMBER_OF_INPUTS/precision)];
+    reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo_backup [0 : NUM_WORDS - 1];
 
 	(* ram_style = "block" *)
-    reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo_backup_2 [0 : (NUMBER_OF_INPUTS/precision)];
+    reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo_backup_2 [0 : NUM_WORDS - 1];
 
 	(* ram_style = "block" *)
-    reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo_backup_3 [0 : (NUMBER_OF_INPUTS/precision)];
+    reg [(C_S00_AXIS_TDATA_WIDTH)-1:0] stream_data_fifo_backup_3 [0 : NUM_WORDS - 1];
  
  
 	always @( posedge s00_axis_aclk )
@@ -388,15 +390,16 @@ const (
 							{{- end }}
 						endcase
  
-						if (read_pointer >= (bminputs-1)) begin
+						if (read_pointer >= (bminputs)) begin
+							read_state <= 32'd0;
+							read_pointer <= 0;
+							send <= 2'b10;
 							{{- if .Inputs }}
 							{{- $inputsLen := len .Inputs }}
 							{{- range $i, $input := .Inputs }}
 							{{ $input }}_valid_r <= 1'b1;
 							{{- end }}
 							{{- end }}
-							read_pointer <= 0;
-							send <= 2'b10;
 						end
  
 					{{- end }}
@@ -422,7 +425,7 @@ const (
 							{{- end }}
 						endcase
  
-						if (read_pointer >= (bminputs-1)) begin
+						if (read_pointer >= (bminputs)) begin
 							read_state <= 32'd0;
 							read_pointer <= 0;
 							send <= 2'b10;
