@@ -17,6 +17,8 @@
 ; {{ .Params.numberreal }} is the real part of the immediate value
 ; {{ .Params.numberimag }} is the imaginary part of the immediate value
 %fragment addargrealnumfull template:true default_setop:rset resin:r0 resout:r0:r1
-	{{ .Params.setop }} r1, {{ .Params.prefix }}{{ .Params.numberreal }}
+	{{ .Params.setop }}	r1, {{ .Params.prefix }}{{ .Params.numberreal }}
 	{{ .Params.addop }}	r0, r1
+	{{ .Params.setop }}	r1, {{ .Params.prefix }}{{ .Params.numberimag }}
+	
 %endfragment
