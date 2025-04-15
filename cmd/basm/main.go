@@ -145,7 +145,7 @@ func main() {
 		passA := strings.Split(*actPasses, ",")
 
 		for _, p := range passA {
-			if err := bi.SetActive(p); err != nil {
+			if err := bi.SetActive(p, "basm"); err != nil {
 				bi.Alert("Error while activating pass:", err)
 				return
 			}
@@ -156,7 +156,7 @@ func main() {
 		passD := strings.Split(*deactPasses, ",")
 
 		for _, p := range passD {
-			if err := bi.UnsetActive(p); err != nil {
+			if err := bi.UnsetActive(p, "basm"); err != nil {
 				bi.Alert("Error while deactivating pass:", err)
 				return
 			}
@@ -168,7 +168,7 @@ func main() {
 		pass := uint64(1)
 
 		for i := 1; pass != basm.LAST_PASS; i++ {
-			opt := basm.IsOptionalPass()[pass]
+			opt := basm.IsOptionalPass("basm")[pass]
 			if bi.ActivePass(pass) {
 				if opt {
 					fmt.Printf("  %02d: %s (optional)\n", i, mne[pass])
