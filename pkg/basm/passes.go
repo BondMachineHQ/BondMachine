@@ -79,29 +79,55 @@ func getPassFunctionName() map[uint64]string {
 	}
 }
 
-func IsOptionalPass() map[uint64]bool {
-	return map[uint64]bool{
-		passTemplateResolver:      false,
-		passDynamicalInstructions: false,
-		passSymbolTagger1:         false,
-		passSymbolTagger2:         false,
-		passSymbolTagger3:         false,
-		passDataSections2Bytes:    false,
-		passMetadataInfer1:        false,
-		passMetadataInfer2:        false,
-		passMetadataInfer3:        false,
-		passEntryPoints:           false,
-		passSymbolsResolver:       false,
-		passMatcherResolver:       false,
-		passFragmentAnalyzer:      false,
-		passFragmentPruner:        false,
-		passFragmentComposer:      false,
-		passFragmentOptimizer1:    true,
-		passMemComposer:           false,
-		passSectionCleaner:        false,
-		passCallResolver:          false,
-		passMacroResolver:         false,
-		passTemplateFinalizer:     true,
+func IsOptionalPass(frontEnd string) map[uint64]bool {
+	if frontEnd == "bondbits" {
+		return map[uint64]bool{
+			passTemplateResolver:      true,
+			passDynamicalInstructions: true,
+			passSymbolTagger1:         true,
+			passSymbolTagger2:         true,
+			passSymbolTagger3:         true,
+			passDataSections2Bytes:    true,
+			passMetadataInfer1:        true,
+			passMetadataInfer2:        true,
+			passMetadataInfer3:        true,
+			passEntryPoints:           true,
+			passSymbolsResolver:       true,
+			passMatcherResolver:       true,
+			passFragmentAnalyzer:      true,
+			passFragmentPruner:        true,
+			passFragmentComposer:      true,
+			passFragmentOptimizer1:    true,
+			passMemComposer:           true,
+			passSectionCleaner:        true,
+			passCallResolver:          true,
+			passMacroResolver:         true,
+			passTemplateFinalizer:     true,
+		}
+	} else {
+		return map[uint64]bool{
+			passTemplateResolver:      false,
+			passDynamicalInstructions: false,
+			passSymbolTagger1:         false,
+			passSymbolTagger2:         false,
+			passSymbolTagger3:         false,
+			passDataSections2Bytes:    false,
+			passMetadataInfer1:        false,
+			passMetadataInfer2:        false,
+			passMetadataInfer3:        false,
+			passEntryPoints:           false,
+			passSymbolsResolver:       false,
+			passMatcherResolver:       false,
+			passFragmentAnalyzer:      false,
+			passFragmentPruner:        false,
+			passFragmentComposer:      false,
+			passFragmentOptimizer1:    true,
+			passMemComposer:           false,
+			passSectionCleaner:        false,
+			passCallResolver:          false,
+			passMacroResolver:         false,
+			passTemplateFinalizer:     true,
+		}
 	}
 }
 
@@ -136,10 +162,10 @@ func GetPassMnemonic() map[uint64]string {
 
 }
 
-func (bi *BasmInstance) SetActive(pass string) error {
+func (bi *BasmInstance) SetActive(pass string, frontEnd string) error {
 	for passN, v := range GetPassMnemonic() {
 		if v == pass {
-			if ch, ok := IsOptionalPass()[passN]; ok {
+			if ch, ok := IsOptionalPass(frontEnd)[passN]; ok {
 				if ch {
 					bi.passes = bi.passes | passN
 					return nil
@@ -154,10 +180,10 @@ func (bi *BasmInstance) SetActive(pass string) error {
 	return errors.New("pass not found")
 }
 
-func (bi *BasmInstance) UnsetActive(pass string) error {
+func (bi *BasmInstance) UnsetActive(pass string, frontend string) error {
 	for passN, v := range GetPassMnemonic() {
 		if v == pass {
-			if ch, ok := IsOptionalPass()[passN]; ok {
+			if ch, ok := IsOptionalPass(frontend)[passN]; ok {
 				if ch {
 					bi.passes = bi.passes & ^passN
 					return nil
