@@ -26,6 +26,8 @@ func (d Unsigned) importMatchers() map[string]ImportFunc {
 	result["^(?P<uint>[0-9]+)$"] = unsignedImportNoSize
 	result["^0u(?P<uint>[0-9]+)$"] = unsignedImportNoSize
 	result["^0d(?P<uint>[0-9]+)$"] = unsignedImportNoSize
+	result["^0u(?P<uint>[0-9]+).0+$"] = unsignedImportNoSize
+	result["^0d(?P<uint>[0-9]+).0+$"] = unsignedImportNoSize
 
 	return result
 }

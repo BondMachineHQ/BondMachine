@@ -1,9 +1,39 @@
 package bmmatrix
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
+)
+
+const (
+	ASYNC = uint8(0) + iota
+	SYNC
+)
+
+type Config struct {
+	Debug         bool
+	Verbose       bool
+	BMinfo        *bminfo.BMinfo
+	NeuronLibPath string
+	Params        map[string]interface{}
+	DataType      string
+	TypePrefix    string
+}
+
+type MatrixOperations struct {
+	RegisterSize int
+	DataType     string
+	TypePrefix   string
+	IOMode       uint8
+	Expression   string
+	Multop       string
+	Addop        string
+	Result       string
+	*Config
+}
 
 // The BmMatrix struct holds a 2d matrix of floating point numbers
-
 type BmMatrixSquareReal struct {
 	N    int
 	Data [][]float32
