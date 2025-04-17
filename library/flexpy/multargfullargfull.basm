@@ -1,0 +1,18 @@
+; product of two complex numbers passed as arguments
+; r0 is the real part of the first number
+; r1 is the imaginary part of the first number
+; r2 is the real part of the second number
+; r3 is the imaginary part of the second number
+%fragment multargfullargfull template:true default_setop:rset default_prefix:0f resin:r0:r1:r2:r3 resout:r0:r1
+	{{ .Params.setop }}	r4, {{ .Params.prefix }}-1
+	cpy	r5, r1
+	cpy	r6, r0
+	{{ .Params.multop }}	r0, r2
+	{{ .Params.multop }}	r5, r3
+	{{ .Params.multop }}	r5, r4
+	{{ .Params.addop }}	r0, r5
+
+	{{ .Params.multop }}	r1, r2
+	{{ .Params.multop }}	r6, r3
+	{{ .Params.addop }}	r1, r6
+%endfragment

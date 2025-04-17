@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"strings"
@@ -29,7 +28,7 @@ func (i *string_slice) Set(value string) error {
 var debug = flag.Bool("d", false, "Debug")
 var verbose = flag.Bool("v", false, "Verbose")
 
-var simbox_file = flag.String("simbox-file", "", "Filename of the simulation data file")
+var simboxFile = flag.String("simbox-file", "", "Filename of the simulation data file")
 var machine_file = flag.String("machine-file", "", "Machine in JSON format")
 var bondmachine_file = flag.String("bondmachine-file", "", "Bondmachine in JSON format")
 
@@ -51,13 +50,13 @@ func init() {
 }
 
 func main() {
-	sbox := new(simbox.Simbox)
+	sBox := new(simbox.Simbox)
 
-	if *simbox_file != "" {
-		if _, err := os.Stat(*simbox_file); err == nil {
+	if *simboxFile != "" {
+		if _, err := os.Stat(*simboxFile); err == nil {
 			// Open the simbox file is exists
-			if simbox_json, err := ioutil.ReadFile(*simbox_file); err == nil {
-				if err := json.Unmarshal([]byte(simbox_json), sbox); err != nil {
+			if simboxJSON, err := os.ReadFile(*simboxFile); err == nil {
+				if err := json.Unmarshal([]byte(simboxJSON), sBox); err != nil {
 					panic(err)
 				}
 			} else {
@@ -73,20 +72,20 @@ func main() {
 				panic("Missing machine or bondmachine file")
 			}
 		} else if *list {
-			fmt.Print(sbox.Print())
+			fmt.Print(sBox.Print())
 		} else if *add != "" {
-			err := sbox.Add(*add)
+			err := sBox.Add(*add)
 			check(err)
 		} else if *del != -1 {
-			err := sbox.Del(*del)
+			err := sBox.Del(*del)
 			check(err)
 		}
 
 		// Write the simbox file
-		f, err := os.Create(*simbox_file)
+		f, err := os.Create(*simboxFile)
 		check(err)
 		defer f.Close()
-		b, errj := json.Marshal(sbox)
+		b, errj := json.Marshal(sBox)
 		check(errj)
 		_, err = f.WriteString(string(b))
 		check(err)
