@@ -60,6 +60,7 @@ type Sim_config struct {
 type Sim_tick_set map[int]interface{}
 type Sim_drive struct {
 	Injectables []*interface{}
+	NeedValid   map[int]int
 	AbsSet      map[uint64]Sim_tick_set
 	PerSet      map[uint64]Sim_tick_set
 }
@@ -519,6 +520,7 @@ func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM, conf *Config) error {
 func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 
 	inj := make([]*interface{}, 0)
+	needValid := make(map[int]int)
 	absset := make(map[uint64]Sim_tick_set)
 	perset := make(map[uint64]Sim_tick_set)
 
@@ -537,6 +539,16 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 					if ipos == -1 {
 						ipos = len(inj)
 						inj = append(inj, loc)
+
+						re := regexp.MustCompile("^i(?P<input>[0-9]+)$")
+						if re.MatchString(rule.Object) {
+							inIdxS := re.ReplaceAllString(rule.Object, "${input}")
+							inIdx, err := strconv.Atoi(inIdxS)
+							if err != nil {
+								return err
+							}
+							needValid[ipos] = inIdx
+						}
 					}
 
 					if actOnTick, ok := absset[rule.Tick]; ok {
@@ -626,6 +638,7 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 	}
 
 	sd.Injectables = inj
+	sd.NeedValid = needValid
 	sd.AbsSet = absset
 	sd.PerSet = perset
 	return nil

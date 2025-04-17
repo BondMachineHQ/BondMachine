@@ -31,7 +31,7 @@ func (i *qbitSwaps) Set(value string) error {
 var swaps qbitSwaps
 
 var verbose = flag.Bool("v", false, "Verbose")
-var debug = flag.Bool("d", false, "Verbose")
+var debug = flag.Bool("d", false, "Debug")
 
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
@@ -52,6 +52,9 @@ var softwareSimulation = flag.Bool("software-simulation", false, "Software simul
 var softwareSimulationInput = flag.String("software-simulation-input", "", "Software simulation mode input file. If not provided, the input will be zero-state")
 var softwareSimulationOutput = flag.String("software-simulation-output", "", "Software simulation mode output file, if not provided the output will be printed to stdout")
 
+// 5
+var buildMatrixSeqHLS = flag.Bool("build-matrix-seq-hls", false, "Build a matrix sequence HLS code with hardcoded quantum circuit")
+
 // Common options
 
 var buildApp = flag.Bool("build-app", false, "Build an hardware connected app")
@@ -62,6 +65,7 @@ var appFile = flag.String("app-file", "a.out", "App file to be used as output")
 var bmFile = flag.String("save-bondmachine", "bondmachine.json", "Bondmachine file to be used as output")
 var basmFile = flag.String("save-basm", "a.out.basm", "Basm file to be used as output")
 var compiledFile = flag.String("compiled-file", "a.out.json", "Compiled file to be used as output")
+var bundleDir = flag.String("bundle-dir", "", "Bundle directory to be used as output")
 
 var hardwareFlavor = flag.String("hw-flavor", "", "Hardware flavor for the selected operating mode")
 var hardwareFlavorList = flag.Bool("hw-flavor-list", false, "List of available hardware flavors")
@@ -91,6 +95,9 @@ func init() {
 	if *buildMatrixSeq || *buildMatrixSeqCompiled {
 		numOp++
 	}
+	if *buildMatrixSeqHLS {
+		numOp++
+	}
 	if *softwareSimulation {
 		numOp++
 	}
@@ -98,7 +105,7 @@ func init() {
 		log.Fatal("No build mode selected")
 	}
 	if numOp > 1 {
-		log.Fatal("Only one build mode can be selected among: build-full-hw-hardcoded, build-matrix-seq(_compiled), build-matrix-seq-hardcoded, software-simulation")
+		log.Fatal("Only one build mode can be selected among: build-full-hw-hardcoded, build-matrix-seq(_compiled), build-matrix-seq-hardcoded, software-simulation, build-matrix-seq-hls")
 	}
 
 	if *linearDataRange != "" {
@@ -330,6 +337,46 @@ func main() {
 		if *hardwareFlavorList {
 			// List of available hardware flavors for the selected operating mode
 		} else if *hardwareFlavor != "" {
+		} else {
+			bld.Alert("Hardware flavor must be selected")
+		}
+	}
+
+	if *buildMatrixSeqHLS {
+		// Build a matrix sequence HLS code
+		modeTags := []string{"real", "complex"}
+
+		if *hardwareFlavorList {
+			// List of available hardware flavors for the selected operating mode
+			for t := range bmqsim.HLSFlavors {
+				flavorTags := bmqsim.HLSFlavorsTags[t]
+				for _, tag := range modeTags {
+					if bmqsim.StringInSlice(tag, flavorTags) {
+						fmt.Println(t)
+					}
+				}
+			}
+		} else if *hardwareFlavor != "" {
+			// The output of this mode is a bundle directory
+			if *bundleDir == "" {
+				bld.Alert("Bundle directory must be provided")
+				return
+			}
+			if startBuilding {
+				if _, ok := bmqsim.HLSFlavors[*hardwareFlavor]; ok {
+					if sim.VerifyConditions(*hardwareFlavor) == nil {
+						if err := sim.ApplyTemplateBundle(*hardwareFlavor, *bundleDir); err != nil {
+							bld.Alert(err)
+						}
+					} else {
+						bld.Alert("Hardware flavor not compatible with the quantum circuit")
+					}
+				} else {
+					bld.Alert("Hardware flavor not found")
+				}
+			} else {
+				bld.Alert("No quantum circuit to build the matrix sequence")
+			}
 		} else {
 			bld.Alert("Hardware flavor must be selected")
 		}

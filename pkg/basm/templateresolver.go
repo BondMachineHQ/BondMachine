@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"text/template"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
@@ -136,7 +137,18 @@ func templateResolver(bi *BasmInstance) error {
 			for key, value := range fi.LoopMeta() {
 				td.Params[key] = value
 			}
-			//fmt.Println(td.Params)
+
+			// Get default values from the fragment metadata, if any
+			for k, v := range bi.fragments[fragCode].fragmentBody.LoopMeta() {
+				if strings.HasPrefix(k, "default_") {
+					key := strings.TrimPrefix(k, "default_")
+					if _, ok := td.Params[key]; !ok {
+						td.Params[key] = v
+					}
+				}
+			}
+
+			// fmt.Println(td.Params)
 			var f bytes.Buffer
 
 			t, err := template.New("template").Funcs(td.funcMap).Parse(newFragment)

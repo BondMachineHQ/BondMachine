@@ -5,7 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
+	"strings"
 	"text/template"
+)
+
+const (
+	HLSRealBundle = uint8(0) + iota
+	HLSComplexBundle
 )
 
 // Modes:
@@ -41,6 +48,16 @@ var AppFlavorsTags = map[string][]string{
 	"c_pynqapi_complex":   {"complex"},
 	"cpp_opencl_real":     {"real"},
 	"cpp_opencl_complex":  {"complex"},
+}
+
+var HLSFlavors = map[string]uint8{
+	"seq_hardcoded_real":    HLSRealBundle,
+	"seq_hardcoded_complex": HLSComplexBundle,
+}
+
+var HLSFlavorsTags = map[string][]string{
+	"seq_hardcoded_real":    {"real"},
+	"seq_hardcoded_complex": {"complex"},
 }
 
 type templateData struct {
@@ -160,6 +177,52 @@ func (sim *BmQSimulator) VerifyConditions(mode string) error {
 			}
 		}
 	case "seq_hardcoded_complex":
+	}
+	return nil
+}
+
+func (sim *BmQSimulator) ApplyTemplateBundle(flavor string, bundle string) error {
+	var allTemplates map[string]string
+	switch flavor {
+	case "seq_hardcoded_real":
+		allTemplates = map[string]string{
+			"Makefile":       HLSMakefile,
+			"run_hls.tcl":    HLSRunHlsTcl,
+			"circuit.py":     HLSPythonPynqReal,
+			"src/circuit.cc": HLSCircuitCCReal,
+			"src/circuit.h":  HLSCircuitH,
+		}
+	case "seq_hardcoded_complex":
+		allTemplates = map[string]string{
+			"Makefile":       HLSMakefile,
+			"run_hls.tcl":    HLSRunHlsTcl,
+			"circuit.py":     HLSPythonPynqComplex,
+			"src/circuit.cc": HLSCircuitCCComplex,
+			"src/circuit.h":  HLSCircuitH,
+		}
+	default:
+		return fmt.Errorf("unsupported flavor: %s", flavor)
+	}
+
+	templateData := sim.createBasicTemplateData()
+	for fileLoc, data := range allTemplates {
+		t, err := template.New("template").Funcs(templateData.funcMap).Parse(data)
+		if err != nil {
+			return err
+		}
+		var f bytes.Buffer
+		err = t.Execute(&f, *templateData)
+		if err != nil {
+			return err
+		}
+
+		filePath := fmt.Sprintf("%s/%s", bundle, fileLoc)
+
+		// Create directory if it doesn't exist
+		os.MkdirAll(strings.Join(strings.Split(filePath, "/")[:len(strings.Split(filePath, "/"))-1], "/"), 0755)
+
+		// Output to file
+		os.WriteFile(filePath, f.Bytes(), 0644)
 	}
 	return nil
 }
