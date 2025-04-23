@@ -1,18 +1,18 @@
 module github.com/BondMachineHQ/BondMachine
 
-go 1.22.0
+go 1.23.3
 
 require (
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10
 	github.com/goccy/go-graphviz v0.1.3
 	github.com/llir/llvm v0.3.6
 	github.com/mdlayher/raw v0.1.0
-	github.com/mmirko/mel v0.0.0-20241025070902-81728f75ca68
+	github.com/mmirko/mel v0.0.0-20250221224538-07744443e851
 	github.com/tfriedel6/canvas v0.12.1
 	github.com/x448/float16 v0.8.4
 	github.com/yuin/gopher-lua v1.1.1
-	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
-	google.golang.org/protobuf v1.34.2
+	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
+	google.golang.org/protobuf v1.36.6
 )
 
 require (
@@ -25,10 +25,10 @@ require (
 	github.com/mewmew/float v0.0.0-20201204173432-505706aa38fa // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/veandco/go-sdl2 v0.4.0 // indirect
-	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/mod v0.20.0 // indirect
-	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
-	golang.org/x/tools v0.24.0 // indirect
+	golang.org/x/image v0.14.0 // indirect
+	golang.org/x/mod v0.24.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/tools v0.32.0 // indirect
 )
