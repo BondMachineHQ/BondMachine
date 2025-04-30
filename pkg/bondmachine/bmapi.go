@@ -148,7 +148,7 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 		}
 
 		// This fields are temporarely hardcoded, in the future could be get from the command line
-		axiStData.Samples = 16
+		axiStData.Samples = 64
 		axiStData.FifoDepth = 256
 
 		if axiStData.InputNum > axiStData.OutputNum {

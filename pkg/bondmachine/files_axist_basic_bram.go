@@ -35,7 +35,13 @@ const (
     localparam bmoutputs = {{ .OutputNum }}; // number of output for the classification
 	localparam NUMBER_OF_INPUTS  = samples*bminputs;                                     
     localparam NUMBER_OF_OUTPUTS = samples*bmoutputs;
-	localparam precision = {{ $.Rsize }}; // precision bit
+	{{- if le $.Rsize 8 }}
+	localparam precision = 8;
+	{{- else if le $.Rsize 16 }}
+	localparam precision = 16;
+	{{- else }}
+	localparam precision = 32;
+	{{- end }}
 	localparam maxfifoloop = (C_S00_AXIS_TDATA_WIDTH / precision) - 1;
  
 	// Machine state for the slave stream part
@@ -337,7 +343,7 @@ const (
 	);
  
 	reg [2:0] counter;
-	reg [15:0] output_mutex = 1;
+	reg [15:0] output_mutex = {{ if eq $.Rsize 8 }} 0 {{ else }} 1 {{- end }};
 	reg [15:0] input_reader = 1;
 	reg [15:0] input_reader_index = 0;
  
@@ -355,7 +361,7 @@ const (
             {{- end }}
 			read_pointer <= 1'b0;
 			read_pointer_output  <= 1'b0;
-			output_mutex <= 1;
+			output_mutex <= {{ if eq $.Rsize 8 }} 0 {{ else }} 1 {{- end }};
 			input_reader_index <= 0;
         end
         else begin
