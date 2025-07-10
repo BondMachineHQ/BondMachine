@@ -1,45 +1,47 @@
 {
-   "Adjacency": {
-      "peer0": [
-         "wire0",
-         "wire1"
-      ],
-      "peer1": [
-         "wire2"
-      ],
-      "peer2": []
+   "Transceivers": {
+      "Type": "bondirect",
+      "Name": "p0tr0",
+      "Signals": {
+         "clk:": {
+            "Type": "clock",
+            "Name": "j1"
+         },
+         "data0": {
+            "Type": "data",
+            "Name": "j2"
+         }
+      },
+      "Data": {}
    },
    "Nodes": {
       "peer0": {
+         "PeerId": 0,
          "Data": {}
       },
       "peer1": {
+         "PeerId": 1,
          "Data": {}
       },
       "peer2": {
+         "PeerId": 2,
          "Data": {}
       }
    },
    "Edges": {
       "wire0": {
-         "From": "peer0",
-         "To": "peer1",
-         "Wires": 1,
-         "Clock": 10,
-         "Data": {}
-      },
-      "wire1": {
-         "From": "peer0",
-         "To": "peer2",
-         "Wires": 1,
-         "Clock": 10,
-         "Data": {}
-      },
-      "wire2": {
-         "From": "peer1",
-         "To": "peer2",
-         "Wires": 2,
-         "Clock": 10,
+         "NodeA": "peer0",
+         "NodeB": "peer1",
+         "FromAtoB": {
+            "ATransceiver": "p0tr0",
+            "BTransceiver": "p0tr0",
+            "Data": {}
+         },
+         "FromBtoA": {
+            "ATransceiver": "p0tr0",
+            "BTransceiver": "p0tr0",
+            "Data": {}
+         },
          "Data": {}
       }
    }
