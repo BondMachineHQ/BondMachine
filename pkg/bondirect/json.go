@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func UnmarshallMesh(c *Config, mesh_file string) (*Mesh, error) {
+func UnmarshalMesh(c *Config, mesh_file string) (*Mesh, error) {
 
 	cluster := new(Mesh)
 
@@ -24,7 +24,7 @@ func UnmarshallMesh(c *Config, mesh_file string) (*Mesh, error) {
 	return cluster, nil
 }
 
-func UnmarshallCluster(c *Config, cluster_file string) (*Cluster, error) {
+func UnmarshalCluster(c *Config, cluster_file string) (*Cluster, error) {
 
 	cluster := new(Cluster)
 

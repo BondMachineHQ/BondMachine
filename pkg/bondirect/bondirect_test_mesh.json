@@ -1,19 +1,36 @@
 {
-   "Transceivers": {
-      "Type": "bondirect",
-      "Name": "p0tr0",
-      "Signals": {
-         "clk:": {
-            "Type": "clock",
-            "Name": "j1"
+   "Transceivers": [
+      {
+         "Type": "bondirect",
+         "Name": "b3defsend",
+         "Signals": {
+            "clk": {
+               "Type": "clock",
+               "Name": "j1"
+            },
+            "data0": {
+               "Type": "data",
+               "Name": "j2"
+            }
          },
-         "data0": {
-            "Type": "data",
-            "Name": "j2"
-         }
+         "Data": {}
       },
-      "Data": {}
-   },
+      {
+         "Type": "bondirect",
+         "Name": "b3defrecv",
+         "Signals": {
+            "clk": {
+               "Type": "clock",
+               "Name": "j1"
+            },
+            "data0": {
+               "Type": "data",
+               "Name": "j2"
+            }
+         },
+         "Data": {}
+      }
+   ],
    "Nodes": {
       "peer0": {
          "PeerId": 0,
@@ -33,13 +50,13 @@
          "NodeA": "peer0",
          "NodeB": "peer1",
          "FromAtoB": {
-            "ATransceiver": "p0tr0",
-            "BTransceiver": "p0tr0",
+            "ATransceiver": "b3defsend",
+            "BTransceiver": "b3defrecv",
             "Data": {}
          },
          "FromBtoA": {
-            "ATransceiver": "p0tr0",
-            "BTransceiver": "p0tr0",
+            "ATransceiver": "b3defrecv",
+            "BTransceiver": "b3defsend",
             "Data": {}
          },
          "Data": {}
