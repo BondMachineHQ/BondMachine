@@ -1,7 +1,7 @@
 package bondirect
 
 const (
-    bdLine = `
+	bdLine = `
 -- Thee bonddirect line transmitter is the component responsible for
 -- transmitting data from two FPGAs. It contains a bond_tx and a bond_rx
 -- component, which are used to send and receive data.
@@ -35,6 +35,8 @@ ARCHITECTURE Behavioral OF bd_line IS
     SIGNAL message_received : STD_LOGIC_VECTOR (7 DOWNTO 0) := (OTHERS => '0');
     SIGNAL message_valid : STD_LOGIC := '0';
     SIGNAL receive_busy : STD_LOGIC := '0';
+    TYPE send_sm IS (IDLE, SEND);
+    SIGNAL send_state : send_sm := IDLE;
 BEGIN
 
     -- Instantiate the bond_tx component
@@ -60,6 +62,27 @@ BEGIN
             valid => message_valid,
             busy => receive_busy
         );
+
+    -- The main process for sending data
+    send_process: PROCESS (clk, reset)
+    BEGIN
+        IF reset = '1' THEN
+            send_state <= IDLE;
+            message_to_send <= (OTHERS => '0');
+            send_data_enable <= '0';
+            s_busy <= '0';
+            s_ok <= '0';
+            s_error <= '0';
+        ELSIF rising_edge(clk) THEN
+            CASE send_state IS
+                WHEN IDLE => 
+                    -- When in IDLE state, check if there is a replay message to send
+                    -- It take precedence over the message to send
+                    -- TODO Finish this part
+                    IF s_valid = '1' THEN
+                        message_to_send <= s_message; -- Load the message to send
+                        s_busy <= '1'; -- Indicate that the component is busy
+
 
 END Behavioral;
 `
