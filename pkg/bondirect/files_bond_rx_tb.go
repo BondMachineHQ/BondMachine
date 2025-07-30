@@ -1,7 +1,7 @@
 package bondirect
 
 const (
-    bondRxTb = `
+	bondRxTb = `
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
@@ -12,10 +12,10 @@ END bond_rx_tb;
 ARCHITECTURE Behavioral OF bond_rx_tb IS
     SIGNAL clk : STD_LOGIC := '0';
     SIGNAL message : STD_LOGIC_VECTOR (7 DOWNTO 0) := (OTHERS => '0');
-    SIGNAL data_enable : STD_LOGIC := '0';
+    SIGNAL data_ready : STD_LOGIC := '0';
     SIGNAL busy : STD_LOGIC;
-    SIGNAL tx_clk : STD_LOGIC;
-    SIGNAL tx_out : STD_LOGIC;
+    SIGNAL rx_clk : STD_LOGIC;
+    SIGNAL rx_in : STD_LOGIC;
 
     CONSTANT clk_period : TIME := 10 ns;
 BEGIN
@@ -24,10 +24,10 @@ BEGIN
             clk => clk,
             reset => '0',  -- Assuming no reset for the test
             message => message,
-            data_enable => data_enable,
-            busy => busy,
-            tx_clk => tx_clk,
-            tx_out => tx_out
+            data_ready => data_ready,
+            receiving => busy,
+            rx_clk => rx_clk,
+            rx_in => rx_in
         );
 
     clk_process: PROCESS
@@ -44,17 +44,17 @@ BEGIN
     BEGIN
         -- Test case 1: Send a message
         -- message <= "11110000"; -- Example message
-        -- data_enable <= '1';
+        -- data_ready <= '1';
         -- WAIT FOR 100 ns;
-        -- data_enable <= '0';
+        -- data_ready <= '0';
 
         -- Disable data enable to stop sending
-        -- data_enable <= '0';
+        -- data_ready <= '0';
         -- WAIT FOR 100 ns;
 
         -- Test case 2: Send another message
         -- message <= "110011001"; -- Another example message
-        -- data_enable <= '1';
+        -- data_ready <= '1';
         -- WAIT FOR 100 ns;
 
         -- Finish simulation

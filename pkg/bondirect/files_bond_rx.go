@@ -7,14 +7,18 @@ USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
 ENTITY bond_rx IS
+    GENERIC (
+        message_length : INTEGER := 8;
+        counters_length : INTEGER := 32
+    );
     PORT (
         clk : IN STD_LOGIC;
         reset : IN STD_LOGIC;
         rx_clk : IN STD_LOGIC;
         rx_in : IN STD_LOGIC;
-        message : OUT STD_LOGIC_VECTOR (7 DOWNTO 0) := (OTHERS => '0');
+        message : OUT STD_LOGIC_VECTOR (message_length-1 DOWNTO 0) := (OTHERS => '0');
         data_ready : OUT STD_LOGIC := '0';
-        receiving : OUT STD_LOGIC := '0';
+        busy : OUT STD_LOGIC := '0';
         failed : OUT STD_LOGIC := '0'
     );
 END bond_rx;
@@ -24,18 +28,21 @@ ARCHITECTURE Behavioral OF bond_rx IS
     SIGNAL current_state : state_type := IDLE;
     SIGNAL int_clk : STD_LOGIC := '0';
     SIGNAL int_clk_prev : STD_LOGIC := '0';
-    CONSTANT clk_grace_period : unsigned(31 DOWNTO 0) := to_unsigned(5, 32);
-    CONSTANT timeout : unsigned(31 DOWNTO 0) := to_unsigned(1000, 32);
-    SIGNAL timeout_counter : unsigned(31 DOWNTO 0) := (OTHERS => '0');
-    SIGNAL busy_sr : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '1');
-    SIGNAL counter : unsigned(31 DOWNTO 0) := clk_grace_period;
+    CONSTANT clk_grace_period : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(5, counters_length);
+    CONSTANT timeout : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(1000, counters_length);
+    CONSTANT ones : STD_LOGIC_VECTOR(message_length-2 DOWNTO 0) := (OTHERS => '1');
+    SIGNAL timeout_counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL busy_sr : STD_LOGIC_VECTOR(message_length-1 DOWNTO 0) := (OTHERS => '1');
+    SIGNAL counter : unsigned(counters_length-1 DOWNTO 0) := clk_grace_period;
     SIGNAL failed_tr : STD_LOGIC := '0';
     SIGNAL failure : STD_LOGIC := '0';
-    SIGNAL message_read : STD_LOGIC_VECTOR (7 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL message_read : STD_LOGIC_VECTOR (message_length-1 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL receiving : STD_LOGIC := '0';
 BEGIN
     -- Overall failure signals
     failure <= failed_tr;
     failed <= failure;
+    busy <= receiving;
 
     int_clk_proc : PROCESS (clk, reset)
     BEGIN
@@ -73,7 +80,7 @@ BEGIN
     BEGIN
         IF rising_edge(int_clk) THEN
             IF failure = '0' THEN
-                message_read <= rx_in & message_read(7 DOWNTO 1); -- Shift in the received bit
+                message_read <= rx_in & message_read(message_length-1 DOWNTO 1); -- Shift in the received bit
             END IF;
         END IF;
     END PROCESS reading_proc;
@@ -96,7 +103,7 @@ BEGIN
                         failed_tr <= '0';
                         data_ready <= '0';
                         timeout_counter <= timeout;
-                        busy_sr <= (busy_sr'high => '0', OTHERS => '1');
+                        busy_sr <= '0' & ones;
                     END IF;
                WHEN RECV =>
                     IF int_clk = '1' AND int_clk_prev = '0' THEN

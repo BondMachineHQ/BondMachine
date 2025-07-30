@@ -7,10 +7,14 @@ USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
 ENTITY bond_tx IS
+    GENERIC (
+        message_length : INTEGER := 8;
+        counters_length : INTEGER := 32
+    );
     PORT (
         clk : IN STD_LOGIC;
         reset : IN STD_LOGIC;
-        message : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+        message : IN STD_LOGIC_VECTOR (message_length-1 DOWNTO 0);
         data_enable : IN STD_LOGIC;
         busy : OUT STD_LOGIC;
         tx_clk : OUT STD_LOGIC;
@@ -19,10 +23,10 @@ ENTITY bond_tx IS
 END bond_tx;
 
 ARCHITECTURE Behavioral OF bond_tx IS
-    SIGNAL counter : unsigned(31 DOWNTO 0) := (OTHERS => '0');
-    CONSTANT out_clock_tick : unsigned(31 DOWNTO 0) := to_unsigned(10, 32);
-    SIGNAL busy_sr : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
-    SIGNAL sending : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');
+    CONSTANT out_clock_tick : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(10, counters_length);
+    SIGNAL busy_sr : STD_LOGIC_VECTOR(message_length-1 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL sending : STD_LOGIC_VECTOR(message_length-1 DOWNTO 0) := (OTHERS => '0');
     SIGNAL int_clk : STD_LOGIC := '0';
     SIGNAL doing : STD_LOGIC := '0';
 BEGIN
@@ -65,7 +69,7 @@ BEGIN
             IF busy_sr(0) = '0' THEN
                 IF data_enable = '1' THEN
                     IF doing = '0' THEN
-                        counter <= to_unsigned(0, 32);
+                        counter <= to_unsigned(0, counters_length);
                         sending <= message;
                         busy_sr <= (OTHERS => '1');
                         doing <= '1';
