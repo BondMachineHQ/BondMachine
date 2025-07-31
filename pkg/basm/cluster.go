@@ -1,5 +1,18 @@
 package basm
 
+type Peer struct {
+	PeerId   uint32
+	PeerName string
+	Channels []uint32
+	Inputs   []uint32
+	Outputs  []uint32
+}
+
+type Cluster struct {
+	ClusterId uint32
+	Peers     []Peer
+}
+
 func (bi *BasmInstance) IsClustered() bool {
 	if bi == nil {
 		return false
