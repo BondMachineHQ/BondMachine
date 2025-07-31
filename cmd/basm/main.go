@@ -253,7 +253,7 @@ func main() {
 
 	// Targets
 
-	if *bmOutFile != "" {
+	if !bi.IsClustered() && *bmOutFile != "" {
 		if err := bi.Assembler2BondMachine(); err != nil {
 			bi.Alert("Error in creating a BondMachine", err)
 			return
@@ -293,7 +293,7 @@ func main() {
 		}
 	}
 
-	if *bcofOutFile != "" {
+	if !bi.IsClustered() && *bcofOutFile != "" {
 		if err := bi.Assembler2BCOF(); err != nil {
 			panic("Error in creating a BCOF file")
 		} else {
@@ -305,5 +305,20 @@ func main() {
 				panic("failed to write BCOF file")
 			}
 		}
+	}
+
+	if bi.IsClustered() && *clusOutFile != "" && *basmOutPrefix != "" {
+		if err := bi.Assembler2Cluster(); err != nil {
+			panic("Error in creating a Cluster")
+		} else {
+			for bmId, bmCode := range bi.GetClusteredBondMachines() {
+				bmName := bi.GetClusteredName()[bmId]
+				if *debug || *verbose {
+					fmt.Printf("Writing BondMachine %s to %s%d.basm\n", bmName, *basmOutPrefix, bmId)
+					fmt.Print(bmCode)
+				}
+			}
+		}
+
 	}
 }

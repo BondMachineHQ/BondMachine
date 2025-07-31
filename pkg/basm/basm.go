@@ -25,40 +25,42 @@ const (
 type BasmInstance struct {
 	*bminfo.BMinfo
 	*bmconfig.BmConfig
-	extra            string
-	verbose          bool
-	debug            bool
-	isClustered      bool
-	isWithinMacro    string
-	isWithinSection  string
-	isWithinFragment string
-	isWithinChunk    string
-	isSymbolled      string
-	lineMeta         string
-	macros           map[string]*BasmMacro
-	sections         map[string]*BasmSection
-	fragments        map[string]*BasmFragment
-	chunks           map[string]*BasmChunk
-	symbols          map[string]int64 // -1 for undefined, >=0 for defined and value
-	passes           uint64
-	optimizations    map[int]struct{}
-	matchers         []*bmline.BasmLine
-	dynMatchers      []*bmline.BasmLine
-	matchersOps      []procbuilder.Opcode
-	dynMatcherOps    []procbuilder.DynamicInstruction
-	bm               *bondmachine.Bondmachine
-	result           *bondmachine.Bondmachine
-	outBCOF          *bcof.BCOFEntry
-	rg               *bmreqs.ReqRoot
-	global           *bmline.BasmElement
-	cps              []*bmline.BasmElement
-	sos              []*bmline.BasmElement
-	ios              []*bmline.BasmElement
-	ioAttach         []*bmline.BasmElement
-	soAttach         []*bmline.BasmElement
-	fis              []*bmline.BasmElement // Fragment instances
-	fiLinks          []*bmline.BasmElement // Fragment links
-	fiLinkAttach     []*bmline.BasmElement // Fragment link attachments
+	extra                 string
+	verbose               bool
+	debug                 bool
+	isClustered           bool
+	clusteredBondMachines []string
+	clusteredNames        []string
+	isWithinMacro         string
+	isWithinSection       string
+	isWithinFragment      string
+	isWithinChunk         string
+	isSymbolled           string
+	lineMeta              string
+	macros                map[string]*BasmMacro
+	sections              map[string]*BasmSection
+	fragments             map[string]*BasmFragment
+	chunks                map[string]*BasmChunk
+	symbols               map[string]int64 // -1 for undefined, >=0 for defined and value
+	passes                uint64
+	optimizations         map[int]struct{}
+	matchers              []*bmline.BasmLine
+	dynMatchers           []*bmline.BasmLine
+	matchersOps           []procbuilder.Opcode
+	dynMatcherOps         []procbuilder.DynamicInstruction
+	bm                    *bondmachine.Bondmachine
+	result                *bondmachine.Bondmachine
+	outBCOF               *bcof.BCOFEntry
+	rg                    *bmreqs.ReqRoot
+	global                *bmline.BasmElement
+	cps                   []*bmline.BasmElement
+	sos                   []*bmline.BasmElement
+	ios                   []*bmline.BasmElement
+	ioAttach              []*bmline.BasmElement
+	soAttach              []*bmline.BasmElement
+	fis                   []*bmline.BasmElement // Fragment instances
+	fiLinks               []*bmline.BasmElement // Fragment links
+	fiLinkAttach          []*bmline.BasmElement // Fragment link attachments
 }
 
 // Sections and Macros

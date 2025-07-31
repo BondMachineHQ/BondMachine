@@ -1,0 +1,36 @@
+package basm
+
+func (bi *BasmInstance) IsClustered() bool {
+	if bi == nil {
+		return false
+	}
+	return bi.isClustered
+}
+
+func (bi *BasmInstance) GetClusteredBondMachines() []string {
+	if bi == nil {
+		return nil
+	}
+	return bi.clusteredBondMachines
+}
+
+func (bi *BasmInstance) GetClusteredName() []string {
+	if bi == nil {
+		return nil
+	}
+	return bi.clusteredNames
+}
+
+func (bi *BasmInstance) Assembler2Cluster() error {
+	if bi == nil {
+		return nil
+	}
+	if !bi.isClustered {
+		return nil
+	}
+
+	bi.clusteredBondMachines = make([]string, 0)
+	bi.clusteredNames = make([]string, 0)
+
+	return nil
+}
