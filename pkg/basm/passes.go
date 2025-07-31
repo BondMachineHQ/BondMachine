@@ -24,7 +24,8 @@ const (
 	passSectionCleaner
 	passSymbolTagger3
 	passSymbolsResolver
-	LAST_PASS = passSymbolsResolver
+	passClusterChecker
+	LAST_PASS = passClusterChecker
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {
@@ -50,6 +51,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passCallResolver:          callResolver,
 		passMacroResolver:         macroResolver,
 		passTemplateFinalizer:     templateFinalizer,
+		passClusterChecker:        clusterChecker,
 	}
 }
 
@@ -76,6 +78,7 @@ func getPassFunctionName() map[uint64]string {
 		passCallResolver:          "callResolver",
 		passMacroResolver:         "macroResolver",
 		passTemplateFinalizer:     "templateFinalizer",
+		passClusterChecker:        "clusterChecker",
 	}
 }
 
@@ -102,6 +105,7 @@ func IsOptionalPass() map[uint64]bool {
 		passCallResolver:          false,
 		passMacroResolver:         false,
 		passTemplateFinalizer:     true,
+		passClusterChecker:        false,
 	}
 }
 
@@ -132,6 +136,7 @@ func GetPassMnemonic() map[uint64]string {
 		passCallResolver:          "callresolver",
 		passMacroResolver:         "macroresolver",
 		passTemplateFinalizer:     "templatefinalizer",
+		passClusterChecker:        "clusterchecker",
 	}
 
 }

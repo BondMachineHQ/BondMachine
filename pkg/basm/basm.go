@@ -122,6 +122,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		passCallResolver |
 		passMacroResolver |
 		// passTemplateFinalizer |
+		passClusterChecker |
 		0
 
 	bi.matchers = make([]*bmline.BasmLine, 0)
