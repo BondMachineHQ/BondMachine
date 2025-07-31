@@ -28,6 +28,8 @@ var symInFile = flag.String("si", "", "Load a symbols JSON file")
 var bmOutFile = flag.String("o", "", "BondMachine Output file")
 var bcofOutFile = flag.String("bo", "", "BCOF Output file")
 var symOutFile = flag.String("so", "", "Symbols Output file")
+var clusOutFile = flag.String("co", "", "Cluster Output file")
+var basmOutPrefix = flag.String("oprefix", "", "Prefix for the output files of the assembler (default: none)")
 
 // Utils
 var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parameter of the BondMachine")

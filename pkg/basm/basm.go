@@ -28,6 +28,7 @@ type BasmInstance struct {
 	extra            string
 	verbose          bool
 	debug            bool
+	isClustered      bool
 	isWithinMacro    string
 	isWithinSection  string
 	isWithinFragment string
@@ -221,6 +222,12 @@ func (bi *BasmInstance) RunAssembler() error {
 					fmt.Println(purple("Phase "+strconv.Itoa(i+1)) + ": " + red(names[step], " completed"))
 					fmt.Println(purple("Post phase "+strconv.Itoa(i+1)) + " " + bi.String())
 				}
+			}
+			if bi.isClustered {
+				if bi.debug {
+					fmt.Println(purple("Detected clustering, skipping remaining passes and moving to the cluster workflow"))
+				}
+				break
 			}
 		} else {
 			if bi.debug {
