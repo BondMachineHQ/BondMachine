@@ -3,7 +3,8 @@ package basm
 import "errors"
 
 const (
-	passTemplateResolver = uint64(1) << iota
+	passClusterChecker = uint64(1) << iota
+	passTemplateResolver
 	passMetadataInfer1
 	passMacroResolver
 	passCallResolver
@@ -24,8 +25,7 @@ const (
 	passSectionCleaner
 	passSymbolTagger3
 	passSymbolsResolver
-	passClusterChecker
-	LAST_PASS = passClusterChecker
+	LAST_PASS = passSymbolsResolver
 )
 
 func getPassFunction() map[uint64]func(*BasmInstance) error {
