@@ -311,11 +311,9 @@ func main() {
 		if err := bi.Assembler2Cluster(); err != nil {
 			panic("Error in creating a Cluster")
 		} else {
-			for bmId, bmCode := range bi.GetClusteredBondMachines() {
-				bmName := bi.GetClusteredName()[bmId]
+			for bmName, bmId := range bi.GetClusteredName() {
 				if *debug || *verbose {
 					fmt.Printf("Writing BondMachine %s to %s%d.basm\n", bmName, *basmOutPrefix, bmId)
-					fmt.Print(bmCode)
 				}
 			}
 		}
