@@ -27,7 +27,7 @@ func (bi *BasmInstance) GetClusteredBondMachines() []string {
 	return bi.clusteredBondMachines
 }
 
-func (bi *BasmInstance) GetClusteredName() []string {
+func (bi *BasmInstance) GetClusteredName() map[string]int {
 	if bi == nil {
 		return nil
 	}
@@ -41,9 +41,6 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 	if !bi.isClustered {
 		return nil
 	}
-
-	bi.clusteredBondMachines = make([]string, 0)
-	bi.clusteredNames = make([]string, 0)
 
 	return nil
 }
