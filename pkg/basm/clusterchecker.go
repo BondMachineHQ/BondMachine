@@ -31,7 +31,7 @@ func clusterChecker(bi *BasmInstance) error {
 			bi.clusteredNames[devName] = devId
 
 			if bi.debug {
-				fmt.Println(green("\t\t\tAdding new device: "), devName, " with ID: ", devId)
+				fmt.Println(green("\t\t\tAdding new device:"), red(devName), green("id"), blue(devId))
 			}
 		}
 	}

@@ -1,5 +1,7 @@
 package basm
 
+import "fmt"
+
 type Peer struct {
 	PeerId   uint32
 	PeerName string
@@ -40,6 +42,13 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 	}
 	if !bi.isClustered {
 		return nil
+	}
+
+	for _, cp := range bi.cps {
+		cpName := cp.GetValue()
+		fmt.Println(cpName)
+		// TODO: Implement the logic to convert assembler to cluster
+		// This is a placeholder for the actual conversion logic
 	}
 
 	return nil
