@@ -46,9 +46,17 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 
 	for _, cp := range bi.cps {
 		cpName := cp.GetValue()
-		fmt.Println(cpName)
+		fmt.Println(cpName, cp)
 		// TODO: Implement the logic to convert assembler to cluster
 		// This is a placeholder for the actual conversion logic
+	}
+
+	// Loop through the clustered bond machines
+	for edgeName, edgeId := range bi.clusteredNames {
+		if bi.debug {
+			fmt.Println(green("\tProcessing BM:"), red(edgeName), green("id"), blue(edgeId))
+		}
+
 	}
 
 	return nil

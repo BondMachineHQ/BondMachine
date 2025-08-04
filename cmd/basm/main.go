@@ -315,6 +315,11 @@ func main() {
 				if *debug || *verbose {
 					fmt.Printf("Writing BondMachine %s to %s%d.basm\n", bmName, *basmOutPrefix, bmId)
 				}
+
+				edgeFile := fmt.Sprintf("%s%d.basm", *basmOutPrefix, bmId)
+				if err := os.WriteFile(edgeFile, []byte(bi.GetClusteredBondMachines()[bmId]), 0644); err != nil {
+					panic(fmt.Sprintf("failed to write BondMachine file %s: %v", edgeFile, err))
+				}
 			}
 		}
 

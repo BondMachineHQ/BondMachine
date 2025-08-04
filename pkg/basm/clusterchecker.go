@@ -27,7 +27,7 @@ func clusterChecker(bi *BasmInstance) error {
 		}
 		if _, ok := bi.clusteredNames[devName]; !ok {
 			devId = len(bi.clusteredBondMachines)
-			bi.clusteredBondMachines = append(bi.clusteredBondMachines, devName)
+			bi.clusteredBondMachines = append(bi.clusteredBondMachines, "")
 			bi.clusteredNames[devName] = devId
 
 			if bi.debug {
