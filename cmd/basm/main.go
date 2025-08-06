@@ -311,12 +311,22 @@ func main() {
 		if err := bi.Assembler2Cluster(); err != nil {
 			panic("Error in creating a Cluster")
 		} else {
+
+			// Write the cluster file
+			clusterBytes, err := json.Marshal(bi.GetCluster())
+			if err != nil {
+				panic("failed to marshal Cluster")
+			}
+			if err := os.WriteFile(*clusOutFile, clusterBytes, 0644); err != nil {
+				panic("failed to write Cluster file")
+			}
+
 			for bmName, bmId := range bi.GetClusteredName() {
 				if *debug || *verbose {
-					fmt.Printf("Writing BondMachine %s to %s%d.basm\n", bmName, *basmOutPrefix, bmId)
+					fmt.Printf("Writing BondMachine %s to %s%d.bmeta\n", bmName, *basmOutPrefix, bmId)
 				}
 
-				edgeFile := fmt.Sprintf("%s%d.basm", *basmOutPrefix, bmId)
+				edgeFile := fmt.Sprintf("%s%d.bmeta", *basmOutPrefix, bmId)
 				if err := os.WriteFile(edgeFile, []byte(bi.GetClusteredBondMachines()[bmId]), 0644); err != nil {
 					panic(fmt.Sprintf("failed to write BondMachine file %s: %v", edgeFile, err))
 				}
