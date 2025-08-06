@@ -12,6 +12,9 @@ func clusterChecker(bi *BasmInstance) error {
 
 	bi.clusteredBondMachines = make([]string, 0)
 	bi.clusteredNames = make(map[string]int)
+	bi.cluster = new(Cluster)
+	bi.cluster.ClusterId = 0
+	bi.cluster.Peers = make([]Peer, 0)
 
 	for _, cp := range bi.cps {
 		cpName := cp.GetValue()

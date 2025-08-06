@@ -31,6 +31,7 @@ type BasmInstance struct {
 	isClustered           bool
 	clusteredBondMachines []string
 	clusteredNames        map[string]int
+	cluster               *Cluster
 	isWithinMacro         string
 	isWithinSection       string
 	isWithinFragment      string
