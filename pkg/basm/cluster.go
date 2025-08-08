@@ -1,6 +1,9 @@
 package basm
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type Peer struct {
 	PeerId   uint32
@@ -78,7 +81,7 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 
 	}
 
-	// Device for each clustered bond machine
+	// Device for each cp
 	cpDev := make(map[string]string)
 
 	// Now loop through the clustered bond machines to create metadata
@@ -102,18 +105,29 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 				if bi.debug {
 					fmt.Println(green("\t\tAdding cp:"), red(cp.GetValue()), green("to BM:"), red(edgeName))
 				}
-				bi.clusteredBondMachines[edgeId] += "%meta cpdef " + cp.GetValue()
+				meta := "%meta cpdef " + cp.GetValue()
 				for key, value := range cp.LoopMeta() {
 					if key != "templated" && key != "device" {
-						bi.clusteredBondMachines[edgeId] += " " + key + ":" + value
+						meta += " " + key + ":" + value + ","
 					}
 				}
-				bi.clusteredBondMachines[edgeId] += "\n"
+				bi.clusteredBondMachines[edgeId] += meta[:len(meta)-1] + "\n"
 			}
 		}
 	}
 
 	linkDone := make(map[string]struct{})
+
+	// Create a structure that holds the I/O counter for every node
+	iCounter := make([]int, len(bi.clusteredBondMachines))
+	oCounter := make([]int, len(bi.clusteredBondMachines))
+
+	for i := 0; i < len(bi.clusteredBondMachines); i++ {
+		iCounter[i] = 0
+		oCounter[i] = 0
+	}
+
+	linkIdx := 0
 
 	// Write the node ioAttach
 	for l1Idx, l1 := range bi.ioAttach {
@@ -134,25 +148,163 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 				l2CpName := l2.GetMeta("cp")
 
 				if l1CpName == "bm" {
+					other := l2CpName
+					devName := cpDev[other]
+					devId := bi.clusteredNames[devName]
+					meta := "%meta ioatt " + l2.GetValue()
+					for key, value := range l2.LoopMeta() {
+						meta += " " + key + ":" + value + ","
+					}
+					bi.clusteredBondMachines[devId] += meta[:len(meta)-1] + "\n"
 
+					meta = "%meta ioatt " + l1.GetValue()
+					for key, value := range l1.LoopMeta() {
+						if key == "index" {
+							if l1.GetMeta("type") == "input" {
+								meta += " " + key + ":" + strconv.Itoa(iCounter[devId]) + ","
+								iCounter[devId]++
+							} else {
+								meta += " " + key + ":" + strconv.Itoa(oCounter[devId]) + ","
+								oCounter[devId]++
+							}
+						} else {
+							meta += " " + key + ":" + value + ","
+						}
+					}
+					bi.clusteredBondMachines[devId] += meta[:len(meta)-1] + "\n"
+					linkDone[l1Name] = struct{}{}
+					break
 				}
 
 				if l2CpName == "bm" {
+					other := l1CpName
+					devName := cpDev[other]
+					devId := bi.clusteredNames[devName]
+					meta := "%meta ioatt " + l1.GetValue()
+					for key, value := range l1.LoopMeta() {
+						meta += " " + key + ":" + value + ","
+					}
+					bi.clusteredBondMachines[devId] += meta[:len(meta)-1] + "\n"
 
-				}
-				l1DevName := "default"
-				if d := l1.GetMeta("device"); d != "" {
-					l1DevName = d
-				}
-				l2DevName := "default"
-				if d := l2.GetMeta("device"); d != "" {
-					l2DevName = d
+					meta = "%meta ioatt " + l2.GetValue()
+					for key, value := range l2.LoopMeta() {
+						if key == "index" {
+							if l2.GetMeta("type") == "input" {
+								meta += " " + key + ":" + strconv.Itoa(iCounter[devId]) + ","
+								iCounter[devId]++
+							} else {
+								meta += " " + key + ":" + strconv.Itoa(oCounter[devId]) + ","
+								oCounter[devId]++
+							}
+						} else {
+							meta += " " + key + ":" + value + ","
+						}
+					}
+					bi.clusteredBondMachines[devId] += meta[:len(meta)-1] + "\n"
+					linkDone[l2Name] = struct{}{}
+					break
 				}
 
-				// TODO Finish it
+				l1DevName := cpDev[l1CpName]
+				l2DevName := cpDev[l2CpName]
+
+				fmt.Println("l1DevName:", l1DevName, "l2DevName:", l2DevName)
+				if l1DevName == l2DevName {
+					// The bonds are within the same device
+					devId := bi.clusteredNames[l1DevName]
+					meta := "%meta ioatt " + l1.GetValue()
+					for key, value := range l1.LoopMeta() {
+						meta += " " + key + ":" + value + ","
+					}
+					bi.clusteredBondMachines[devId] += meta[:len(meta)-1] + "\n"
+
+					meta = "%meta ioatt " + l2.GetValue()
+					for key, value := range l2.LoopMeta() {
+						meta += " " + key + ":" + value + ","
+					}
+					bi.clusteredBondMachines[devId] += meta[:len(meta)-1] + "\n"
+					linkDone[l1Name] = struct{}{}
+					break
+				} else {
+					dev1Id := bi.clusteredNames[l1DevName]
+					meta := "%meta ioatt " + l1.GetValue()
+					for key, value := range l1.LoopMeta() {
+						meta += " " + key + ":" + value + ","
+					}
+					bi.clusteredBondMachines[dev1Id] += meta[:len(meta)-1] + "\n"
+
+					// Get the peer index
+					peerIdx := 0
+					for i, p := range bi.cluster.Peers {
+						if p.PeerName == l1DevName {
+							peerIdx = i
+							break
+						}
+					}
+
+					meta = "%meta ioatt " + l1.GetValue()
+					for key, value := range l1.LoopMeta() {
+						switch key {
+						case "index":
+							if l1.GetMeta("type") == "input" {
+								meta += " " + key + ":" + strconv.Itoa(iCounter[dev1Id]) + ","
+								bi.cluster.Peers[peerIdx].Inputs = append(bi.cluster.Peers[peerIdx].Inputs, uint32(linkIdx))
+								iCounter[dev1Id]++
+							} else {
+								meta += " " + key + ":" + strconv.Itoa(oCounter[dev1Id]) + ","
+								bi.cluster.Peers[peerIdx].Outputs = append(bi.cluster.Peers[peerIdx].Outputs, uint32(linkIdx))
+								oCounter[dev1Id]++
+							}
+						case "cp":
+							meta += " " + key + ":bm,"
+						default:
+							meta += " " + key + ":" + value + ","
+						}
+					}
+					bi.clusteredBondMachines[dev1Id] += meta[:len(meta)-1] + "\n"
+
+					dev2Id := bi.clusteredNames[l2DevName]
+					meta = "%meta ioatt " + l2.GetValue()
+					for key, value := range l2.LoopMeta() {
+						meta += " " + key + ":" + value + ","
+					}
+					bi.clusteredBondMachines[dev2Id] += meta[:len(meta)-1] + "\n"
+
+					// Get the peer index
+					for i, p := range bi.cluster.Peers {
+						if p.PeerName == l2DevName {
+							peerIdx = i
+							break
+						}
+					}
+
+					meta = "%meta ioatt" + l2.GetValue()
+					for key, value := range l2.LoopMeta() {
+						switch key {
+						case "index":
+							if l2.GetMeta("type") == "input" {
+								meta += " " + key + ":" + strconv.Itoa(iCounter[dev2Id]) + ","
+								bi.cluster.Peers[peerIdx].Inputs = append(bi.cluster.Peers[peerIdx].Inputs, uint32(linkIdx))
+								iCounter[dev2Id]++
+							} else {
+								meta += " " + key + ":" + strconv.Itoa(oCounter[dev2Id]) + ","
+								bi.cluster.Peers[peerIdx].Outputs = append(bi.cluster.Peers[peerIdx].Outputs, uint32(linkIdx))
+								oCounter[dev2Id]++
+							}
+						case "cp":
+							meta += " " + key + ":bm,"
+						default:
+							meta += " " + key + ":" + value + ","
+						}
+					}
+					bi.clusteredBondMachines[dev2Id] += meta[:len(meta)-1] + "\n"
+
+					linkDone[l1Name] = struct{}{}
+					linkIdx++
+				}
+
 			}
 		}
 	}
-
 	return nil
 }
