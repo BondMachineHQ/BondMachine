@@ -1,7 +1,5 @@
 package bondirect
 
-import "github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
-
 // Config struct
 type Config struct {
 	Rsize uint8
@@ -21,8 +19,6 @@ type Transceiver struct {
 	Signals map[string]Signal      `json:"Signals"`
 	Data    map[string]interface{} `json:"Data"`
 }
-
-type Cluster bmcluster.Cluster
 
 type Signal struct {
 	Type string `json:"Type"`
