@@ -5,7 +5,6 @@ import (
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
-	"github.com/BondMachineHQ/BondMachine/pkg/etherbond"
 
 	//"errors"
 	"flag"
@@ -17,27 +16,13 @@ import (
 	//"github.com/BondMachineHQ/BondMachine/pkg/simbox"
 	//"sort"
 	//"strconv"
-	"strings"
 )
 
-type string_slice []string
-
-func (i *string_slice) String() string {
-	return fmt.Sprint(*i)
-}
-
-func (i *string_slice) Set(value string) error {
-	for _, dt := range strings.Split(value, ",") {
-		*i = append(*i, dt)
-	}
-	return nil
-}
-
 type BMCluster struct {
-	Cluster_file      string
-	Bondmachine_ids   []int
-	Bondmachine_files []string
-	Bondmachine_maps  []string
+	clFile string
+	bmIds  []int
+	bmFile []string
+	bmMaps []string
 }
 
 type Transformation struct {
@@ -49,8 +34,8 @@ var verbose = flag.Bool("v", false, "Verbose")
 
 var clusterFile = flag.String("cluster-file", "", "Cluster JSON file")
 
-var emit_dot = flag.Bool("emit-dot", false, "Emit dot file on stdout")
-var dot_detail = flag.Int("dot-detail", 1, "Detail of infos on dot file 1-5")
+var emitDot = flag.Bool("emit-dot", false, "Emit dot file on stdout")
+var dotDetail = flag.Int("dot-detail", 1, "Detail of infos on dot file 1-5")
 
 func check(e error) {
 	if e != nil {
@@ -65,12 +50,12 @@ func init() {
 func main() {
 	conf := new(bondmachine.Config)
 	conf.Debug = *debug
-	conf.Dotdetail = uint8(*dot_detail)
+	conf.Dotdetail = uint8(*dotDetail)
 
 	clMain := new(BMCluster)
 	if *clusterFile != "" {
-		if rd_json, err := os.ReadFile(*clusterFile); err == nil {
-			if err := json.Unmarshal([]byte(rd_json), clMain); err != nil {
+		if clJSON, err := os.ReadFile(*clusterFile); err == nil {
+			if err := json.Unmarshal([]byte(clJSON), clMain); err != nil {
 				panic(err)
 			}
 		} else {
@@ -82,12 +67,8 @@ func main() {
 
 		rd.Init()
 
-		econfig := new(etherbond.Config)
-		// TODO Import register size from whitin BM internals
-		econfig.Rsize = uint8(8)
-
-		if clMain.Cluster_file != "" {
-			if cluster, err := bmcluster.UnmarshalCluster(clMain.Cluster_file); err != nil {
+		if clMain.clFile != "" {
+			if cluster, err := bmcluster.UnmarshalCluster(clMain.clFile); err != nil {
 				panic(err)
 			} else {
 				rd.Cluster = cluster
@@ -96,19 +77,19 @@ func main() {
 			panic("Wrong Cluster file")
 		}
 
-		if len(clMain.Bondmachine_ids) != len(clMain.Bondmachine_files) {
+		if len(clMain.bmIds) != len(clMain.bmFile) {
 			panic("Wrong number of files")
 		}
-		if len(clMain.Bondmachine_ids) != len(clMain.Bondmachine_maps) {
+		if len(clMain.bmIds) != len(clMain.bmMaps) {
 			panic("Wrong number of files")
 		}
 
-		for i, id := range clMain.Bondmachine_ids {
-			bmach := new(bondmachine.Bondmachine)
-			if bondmachine_json, err := os.ReadFile(clMain.Bondmachine_files[i]); err == nil {
-				var bmachj bondmachine.Bondmachine_json
-				if err := json.Unmarshal([]byte(bondmachine_json), &bmachj); err == nil {
-					bmach = (&bmachj).Dejsoner()
+		for i, id := range clMain.bmIds {
+			bMach := new(bondmachine.Bondmachine)
+			if bondmachineJSON, err := os.ReadFile(clMain.bmFile[i]); err == nil {
+				var bMachJ bondmachine.Bondmachine_json
+				if err := json.Unmarshal([]byte(bondmachineJSON), &bMachJ); err == nil {
+					bMach = (&bMachJ).Dejsoner()
 				} else {
 					panic(err)
 				}
@@ -116,30 +97,23 @@ func main() {
 				panic(err)
 			}
 
-			rd.Bondmachines[id] = bmach
+			rd.Bondmachines[id] = bMach
 
-			iomap := new(bondmachine.IOmap)
-			if mapfile_json, err := os.ReadFile(clMain.Bondmachine_maps[i]); err == nil {
-				if err := json.Unmarshal([]byte(mapfile_json), iomap); err != nil {
+			ioMap := new(bondmachine.IOmap)
+			if mapFileJSON, err := os.ReadFile(clMain.bmMaps[i]); err == nil {
+				if err := json.Unmarshal([]byte(mapFileJSON), ioMap); err != nil {
 					panic(err)
 				}
 			} else {
 				panic(err)
 			}
 
-			rd.Maps[id] = iomap
+			rd.Maps[id] = ioMap
 
 		}
 
-		if *emit_dot {
+		if *emitDot {
 			fmt.Print(rd.Dot(conf))
 		}
-
-		f, err := os.Create(*clusterFile)
-		check(err)
-		b, errj := json.Marshal(clMain)
-		check(errj)
-		_, err = f.WriteString(string(b))
-		check(err)
 	}
 }
