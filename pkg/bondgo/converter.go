@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
-	"github.com/BondMachineHQ/BondMachine/pkg/etherbond"
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
 	"github.com/BondMachineHQ/BondMachine/pkg/udpbond"
 )
@@ -257,7 +257,7 @@ func (bg *BondgoRequirements) Abstract_assembler(rsize int, asmcode []string, us
 	return nil
 }
 
-func (bg *BondgoCheck) Create_Etherbond_Cluster(rsize int, extc *etherbond.Cluster) (*etherbond.Cluster, []uint32, []*bondmachine.Bondmachine, []*bondmachine.IOmap, []*bondmachine.Residual, error) {
+func (bg *BondgoCheck) Create_Etherbond_Cluster(rsize int, extc *bmcluster.Cluster) (*bmcluster.Cluster, []uint32, []*bondmachine.Bondmachine, []*bondmachine.IOmap, []*bondmachine.Residual, error) {
 	devlist := make([]string, 0)
 
 	resultbond := make([]*bondmachine.Bondmachine, 0)
@@ -314,9 +314,9 @@ func (bg *BondgoCheck) Create_Etherbond_Cluster(rsize int, extc *etherbond.Clust
 		}
 	}
 
-	resultcluster := new(etherbond.Cluster)
+	resultcluster := new(bmcluster.Cluster)
 	resultcluster.ClusterId = uint32(0)
-	resultcluster.Peers = make([]etherbond.Peer, 0)
+	resultcluster.Peers = make([]bmcluster.Peer, 0)
 
 	if extc != nil {
 
@@ -336,7 +336,7 @@ func (bg *BondgoCheck) Create_Etherbond_Cluster(rsize int, extc *etherbond.Clust
 			for _, outp := range peer.Outputs {
 				newoutputs = append(newoutputs, outp)
 			}
-			newpeer := etherbond.Peer{peer.PeerId, newchannels, newinputs, newoutputs}
+			newpeer := bmcluster.Peer{peer.PeerId, "", newchannels, newinputs, newoutputs}
 			resultcluster.Peers = append(resultcluster.Peers, newpeer)
 		}
 	}
@@ -468,7 +468,7 @@ func (bg *BondgoCheck) Create_Etherbond_Cluster(rsize int, extc *etherbond.Clust
 		resultio = append(resultio, newio)
 		resultresi = append(resultresi, newresidual)
 
-		newpeer := etherbond.Peer{resultpeerids[myid], newchannels, newinputs, newoutputs}
+		newpeer := bmcluster.Peer{resultpeerids[myid], "", newchannels, newinputs, newoutputs}
 		resultcluster.Peers = append(resultcluster.Peers, newpeer)
 
 	}

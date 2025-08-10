@@ -362,7 +362,7 @@ func main() {
 				ethb.Flavor = *etherbond_flavor
 
 				if *cluster_spec != "" {
-					if cluster, err := etherbond.UnmarshallCluster(config, *cluster_spec); err != nil {
+					if cluster, err := bmcluster.UnmarshalCluster(*cluster_spec); err != nil {
 						panic(err)
 					} else {
 						ethb.Cluster = cluster
