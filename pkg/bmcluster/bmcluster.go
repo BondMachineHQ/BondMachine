@@ -18,6 +18,13 @@ type Cluster struct {
 	Peers     []Peer
 }
 
+type ClusterInfo struct {
+	ClusterFile string
+	BMIds       []int
+	BMFiles     []string
+	BMMaps      []string
+}
+
 func UnmarshalCluster(clusterFile string) (*Cluster, error) {
 
 	cluster := new(Cluster)

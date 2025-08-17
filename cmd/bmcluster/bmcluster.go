@@ -2,32 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
+	"fmt"
+	"os"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
-
-	//"errors"
-	"flag"
-	"fmt"
-
-	//"log"
-	"os"
-	//"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
-	//"github.com/BondMachineHQ/BondMachine/pkg/simbox"
-	//"sort"
-	//"strconv"
 )
-
-type BMCluster struct {
-	clFile string
-	bmIds  []int
-	bmFile []string
-	bmMaps []string
-}
-
-type Transformation struct {
-	Transformations []string
-}
 
 var debug = flag.Bool("d", false, "Debug")
 var verbose = flag.Bool("v", false, "Verbose")
@@ -36,12 +17,6 @@ var clusterFile = flag.String("cluster-file", "", "Cluster JSON file")
 
 var emitDot = flag.Bool("emit-dot", false, "Emit dot file on stdout")
 var dotDetail = flag.Int("dot-detail", 1, "Detail of infos on dot file 1-5")
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 func init() {
 	flag.Parse()
@@ -52,7 +27,7 @@ func main() {
 	conf.Debug = *debug
 	conf.Dotdetail = uint8(*dotDetail)
 
-	clMain := new(BMCluster)
+	clMain := new(bmcluster.ClusterInfo)
 	if *clusterFile != "" {
 		if clJSON, err := os.ReadFile(*clusterFile); err == nil {
 			if err := json.Unmarshal([]byte(clJSON), clMain); err != nil {
@@ -67,8 +42,8 @@ func main() {
 
 		rd.Init()
 
-		if clMain.clFile != "" {
-			if cluster, err := bmcluster.UnmarshalCluster(clMain.clFile); err != nil {
+		if clMain.ClusterFile != "" {
+			if cluster, err := bmcluster.UnmarshalCluster(clMain.ClusterFile); err != nil {
 				panic(err)
 			} else {
 				rd.Cluster = cluster
@@ -77,16 +52,16 @@ func main() {
 			panic("Wrong Cluster file")
 		}
 
-		if len(clMain.bmIds) != len(clMain.bmFile) {
+		if len(clMain.BMIds) != len(clMain.BMFiles) {
 			panic("Wrong number of files")
 		}
-		if len(clMain.bmIds) != len(clMain.bmMaps) {
+		if len(clMain.BMIds) != len(clMain.BMMaps) {
 			panic("Wrong number of files")
 		}
 
-		for i, id := range clMain.bmIds {
+		for i, id := range clMain.BMIds {
 			bMach := new(bondmachine.Bondmachine)
-			if bondmachineJSON, err := os.ReadFile(clMain.bmFile[i]); err == nil {
+			if bondmachineJSON, err := os.ReadFile(clMain.BMFiles[i]); err == nil {
 				var bMachJ bondmachine.Bondmachine_json
 				if err := json.Unmarshal([]byte(bondmachineJSON), &bMachJ); err == nil {
 					bMach = (&bMachJ).Dejsoner()
@@ -100,7 +75,7 @@ func main() {
 			rd.Bondmachines[id] = bMach
 
 			ioMap := new(bondmachine.IOmap)
-			if mapFileJSON, err := os.ReadFile(clMain.bmMaps[i]); err == nil {
+			if mapFileJSON, err := os.ReadFile(clMain.BMMaps[i]); err == nil {
 				if err := json.Unmarshal([]byte(mapFileJSON), ioMap); err != nil {
 					panic(err)
 				}
