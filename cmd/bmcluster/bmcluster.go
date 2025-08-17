@@ -13,7 +13,7 @@ import (
 var debug = flag.Bool("d", false, "Debug")
 var verbose = flag.Bool("v", false, "Verbose")
 
-var clusterFile = flag.String("cluster-file", "", "Cluster JSON file")
+var clusterInfoFile = flag.String("clusterinfo-file", "", "Cluster Info JSON file")
 
 var emitDot = flag.Bool("emit-dot", false, "Emit dot file on stdout")
 var dotDetail = flag.Int("dot-detail", 1, "Detail of infos on dot file 1-5")
@@ -28,8 +28,8 @@ func main() {
 	conf.Dotdetail = uint8(*dotDetail)
 
 	clMain := new(bmcluster.ClusterInfo)
-	if *clusterFile != "" {
-		if clJSON, err := os.ReadFile(*clusterFile); err == nil {
+	if *clusterInfoFile != "" {
+		if clJSON, err := os.ReadFile(*clusterInfoFile); err == nil {
 			if err := json.Unmarshal([]byte(clJSON), clMain); err != nil {
 				panic(err)
 			}
