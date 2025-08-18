@@ -330,6 +330,18 @@ func main() {
 				if err := os.WriteFile(edgeFile, []byte(bi.GetClusteredBondMachines()[bmId]), 0644); err != nil {
 					panic(fmt.Sprintf("failed to write BondMachine file %s: %v", edgeFile, err))
 				}
+
+				if *debug || *verbose {
+					fmt.Printf("Writing BondMachine Maps %s to %s%d_maps.json\n", bmName, *basmOutPrefix, bmId)
+				}
+
+				mapFile := fmt.Sprintf("%s%d_maps.json", *basmOutPrefix, bmId)
+				assoc := bi.GetClusteredMaps()[bmId]
+				if mapBytes, err := json.Marshal(assoc); err == nil {
+					os.WriteFile(mapFile, mapBytes, 0644)
+				} else {
+					panic(fmt.Sprintf("failed to marshal BondMachine Maps file %s: %v", mapFile, err))
+				}
 			}
 		}
 	}
