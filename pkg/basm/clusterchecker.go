@@ -2,6 +2,8 @@ package basm
 
 import (
 	"fmt"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
 )
 
 func clusterChecker(bi *BasmInstance) error {
@@ -12,6 +14,7 @@ func clusterChecker(bi *BasmInstance) error {
 
 	bi.clusteredBondMachines = make([]string, 0)
 	bi.clusteredNames = make(map[string]int)
+	bi.clusteredMaps = make([]*bondmachine.IOmap, 0)
 	bi.cluster = new(Cluster)
 	bi.cluster.ClusterId = 0
 	bi.cluster.Peers = make([]Peer, 0)
@@ -32,6 +35,9 @@ func clusterChecker(bi *BasmInstance) error {
 			devId = len(bi.clusteredBondMachines)
 			bi.clusteredBondMachines = append(bi.clusteredBondMachines, "")
 			bi.clusteredNames[devName] = devId
+			newMap := new(bondmachine.IOmap)
+			newMap.Assoc = make(map[string]string)
+			bi.clusteredMaps = append(bi.clusteredMaps, newMap)
 
 			if bi.debug {
 				fmt.Println(green("\t\t\tAdding new device:"), red(devName), green("id"), blue(devId))

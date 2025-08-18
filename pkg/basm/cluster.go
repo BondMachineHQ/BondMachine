@@ -3,6 +3,8 @@ package basm
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
 )
 
 type Peer struct {
@@ -37,6 +39,13 @@ func (bi *BasmInstance) GetClusteredName() map[string]int {
 		return nil
 	}
 	return bi.clusteredNames
+}
+
+func (bi *BasmInstance) GetClusteredMaps() []*bondmachine.IOmap {
+	if bi == nil {
+		return nil
+	}
+	return bi.clusteredMaps
 }
 
 func (bi *BasmInstance) GetCluster() *Cluster {
@@ -91,6 +100,11 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 	for edgeName, edgeId := range bi.clusteredNames {
 		if bi.debug {
 			fmt.Println(green("\tProcessing BM:"), red(edgeName), green("id"), blue(edgeId))
+		}
+
+		// Write the global metadata unchanged
+		for key, value := range bi.global.LoopMeta() {
+			bi.clusteredBondMachines[edgeId] += "%meta bmdef global " + key + ":" + value + "\n"
 		}
 
 		// Write the node cps
@@ -249,10 +263,12 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 							if l1.GetMeta("type") == "input" {
 								meta += " " + key + ":" + strconv.Itoa(iCounter[dev1Id]) + ","
 								bi.cluster.Peers[peerIdx].Inputs = append(bi.cluster.Peers[peerIdx].Inputs, uint32(linkIdx))
+								bi.clusteredMaps[dev1Id].Assoc["i"+strconv.Itoa(iCounter[dev1Id])] = strconv.Itoa(linkIdx)
 								iCounter[dev1Id]++
 							} else {
 								meta += " " + key + ":" + strconv.Itoa(oCounter[dev1Id]) + ","
 								bi.cluster.Peers[peerIdx].Outputs = append(bi.cluster.Peers[peerIdx].Outputs, uint32(linkIdx))
+								bi.clusteredMaps[dev1Id].Assoc["o"+strconv.Itoa(oCounter[dev1Id])] = strconv.Itoa(linkIdx)
 								oCounter[dev1Id]++
 							}
 						case "cp":
@@ -278,17 +294,19 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 						}
 					}
 
-					meta = "%meta ioatt" + l2.GetValue()
+					meta = "%meta ioatt " + l2.GetValue()
 					for key, value := range l2.LoopMeta() {
 						switch key {
 						case "index":
 							if l2.GetMeta("type") == "input" {
 								meta += " " + key + ":" + strconv.Itoa(iCounter[dev2Id]) + ","
 								bi.cluster.Peers[peerIdx].Inputs = append(bi.cluster.Peers[peerIdx].Inputs, uint32(linkIdx))
+								bi.clusteredMaps[dev2Id].Assoc["i"+strconv.Itoa(iCounter[dev2Id])] = strconv.Itoa(linkIdx)
 								iCounter[dev2Id]++
 							} else {
 								meta += " " + key + ":" + strconv.Itoa(oCounter[dev2Id]) + ","
 								bi.cluster.Peers[peerIdx].Outputs = append(bi.cluster.Peers[peerIdx].Outputs, uint32(linkIdx))
+								bi.clusteredMaps[dev2Id].Assoc["o"+strconv.Itoa(oCounter[dev2Id])] = strconv.Itoa(linkIdx)
 								oCounter[dev2Id]++
 							}
 						case "cp":
