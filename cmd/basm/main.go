@@ -37,6 +37,7 @@ var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parame
 // Optionals
 var bmInfoFile = flag.String("bminfo-file", "", "Load additional information about the BondMachine")
 var dumpRequirements = flag.String("dump-requirements", "", "Dump the requirements of the BondMachine in a JSON file")
+var createMapFile = flag.String("create-mapfile", "", "Create a mapping file for the BondMachine I/O")
 
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
@@ -289,6 +290,13 @@ func main() {
 				os.WriteFile(*dumpRequirements, requirementsJSON, 0644)
 			} else {
 				panic(err)
+			}
+		}
+
+		if *createMapFile != "" {
+			// Create the mapping file
+			if err := bi.CreateMappingFile(*createMapFile); err != nil {
+				panic(fmt.Sprintf("Error in creating a mapping file: %v", err))
 			}
 		}
 	}
