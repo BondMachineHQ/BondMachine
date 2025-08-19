@@ -207,6 +207,8 @@ func (bi *BasmInstance) filteredMetaAdd(el *bmline.BasmElement, key string, valu
 		case "registersize":
 		case "iomode":
 		case "defaultexecmode":
+		case "mapclk":
+		case "mapreset":
 		default:
 			return errors.New("Unknown global %meta: " + key)
 		}
@@ -263,6 +265,9 @@ func (bi *BasmInstance) filteredMetaAdd(el *bmline.BasmElement, key string, valu
 		switch key {
 		case "cp":
 		case "type":
+		case "mapfrom":
+		case "mapto":
+		case "mapname":
 		case "index":
 		default:
 			return errors.New("Unknown ioatt %meta: " + key)
