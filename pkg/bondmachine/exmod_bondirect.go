@@ -4,12 +4,13 @@ import (
 	//	"fmt"
 	"strconv"
 	//	"strings"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondirect"
 )
 
 type Bondirect_extra struct {
 	Config  *bondirect.Config
-	Cluster *bondirect.Cluster
+	Cluster *bmcluster.Cluster
 	Mesh    *bondirect.Mesh
 	PeerID  uint32
 	Maps    *IOmap

@@ -1,15 +1,16 @@
 package bondmachine
 
 import (
-	"github.com/BondMachineHQ/BondMachine/pkg/etherbond"
 	//"fmt"
 	"strconv"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 )
 
 type peerlist map[int]int
 
 type Redeployer struct {
-	Cluster      *etherbond.Cluster
+	Cluster      *bmcluster.Cluster
 	Bondmachines map[int]*Bondmachine
 	Maps         map[int]*IOmap
 }

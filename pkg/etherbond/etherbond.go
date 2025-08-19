@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mdlayher/raw"
 	"net"
 	"strconv"
+
+	"github.com/mdlayher/raw"
 )
 
 const (
