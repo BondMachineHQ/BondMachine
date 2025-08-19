@@ -28,6 +28,8 @@ var symInFile = flag.String("si", "", "Load a symbols JSON file")
 var bmOutFile = flag.String("o", "", "BondMachine Output file")
 var bcofOutFile = flag.String("bo", "", "BCOF Output file")
 var symOutFile = flag.String("so", "", "Symbols Output file")
+var clusOutFile = flag.String("co", "", "Cluster Output file")
+var basmOutPrefix = flag.String("oprefix", "", "Prefix for the output files of the assembler (default: none)")
 
 // Utils
 var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parameter of the BondMachine")
@@ -251,7 +253,7 @@ func main() {
 
 	// Targets
 
-	if *bmOutFile != "" {
+	if !bi.IsClustered() && *bmOutFile != "" {
 		if err := bi.Assembler2BondMachine(); err != nil {
 			bi.Alert("Error in creating a BondMachine", err)
 			return
@@ -291,7 +293,7 @@ func main() {
 		}
 	}
 
-	if *bcofOutFile != "" {
+	if !bi.IsClustered() && *bcofOutFile != "" {
 		if err := bi.Assembler2BCOF(); err != nil {
 			panic("Error in creating a BCOF file")
 		} else {
@@ -301,6 +303,45 @@ func main() {
 			}
 			if err := os.WriteFile(*bcofOutFile, bcofBytes, 0644); err != nil {
 				panic("failed to write BCOF file")
+			}
+		}
+	}
+
+	if bi.IsClustered() && *clusOutFile != "" && *basmOutPrefix != "" {
+		if err := bi.Assembler2Cluster(); err != nil {
+			panic("Error in creating a Cluster")
+		} else {
+
+			// Write the cluster file
+			clusterBytes, err := json.Marshal(bi.GetCluster())
+			if err != nil {
+				panic("failed to marshal Cluster")
+			}
+			if err := os.WriteFile(*clusOutFile, clusterBytes, 0644); err != nil {
+				panic("failed to write Cluster file")
+			}
+
+			for bmName, bmId := range bi.GetClusteredName() {
+				if *debug || *verbose {
+					fmt.Printf("Writing BondMachine %s to %s%d.bmeta\n", bmName, *basmOutPrefix, bmId)
+				}
+
+				edgeFile := fmt.Sprintf("%s%d.bmeta", *basmOutPrefix, bmId)
+				if err := os.WriteFile(edgeFile, []byte(bi.GetClusteredBondMachines()[bmId]), 0644); err != nil {
+					panic(fmt.Sprintf("failed to write BondMachine file %s: %v", edgeFile, err))
+				}
+
+				if *debug || *verbose {
+					fmt.Printf("Writing BondMachine Maps %s to %s%d_maps.json\n", bmName, *basmOutPrefix, bmId)
+				}
+
+				mapFile := fmt.Sprintf("%s%d_maps.json", *basmOutPrefix, bmId)
+				assoc := bi.GetClusteredMaps()[bmId]
+				if mapBytes, err := json.Marshal(assoc); err == nil {
+					os.WriteFile(mapFile, mapBytes, 0644)
+				} else {
+					panic(fmt.Sprintf("failed to marshal BondMachine Maps file %s: %v", mapFile, err))
+				}
 			}
 		}
 	}

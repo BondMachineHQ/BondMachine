@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
@@ -361,7 +362,7 @@ func main() {
 				ethb.Flavor = *etherbond_flavor
 
 				if *cluster_spec != "" {
-					if cluster, err := etherbond.UnmarshallCluster(config, *cluster_spec); err != nil {
+					if cluster, err := bmcluster.UnmarshalCluster(*cluster_spec); err != nil {
 						panic(err)
 					} else {
 						ethb.Cluster = cluster
@@ -494,7 +495,7 @@ func main() {
 				bdir.Flavor = *bondirect_flavor
 
 				if *cluster_spec != "" {
-					if cluster, err := bondirect.UnmarshallCluster(config, *cluster_spec); err != nil {
+					if cluster, err := bmcluster.UnmarshalCluster(*cluster_spec); err != nil {
 						panic(err)
 					} else {
 						bdir.Cluster = cluster
@@ -504,7 +505,7 @@ func main() {
 				}
 
 				if *bondirectMesh != "" {
-					if mesh, err := bondirect.UnmarshallMesh(config, *bondirectMesh); err != nil {
+					if mesh, err := bondirect.UnmarshalMesh(config, *bondirectMesh); err != nil {
 						panic(err)
 					} else {
 						bdir.Mesh = mesh

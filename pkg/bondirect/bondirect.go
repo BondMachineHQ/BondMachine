@@ -6,41 +6,43 @@ type Config struct {
 	Debug bool
 }
 
-type Peer struct {
-	PeerId   uint32
-	Channels []uint32
-	Inputs   []uint32
-	Outputs  []uint32
-}
-
-type Cluster struct {
-	ClusterId uint32
-	Peers     []Peer
-}
-
-// Mesh description
-
-type EdgesList []string
-
-type NodesParams struct {
-	Data map[string]string
-}
-
-type EdgesParams struct {
-	From  string
-	To    string
-	Wires uint8
-	Clock uint8
-	Data  map[string]string
-}
-
+// Mesh JSON structures
 type Mesh struct {
-	Adjacency map[string]EdgesList
-	Nodes     map[string]NodesParams
-	Edges     map[string]EdgesParams
+	Transceivers []Transceiver   `json:"Transceivers"`
+	Nodes        map[string]Node `json:"Nodes"`
+	Edges        map[string]Edge `json:"Edges"`
 }
 
-//
+type Transceiver struct {
+	Type    string                 `json:"Type"`
+	Name    string                 `json:"Name"`
+	Signals map[string]Signal      `json:"Signals"`
+	Data    map[string]interface{} `json:"Data"`
+}
+
+type Signal struct {
+	Type string `json:"Type"`
+	Name string `json:"Name"`
+}
+
+type Node struct {
+	PeerId uint32                 `json:"PeerId"`
+	Data   map[string]interface{} `json:"Data"`
+}
+
+type Edge struct {
+	NodeA    string                 `json:"NodeA"`
+	NodeB    string                 `json:"NodeB"`
+	FromAtoB EdgeDirection          `json:"FromAtoB"`
+	FromBtoA EdgeDirection          `json:"FromBtoA"`
+	Data     map[string]interface{} `json:"Data"`
+}
+
+type EdgeDirection struct {
+	ATransceiver string                 `json:"ATransceiver"`
+	BTransceiver string                 `json:"BTransceiver"`
+	Data         map[string]interface{} `json:"Data"`
+}
 
 type Ips struct {
 	Assoc map[string]string
