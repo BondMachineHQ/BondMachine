@@ -121,7 +121,7 @@ func (bi *BasmInstance) Assembler2Cluster() error {
 				}
 				meta := "%meta cpdef " + cp.GetValue()
 				for key, value := range cp.LoopMeta() {
-					if key != "templated" && key != "device" {
+					if key != "templated" && key != "device" && key != "devid" {
 						meta += " " + key + ":" + value + ","
 					}
 				}
