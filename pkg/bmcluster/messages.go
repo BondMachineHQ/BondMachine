@@ -1,5 +1,7 @@
 package bmcluster
 
+import "fmt"
+
 type Port struct {
 	BmId  int
 	Index int
@@ -8,6 +10,14 @@ type Port struct {
 type Message struct {
 	From Port
 	To   Port
+}
+
+func (p Port) String() string {
+	return fmt.Sprintf("Port{BmId: %d, Index: %d}", p.BmId, p.Index)
+}
+
+func (m Message) String() string {
+	return fmt.Sprintf("Message from %v to %v", m.From, m.To)
 }
 
 func (c *Cluster) GetMessages() []Message {
