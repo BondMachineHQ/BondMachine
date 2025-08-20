@@ -118,8 +118,8 @@ var simReport = flag.String("sim-report", "", "Simulation report file")
 var emu = flag.Bool("emu", false, "Emulate bond machine")
 var emu_interactions = flag.Int("emu-interactions", 10, "Emulation interaction (0 means forever)")
 
-var cluster_spec = flag.String("cluster-spec", "", "Etherbond or udpbond cluster Spec File ")
-var peer_id = flag.Int("peer-id", -1, "Etherbond or udpbond Peer ID")
+var clusterSpec = flag.String("cluster-spec", "", "Cluster Spec File ")
+var peerID = flag.Int("peer-id", -1, "Peer ID of the BondMachine within the cluster")
 
 var use_etherbond = flag.Bool("use-etherbond", false, "Build including etherbond support")
 var etherbond_flavor = flag.String("etherbond-flavor", "enc60j28", "Choose the type of ethernet device. currently supported: enc60j28.")
@@ -361,8 +361,8 @@ func main() {
 				ethb.Config = config
 				ethb.Flavor = *etherbond_flavor
 
-				if *cluster_spec != "" {
-					if cluster, err := bmcluster.UnmarshalCluster(*cluster_spec); err != nil {
+				if *clusterSpec != "" {
+					if cluster, err := bmcluster.UnmarshalCluster(*clusterSpec); err != nil {
 						panic(err)
 					} else {
 						ethb.Cluster = cluster
@@ -398,8 +398,8 @@ func main() {
 
 				ethb.Macs = macmap
 				ethb.Maps = ethiomap
-				ethb.PeerID = uint32(*peer_id)
-				ethb.Mac = "0288" + fmt.Sprintf("%08d", *peer_id)
+				ethb.PeerID = uint32(*peerID)
+				ethb.Mac = "0288" + fmt.Sprintf("%08d", *peerID)
 
 				if err := ethb.Check(bmach); err != nil {
 					panic(err)
@@ -417,8 +417,8 @@ func main() {
 				udpb.Config = config
 				udpb.Flavor = *udpbond_flavor
 
-				if *cluster_spec != "" {
-					if cluster, err := udpbond.UnmarshallCluster(config, *cluster_spec); err != nil {
+				if *clusterSpec != "" {
+					if cluster, err := udpbond.UnmarshallCluster(config, *clusterSpec); err != nil {
 						panic(err)
 					} else {
 						udpb.Cluster = cluster
@@ -466,8 +466,8 @@ func main() {
 				udpb.NetParams = netparams
 				udpb.Ips = macmap
 				udpb.Maps = ethiomap
-				udpb.PeerID = uint32(*peer_id)
-				if ipst, ok := macmap.Assoc["peer_"+strconv.Itoa(*peer_id)]; ok {
+				udpb.PeerID = uint32(*peerID)
+				if ipst, ok := macmap.Assoc["peer_"+strconv.Itoa(*peerID)]; ok {
 					ip := strings.Split(ipst, "/")[0]
 					port := strings.Split(ipst, ":")[1]
 					udpb.Ip = ip
@@ -494,8 +494,8 @@ func main() {
 				bdir.Config = config
 				bdir.Flavor = *bondirectFlavor
 
-				if *cluster_spec != "" {
-					if cluster, err := bmcluster.UnmarshalCluster(*cluster_spec); err != nil {
+				if *clusterSpec != "" {
+					if cluster, err := bmcluster.UnmarshalCluster(*clusterSpec); err != nil {
 						panic(err)
 					} else {
 						bdir.Cluster = cluster
