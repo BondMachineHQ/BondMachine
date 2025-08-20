@@ -43,7 +43,3 @@ type EdgeDirection struct {
 	BTransceiver string                 `json:"BTransceiver"`
 	Data         map[string]interface{} `json:"Data"`
 }
-
-type Ips struct {
-	Assoc map[string]string
-}
