@@ -18,6 +18,9 @@ var clusterSpec = flag.String("cluster-spec", "", "Cluster Spec File ")
 // Operations
 var showMessages = flag.Bool("show-messages", false, "Show messages")
 
+// Graphviz
+var emitMeshDot = flag.Bool("emit-mesh-dot", false, "Emit Graphviz DOT for the mesh")
+
 func init() {
 	flag.Parse()
 }
@@ -62,6 +65,19 @@ func main() {
 			fmt.Println("Both Bondirect Mesh and Cluster Spec must be provided to show messages.")
 		} else {
 			bondirect.ShowMessages(c, myMesh, myCluster)
+		}
+	}
+
+	if *emitMeshDot {
+		if myMesh == nil {
+			fmt.Println("Bondirect Mesh must be provided to emit Graphviz DOT.")
+		} else {
+			dot, err := bondirect.EmitMeshDot(c, myMesh)
+			if err != nil {
+				panic(err)
+			} else {
+				fmt.Println(dot)
+			}
 		}
 	}
 }
