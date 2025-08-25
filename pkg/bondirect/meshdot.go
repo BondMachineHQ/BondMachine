@@ -21,10 +21,20 @@ const meshDotTemplate = `digraph BondirectMesh {
 
 {{- range $.Edges}}
 {{- if eq $peerName .NodeA }}
-	"{{.NodeA}}{{.Name}}" [label="{{.Name}}"];
+	subgraph cluster_{{$peerName}}_{{.Name}} {
+	style="filled, rounded" fillcolor=aquamarine1 color=grey30;
+	label="{{.Name}}";
+	"{{.NodeA}}{{.Name}}{{.AtoBTransA}}" [label="{{.AtoBTransA}}"];
+	"{{.NodeA}}{{.Name}}{{.BtoATransA}}" [label="{{.BtoATransA}}"];
+	}
 {{- end}}
 {{- if eq $peerName .NodeB }}
-	"{{.NodeB}}{{.Name}}" [label="{{.Name}}"];
+	subgraph cluster_{{$peerName}}_{{.Name}} {
+	style="filled, rounded" fillcolor=aquamarine1 color=grey30;
+	label="{{.Name}}";
+	"{{.NodeB}}{{.Name}}{{.AtoBTransB}}" [label="{{.AtoBTransB}}"];
+	"{{.NodeB}}{{.Name}}{{.BtoATransB}}" [label="{{.BtoATransB}}"];
+	}
 {{- end}}
 {{- end}}
 
@@ -32,7 +42,8 @@ const meshDotTemplate = `digraph BondirectMesh {
 {{- end}}
 
 {{- range $.Edges}}
-	"{{.NodeA}}{{.Name}}" -> "{{.NodeB}}{{.Name}}";
+	"{{.NodeA}}{{.Name}}{{.AtoBTransA}}" -> "{{.NodeB}}{{.Name}}{{.AtoBTransB}}";
+	"{{.NodeB}}{{.Name}}{{.BtoATransB}}" -> "{{.NodeA}}{{.Name}}{{.BtoATransA}}";
 {{- end}}
 }
 `
@@ -48,9 +59,13 @@ type dotNode struct {
 }
 
 type dotEdge struct {
-	NodeA string
-	NodeB string
-	Name  string
+	NodeA      string
+	NodeB      string
+	Name       string
+	AtoBTransA string
+	AtoBTransB string
+	BtoATransA string
+	BtoATransB string
 }
 
 func EmitMeshDot(c *Config, mesh *Mesh) (string, error) {
@@ -76,9 +91,13 @@ func EmitMeshDot(c *Config, mesh *Mesh) (string, error) {
 
 	for edgeName, edge := range mesh.Edges {
 		dotEdge := dotEdge{
-			NodeA: edge.NodeA,
-			NodeB: edge.NodeB,
-			Name:  edgeName,
+			NodeA:      edge.NodeA,
+			NodeB:      edge.NodeB,
+			Name:       edgeName,
+			AtoBTransA: edge.FromAtoB.ATransceiver,
+			AtoBTransB: edge.FromAtoB.BTransceiver,
+			BtoATransA: edge.FromBtoA.ATransceiver,
+			BtoATransB: edge.FromBtoA.BTransceiver,
 		}
 
 		templateData.Edges = append(templateData.Edges, dotEdge)
