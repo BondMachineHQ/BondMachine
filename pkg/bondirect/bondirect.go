@@ -43,3 +43,9 @@ type EdgeDirection struct {
 	BTransceiver string                 `json:"BTransceiver"`
 	Data         map[string]interface{} `json:"Data"`
 }
+
+type Path struct {
+	NodeA string   `json:"NodeA"`
+	NodeB string   `json:"NodeB"`
+	Nodes []string `json:"Nodes"`
+}
