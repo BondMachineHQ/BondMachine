@@ -1,8 +1,12 @@
 package bondirect
 
-import "fmt"
+import (
+	"fmt"
 
-func ShowPaths(c *Config, mesh *Mesh) {
+	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
+)
+
+func ShowPaths(c *Config, mesh *Mesh, cluster *bmcluster.Cluster) {
 	paths, err := GetPaths(c, mesh)
 	if err != nil {
 		fmt.Println("Error getting paths:", err)
@@ -12,6 +16,12 @@ func ShowPaths(c *Config, mesh *Mesh) {
 	fmt.Println("Paths:")
 	for _, path := range paths {
 		fmt.Println(" -", path)
+	}
+
+	messPaths, _ := SolveMessages(c, mesh, cluster)
+	fmt.Println("Messages paths:")
+	for _, mp := range messPaths {
+		fmt.Println(" -", mp.PeerId, mp.Origins, mp.Destinations, mp.Routes, mp.OriginDestinations, mp.RouteDestinations)
 	}
 }
 

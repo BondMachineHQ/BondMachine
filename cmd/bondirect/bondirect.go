@@ -73,7 +73,7 @@ func main() {
 		if myMesh == nil {
 			fmt.Println("Bondirect Mesh must be provided to show paths.")
 		} else {
-			bondirect.ShowPaths(c, myMesh)
+			bondirect.ShowPaths(c, myMesh, myCluster)
 		}
 	}
 
