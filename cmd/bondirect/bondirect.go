@@ -9,7 +9,6 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bondirect"
 )
 
-var verbose = flag.Bool("v", false, "Verbose")
 var debug = flag.Bool("d", false, "Verbose")
 
 // Bondirect mesh file and cluster spec file
@@ -20,9 +19,12 @@ var clusterSpec = flag.String("cluster-spec", "", "Cluster Spec File ")
 var showMessages = flag.Bool("show-messages", false, "Show messages")
 var showPaths = flag.Bool("show-paths", false, "Show paths")
 
+//TODO var listNodes = flag.Bool("list-nodes", false, "List nodes")
+//TODO var listEdges = flag.Bool("list-edges", false, "List edges")
+
 // The bondirect components are:
 // - Transceiver: Handles the communication (in or out) on one end of a wire, they can be recv or send.
-// - Wire: Connects two Transceivers, send+recv on both ends, also is a logic edge on the mesh
+// - Wire or Edge: Connects two Transceivers, send+recv on both ends, also is a logic edge on the mesh
 // - Node: Represents a logical endpoint in the mesh
 // - Cluster: Represents a group of Nodes with the messages among them
 // - Path: Represents a sequence of Nodes and Wires connecting them
@@ -32,6 +34,18 @@ var showPaths = flag.Bool("show-paths", false, "Show paths")
 
 // So every BM has 1 element connected to the BM. It has as many lines as the wires
 // Going to others BMs from that BM. Every line has 2 transceivers.
+
+// Objects specify
+var prefix = flag.String("prefix", "", "Prefix for all the generated names")
+
+var nodeName = flag.String("node", "", "Node name")
+var edgeName = flag.String("edge", "", "Edge name")
+var direction = flag.String("direction", "", "Direction (in(recv)/out(send))")
+
+// Generation
+var generateTransceiver = flag.Bool("generate-transceiver", false, "Generate Transceiver")
+var generateLine = flag.Bool("generate-line", false, "Generate Line")
+var generateEndpoint = flag.Bool("generate-endpoint", false, "Generate Endpoint")
 
 // Graphviz
 var emitMeshDot = flag.Bool("emit-mesh-dot", false, "Emit Graphviz DOT for the mesh")
