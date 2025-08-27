@@ -19,6 +19,19 @@ var clusterSpec = flag.String("cluster-spec", "", "Cluster Spec File ")
 var showMessages = flag.Bool("show-messages", false, "Show messages")
 var showPaths = flag.Bool("show-paths", false, "Show paths")
 
+// The bondirect components are:
+// - Transceiver: Handles the communication (in or out) on one end of a wire, they can be recv or send.
+// - Wire: Connects two Transceivers, send+recv on both ends, also is a logic edge on the mesh
+// - Node: Represents a logical endpoint in the mesh
+// - Cluster: Represents a group of Nodes with the messages among them
+// - Path: Represents a sequence of Nodes and Wires connecting them
+// - Mesh: Represents the entire network of Nodes and Wires
+// - Line: Represents a couple of Transceivers of a wire in a node.
+// - Endpoint: If the elements that connects BM with all the wires in the mash
+
+// So every BM has 1 element connected to the BM. It has as many lines as the wires
+// Going to others BMs from that BM. Every line has 2 transceivers.
+
 // Graphviz
 var emitMeshDot = flag.Bool("emit-mesh-dot", false, "Emit Graphviz DOT for the mesh")
 
