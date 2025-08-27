@@ -1,5 +1,13 @@
 package bondirect
 
+import "github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
+
+type BondirectElement struct {
+	*Config
+	*bmcluster.Cluster
+	*Mesh
+}
+
 // Config struct
 type Config struct {
 	Rsize uint8

@@ -2,12 +2,11 @@ package bondirect
 
 import (
 	"fmt"
-
-	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 )
 
-func ShowPaths(c *Config, mesh *Mesh, cluster *bmcluster.Cluster) {
-	paths, err := GetPaths(c, mesh)
+func (be *BondirectElement) ShowPaths() {
+
+	paths, err := be.GetPaths()
 	if err != nil {
 		fmt.Println("Error getting paths:", err)
 		return
@@ -18,19 +17,22 @@ func ShowPaths(c *Config, mesh *Mesh, cluster *bmcluster.Cluster) {
 		fmt.Println(" -", path)
 	}
 
-	messPaths, _ := SolveMessages(c, mesh, cluster)
+	messPaths, _ := be.SolveMessages()
 	fmt.Println("Messages paths:")
 	for _, mp := range messPaths {
 		fmt.Println(" -", mp.PeerId, mp.Origins, mp.Destinations, mp.Routes, mp.OriginDestinations, mp.RouteDestinations)
 	}
 }
 
-func GetPaths(c *Config, mesh *Mesh) ([]Path, error) {
+func (be *BondirectElement) GetPaths() ([]Path, error) {
+
+	mesh := be.Mesh
+
 	paths := make([]Path, 0)
 
 	for nodeIName := range mesh.Nodes {
 		for nodeJName := range mesh.Nodes {
-			path, err := GetPath(c, mesh, nodeIName, nodeJName)
+			path, err := be.GetPath(nodeIName, nodeJName)
 			if err != nil {
 				return nil, err
 			}
@@ -40,7 +42,7 @@ func GetPaths(c *Config, mesh *Mesh) ([]Path, error) {
 	return paths, nil
 }
 
-func GetPath(c *Config, mesh *Mesh, nodeA string, nodeB string) (Path, error) {
+func (be *BondirectElement) GetPath(nodeA string, nodeB string) (Path, error) {
 	if nodeA == nodeB {
 		return Path{
 			NodeA: nodeA,
@@ -58,7 +60,7 @@ func GetPath(c *Config, mesh *Mesh, nodeA string, nodeB string) (Path, error) {
 			lastNode := p[len(p)-1]
 
 			// Get neighbors of the last node
-			neighbors, err := GetNeighbors(c, mesh, lastNode)
+			neighbors, err := be.GetNeighbors(lastNode)
 			if err != nil {
 				return Path{}, err
 			}
@@ -98,8 +100,9 @@ func GetPath(c *Config, mesh *Mesh, nodeA string, nodeB string) (Path, error) {
 	return Path{}, nil
 }
 
-func GetNeighbors(c *Config, mesh *Mesh, nodeName string) ([]string, error) {
+func (be *BondirectElement) GetNeighbors(nodeName string) ([]string, error) {
 	neighbors := make([]string, 0)
+	mesh := be.Mesh
 
 	_, ok := mesh.Nodes[nodeName]
 	if !ok {

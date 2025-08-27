@@ -3,13 +3,11 @@ package bondirect
 import (
 	"fmt"
 	"strconv"
-
-	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 )
 
 // ShowMessages displays the message flow between nodes in the cluster
-func ShowMessages(c *Config, mesh *Mesh, cluster *bmcluster.Cluster) {
-	rawMess := cluster.GetMessages()
+func (be *BondirectElement) ShowMessages() {
+	rawMess := be.Cluster.GetMessages()
 
 	for _, rawMes := range rawMess {
 		from := rawMes.From
@@ -27,7 +25,11 @@ func ShowMessages(c *Config, mesh *Mesh, cluster *bmcluster.Cluster) {
 	}
 }
 
-func SolveMessages(c *Config, mesh *Mesh, cluster *bmcluster.Cluster) (map[string]NodeMessages, error) {
+func (be *BondirectElement) SolveMessages() (map[string]NodeMessages, error) {
+
+	cluster := be.Cluster
+	mesh := be.Mesh
+
 	rawMess := cluster.GetMessages()
 
 	nodeMessages := make(map[string]NodeMessages)
@@ -71,7 +73,7 @@ func SolveMessages(c *Config, mesh *Mesh, cluster *bmcluster.Cluster) (map[strin
 			return nil, fmt.Errorf("unable to find node names for peer IDs %d and %d", peerIdFrom, peerIdTo)
 		}
 
-		path, err := GetPath(c, mesh, formName, toName)
+		path, err := be.GetPath(formName, toName)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get path from %s to %s: %w", formName, toName, err)
 		}

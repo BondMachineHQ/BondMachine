@@ -68,7 +68,10 @@ type dotEdge struct {
 	BtoATransB string
 }
 
-func EmitMeshDot(c *Config, mesh *Mesh) (string, error) {
+func (be *BondirectElement) EmitMeshDot() (string, error) {
+
+	mesh := be.Mesh
+
 	// Create template
 	tmpl, err := template.New("meshDot").Parse(meshDotTemplate)
 	if err != nil {

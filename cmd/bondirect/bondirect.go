@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondirect"
@@ -56,6 +57,8 @@ func main() {
 		} else {
 			myMesh = mesh
 		}
+	} else {
+		log.Fatal("Bondirect Mesh must be provided")
 	}
 
 	if c.Debug {
@@ -68,7 +71,14 @@ func main() {
 		} else {
 			myCluster = cluster
 		}
+	} else {
+		log.Fatal("Cluster Spec must be provided")
 	}
+
+	be := new(bondirect.BondirectElement)
+	be.Config = c
+	be.Mesh = myMesh
+	be.Cluster = myCluster
 
 	if c.Debug {
 		fmt.Println("Cluster Spec:", myCluster)
@@ -78,7 +88,7 @@ func main() {
 		if myMesh == nil || myCluster == nil {
 			fmt.Println("Both Bondirect Mesh and Cluster Spec must be provided to show messages.")
 		} else {
-			bondirect.ShowMessages(c, myMesh, myCluster)
+			be.ShowMessages()
 		}
 	}
 
@@ -86,7 +96,7 @@ func main() {
 		if myMesh == nil {
 			fmt.Println("Bondirect Mesh must be provided to show paths.")
 		} else {
-			bondirect.ShowPaths(c, myMesh, myCluster)
+			be.ShowPaths()
 		}
 	}
 
@@ -94,7 +104,7 @@ func main() {
 		if myMesh == nil {
 			fmt.Println("Bondirect Mesh must be provided to emit Graphviz DOT.")
 		} else {
-			dot, err := bondirect.EmitMeshDot(c, myMesh)
+			dot, err := be.EmitMeshDot()
 			if err != nil {
 				panic(err)
 			} else {
