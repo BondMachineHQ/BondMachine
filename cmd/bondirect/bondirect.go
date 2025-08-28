@@ -51,6 +51,7 @@ var generateEndpoint = flag.Bool("generate-endpoint", false, "Generate Endpoint"
 
 // Graphviz
 var emitMeshDot = flag.Bool("emit-mesh-dot", false, "Emit Graphviz DOT for the mesh")
+var dumpMetaData = flag.Bool("dump-metadata", false, "Dump metadata")
 
 func init() {
 	flag.Parse()
@@ -106,6 +107,7 @@ func main() {
 		} else {
 			be.ShowMessages()
 		}
+		return
 	}
 
 	if *showPaths {
@@ -114,6 +116,7 @@ func main() {
 		} else {
 			be.ShowPaths()
 		}
+		return
 	}
 
 	if *emitMeshDot {
@@ -127,6 +130,31 @@ func main() {
 				fmt.Println(dot)
 			}
 		}
+		return
+	}
+	if *dumpMetaData {
+		if myMesh == nil {
+			fmt.Println("Bondirect Mesh must be provided to dump metadata.")
+		} else {
+			if *nodeName != "" {
+				metadata, err := be.DumpNodeMetaData(*nodeName)
+				if err != nil {
+					panic(err)
+				} else {
+					fmt.Println(metadata)
+				}
+			} else if *edgeName != "" {
+				metadata, err := be.DumpEdgeMetaData(*edgeName)
+				if err != nil {
+					panic(err)
+				} else {
+					fmt.Println(metadata)
+				}
+			} else {
+				fmt.Println("Node name or Edge name must be provided to dump metadata.")
+			}
+		}
+		return
 	}
 
 	if *generateTransceiver {
@@ -146,6 +174,7 @@ func main() {
 				}
 			}
 		}
+		return
 	}
 
 	if *generateLine {
@@ -165,6 +194,7 @@ func main() {
 				}
 			}
 		}
+		return
 	}
 
 	if *generateEndpoint {
@@ -184,5 +214,6 @@ func main() {
 				}
 			}
 		}
+		return
 	}
 }

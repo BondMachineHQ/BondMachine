@@ -1,6 +1,6 @@
 package bondirect
 
 const (
-	bdendpoint = `
+	bdEndpoint = `
 	`
 )
