@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondirect"
@@ -37,6 +38,7 @@ var showPaths = flag.Bool("show-paths", false, "Show paths")
 
 // Objects specify
 var prefix = flag.String("prefix", "", "Prefix for all the generated names")
+var outputFile = flag.String("output-file", "", "Output file")
 
 var nodeName = flag.String("node", "", "Node name")
 var edgeName = flag.String("edge", "", "Edge name")
@@ -123,6 +125,63 @@ func main() {
 				panic(err)
 			} else {
 				fmt.Println(dot)
+			}
+		}
+	}
+
+	if *generateTransceiver {
+		if *nodeName == "" || *edgeName == "" || *direction == "" {
+			fmt.Println("Node name, Edge name and Direction must be provided to generate a Transceiver.")
+		} else {
+			code, err := be.GenerateTransceiver(*prefix, *nodeName, *edgeName, *direction)
+			if err != nil {
+				panic(err)
+			} else {
+				if *outputFile != "" {
+					if err := os.WriteFile(*outputFile, []byte(code), 0644); err != nil {
+						panic(err)
+					}
+				} else {
+					fmt.Println(code)
+				}
+			}
+		}
+	}
+
+	if *generateLine {
+		if *nodeName == "" || *edgeName == "" {
+			fmt.Println("Node name, Edge name must be provided to generate a Line.")
+		} else {
+			code, err := be.GenerateLine(*prefix, *nodeName, *edgeName)
+			if err != nil {
+				panic(err)
+			} else {
+				if *outputFile != "" {
+					if err := os.WriteFile(*outputFile, []byte(code), 0644); err != nil {
+						panic(err)
+					}
+				} else {
+					fmt.Println(code)
+				}
+			}
+		}
+	}
+
+	if *generateEndpoint {
+		if *nodeName == "" {
+			fmt.Println("Node name must be provided to generate an Endpoint.")
+		} else {
+			code, err := be.GenerateEndpoint(*prefix, *nodeName)
+			if err != nil {
+				panic(err)
+			} else {
+				if *outputFile != "" {
+					if err := os.WriteFile(*outputFile, []byte(code), 0644); err != nil {
+						panic(err)
+					}
+				} else {
+					fmt.Println(code)
+				}
 			}
 		}
 	}

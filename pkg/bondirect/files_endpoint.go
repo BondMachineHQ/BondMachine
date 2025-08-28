@@ -1,0 +1,6 @@
+package bondirect
+
+const (
+	bdendpoint = `
+	`
+)
