@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondirect"
@@ -41,6 +42,7 @@ var prefix = flag.String("prefix", "", "Prefix for all the generated names")
 var outputFile = flag.String("output-file", "", "Output file")
 
 var nodeName = flag.String("node", "", "Node name")
+var nodeID = flag.String("node-id", "", "Node ID")
 var edgeName = flag.String("edge", "", "Edge name")
 var direction = flag.String("direction", "", "Direction (in(recv)/out(send))")
 
@@ -90,6 +92,19 @@ func main() {
 		}
 	} else {
 		log.Fatal("Cluster Spec must be provided")
+	}
+
+	// Processing node name if nodeName or NodeID is provided
+	if *nodeID != "" && *nodeName == "" {
+		for name, node := range myMesh.Nodes {
+			if strconv.Itoa(int(node.PeerId)) == *nodeID {
+				*nodeName = name
+				break
+			}
+		}
+		if *nodeName == "" {
+			log.Fatal("Invalid Node ID")
+		}
 	}
 
 	be := new(bondirect.BondirectElement)
