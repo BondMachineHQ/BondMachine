@@ -107,6 +107,18 @@ func main() {
 		}
 	}
 
+	// Processing direction
+	if *direction != "" {
+		switch *direction {
+		case "in", "recv":
+			*direction = "in"
+		case "out", "send":
+			*direction = "out"
+		default:
+			log.Fatal("Invalid Direction")
+		}
+	}
+
 	be := new(bondirect.BondirectElement)
 	be.Config = c
 	be.Mesh = myMesh
