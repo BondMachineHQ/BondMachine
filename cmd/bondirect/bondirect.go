@@ -38,6 +38,7 @@ var showPaths = flag.Bool("show-paths", false, "Show paths")
 // Going to others BMs from that BM. Every line has 2 transceivers.
 
 // Objects specify
+var registerSize = flag.Int("register-size", 8, "Register size (in bits)")
 var prefix = flag.String("prefix", "", "Prefix for all the generated names")
 var outputFile = flag.String("output-file", "", "Output file")
 
@@ -69,6 +70,8 @@ func main() {
 	if *debug {
 		c.Debug = true
 	}
+
+	c.Rsize = uint8(*registerSize)
 
 	if *bondirectMesh != "" {
 		if mesh, err := bondirect.UnmarshalMesh(c, *bondirectMesh); err != nil {
@@ -123,6 +126,8 @@ func main() {
 	be.Config = c
 	be.Mesh = myMesh
 	be.Cluster = myCluster
+
+	be.InitTData()
 
 	if c.Debug {
 		fmt.Println("Cluster Spec:", myCluster)

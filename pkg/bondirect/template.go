@@ -4,8 +4,15 @@ import (
 	"text/template"
 )
 
-type Tdata struct {
+type TData struct {
 	// Define the fields for Tdata
+	Rsize int
+}
+
+func (be *BondirectElement) InitTData() {
+	be.TData = &TData{
+		Rsize: int(be.Config.Rsize),
+	}
 }
 
 var funcMap = template.FuncMap{

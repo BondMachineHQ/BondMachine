@@ -20,7 +20,7 @@ func (be *BondirectElement) GenerateTransceiver(prefix, nodeName, edgeName, dire
 		return "", err
 	}
 
-	err = t.Execute(&f, be.Tdata)
+	err = t.Execute(&f, be.TData)
 	if err != nil {
 		return "", err
 	}

@@ -8,7 +8,7 @@ USE IEEE.NUMERIC_STD.ALL;
 
 ENTITY bond_tx IS
     GENERIC (
-        message_length : INTEGER := 8;
+        message_length : INTEGER := {{.Rsize}};
         counters_length : INTEGER := 32
     );
     PORT (

@@ -3,10 +3,10 @@ package bondirect
 import "github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 
 type BondirectElement struct {
-	*Config
-	*bmcluster.Cluster
-	*Mesh
-	*Tdata
+	*Config            // Configuration settings
+	*bmcluster.Cluster // Reference to the cluster
+	*Mesh              // Reference to the mesh
+	*TData             // Metadata
 }
 
 // Config struct
