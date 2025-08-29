@@ -6,6 +6,7 @@ type BondirectElement struct {
 	*Config
 	*bmcluster.Cluster
 	*Mesh
+	*Tdata
 }
 
 // Config struct
