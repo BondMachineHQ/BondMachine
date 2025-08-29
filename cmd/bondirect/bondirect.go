@@ -141,14 +141,14 @@ func main() {
 				if err != nil {
 					panic(err)
 				} else {
-					fmt.Println(metadata)
+					fmt.Print(metadata)
 				}
 			} else if *edgeName != "" {
 				metadata, err := be.DumpEdgeMetaData(*edgeName)
 				if err != nil {
 					panic(err)
 				} else {
-					fmt.Println(metadata)
+					fmt.Print(metadata)
 				}
 			} else {
 				fmt.Println("Node name or Edge name must be provided to dump metadata.")
