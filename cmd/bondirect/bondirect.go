@@ -55,6 +55,7 @@ var generateEndpoint = flag.Bool("generate-endpoint", false, "Generate Endpoint"
 // Graphviz
 var emitMeshDot = flag.Bool("emit-mesh-dot", false, "Emit Graphviz DOT for the mesh")
 var dumpMetaData = flag.Bool("dump-metadata", false, "Dump metadata")
+var dumpTemplateData = flag.Bool("dump-template-data", false, "Dump template data")
 
 func init() {
 	flag.Parse()
@@ -185,6 +186,15 @@ func main() {
 			} else {
 				fmt.Println("Node name or Edge name must be provided to dump metadata.")
 			}
+		}
+		return
+	}
+
+	if *dumpTemplateData {
+		if myMesh == nil || myCluster == nil {
+			fmt.Println("Both Bondirect Mesh and Cluster Spec must be provided to dump template data.")
+		} else {
+			fmt.Print(be.DumpTemplateData())
 		}
 		return
 	}
