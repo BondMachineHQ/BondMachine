@@ -11,14 +11,22 @@ const (
 
 type TData struct {
 	// Define the fields for Tdata
+	Prefix       string
 	NodeName     string
 	EdgeName     string
-	Rsize        int // Register size
-	NodeNum      int // Number of nodes
-	NodeBits     int // Bits needed for node addressing
-	IONum        int // Maximum number of inputs or outputs Among all nodes
-	IOBits       int // Bits needed for IO addressing
-	InnerMessLen int // Length of inner messages
+	Rsize        int        // Register size
+	NodeNum      int        // Number of nodes
+	NodeBits     int        // Bits needed for node addressing
+	IONum        int        // Maximum number of inputs or outputs Among all nodes
+	IOBits       int        // Bits needed for IO addressing
+	InnerMessLen int        // Length of inner messages
+	Inputs       []string   // List of input signals
+	Outputs      []string   // List of output signals
+	Lines        []string   // List of line signals
+	TrIn         []string   // List of transceivers for incoming signals
+	TrOut        []string   // List of transceivers for outgoing signals
+	WiresIn      [][]string // List of wire signals, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
+	WiresOut     [][]string // List of wire signals, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
 }
 
 func (be *BondirectElement) InitTData() {
@@ -42,6 +50,111 @@ func (be *BondirectElement) InitTData() {
 	be.TData.InnerMessLen = be.TData.NodeBits + be.TData.IOBits + NeededBits(ActionsNum) + be.TData.Rsize
 }
 
+func (be *BondirectElement) PopulateIOData(nodeName string) error {
+	inputs := make([]string, 0)
+	outputs := make([]string, 0)
+
+	found := false
+	for _, node := range be.Cluster.Peers {
+		if node.PeerName == nodeName {
+			for _, inp := range node.Inputs {
+				inName := fmt.Sprintf("input%d", inp)
+				inputs = append(inputs, inName)
+			}
+			for _, out := range node.Outputs {
+				outName := fmt.Sprintf("output%d", out)
+				outputs = append(outputs, outName)
+			}
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("node %s not found", nodeName)
+	}
+
+	be.TData.Inputs = inputs
+	be.TData.Outputs = outputs
+
+	return nil
+}
+
+func (be *BondirectElement) PopulateWireData(nodeName string) error {
+	lines := make([]string, 0)
+	trIn := make([]string, 0)
+	trOut := make([]string, 0)
+	wiresIn := make([][]string, 0)
+	wiresOut := make([][]string, 0)
+
+	// Using cluster names to find the mesh node name (that can be different)
+	if meshNodeName, err := be.GetMeshNodeName(nodeName); err == nil {
+		nodeName = meshNodeName
+	} else {
+		return fmt.Errorf("failed to get mesh node name: %v", err)
+	}
+
+	fmt.Println("Populating wire data for node:", nodeName)
+
+	for lineName, line := range be.Mesh.Edges {
+
+		if line.NodeA == nodeName {
+			// Check if NodeB is in the cluster
+			if be.CheckMeshNodeName(line.NodeB) {
+				lines = append(lines, lineName)
+				incoming := line.FromBtoA.ATransceiver
+				trIn = append(trIn, incoming)
+				if signals, err := be.GetTransceiverSignals(incoming); err == nil {
+					wiresIn = append(wiresIn, signals)
+				} else {
+					return fmt.Errorf("failed to get incoming transceiver signals: %v", err)
+				}
+
+				outgoing := line.FromAtoB.ATransceiver
+				trOut = append(trOut, outgoing)
+				if signals, err := be.GetTransceiverSignals(outgoing); err == nil {
+					wiresOut = append(wiresOut, signals)
+				} else {
+					return fmt.Errorf("failed to get outgoing transceiver signals: %v", err)
+				}
+
+				continue
+			}
+		} else if line.NodeB == nodeName {
+			// Check if NodeA is in the cluster
+			if be.CheckMeshNodeName(line.NodeA) {
+				lines = append(lines, lineName)
+
+				incoming := line.FromAtoB.BTransceiver
+				trIn = append(trIn, incoming)
+				if signals, err := be.GetTransceiverSignals(incoming); err == nil {
+					wiresIn = append(wiresIn, signals)
+				} else {
+					return fmt.Errorf("failed to get incoming transceiver signals: %v", err)
+				}
+
+				outgoing := line.FromBtoA.BTransceiver
+				trOut = append(trOut, outgoing)
+				if signals, err := be.GetTransceiverSignals(outgoing); err == nil {
+					wiresOut = append(wiresOut, signals)
+				} else {
+					return fmt.Errorf("failed to get outgoing transceiver signals: %v", err)
+				}
+
+				continue
+			}
+		}
+	}
+
+	be.TData.Lines = lines
+	be.TData.TrIn = trIn
+	be.TData.TrOut = trOut
+	be.TData.WiresIn = wiresIn
+	be.TData.WiresOut = wiresOut
+
+	return nil
+}
+
 func (be *BondirectElement) DumpTemplateData() string {
 	result := ""
 	result += fmt.Sprintf("Register Size: %d\n", be.TData.Rsize)
@@ -50,6 +163,13 @@ func (be *BondirectElement) DumpTemplateData() string {
 	result += fmt.Sprintf("IO Number: %d\n", be.TData.IONum)
 	result += fmt.Sprintf("IO Bits: %d\n", be.TData.IOBits)
 	result += fmt.Sprintf("Inner Message Length: %d\n", be.TData.InnerMessLen)
+	result += fmt.Sprintf("Inputs: %v\n", be.TData.Inputs)
+	result += fmt.Sprintf("Outputs: %v\n", be.TData.Outputs)
+	result += fmt.Sprintf("Lines: %v\n", be.TData.Lines)
+	result += fmt.Sprintf("Transceivers In: %v\n", be.TData.TrIn)
+	result += fmt.Sprintf("Transceivers Out: %v\n", be.TData.TrOut)
+	result += fmt.Sprintf("Wires In: %v\n", be.TData.WiresIn)
+	result += fmt.Sprintf("Wires Out: %v\n", be.TData.WiresOut)
 	return result
 }
 
@@ -69,6 +189,16 @@ var funcMap = template.FuncMap{
 	},
 	"bits": func(i int) int {
 		return NeededBits(i)
+	},
+	"len": func(s []string) int {
+		return len(s)
+	},
+	"iter": func(n int) []int {
+		result := make([]int, n)
+		for i := 0; i < n; i++ {
+			result[i] = i
+		}
+		return result
 	},
 }
 
