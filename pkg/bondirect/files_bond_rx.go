@@ -9,7 +9,9 @@ USE IEEE.NUMERIC_STD.ALL;
 ENTITY bond_rx IS
     GENERIC (
         message_length : INTEGER := 8;
-        counters_length : INTEGER := 32
+        counters_length : INTEGER := 32;
+        clk_grace_wait : INTEGER := 10000;
+        clk_timeout: INTEGER := 1000000;
     );
     PORT (
         clk : IN STD_LOGIC;
@@ -28,8 +30,8 @@ ARCHITECTURE Behavioral OF bond_rx IS
     SIGNAL current_state : state_type := IDLE;
     SIGNAL int_clk : STD_LOGIC := '0';
     SIGNAL int_clk_prev : STD_LOGIC := '0';
-    CONSTANT clk_grace_period : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(5, counters_length);
-    CONSTANT timeout : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(1000, counters_length);
+    CONSTANT clk_grace_period : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(clk_grace_wait, counters_length);
+    CONSTANT timeout : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(clk_timeout, counters_length);
     CONSTANT ones : STD_LOGIC_VECTOR(message_length-2 DOWNTO 0) := (OTHERS => '1');
     SIGNAL timeout_counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');
     SIGNAL busy_sr : STD_LOGIC_VECTOR(message_length-1 DOWNTO 0) := (OTHERS => '1');

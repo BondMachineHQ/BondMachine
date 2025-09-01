@@ -11,7 +11,7 @@ USE IEEE.NUMERIC_STD.ALL;
 
 ENTITY bd_line IS
     GENERIC (
-        message_length : INTEGER := 8 -- Length of the message to be sent, in this length is not included bits used by tx and rx
+        message_length : INTEGER := {{.InnerMessLen}} -- Length of the message to be sent, in this length is not included bits used by tx and rx
     );
     PORT (
         clk : IN STD_LOGIC; -- Clock signal for the component

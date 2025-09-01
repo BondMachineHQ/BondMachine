@@ -10,6 +10,7 @@ ENTITY bond_tx IS
     GENERIC (
         message_length : INTEGER := {{.Rsize}};
         counters_length : INTEGER := 32
+	    out_clock_wait: INTEGER := 20000;
     );
     PORT (
         clk : IN STD_LOGIC;
@@ -24,7 +25,7 @@ END bond_tx;
 
 ARCHITECTURE Behavioral OF bond_tx IS
     SIGNAL counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');
-    CONSTANT out_clock_tick : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(10, counters_length);
+    CONSTANT out_clock_tick : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(out_clock_wait, counters_length);
     SIGNAL busy_sr : STD_LOGIC_VECTOR(message_length-1 DOWNTO 0) := (OTHERS => '0');
     SIGNAL sending : STD_LOGIC_VECTOR(message_length-1 DOWNTO 0) := (OTHERS => '0');
     SIGNAL int_clk : STD_LOGIC := '0';
