@@ -9,6 +9,7 @@ func (be *BondirectElement) GenerateLine(prefix, nodeName, edgeName string) (str
 	// Implementation for generating a Line
 
 	// Fill Template Data with the request values
+	be.TData.Prefix = prefix
 	be.TData.NodeName = nodeName
 	be.TData.EdgeName = edgeName
 
