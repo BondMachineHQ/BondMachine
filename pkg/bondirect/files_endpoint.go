@@ -44,5 +44,97 @@ ENTITY bd_endpoint IS
 
     );
 END bd_endpoint;
+
+ARCHITECTURE Behavioral OF bd_endpoint IS
+	-- BM Cache signals
+		-- BM Inputs
+		{{- range .Inputs }}
+		{{ . }}_local: STD_LOGIC_VECTOR(rsize-1 DOWNTO 0);
+		{{ . }}_valid_local: STD_LOGIC := '0';
+		{{ . }}_recv_local: STD_LOGIC := '0';
+		{{- end }}
+		-- BM Outputs
+		{{- range .Outputs }}
+		{{ . }}_local: STD_LOGIC_VECTOR(rsize-1 DOWNTO 0);
+		{{ . }}_valid_local: STD_LOGIC := '0';
+		{{ . }}_recv_local: STD_LOGIC := '0';
+		{{- end }}
+	-- BM need signals
+		-- BM Inputs
+		{{- range .Inputs }}
+		{{ . }}_recv_need: STD_LOGIC := '0';
+		{{ . }}_recv_need_reset: STD_LOGIC := '0';
+		{{- end }}
+		-- BM Outputs
+		{{- range .Outputs }}
+		{{ . }}_need: STD_LOGIC := '0';
+		{{ . }}_need_reset: STD_LOGIC := '0';
+		{{ . }}_valid_need: STD_LOGIC := '0';
+		{{ . }}_valid_need_reset: STD_LOGIC := '0';
+		{{- end }}
+BEGIN
+	-- Towards BM wires
+	-- BM Inputs
+	{{- range .Inputs }}
+	{{ . }} <= {{ . }}_local;
+	{{ . }}_valid <= {{ . }}_valid_local;
+	{{- end }}
+	-- BM Outputs
+	{{- range .Outputs }}
+	{{ . }}_recv <= {{ . }}_recv_local;
+	{{- end }}
+
+	-- BM need signals processes
+	-- BM Inputs
+	{{- range .Inputs }}
+	{{ . }}_recv_need_proc : PROCESS (clk, reset)
+    	BEGIN
+        IF reset = '1' THEN
+		{{ . }}_recv_need <= '0';
+        ELSIF rising_edge(clk) THEN
+		IF {{ . }}_recv_need_reset = '1' THEN
+			{{ . }}_recv_need <= '0';
+		ELSE
+			{{ . }}_recv_local <= {{ . }}_recv;
+			IF {{ . }}_recv_local \= {{ . }}_recv THEN
+				{{ . }}_recv_need <= '1';
+			END IF;
+		END IF;
+	END PROCESS;
+	{{- end }}
+	-- BM Outputs
+	{{- range .Outputs }}
+	{{ . }}_valid_need_proc : PROCESS (clk, reset)
+    	BEGIN
+        IF reset = '1' THEN
+		{{ . }}_valid_need <= '0';
+        ELSIF rising_edge(clk) THEN
+		IF {{ . }}_valid_need_reset = '1' THEN
+			{{ . }}_valid_need <= '0';
+		ELSE
+			{{ . }}_valid_local <= {{ . }}_valid;
+			IF {{ . }}_valid_local \= {{ . }}_valid THEN
+				{{ . }}_valid_need <= '1';
+			END IF;
+		END IF;
+	END PROCESS;
+
+	{{ . }}_need_proc : PROCESS (clk, reset)
+    	BEGIN
+        IF reset = '1' THEN
+		{{ . }}_need <= '0';
+        ELSIF rising_edge(clk) THEN
+		IF {{ . }}_need_reset = '1' THEN
+			{{ . }}_need <= '0';
+		ELSE
+			{{ . }}_local <= {{ . }};
+			IF {{ . }}_local \= {{ . }} THEN
+				{{ . }}_need <= '1';
+			END IF;
+		END IF;
+	END PROCESS;	
+
+	{{- end }}
+END Behavioral;
 	`
 )
