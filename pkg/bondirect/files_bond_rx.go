@@ -8,10 +8,10 @@ USE IEEE.NUMERIC_STD.ALL;
 
 ENTITY bond_rx IS
     GENERIC (
-        message_length : INTEGER := 8;
-        counters_length : INTEGER := 32;
-        clk_grace_wait : INTEGER := 10000;
-        clk_timeout: INTEGER := 1000000;
+        message_length : INTEGER := {{add .InnerMessLen 2}}; -- Length of the message to be received, including 2 extra bits
+        counters_length : INTEGER := {{.EdgeParams.CountersLen}}; -- Length of the counters used in the design
+        clk_grace_wait : INTEGER := {{.EdgeParams.ClkGraceWait}}; -- Number of stable clock cycles before accepting the clock
+        clk_timeout: INTEGER := {{.EdgeParams.ClkTimeout}};
     );
     PORT (
         clk : IN STD_LOGIC;

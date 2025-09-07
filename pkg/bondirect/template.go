@@ -14,19 +14,21 @@ type TData struct {
 	Prefix       string
 	NodeName     string
 	EdgeName     string
-	Rsize        int        // Register size
-	NodeNum      int        // Number of nodes
-	NodeBits     int        // Bits needed for node addressing
-	IONum        int        // Maximum number of inputs or outputs Among all nodes
-	IOBits       int        // Bits needed for IO addressing
-	InnerMessLen int        // Length of inner messages
-	Inputs       []string   // List of input signals
-	Outputs      []string   // List of output signals
-	Lines        []string   // List of line signals
-	TrIn         []string   // List of transceivers for incoming signals
-	TrOut        []string   // List of transceivers for outgoing signals
-	WiresIn      [][]string // List of wire signals, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
-	WiresOut     [][]string // List of wire signals, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
+	Rsize        int               // Register size
+	NodeNum      int               // Number of nodes
+	NodeBits     int               // Bits needed for node addressing
+	IONum        int               // Maximum number of inputs or outputs Among all nodes
+	IOBits       int               // Bits needed for IO addressing
+	InnerMessLen int               // Length of inner messages
+	Inputs       []string          // List of input signals
+	Outputs      []string          // List of output signals
+	Lines        []string          // List of line signals
+	TrIn         []string          // List of transceivers for incoming signals
+	TrOut        []string          // List of transceivers for outgoing signals
+	WiresIn      [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
+	WiresOut     [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
+	NodeParams   map[string]string // Additional parameters for the specified node
+	EdgeParams   map[string]string // Additional parameters for the specified edge
 }
 
 func (be *BondirectElement) InitTData() {
@@ -155,6 +157,46 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 	return nil
 }
 
+func (be *BondirectElement) PopulateNodeParams(nodeName string) {
+	params := make(map[string]string)
+
+	// Using cluster names to find the mesh node name (that can be different)
+	if meshNodeName, err := be.GetMeshNodeName(nodeName); err == nil {
+		nodeName = meshNodeName
+	} else {
+		return
+	}
+
+	for mNodeName, mNode := range be.Mesh.Nodes {
+		if mNodeName == nodeName {
+			for pName, pValue := range mNode.Data {
+				params[pName] = pValue
+			}
+			break
+		}
+	}
+
+	be.TData.NodeParams = params
+}
+
+func (be *BondirectElement) PopulateEdgeParams(edgeName string) {
+	params := make(map[string]string)
+	params["CountersLen"] = "32" // Default values
+	params["ClkGraceWait"] = "10000"
+	params["ClkTimeout"] = "1000000"
+
+	for mEdgeName, mEdge := range be.Mesh.Edges {
+		if mEdgeName == edgeName {
+			for pName, pValue := range mEdge.Data {
+				params[pName] = pValue
+			}
+			break
+		}
+	}
+
+	be.TData.EdgeParams = params
+}
+
 func (be *BondirectElement) DumpTemplateData() string {
 	result := ""
 	result += fmt.Sprintf("Register Size: %d\n", be.TData.Rsize)
@@ -170,6 +212,8 @@ func (be *BondirectElement) DumpTemplateData() string {
 	result += fmt.Sprintf("Transceivers Out: %v\n", be.TData.TrOut)
 	result += fmt.Sprintf("Wires In: %v\n", be.TData.WiresIn)
 	result += fmt.Sprintf("Wires Out: %v\n", be.TData.WiresOut)
+	result += fmt.Sprintf("Node Params: %v\n", be.TData.NodeParams)
+	result += fmt.Sprintf("Edge Params: %v\n", be.TData.EdgeParams)
 	return result
 }
 
@@ -199,6 +243,9 @@ var funcMap = template.FuncMap{
 			result[i] = i
 		}
 		return result
+	},
+	"add": func(a, b int) int {
+		return a + b
 	},
 }
 

@@ -1,17 +1,19 @@
 package bondirect
 
+// TODO make the number of wires configurable, currently hardcoded to 4, also the name will reflect
+// the number of wires used in the design for example: bd_line_1_1
 const (
 	bdLine = `
--- Thee bonddirect line transmitter is the component responsible for
+-- The bondirect line transmitter is the component responsible for
 -- transmitting data from two FPGAs. It contains a bond_tx and a bond_rx
 -- component, which are used to send and receive data.
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
-ENTITY bd_line IS
+ENTITY bd_line_{{ .EdgeName }} IS
     GENERIC (
-        message_length : INTEGER := {{.InnerMessLen}} -- Length of the message to be sent, in this length is not included bits used by tx and rx
+        message_length : INTEGER := {{ .InnerMessLen }} -- Length of the message to be sent, in this length is not included bits used by tx and rx
     );
     PORT (
         clk : IN STD_LOGIC; -- Clock signal for the component

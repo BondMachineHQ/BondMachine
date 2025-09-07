@@ -73,6 +73,34 @@ ARCHITECTURE Behavioral OF bd_endpoint IS
 		{{ . }}_valid_need_reset: STD_LOGIC := '0';
 		{{- end }}
 BEGIN
+
+	-- Instantiations
+
+    	-- Instantiate the lines
+	{{- range $i := iter (len .Lines) }}
+	{{- $lineName:= index $.Lines $i }}
+	line_{{ $lineName }}_inst : ENTITY work.bd_line_1_1
+	GENERIC MAP(
+		message_length => {{ $.InnerMessLen }}
+	)
+	PORT MAP(
+		clk => clk,
+		reset => reset,
+		{{- range $j := iter (len (index $.WiresOut $i)) }}
+		tx_{{index (index $.WiresOut $i) $j}} => {{index $.Lines $i}}{{index $.TrOut $i}}{{index (index $.WiresOut $i) $j}},
+		{{- end }}
+	{{- end }}
+
+
+            message => message_to_send,
+            data_enable => send_data_enable,
+            busy => send_busy,
+            tx_clk => tx_clk,
+            tx_out => tx_out
+        );
+
+	-- Processes
+
 	-- Towards BM wires
 	-- BM Inputs
 	{{- range .Inputs }}

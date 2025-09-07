@@ -2,7 +2,6 @@ package bondirect
 
 import (
 	"bytes"
-	"fmt"
 	"text/template"
 )
 
@@ -19,7 +18,7 @@ func (be *BondirectElement) GenerateEndpoint(prefix, nodeName string) (string, e
 		return "", err
 	}
 
-	fmt.Println(be.DumpTemplateData())
+	// fmt.Println(be.DumpTemplateData())
 
 	// Define the endpoint template
 	en := bdEndpoint

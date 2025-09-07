@@ -20,6 +20,10 @@ func (be *BondirectElement) GenerateTransceiver(prefix, nodeName, edgeName, dire
 		trn = bondTx
 	}
 
+	be.PopulateEdgeParams(edgeName)
+
+	fmt.Println(be.DumpTemplateData())
+
 	var f bytes.Buffer
 
 	t, err := template.New("transceiver").Funcs(funcMap).Parse(trn)
