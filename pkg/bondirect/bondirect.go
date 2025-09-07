@@ -23,10 +23,10 @@ type Mesh struct {
 }
 
 type Transceiver struct {
-	Type    string                 `json:"Type"`
-	Name    string                 `json:"Name"`
-	Signals map[string]Signal      `json:"Signals"`
-	Data    map[string]interface{} `json:"Data"`
+	Type    string            `json:"Type"`
+	Name    string            `json:"Name"`
+	Signals map[string]Signal `json:"Signals"`
+	Data    map[string]string `json:"Data"`
 }
 
 type Signal struct {
@@ -35,22 +35,22 @@ type Signal struct {
 }
 
 type Node struct {
-	PeerId uint32                 `json:"PeerId"`
-	Data   map[string]interface{} `json:"Data"`
+	PeerId uint32            `json:"PeerId"`
+	Data   map[string]string `json:"Data"`
 }
 
 type Edge struct {
-	NodeA    string                 `json:"NodeA"`
-	NodeB    string                 `json:"NodeB"`
-	FromAtoB EdgeDirection          `json:"FromAtoB"`
-	FromBtoA EdgeDirection          `json:"FromBtoA"`
-	Data     map[string]interface{} `json:"Data"`
+	NodeA    string            `json:"NodeA"`
+	NodeB    string            `json:"NodeB"`
+	FromAtoB EdgeDirection     `json:"FromAtoB"`
+	FromBtoA EdgeDirection     `json:"FromBtoA"`
+	Data     map[string]string `json:"Data"`
 }
 
 type EdgeDirection struct {
-	ATransceiver string                 `json:"ATransceiver"`
-	BTransceiver string                 `json:"BTransceiver"`
-	Data         map[string]interface{} `json:"Data"`
+	ATransceiver string            `json:"ATransceiver"`
+	BTransceiver string            `json:"BTransceiver"`
+	Data         map[string]string `json:"Data"`
 }
 
 type Path struct {
