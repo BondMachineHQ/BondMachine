@@ -8,7 +8,7 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
-ENTITY bd_endpoint IS
+ENTITY {{.Prefix}}bd_endpoint_{{.NodeName}} IS
     GENERIC (
 	rsize : INTEGER := {{.Rsize}} -- Size of the register
         message_length : INTEGER := {{.InnerMessLen}} -- Length of the message to be sent, in this length is not included bits used by tx and rx
@@ -43,9 +43,9 @@ ENTITY bd_endpoint IS
 	{{- end }}
 
     );
-END bd_endpoint;
+END {{.Prefix}}bd_endpoint_{{.NodeName}};
 
-ARCHITECTURE Behavioral OF bd_endpoint IS
+ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.NodeName}} IS
 	-- BM Cache signals
 		-- BM Inputs
 		{{- range .Inputs }}
@@ -72,6 +72,20 @@ ARCHITECTURE Behavioral OF bd_endpoint IS
 		{{ . }}_valid_need: STD_LOGIC := '0';
 		{{ . }}_valid_need_reset: STD_LOGIC := '0';
 		{{- end }}
+	-- Signals towards the lines
+	{{- range $i := iter (len .Lines) }}
+	{{- $lineName:= index $.Lines $i }}
+		-- Signals towards the line {{ $lineName }}
+		{{$lineName}}_s_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0); -- Message to be sent to the other FPGA
+        	{{$lineName}}_s_valid : STD_LOGIC; -- Signal indicating that the message is valid
+        	{{$lineName}}_s_busy : STD_LOGIC := '0'; -- Signal indicating that the component is busy while transmitting
+        	{{$lineName}}_s_ok : STD_LOGIC := '0'; -- Signal indicating that the outgoing transmission was successful
+        	{{$lineName}}_s_error : STD_LOGIC := '0'; -- Signal indicating that an error occurred during transmission
+        	{{$lineName}}_r_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0) := (OTHERS => '0'); -- Message received from the other FPGA
+        	{{$lineName}}_r_busy : STD_LOGIC := '0'; -- Signal indicating that the component is busy while receiving
+        	{{$lineName}}_r_valid : STD_LOGIC := '0'; -- Signal indicating that the received message is valid
+        	{{$lineName}}_r_error : STD_LOGIC := '0' -- Signal indicating that an error occurred during reception
+	{{- end }}
 BEGIN
 
 	-- Instantiations
@@ -79,25 +93,38 @@ BEGIN
     	-- Instantiate the lines
 	{{- range $i := iter (len .Lines) }}
 	{{- $lineName:= index $.Lines $i }}
-	line_{{ $lineName }}_inst : ENTITY work.bd_line_1_1
+	{{$.Prefix}}bd_line_{{$.NodeName}}_{{ $lineName }}_inst : ENTITY work.{{$.Prefix}}bd_line_{{$.NodeName}}_{{ $lineName }}
 	GENERIC MAP(
-		message_length => {{ $.InnerMessLen }}
+		message_length => {{ $.InnerMessLen }},
 	)
 	PORT MAP(
 		clk => clk,
 		reset => reset,
 		{{- range $j := iter (len (index $.WiresOut $i)) }}
-		tx_{{index (index $.WiresOut $i) $j}} => {{index $.Lines $i}}{{index $.TrOut $i}}{{index (index $.WiresOut $i) $j}},
+		{{- if eq $j 0 }}
+		tx_clk => {{index $.Lines $i}}{{index $.TrOut $i}}{{index (index $.WiresOut $i) $j}},
+		{{- else }}
+		tx_data{{ dec $j }} => {{index $.Lines $i}}{{index $.TrOut $i}}{{index (index $.WiresOut $i) $j}},
 		{{- end }}
+		{{- end }}
+		{{- range $j := iter (len (index $.WiresIn $i)) }}
+		{{- if eq $j 0 }}
+		rx_clk => {{index $.Lines $i}}{{index $.TrIn $i}}{{index (index $.WiresIn $i) $j}},
+		{{- else }}
+		rx_data{{ dec $j }} => {{index $.Lines $i}}{{index $.TrIn $i}}{{index (index $.WiresIn $i) $j}},
+		{{- end }}
+		{{- end }}
+		s_message => {{$lineName}}_s_message,
+		s_valid => {{$lineName}}_s_valid,
+		s_busy => {{$lineName}}_s_busy,
+		s_ok => {{$lineName}}_s_ok,
+		s_error => {{$lineName}}_s_error,
+		r_message => {{$lineName}}_r_message,
+		r_busy => {{$lineName}}_r_busy,
+		r_valid => {{$lineName}}_r_valid,
+		r_error => {{$lineName}}_r_error
+	);
 	{{- end }}
-
-
-            message => message_to_send,
-            data_enable => send_data_enable,
-            busy => send_busy,
-            tx_clk => tx_clk,
-            tx_out => tx_out
-        );
 
 	-- Processes
 

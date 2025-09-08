@@ -1,7 +1,7 @@
 package bondirect
 
 const (
-    bondTxTb = `
+	bondTxTb = `
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
@@ -27,7 +27,7 @@ BEGIN
             data_enable => data_enable,
             busy => busy,
             tx_clk => tx_clk,
-            tx_out => data_line
+            tx_data0 => data_line
         );
 
     clk_process: PROCESS

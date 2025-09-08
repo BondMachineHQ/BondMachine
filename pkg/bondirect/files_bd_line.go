@@ -11,7 +11,15 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
-ENTITY bd_line_{{ .EdgeName }} IS
+{{- $lineIdx := -1 }}
+{{- range $i := iter (len .Lines) }}
+{{- if eq $.EdgeName (index $.Lines $i) }}
+{{- $lineIdx = $i }}
+{{- end }}
+{{- end }}
+-- Line index: {{ $lineIdx }}
+
+ENTITY {{.Prefix}}bd_line_{{.NodeName}}_{{ .EdgeName }} IS
     GENERIC (
         message_length : INTEGER := {{ .InnerMessLen }} -- Length of the message to be sent, in this length is not included bits used by tx and rx
     );
@@ -19,9 +27,13 @@ ENTITY bd_line_{{ .EdgeName }} IS
         clk : IN STD_LOGIC; -- Clock signal for the component
         reset : IN STD_LOGIC; -- Reset signal to initialize the component
         tx_clk : OUT STD_LOGIC; -- Clock signal to be used for transmission. Goes to the bond_tx component
-        tx_out : OUT STD_LOGIC; -- Output signal for the transmitted data. Goes to the bond_tx component
+{{- range $j := iter (dec (len (index $.WiresOut $lineIdx))) }}
+        tx_data{{$j}} : OUT STD_LOGIC; -- Output signal for the wire {{$j}}. Goes to the physical line
+{{- end }}
         rx_clk : IN STD_LOGIC; -- Clock signal for receiving data. Comes from the bond_rx component
-        rx_in : IN STD_LOGIC; -- Input signal for the received data. Comes from the bond_rx component
+{{- range $j := iter (dec (len (index $.WiresIn $lineIdx))) }}
+        rx_data{{$j}} : IN STD_LOGIC; -- Input signal for the wire {{$j}}. Comes from the physical line
+{{- end }}
         s_message : IN STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0); -- Message to be sent to the other FPGA
         s_valid : IN STD_LOGIC; -- Signal indicating that the message is valid
         s_busy : OUT STD_LOGIC := '0'; -- Signal indicating that the component is busy while transmitting
@@ -32,9 +44,9 @@ ENTITY bd_line_{{ .EdgeName }} IS
         r_valid : OUT STD_LOGIC := '0'; -- Signal indicating that the received message is valid
         r_error : OUT STD_LOGIC := '0' -- Signal indicating that an error occurred during reception
     );
-END bd_line;
+END {{.Prefix}}bd_line_{{.NodeName}}_{{ .EdgeName }};
 
-ARCHITECTURE Behavioral OF bd_line IS
+ARCHITECTURE Behavioral OF {{.Prefix}}bd_line_{{.NodeName}}_{{ .EdgeName }} IS
     SIGNAL message_to_send : STD_LOGIC_VECTOR (message_length + 1 DOWNTO 0) := (OTHERS => '0');
     SIGNAL send_data_enable : STD_LOGIC := '0';
     SIGNAL send_busy : STD_LOGIC := '0';
@@ -70,10 +82,9 @@ ARCHITECTURE Behavioral OF bd_line IS
 BEGIN
 
     -- Instantiate the bond_tx component
-    bond_tx_inst : ENTITY work.bond_tx
+    {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}}_inst : ENTITY work.{{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}}
         GENERIC MAP(
-            message_length => message_length + 2, -- +2 for the message length plus bits used by tx and rx
-            counters_length => 32
+            message_length => message_length + 2 -- +2 for the message length plus bits used by tx and rx
         )
         PORT MAP(
             clk => clk,
@@ -81,21 +92,24 @@ BEGIN
             message => message_to_send,
             data_enable => send_data_enable,
             busy => send_busy,
-            tx_clk => tx_clk,
-            tx_out => tx_out
+{{- range $j := iter (dec (len (index $.WiresOut $lineIdx))) }}
+            tx_data{{$j}} => tx_data{{$j}},
+{{- end }}
+            tx_clk => tx_clk
         );
 
     -- Instantiate the bond_rx component
-    bond_rx_inst : ENTITY work.bond_rx
+    {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_inst : ENTITY work.{{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}
         GENERIC MAP(
-            message_length => message_length + 2, -- +2 for the message length plus bits used by tx and rx
-            counters_length => 32
+            message_length => message_length + 2 -- +2 for the message length plus bits used by tx and rx
         )
         PORT MAP(
             clk => clk,
             reset => reset,
             rx_clk => rx_clk,
-            rx_in => rx_in,
+{{- range $j := iter (dec (len (index $.WiresIn $lineIdx))) }}
+            rx_data{{$j}} => rx_data{{$j}},
+{{- end }}
             message => message_received,
             data_ready => message_valid,
             busy => receive_busy,

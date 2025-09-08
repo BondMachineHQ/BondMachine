@@ -22,7 +22,7 @@ ENTITY {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} 
         tx_clk : OUT STD_LOGIC;
 {{- $iSeq := ""}}
 {{- range $i := (iter (int .TransParams.NumWires )) }}
-        rx_out{{ $i }} : IN STD_LOGIC;
+        tx_data{{ $i }} : IN STD_LOGIC;
         {{- $iSeq = printf "%s'1' & " $iSeq }}
 {{- end }}
     );
@@ -51,7 +51,7 @@ BEGIN
             sending <= (OTHERS => '0');
             int_clk <= '0';
 {{- range $i := (iter (int .TransParams.NumWires )) }}
-            rx_out{{ $i }} <= '0';
+            tx_data{{ $i }} <= '0';
 {{- end }}
             doing <= '0';
         ELSIF rising_edge(clk) THEN
@@ -61,7 +61,7 @@ BEGIN
                     IF int_clk = '0' THEN
                         int_clk <= '1';
 {{- range $i := (iter (int .TransParams.NumWires )) }}
-                        rx_out{{ $i }} <= sending({{ $i }});
+                        tx_data{{ $i }} <= sending({{ $i }});
 {{- end }}
                     ELSIF int_clk = '1' THEN
                         int_clk <= '0';
@@ -77,7 +77,7 @@ BEGIN
                 IF counter = 0 THEN
                     int_clk <= '0';
 {{- range $i := (iter (int .TransParams.NumWires )) }}
-                    rx_out{{ $i }} <= '0';
+                    tx_data{{ $i }} <= '0';
 {{- end }}
                 ELSE
                     counter <= counter - 1;

@@ -20,8 +20,8 @@ ENTITY {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} 
         rx_clk : IN STD_LOGIC;
 {{- $iSeq := ""}}
 {{- range $i := (iter (int .TransParams.NumWires )) }}
-        rx_in{{ $i }} : IN STD_LOGIC;
-        {{- $iSeq = printf "rx_in%d & %s" $i $iSeq }}
+        rx_data{{ $i }} : IN STD_LOGIC;
+        {{- $iSeq = printf "rx_data%d & %s" $i $iSeq }}
 {{- end }}
         message : OUT STD_LOGIC_VECTOR (message_length-1 DOWNTO 0) := (OTHERS => '0');
         data_ready : OUT STD_LOGIC := '0';

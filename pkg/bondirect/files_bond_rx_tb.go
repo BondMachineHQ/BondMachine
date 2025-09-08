@@ -15,7 +15,7 @@ ARCHITECTURE Behavioral OF bond_rx_tb IS
     SIGNAL data_ready : STD_LOGIC := '0';
     SIGNAL busy : STD_LOGIC;
     SIGNAL rx_clk : STD_LOGIC;
-    SIGNAL rx_in : STD_LOGIC;
+    SIGNAL rx_data0 : STD_LOGIC;
 
     CONSTANT clk_period : TIME := 10 ns;
 BEGIN
@@ -27,7 +27,7 @@ BEGIN
             data_ready => data_ready,
             receiving => busy,
             rx_clk => rx_clk,
-            rx_in => rx_in
+            rx_data0 => rx_data0
         );
 
     clk_process: PROCESS
