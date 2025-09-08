@@ -13,16 +13,26 @@ func (be *BondirectElement) GenerateTransceiver(prefix, nodeName, edgeName, dire
 	be.TData.Prefix = prefix
 	be.TData.NodeName = nodeName
 	be.TData.EdgeName = edgeName
+	if name, err := be.GetTransceiverName(nodeName, edgeName, direction); err == nil {
+		be.TData.TransName = name
+	} else {
+		return "", err
+	}
+
+	if err := be.PopulateIOData(nodeName); err != nil {
+		return "", err
+	}
+	if err := be.PopulateWireData(nodeName); err != nil {
+		return "", err
+	}
+
+	be.PopulateTransParams(be.TData.TransName)
 
 	// Define the transceiver template
 	trn := bondRx
 	if direction == "out" {
 		trn = bondTx
 	}
-
-	be.PopulateEdgeParams(edgeName)
-
-	fmt.Println(be.DumpTemplateData())
 
 	var f bytes.Buffer
 
@@ -71,4 +81,33 @@ func (be *BondirectElement) GetTransceiverSignals(trName string) ([]string, erro
 		return signals, nil
 	}
 	return nil, fmt.Errorf("not enough signals found for transceiver: %s", trName)
+}
+
+func (be *BondirectElement) GetTransceiverName(nodeName, lineName, direction string) (string, error) {
+	// Using cluster names to find the mesh node name (that can be different)
+	if meshNodeName, err := be.GetMeshNodeName(nodeName); err == nil {
+		nodeName = meshNodeName
+	} else {
+		return "", fmt.Errorf("failed to get mesh node name: %v", err)
+	}
+
+	if line, exists := be.Mesh.Edges[lineName]; exists {
+		if direction == "in" {
+			if line.NodeA == nodeName {
+				return line.FromBtoA.ATransceiver, nil
+			} else if line.NodeB == nodeName {
+				return line.FromAtoB.BTransceiver, nil
+			}
+		} else if direction == "out" {
+			if line.NodeA == nodeName {
+				return line.FromAtoB.ATransceiver, nil
+			} else if line.NodeB == nodeName {
+				return line.FromBtoA.BTransceiver, nil
+			}
+		} else {
+			return "", fmt.Errorf("invalid direction: %s", direction)
+		}
+		return "", fmt.Errorf("node %s is not connected to line %s", nodeName, lineName)
+	}
+	return "", fmt.Errorf("line %s not found", lineName)
 }

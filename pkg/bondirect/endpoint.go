@@ -18,7 +18,7 @@ func (be *BondirectElement) GenerateEndpoint(prefix, nodeName string) (string, e
 		return "", err
 	}
 
-	// fmt.Println(be.DumpTemplateData())
+	be.PopulateNodeParams(nodeName)
 
 	// Define the endpoint template
 	en := bdEndpoint

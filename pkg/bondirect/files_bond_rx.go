@@ -6,39 +6,47 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
-ENTITY bond_rx IS
+ENTITY {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} IS
     GENERIC (
         message_length : INTEGER := {{add .InnerMessLen 2}}; -- Length of the message to be received, including 2 extra bits
-        counters_length : INTEGER := {{.EdgeParams.CountersLen}}; -- Length of the counters used in the design
-        clk_grace_wait : INTEGER := {{.EdgeParams.ClkGraceWait}}; -- Number of stable clock cycles before accepting the clock
-        clk_timeout: INTEGER := {{.EdgeParams.ClkTimeout}};
+        num_wires : INTEGER := {{.TransParams.NumWires}}; -- Number of wires in the bond direct connection
+        counters_length : INTEGER := {{.TransParams.CountersLen}}; -- Length of the counters used in the design
+        clk_grace_wait : INTEGER := {{.TransParams.ClkGraceWait}}; -- Number of stable clock cycles before accepting the clock
+        clk_timeout: INTEGER := {{.TransParams.ClkTimeout}};
     );
     PORT (
         clk : IN STD_LOGIC;
         reset : IN STD_LOGIC;
         rx_clk : IN STD_LOGIC;
-        rx_in : IN STD_LOGIC;
+{{- $iSeq := ""}}
+{{- range $i := (iter (int .TransParams.NumWires )) }}
+        rx_in{{ $i }} : IN STD_LOGIC;
+        {{- $iSeq = printf "rx_in%d & %s" $i $iSeq }}
+{{- end }}
         message : OUT STD_LOGIC_VECTOR (message_length-1 DOWNTO 0) := (OTHERS => '0');
         data_ready : OUT STD_LOGIC := '0';
         busy : OUT STD_LOGIC := '0';
         failed : OUT STD_LOGIC := '0'
     );
-END bond_rx;
+END {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}};
 
-ARCHITECTURE Behavioral OF bond_rx IS
+ARCHITECTURE Behavioral OF {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} IS
     TYPE state_type IS (IDLE, RECV, DONE, FAIL);
     SIGNAL current_state : state_type := IDLE;
     SIGNAL int_clk : STD_LOGIC := '0';
     SIGNAL int_clk_prev : STD_LOGIC := '0';
     CONSTANT clk_grace_period : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(clk_grace_wait, counters_length);
     CONSTANT timeout : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(clk_timeout, counters_length);
-    CONSTANT ones : STD_LOGIC_VECTOR(message_length-2 DOWNTO 0) := (OTHERS => '1');
+    CONSTANT ones : STD_LOGIC_VECTOR(adjusted_length-2 DOWNTO 0) := (OTHERS => '1');
+    CONSTANT adjusted_length : INTEGER := ((message_length + num_wires - 1) / num_wires) * num_wires; -- Adjusted message length to be a multiple of num_wires
+    CONSTANT extra_bits : INTEGER := adjusted_length - message_length;
+    CONSTANT readings: INTEGER := adjusted_length / num_wires;
     SIGNAL timeout_counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');
-    SIGNAL busy_sr : STD_LOGIC_VECTOR(message_length-1 DOWNTO 0) := (OTHERS => '1');
+    SIGNAL busy_sr : STD_LOGIC_VECTOR(readings-1 DOWNTO 0) := (OTHERS => '1');
     SIGNAL counter : unsigned(counters_length-1 DOWNTO 0) := clk_grace_period;
     SIGNAL failed_tr : STD_LOGIC := '0';
     SIGNAL failure : STD_LOGIC := '0';
-    SIGNAL message_read : STD_LOGIC_VECTOR (message_length-1 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL message_read : STD_LOGIC_VECTOR (adjusted_length-1 DOWNTO 0) := (OTHERS => '0');
     SIGNAL receiving : STD_LOGIC := '0';
 BEGIN
     -- Overall failure signals
@@ -82,7 +90,7 @@ BEGIN
     BEGIN
         IF rising_edge(int_clk) THEN
             IF failure = '0' THEN
-                message_read <= rx_in & message_read(message_length-1 DOWNTO 1); -- Shift in the received bit
+                message_read <= {{ $iSeq }} message_read(adjusted_length-1 DOWNTO {{.TransParams.NumWires}}); -- Shift in the received bit
             END IF;
         END IF;
     END PROCESS reading_proc;
@@ -110,7 +118,7 @@ BEGIN
                WHEN RECV =>
                     IF int_clk = '1' AND int_clk_prev = '0' THEN
                         IF busy_sr(1) = '0' THEN
-                            message <= message_read;
+                            message <= message_read(adjusted_length-1 DOWNTO extra_bits);
                             data_ready <= '1';
                             current_state <= DONE;
                         ELSE

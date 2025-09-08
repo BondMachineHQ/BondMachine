@@ -2,7 +2,6 @@ package bondirect
 
 import (
 	"bytes"
-	"fmt"
 	"text/template"
 )
 
@@ -21,7 +20,7 @@ func (be *BondirectElement) GenerateLine(prefix, nodeName, edgeName string) (str
 		return "", err
 	}
 
-	fmt.Println(be.DumpTemplateData())
+	be.PopulateEdgeParams(edgeName)
 
 	// Define the line template
 	ln := bdLine

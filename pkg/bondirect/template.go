@@ -14,6 +14,7 @@ type TData struct {
 	Prefix       string
 	NodeName     string
 	EdgeName     string
+	TransName    string
 	Rsize        int               // Register size
 	NodeNum      int               // Number of nodes
 	NodeBits     int               // Bits needed for node addressing
@@ -29,6 +30,7 @@ type TData struct {
 	WiresOut     [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
 	NodeParams   map[string]string // Additional parameters for the specified node
 	EdgeParams   map[string]string // Additional parameters for the specified edge
+	TransParams  map[string]string // Additional parameters for the specified transceiver
 }
 
 func (be *BondirectElement) InitTData() {
@@ -157,46 +159,6 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 	return nil
 }
 
-func (be *BondirectElement) PopulateNodeParams(nodeName string) {
-	params := make(map[string]string)
-
-	// Using cluster names to find the mesh node name (that can be different)
-	if meshNodeName, err := be.GetMeshNodeName(nodeName); err == nil {
-		nodeName = meshNodeName
-	} else {
-		return
-	}
-
-	for mNodeName, mNode := range be.Mesh.Nodes {
-		if mNodeName == nodeName {
-			for pName, pValue := range mNode.Data {
-				params[pName] = pValue
-			}
-			break
-		}
-	}
-
-	be.TData.NodeParams = params
-}
-
-func (be *BondirectElement) PopulateEdgeParams(edgeName string) {
-	params := make(map[string]string)
-	params["CountersLen"] = "32" // Default values
-	params["ClkGraceWait"] = "10000"
-	params["ClkTimeout"] = "1000000"
-
-	for mEdgeName, mEdge := range be.Mesh.Edges {
-		if mEdgeName == edgeName {
-			for pName, pValue := range mEdge.Data {
-				params[pName] = pValue
-			}
-			break
-		}
-	}
-
-	be.TData.EdgeParams = params
-}
-
 func (be *BondirectElement) DumpTemplateData() string {
 	result := ""
 	result += fmt.Sprintf("Register Size: %d\n", be.TData.Rsize)
@@ -214,6 +176,8 @@ func (be *BondirectElement) DumpTemplateData() string {
 	result += fmt.Sprintf("Wires Out: %v\n", be.TData.WiresOut)
 	result += fmt.Sprintf("Node Params: %v\n", be.TData.NodeParams)
 	result += fmt.Sprintf("Edge Params: %v\n", be.TData.EdgeParams)
+	result += fmt.Sprintf("Transceiver Params: %v\n", be.TData.TransParams)
+
 	return result
 }
 
@@ -243,6 +207,14 @@ var funcMap = template.FuncMap{
 			result[i] = i
 		}
 		return result
+	},
+	"str": func(i int) string {
+		return fmt.Sprintf("%d", i)
+	},
+	"int": func(s string) int {
+		var i int
+		fmt.Sscanf(s, "%d", &i)
+		return i
 	},
 	"add": func(a, b int) int {
 		return a + b
