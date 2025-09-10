@@ -490,9 +490,11 @@ func main() {
 
 				config := new(bondirect.Config)
 				config.Rsize = uint8(*register_size)
+				bdir.BondirectElement = new(bondirect.BondirectElement)
 
 				bdir.Config = config
 				bdir.Flavor = *bondirectFlavor
+				bdir.PeerID = uint32(*peerID)
 
 				if *clusterSpec != "" {
 					if cluster, err := bmcluster.UnmarshalCluster(*clusterSpec); err != nil {
@@ -519,6 +521,8 @@ func main() {
 					if mapfileJSON, err := os.ReadFile(*bondirectMapfile); err == nil {
 						if err := json.Unmarshal([]byte(mapfileJSON), bmdirmap); err != nil {
 							panic(err)
+						} else {
+							bdir.Maps = bmdirmap
 						}
 					} else {
 						panic(err)

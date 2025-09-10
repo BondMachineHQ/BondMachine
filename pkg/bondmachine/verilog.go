@@ -1473,6 +1473,14 @@ func (bmach *Bondmachine) Write_verilog_udpbond(module_name string, flavor strin
 	return "", errors.New("No udpbond module found")
 }
 
+func (bmach *Bondmachine) WriteVerilogBondirect(module_name string, flavor string, iomaps *IOmap, extramods []ExtraModule) (string, error) {
+	for _, mod := range extramods {
+		if mod.Get_Name() == "bondirect" {
+		}
+	}
+	return "", errors.New("No bondirect module found")
+}
+
 func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, flavor string, iomaps *IOmap, extramods []ExtraModule) string {
 
 	resolved_io := make(map[string]string)
@@ -1487,6 +1495,9 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 
 	udpbond_module := false
 	var udpbond_params map[string]string
+
+	bondirectModule := false
+	var bondirectParams map[string]string
 
 	var inames []string
 	var onames []string
@@ -1558,6 +1569,18 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			}
 			inames = strings.Split(udpbond_params["inputs"], ",")
 			onames = strings.Split(udpbond_params["outputs"], ",")
+		}
+		if mod.Get_Name() == "bondirect" {
+			bondirectModule = true
+			bondirectParams = mod.Get_Params().Params
+			fmt.Println(bondirectParams)
+			if subresult, ok := bmach.WriteVerilogBondirect("bondirect", flavor, iomaps, extramods); ok == nil {
+				result += subresult
+			} else {
+				// TODO proper error handling
+			}
+			inames = strings.Split(bondirectParams["inputs"], ",")
+			onames = strings.Split(bondirectParams["outputs"], ",")
 		}
 		if mod.Get_Name() == "basys3_7segment" {
 			basys3_7segment_module = true
@@ -1731,6 +1754,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		result += "\toutput wifi_tx,\n"
 	}
 
+	if bondirectModule {
+		// TODO bondirect external ports
+	}
+
 	if uartModule {
 		for name, value := range uartParams {
 			fmt.Println(name[len(name)-3:])
@@ -1839,6 +1866,17 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			}
 		}
 
+		if bondirectModule {
+			for _, bdIname := range inames {
+				if iname == bdIname {
+					resolved_io[iname] = "bondirect"
+					result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Input" + strconv.Itoa(i) + ";\n"
+					result += "\twire Input" + strconv.Itoa(i) + "_valid;\n"
+					result += "\twire Input" + strconv.Itoa(i) + "_received;\n"
+					break
+				}
+			}
+		}
 		if ps2KeyboardModule {
 			if iname == ps2KeyboardParams["mapped_input"] {
 				resolved_io[iname] = "ps2keyboard"
@@ -1895,6 +1933,18 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			}
 		}
 
+		if bondirectModule {
+			for _, bdOname := range onames {
+				if oname == bdOname {
+					resolved_io[oname] = "bondirect"
+					result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_valid;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_received;\n"
+					break
+				}
+			}
+		}
+
 		if bmapiModule {
 			for _, bmoname := range onames {
 				if oname == bmoname {
@@ -1940,9 +1990,9 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	result += "\n"
 	clockString := clk_name
 
-	// Processing per-extramodule initializazions
+	// Processing per-extramodule initializations
 	if conf.CommentedVerilog {
-		result += "\t// Processing per-extramodule initializazions\n"
+		result += "\t// Processing per-extramodule initializations\n"
 	}
 
 	if slow_module {
@@ -2020,7 +2070,7 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 
 	result += ");\n\n"
 
-	// Processing BM connected firwmwares
+	// Processing BM connected firmwares
 	if conf.CommentedVerilog {
 		result += "\t// Processing BM connected firmwares\n"
 	}
@@ -2074,6 +2124,37 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		}
 
 		result += ");\n"
+	}
+
+	if bondirectModule {
+		peerName := bondirectParams["peer_name"]
+		result += "\tbd_endpoint_" + peerName + " bd_endpoint_" + peerName + "_main (\n"
+		result += "\t\t.clk(" + clk_name + "),\n"
+		result += "\t\t.reset(reset),\n"
+
+		for j, iname := range inames {
+			for i := 0; i < bmach.Inputs; i++ {
+				iiname := Get_input_name(i)
+				if iiname == iname {
+					result += "\t\t.input" + strconv.Itoa(j) + "(Input" + strconv.Itoa(i) + "),\n"
+					result += "\t\t.input" + strconv.Itoa(j) + "_valid(Input" + strconv.Itoa(i) + "_valid),\n"
+					result += "\t\t.input" + strconv.Itoa(j) + "_recv(Input" + strconv.Itoa(i) + "_received),\n"
+				}
+			}
+		}
+
+		for j, oname := range onames {
+			for i := 0; i < bmach.Outputs; i++ {
+				ooname := Get_output_name(i)
+				if ooname == oname {
+					result += "\t\t.output" + strconv.Itoa(j) + "(Output" + strconv.Itoa(i) + "),\n"
+					result += "\t\t.output" + strconv.Itoa(j) + "_valid(Output" + strconv.Itoa(i) + "_valid),\n"
+					result += "\t\t.output" + strconv.Itoa(j) + "_recv(Output" + strconv.Itoa(i) + "_received),\n"
+				}
+			}
+		}
+
+		result += "\t);\n"
 	}
 
 	if basys3_7segment_module {
