@@ -86,6 +86,11 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.NodeName}} IS
         	{{$lineName}}_r_valid : STD_LOGIC := '0'; -- Signal indicating that the received message is valid
         	{{$lineName}}_r_error : STD_LOGIC := '0' -- Signal indicating that an error occurred during reception
 	{{- end }}
+	-- Every line has its own queue for outgoing messages, so we need to instantiate one queue per line
+	-- The queues are implemented using the verilog queue module offered in bmstack
+	-- Each queue has several senders, some for the BM outputs meant for that line, and some for
+	-- routed messages from other lines
+	-- Each queue has only one receiver, the process that sends messages to the line
 BEGIN
 
 	-- Instantiations
