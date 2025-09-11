@@ -50,8 +50,9 @@ func (be *BondirectElement) GenerateTransceiver(prefix, nodeName, edgeName, dire
 	return f.String(), nil
 }
 
-func (be *BondirectElement) GetTransceiverSignals(trName string) ([]string, error) {
+func (be *BondirectElement) GetTransceiverSignals(trName string) ([]string, []string, error) {
 	signals := make([]string, 0)
+	ports := make([]string, 0)
 
 	sigs := 0
 	for _, tr := range be.Mesh.Transceivers {
@@ -62,15 +63,19 @@ func (be *BondirectElement) GetTransceiverSignals(trName string) ([]string, erro
 					pref := make([]string, 0)
 					pref = append(pref, sName)
 					signals = append(pref, signals...)
+					pref2 := make([]string, 0)
+					pref2 = append(pref2, s.Name)
+					ports = append(pref2, ports...)
 					sigs++
 					continue
 				}
 				if s.Type == "data" {
 					signals = append(signals, sName)
+					ports = append(ports, s.Name)
 					sigs++
 					continue
 				} else {
-					return nil, fmt.Errorf("unknown signal type: %s", s.Type)
+					return nil, nil, fmt.Errorf("unknown signal type: %s", s.Type)
 				}
 			}
 			break
@@ -78,9 +83,9 @@ func (be *BondirectElement) GetTransceiverSignals(trName string) ([]string, erro
 	}
 
 	if sigs >= 2 {
-		return signals, nil
+		return signals, ports, nil
 	}
-	return nil, fmt.Errorf("not enough signals found for transceiver: %s", trName)
+	return nil, nil, fmt.Errorf("not enough signals found for transceiver: %s", trName)
 }
 
 func (be *BondirectElement) GetTransceiverName(nodeName, lineName, direction string) (string, error) {

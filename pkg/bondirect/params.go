@@ -49,7 +49,7 @@ func (be *BondirectElement) PopulateTransParams(transName string) {
 	params["ClkTimeout"] = "1000000"
 	params["NumWires"] = "1" // Default values
 
-	if numWires, err := be.GetTransceiverSignals(transName); err == nil {
+	if numWires, _, err := be.GetTransceiverSignals(transName); err == nil {
 		params["NumWires"] = fmt.Sprintf("%d", len(numWires)-1) // Exclude clock
 	}
 

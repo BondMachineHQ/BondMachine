@@ -11,26 +11,28 @@ const (
 
 type TData struct {
 	// Define the fields for Tdata
-	Prefix       string
-	NodeName     string
-	EdgeName     string
-	TransName    string
-	Rsize        int               // Register size
-	NodeNum      int               // Number of nodes
-	NodeBits     int               // Bits needed for node addressing
-	IONum        int               // Maximum number of inputs or outputs Among all nodes
-	IOBits       int               // Bits needed for IO addressing
-	InnerMessLen int               // Length of inner messages
-	Inputs       []string          // List of input signals
-	Outputs      []string          // List of output signals
-	Lines        []string          // List of line signals
-	TrIn         []string          // List of transceivers for incoming signals
-	TrOut        []string          // List of transceivers for outgoing signals
-	WiresIn      [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
-	WiresOut     [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
-	NodeParams   map[string]string // Additional parameters for the specified node
-	EdgeParams   map[string]string // Additional parameters for the specified edge
-	TransParams  map[string]string // Additional parameters for the specified transceiver
+	Prefix        string
+	NodeName      string
+	EdgeName      string
+	TransName     string
+	Rsize         int               // Register size
+	NodeNum       int               // Number of nodes
+	NodeBits      int               // Bits needed for node addressing
+	IONum         int               // Maximum number of inputs or outputs Among all nodes
+	IOBits        int               // Bits needed for IO addressing
+	InnerMessLen  int               // Length of inner messages
+	Inputs        []string          // List of input signals
+	Outputs       []string          // List of output signals
+	Lines         []string          // List of line signals
+	TrIn          []string          // List of transceivers for incoming signals
+	TrOut         []string          // List of transceivers for outgoing signals
+	WiresIn       [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
+	WiresInNames  [][]string        // List of wire signal port names, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
+	WiresOut      [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
+	WiresOutNames [][]string        // List of wire signal port names, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
+	NodeParams    map[string]string // Additional parameters for the specified node
+	EdgeParams    map[string]string // Additional parameters for the specified edge
+	TransParams   map[string]string // Additional parameters for the specified transceiver
 }
 
 func (be *BondirectElement) InitTData() {
@@ -90,6 +92,8 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 	trOut := make([]string, 0)
 	wiresIn := make([][]string, 0)
 	wiresOut := make([][]string, 0)
+	wiresInNames := make([][]string, 0)
+	wiresOutNames := make([][]string, 0)
 
 	// Using cluster names to find the mesh node name (that can be different)
 	if meshNodeName, err := be.GetMeshNodeName(nodeName); err == nil {
@@ -108,16 +112,18 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 				lines = append(lines, lineName)
 				incoming := line.FromBtoA.ATransceiver
 				trIn = append(trIn, incoming)
-				if signals, err := be.GetTransceiverSignals(incoming); err == nil {
+				if signals, ports, err := be.GetTransceiverSignals(incoming); err == nil {
 					wiresIn = append(wiresIn, signals)
+					wiresInNames = append(wiresInNames, ports)
 				} else {
 					return fmt.Errorf("failed to get incoming transceiver signals: %v", err)
 				}
 
 				outgoing := line.FromAtoB.ATransceiver
 				trOut = append(trOut, outgoing)
-				if signals, err := be.GetTransceiverSignals(outgoing); err == nil {
+				if signals, ports, err := be.GetTransceiverSignals(outgoing); err == nil {
 					wiresOut = append(wiresOut, signals)
+					wiresOutNames = append(wiresOutNames, ports)
 				} else {
 					return fmt.Errorf("failed to get outgoing transceiver signals: %v", err)
 				}
@@ -131,16 +137,18 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 
 				incoming := line.FromAtoB.BTransceiver
 				trIn = append(trIn, incoming)
-				if signals, err := be.GetTransceiverSignals(incoming); err == nil {
+				if signals, ports, err := be.GetTransceiverSignals(incoming); err == nil {
 					wiresIn = append(wiresIn, signals)
+					wiresInNames = append(wiresInNames, ports)
 				} else {
 					return fmt.Errorf("failed to get incoming transceiver signals: %v", err)
 				}
 
 				outgoing := line.FromBtoA.BTransceiver
 				trOut = append(trOut, outgoing)
-				if signals, err := be.GetTransceiverSignals(outgoing); err == nil {
+				if signals, ports, err := be.GetTransceiverSignals(outgoing); err == nil {
 					wiresOut = append(wiresOut, signals)
+					wiresOutNames = append(wiresOutNames, ports)
 				} else {
 					return fmt.Errorf("failed to get outgoing transceiver signals: %v", err)
 				}
@@ -155,6 +163,10 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 	be.TData.TrOut = trOut
 	be.TData.WiresIn = wiresIn
 	be.TData.WiresOut = wiresOut
+	be.TData.WiresInNames = wiresInNames
+	be.TData.WiresOutNames = wiresOutNames
+
+	// fmt.Println("Tdata:", be.TData)
 
 	return nil
 }
