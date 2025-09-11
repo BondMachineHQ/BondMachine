@@ -28,7 +28,7 @@ func (be *BondirectElement) GetMeshNodeName(nodeName string) (string, error) {
 	return nodeName, nil
 }
 
-func (be *BondirectElement) CheckClusterNoneName(nodeName string) bool {
+func (be *BondirectElement) CheckClusterNodeName(nodeName string) bool {
 	// Check if the node name exists in the cluster
 	for _, node := range be.Cluster.Peers {
 		if node.PeerName == nodeName {
@@ -50,4 +50,23 @@ func (be *BondirectElement) CheckMeshNodeName(nodeName string) bool {
 		}
 	}
 	return false
+}
+
+func (be *BondirectElement) AnyNameToClusterName(nodeName string) (string, error) {
+	if be.CheckClusterNodeName(nodeName) {
+		return nodeName, nil
+	}
+
+	for n, mnode := range be.Mesh.Nodes {
+		if n == nodeName {
+			for _, cnode := range be.Cluster.Peers {
+				if cnode.PeerId == mnode.PeerId {
+					return cnode.PeerName, nil
+				}
+			}
+			return "", fmt.Errorf("node %s found in mesh but not in cluster", nodeName)
+		}
+	}
+
+	return "", fmt.Errorf("node %s not found in either cluster or mesh", nodeName)
 }
