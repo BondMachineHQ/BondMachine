@@ -190,5 +190,34 @@ func (sl *Bondirect_extra) StaticVerilog() string {
 }
 
 func (sl *Bondirect_extra) ExtraFiles() ([]string, []string) {
-	return []string{}, []string{}
+	files := make([]string, 0)
+	code := make([]string, 0)
+	nodeName, _ := sl.BondirectElement.AnyNameToClusterName(sl.PeerName)
+
+	// Generate extra files for the Bondirect module
+
+	// Endpoint
+	epCode, _ := sl.GenerateEndpoint("", nodeName)
+	files = append(files, "bd_endpoint_"+sl.PeerName+".vhd")
+	code = append(code, epCode)
+
+	// Lines
+	for _, line := range sl.Lines {
+		lineCode, _ := sl.GenerateLine("", nodeName, line)
+		files = append(files, "bd_line_"+sl.PeerName+"_"+line+".vhd")
+		code = append(code, lineCode)
+	}
+	// Queues
+	// TODO
+	// Transceivers
+	for _, line := range sl.Lines {
+		trCodeIn, _ := sl.GenerateTransceiver("", nodeName, line, "in")
+		trCodeOut, _ := sl.GenerateTransceiver("", nodeName, line, "out")
+		files = append(files, "bond_tx_"+sl.PeerName+"_"+line+"_out.vhd")
+		code = append(code, trCodeOut)
+		files = append(files, "bond_rx_"+sl.PeerName+"_"+line+"_in.vhd")
+		code = append(code, trCodeIn)
+	}
+
+	return files, code
 }

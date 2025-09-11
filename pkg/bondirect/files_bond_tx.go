@@ -6,7 +6,7 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
-ENTITY {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} IS
+ENTITY {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}} IS
     GENERIC (
         message_length : INTEGER := {{add .InnerMessLen 2}}; -- Length of the message to be sent including 2 extra bits
         num_wires : INTEGER := {{.TransParams.NumWires}}; -- Number of wires in the bond direct interface
@@ -26,9 +26,9 @@ ENTITY {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} 
         {{- $iSeq = printf "%s'1' & " $iSeq }}
 {{- end }}
     );
-END {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}};
+END {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}};
 
-ARCHITECTURE Behavioral OF {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} IS
+ARCHITECTURE Behavioral OF {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}} IS
     SIGNAL counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');
     CONSTANT out_clock_tick : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(out_clock_wait, counters_length);
     CONSTANT adjusted_length : INTEGER := ((message_length + num_wires - 1) / num_wires) * num_wires; -- Adjusted message length to be a multiple of num_wires
