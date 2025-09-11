@@ -1573,7 +1573,7 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		if mod.Get_Name() == "bondirect" {
 			bondirectModule = true
 			bondirectParams = mod.Get_Params().Params
-			fmt.Println(bondirectParams)
+			// fmt.Println(bondirectParams)
 			if subresult, ok := bmach.WriteVerilogBondirect("bondirect", flavor, iomaps, extramods); ok == nil {
 				result += subresult
 			} else {
@@ -1755,7 +1755,20 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	}
 
 	if bondirectModule {
-		// TODO bondirect external ports
+		if portsIn, ok := bondirectParams["inports"]; ok {
+			for _, port := range strings.Split(portsIn, ",") {
+				if port != "" {
+					result += "\tinput " + port + ",\n"
+				}
+			}
+		}
+		if portsOut, ok := bondirectParams["outports"]; ok {
+			for _, port := range strings.Split(portsOut, ",") {
+				if port != "" {
+					result += "\toutput " + port + ",\n"
+				}
+			}
+		}
 	}
 
 	if uartModule {
@@ -1914,8 +1927,8 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				if oname == ethoname {
 					resolved_io[oname] = "etherbond"
 					result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
-					result += "\twire Onput" + strconv.Itoa(i) + "_valid;\n"
-					result += "\twire Onput" + strconv.Itoa(i) + "_received;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_valid;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_received;\n"
 					break
 				}
 			}
@@ -1926,8 +1939,8 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				if oname == ethoname {
 					resolved_io[oname] = "udpbond"
 					result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
-					result += "\twire Onput" + strconv.Itoa(i) + "_valid;\n"
-					result += "\twire Onput" + strconv.Itoa(i) + "_received;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_valid;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_received;\n"
 					break
 				}
 			}
@@ -1998,6 +2011,37 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	if slow_module {
 		result += "\treg [31:0] divider;\n\n"
 		clockString = "divider[" + slow_params["slow_factor"] + "]"
+	}
+
+	if bondirectModule {
+		if portsIn, ok := bondirectParams["inports"]; ok {
+			if sigIn, ok := bondirectParams["insignals"]; ok {
+				inports := strings.Split(portsIn, ",")
+				signals := strings.Split(sigIn, ",")
+				if len(inports) == len(signals) {
+					for idx, port := range inports {
+						if port != "" && signals[idx] != "" {
+							result += "\twire " + signals[idx] + ";\n"
+							result += "\tassign " + signals[idx] + " = " + port + ";\n"
+						}
+					}
+				}
+			}
+		}
+		if portsOut, ok := bondirectParams["outports"]; ok {
+			if sigOut, ok := bondirectParams["outsignals"]; ok {
+				outports := strings.Split(portsOut, ",")
+				signals := strings.Split(sigOut, ",")
+				if len(outports) == len(signals) {
+					for idx, port := range outports {
+						if port != "" && signals[idx] != "" {
+							result += "\twire " + signals[idx] + ";\n"
+							result += "\tassign " + port + " = " + signals[idx] + ";\n"
+						}
+					}
+				}
+			}
+		}
 	}
 
 	if vgatext800x600Module {
@@ -2153,6 +2197,27 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				}
 			}
 		}
+
+		if sigIn, ok := bondirectParams["insignals"]; ok {
+			signals := strings.Split(sigIn, ",")
+			for _, sig := range signals {
+				if sig != "" {
+					result += "\t\t." + sig + "(" + sig + "),\n"
+				}
+			}
+		}
+
+		if sigOut, ok := bondirectParams["outsignals"]; ok {
+			signals := strings.Split(sigOut, ",")
+			for _, sig := range signals {
+				if sig != "" {
+					result += "\t\t." + sig + "(" + sig + "),\n"
+				}
+			}
+		}
+
+		// Remove last comma
+		result = result[:len(result)-2] + "\n"
 
 		result += "\t);\n"
 	}

@@ -15,9 +15,10 @@ type Bondirect_extra struct {
 	// Cluster *bmcluster.Cluster
 	// Mesh    *bondirect.Mesh
 	*bondirect.BondirectElement
-	PeerID uint32
-	Maps   *IOmap
-	Flavor string
+	PeerID   uint32
+	PeerName string
+	Maps     *IOmap
+	Flavor   string
 }
 
 func (sl *Bondirect_extra) Get_Name() string {
@@ -44,9 +45,9 @@ func (sl *Bondirect_extra) Get_Params() *ExtraParams {
 	result.Params["input_ids"] = ""
 	result.Params["inputs"] = ""
 	result.Params["sources"] = ""
-	fmt.Println("mypeer", mypeer)
+	// fmt.Println("mypeer", mypeer)
 	fmt.Println("cluster", sl.Cluster)
-	fmt.Println("ppp", sl.Maps)
+
 	for _, inp := range mypeer.Inputs {
 		for iname, ival := range sl.Maps.Assoc {
 			if iname[0] == 'i' && ival == strconv.Itoa(int(inp)) {
@@ -111,6 +112,58 @@ func (sl *Bondirect_extra) Get_Params() *ExtraParams {
 		result.Params["destinations"] = result.Params["destinations"][1:len(result.Params["destinations"])]
 	}
 
+	result.Params["lines"] = ""
+	for _, line := range sl.Lines {
+		result.Params["lines"] += line + ","
+	}
+	if result.Params["lines"] != "" {
+		result.Params["lines"] = result.Params["lines"][0 : len(result.Params["lines"])-1]
+	}
+
+	result.Params["insignals"] = ""
+	result.Params["inports"] = ""
+	result.Params["outsignals"] = ""
+	result.Params["outports"] = ""
+
+	for i, signals := range sl.TData.WiresIn {
+		prefix := sl.TData.Lines[i] + sl.TData.TrIn[i]
+		for _, sig := range signals {
+			result.Params["insignals"] += prefix + sig + ","
+		}
+	}
+
+	for _, ports := range sl.TData.WiresInNames {
+		for _, port := range ports {
+			result.Params["inports"] += port + ","
+		}
+	}
+
+	for i, signals := range sl.TData.WiresOut {
+		prefix := sl.TData.Lines[i] + sl.TData.TrOut[i]
+		for _, sig := range signals {
+			result.Params["outsignals"] += prefix + sig + ","
+		}
+	}
+
+	for _, ports := range sl.TData.WiresOutNames {
+		for _, port := range ports {
+			result.Params["outports"] += port + ","
+		}
+	}
+	if result.Params["insignals"] != "" {
+		result.Params["insignals"] = result.Params["insignals"][0 : len(result.Params["insignals"])-1]
+	}
+	if result.Params["inports"] != "" {
+		result.Params["inports"] = result.Params["inports"][0 : len(result.Params["inports"])-1]
+	}
+	if result.Params["outsignals"] != "" {
+		result.Params["outsignals"] = result.Params["outsignals"][0 : len(result.Params["outsignals"])-1]
+	}
+	if result.Params["outports"] != "" {
+		result.Params["outports"] = result.Params["outports"][0 : len(result.Params["outports"])-1]
+	}
+
+	fmt.Println("lines:", result.Params)
 	return result
 }
 
