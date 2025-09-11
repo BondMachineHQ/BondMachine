@@ -532,6 +532,22 @@ func main() {
 					panic(errors.New("bondirect mapfile needed"))
 				}
 
+				// Peer name taken from the mesh
+				for _, peer := range bdir.Cluster.Peers {
+					if peer.PeerId == bdir.PeerID {
+						bdir.PeerName, _ = bdir.GetMeshNodeName(peer.PeerName)
+						break
+					}
+				}
+
+				clusterNodeName, err := bdir.BondirectElement.AnyNameToClusterName(bdir.PeerName)
+				if err != nil {
+					panic(err)
+				}
+				bdir.BondirectElement.InitTData()
+				bdir.BondirectElement.PopulateIOData(clusterNodeName)
+				bdir.BondirectElement.PopulateWireData(clusterNodeName)
+
 				extramodules = append(extramodules, bdir)
 			}
 
