@@ -2,6 +2,7 @@ package bondmachine
 
 import (
 	//	"fmt"
+
 	"fmt"
 	"strconv"
 
@@ -46,7 +47,7 @@ func (sl *Bondirect_extra) Get_Params() *ExtraParams {
 	result.Params["inputs"] = ""
 	result.Params["sources"] = ""
 	// fmt.Println("mypeer", mypeer)
-	fmt.Println("cluster", sl.Cluster)
+	// fmt.Println("cluster", sl.Cluster)
 
 	for _, inp := range mypeer.Inputs {
 		for iname, ival := range sl.Maps.Assoc {
@@ -163,7 +164,7 @@ func (sl *Bondirect_extra) Get_Params() *ExtraParams {
 		result.Params["outports"] = result.Params["outports"][0 : len(result.Params["outports"])-1]
 	}
 
-	fmt.Println("lines:", result.Params)
+	// fmt.Println("lines:", result.Params)
 	return result
 }
 
@@ -208,7 +209,17 @@ func (sl *Bondirect_extra) ExtraFiles() ([]string, []string) {
 		code = append(code, lineCode)
 	}
 	// Queues
-	// TODO
+	for _, line := range sl.Lines {
+		fmt.Println("Generating queue for line", line)
+		// Every line has an input queue with several senders and one receiver
+		// Senders are:
+		// One for every message coming from the local peer (bm out data and valid, bm in recv)
+		// One for every couple (wire, wire) if there are messages coming from that wire
+		// That has to be routed to the other wire
+
+		// TODO Finish this
+
+	}
 	// Transceivers
 	for _, line := range sl.Lines {
 		trCodeIn, _ := sl.GenerateTransceiver("", nodeName, line, "in")

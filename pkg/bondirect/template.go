@@ -102,7 +102,7 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 		return fmt.Errorf("failed to get mesh node name: %v", err)
 	}
 
-	fmt.Println("Populating wire data for node:", nodeName)
+	// fmt.Println("Populating wire data for node:", nodeName)
 
 	for lineName, line := range be.Mesh.Edges {
 

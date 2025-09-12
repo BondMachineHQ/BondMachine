@@ -36,12 +36,14 @@ func (be *BondirectElement) SolveMessages() (map[string]NodeMessages, error) {
 
 	for nodeName := range mesh.Nodes {
 		nodeMessages[nodeName] = NodeMessages{
-			PeerId:             mesh.Nodes[nodeName].PeerId,
-			Origins:            &[]string{},
-			OriginDestinations: &[]string{},
-			Destinations:       &[]string{},
-			Routes:             &[]string{},
-			RouteDestinations:  &[]string{},
+			PeerId:            mesh.Nodes[nodeName].PeerId,
+			Origins:           &[]string{},
+			OriginsNextHop:    &[]string{},
+			Destinations:      &[]string{},
+			Routes:            &[]string{},
+			RoutesNextHop:     &[]string{},
+			OriginsNextHopVia: &[]string{},
+			RoutesNextHopVia:  &[]string{},
 		}
 	}
 
@@ -84,27 +86,34 @@ func (be *BondirectElement) SolveMessages() (map[string]NodeMessages, error) {
 
 		// Process the path
 		for i, step := range path.Nodes {
+			fmt.Println(path.Nodes, path.Via)
 			if i == 0 {
 				// First step
 				*nodeMessages[step].Origins = append(*nodeMessages[step].Origins, messDataName)
-				*nodeMessages[step].OriginDestinations = append(*nodeMessages[step].OriginDestinations, path.Nodes[1])
+				*nodeMessages[step].OriginsNextHop = append(*nodeMessages[step].OriginsNextHop, path.Nodes[1])
+				*nodeMessages[step].OriginsNextHopVia = append(*nodeMessages[step].OriginsNextHopVia, path.Via[1])
 				*nodeMessages[step].Origins = append(*nodeMessages[step].Origins, messValidName)
-				*nodeMessages[step].OriginDestinations = append(*nodeMessages[step].OriginDestinations, path.Nodes[1])
+				*nodeMessages[step].OriginsNextHop = append(*nodeMessages[step].OriginsNextHop, path.Nodes[1])
+				*nodeMessages[step].OriginsNextHopVia = append(*nodeMessages[step].OriginsNextHopVia, path.Via[1])
 				*nodeMessages[step].Destinations = append(*nodeMessages[step].Destinations, messRecvName)
 			} else if i == len(path.Nodes)-1 {
 				// Last step
 				*nodeMessages[step].Destinations = append(*nodeMessages[step].Destinations, messDataName)
 				*nodeMessages[step].Destinations = append(*nodeMessages[step].Destinations, messValidName)
 				*nodeMessages[step].Origins = append(*nodeMessages[step].Origins, messRecvName)
-				*nodeMessages[step].OriginDestinations = append(*nodeMessages[step].OriginDestinations, path.Nodes[i-1])
+				*nodeMessages[step].OriginsNextHop = append(*nodeMessages[step].OriginsNextHop, path.Nodes[i-1])
+				*nodeMessages[step].OriginsNextHopVia = append(*nodeMessages[step].OriginsNextHopVia, path.Via[i])
 			} else {
 				// Intermediate step
 				*nodeMessages[step].Routes = append(*nodeMessages[step].Routes, messDataName)
-				*nodeMessages[step].RouteDestinations = append(*nodeMessages[step].RouteDestinations, path.Nodes[i+1])
+				*nodeMessages[step].RoutesNextHop = append(*nodeMessages[step].RoutesNextHop, path.Nodes[i+1])
+				*nodeMessages[step].RoutesNextHopVia = append(*nodeMessages[step].RoutesNextHopVia, path.Via[i+1])
 				*nodeMessages[step].Routes = append(*nodeMessages[step].Routes, messValidName)
-				*nodeMessages[step].RouteDestinations = append(*nodeMessages[step].RouteDestinations, path.Nodes[i+1])
+				*nodeMessages[step].RoutesNextHop = append(*nodeMessages[step].RoutesNextHop, path.Nodes[i+1])
+				*nodeMessages[step].RoutesNextHopVia = append(*nodeMessages[step].RoutesNextHopVia, path.Via[i+1])
 				*nodeMessages[step].Routes = append(*nodeMessages[step].Routes, messRecvName)
-				*nodeMessages[step].RouteDestinations = append(*nodeMessages[step].RouteDestinations, path.Nodes[i-1])
+				*nodeMessages[step].RoutesNextHop = append(*nodeMessages[step].RoutesNextHop, path.Nodes[i-1])
+				*nodeMessages[step].RoutesNextHopVia = append(*nodeMessages[step].RoutesNextHopVia, path.Via[i])
 			}
 		}
 	}
