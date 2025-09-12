@@ -29,6 +29,7 @@ func clusterChecker(bi *BasmInstance) error {
 		devId := 0
 		devIdS := ""
 		devName := "default"
+		choosenID := false
 
 		if cp.GetMeta("device") != "" {
 			devName = cp.GetMeta("device")
@@ -39,6 +40,7 @@ func clusterChecker(bi *BasmInstance) error {
 				return fmt.Errorf("invalid device id %q: %w", devIdS, err)
 			} else {
 				devId = value
+				choosenID = true
 			}
 		}
 
@@ -47,6 +49,26 @@ func clusterChecker(bi *BasmInstance) error {
 				return fmt.Errorf("device name %q is already associated with a different id: %d", devName, bi.clusteredNames[devName])
 			}
 		} else {
+			if choosenID {
+				// Check that the ID is not already used
+				for _, id := range bi.clusteredNames {
+					if id == devId {
+						return fmt.Errorf("device id %d is already associated with a different name", devId)
+					}
+				}
+			} else {
+				// Choose the next available ID
+				usedIDs := make(map[int]bool)
+				for _, id := range bi.clusteredNames {
+					usedIDs[id] = true
+				}
+				for i := 0; i < 10000; i++ {
+					if !usedIDs[i] {
+						devId = i
+						break
+					}
+				}
+			}
 			bi.clusteredNames[devName] = devId
 
 			if bi.debug {
