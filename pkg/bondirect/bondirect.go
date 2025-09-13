@@ -61,12 +61,16 @@ type Path struct {
 }
 
 type NodeMessages struct {
-	PeerId            uint32
-	Origins           *[]string
-	OriginsNextHop    *[]string
-	OriginsNextHopVia *[]string
-	Destinations      *[]string
-	Routes            *[]string
-	RoutesNextHop     *[]string
-	RoutesNextHopVia  *[]string
+	PeerId                 uint32
+	Origins                *[]string
+	OriginsNextHop         *[]string
+	OriginsNextHopVia      *[]string
+	Destinations           *[]string
+	DestinationsPrevHop    *[]string
+	DestinationsPrevHopVia *[]string
+	Routes                 *[]string
+	RoutesPrevHop          *[]string
+	RoutesPrevHopVia       *[]string
+	RoutesNextHop          *[]string
+	RoutesNextHopVia       *[]string
 }

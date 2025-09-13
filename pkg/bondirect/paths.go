@@ -20,7 +20,18 @@ func (be *BondirectElement) ShowPaths() {
 	messPaths, _ := be.SolveMessages()
 	fmt.Println("Messages paths:")
 	for _, mp := range messPaths {
-		fmt.Println(" -", mp.PeerId, mp.Origins, mp.Destinations, mp.Routes, mp.OriginsNextHop, mp.OriginsNextHopVia, mp.RoutesNextHop, mp.RoutesNextHopVia)
+		fmt.Println(" -", mp.PeerId)
+		fmt.Println("   - Origins:", *mp.Origins)
+		fmt.Println("     Origins Next Hop:", *mp.OriginsNextHop)
+		fmt.Println("     Origins Next Hop Via:", *mp.OriginsNextHopVia)
+		fmt.Println("   - Destinations:", *mp.Destinations)
+		fmt.Println("     Destinations Prev Hop:", *mp.DestinationsPrevHop)
+		fmt.Println("     Destinations Prev Hop Via:", *mp.DestinationsPrevHopVia)
+		fmt.Println("   - Routes:", *mp.Routes)
+		fmt.Println("     Routes Prev Hop:", *mp.RoutesPrevHop)
+		fmt.Println("     Routes Prev Hop Via:", *mp.RoutesPrevHopVia)
+		fmt.Println("     Routes Next Hop:", *mp.RoutesNextHop)
+		fmt.Println("     Routes Next Hop Via:", *mp.RoutesNextHopVia)
 	}
 }
 
