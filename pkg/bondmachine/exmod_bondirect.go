@@ -8,6 +8,7 @@ import (
 
 	//	"strings"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmstack"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondirect"
 )
 
@@ -209,6 +210,10 @@ func (sl *Bondirect_extra) ExtraFiles() ([]string, []string) {
 		code = append(code, lineCode)
 	}
 	// Queues
+	maps, _ := sl.BondirectElement.SolveMessages()
+	peerName := sl.PeerName
+	myMessages := maps[peerName]
+
 	for _, line := range sl.Lines {
 		fmt.Println("Generating queue for line", line)
 		// Every line (let's call it wireB) has an input queue with several senders and one receiver
@@ -220,9 +225,53 @@ func (sl *Bondirect_extra) ExtraFiles() ([]string, []string) {
 		//   Even if there are more than one message coming from wireA, they will be serialized by the
 		//   endpoint, so only one sender is needed
 
-		// TODO Finish this
+		origins := *(myMessages.Origins)
+		originsNextHopVia := *(myMessages.OriginsNextHopVia)
+		routes := *(myMessages.Routes)
+		routesNextHopVia := *(myMessages.RoutesNextHopVia)
+		routesPrevHopVia := *(myMessages.RoutesPrevHopVia)
 
+		s := bmstack.CreateBasicStack()
+		s.ModuleName = "bond_queue_" + sl.PeerName + "_" + line
+		s.DataSize = sl.InnerMessLen
+		s.Depth = 8
+		s.MemType = "FIFO"
+		s.Receivers = make([]string, 1)
+		s.Receivers[0] = line + "_queue_receiver"
+		s.Senders = make([]string, 0)
+		for i, msg := range origins {
+			destWire := originsNextHopVia[i]
+			if destWire == line {
+				// This message is destined to this line, so it has a sender
+				s.Senders = append(s.Senders, msg+"_to_"+destWire+"_sender")
+			}
+		}
+
+		wire2wireSenders := make(map[string]struct{})
+
+		for i, _ := range routes {
+			prevWire := routesPrevHopVia[i]
+			nextWire := routesNextHopVia[i]
+			if nextWire == line {
+				// This message is routed through this line, so it has a sender from the previous wire
+				wire2wireSenders[prevWire+"_to_"+nextWire+"_sender"] = struct{}{}
+			}
+		}
+
+		for w2wSender, _ := range wire2wireSenders {
+			s.Senders = append(s.Senders, w2wSender)
+		}
+
+		if len(s.Senders) > 0 {
+			queueCode, _ := s.WriteHDL()
+			files = append(files, "bond_queue_"+sl.PeerName+"_"+line+".v")
+			code = append(code, queueCode)
+		} else {
+			fmt.Println("No senders for line", line, "no queue generated")
+
+		}
 	}
+
 	// Transceivers
 	for _, line := range sl.Lines {
 		trCodeIn, _ := sl.GenerateTransceiver("", nodeName, line, "in")
