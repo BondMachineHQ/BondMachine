@@ -211,11 +211,14 @@ func (sl *Bondirect_extra) ExtraFiles() ([]string, []string) {
 	// Queues
 	for _, line := range sl.Lines {
 		fmt.Println("Generating queue for line", line)
-		// Every line has an input queue with several senders and one receiver
+		// Every line (let's call it wireB) has an input queue with several senders and one receiver
 		// Senders are:
-		// One for every message coming from the local peer (bm out data and valid, bm in recv)
-		// One for every couple (wire, wire) if there are messages coming from that wire
-		// That has to be routed to the other wire
+		// - One for every message coming from the local peer (bm out data and valid, bm in recv)
+		//   These messages potentially can be concurrent, so they need to be queued by different senders
+		// - One for every couple (wireA, wireB) if there are messages coming from wireA
+		//   That has to be routed to the other wireB.
+		//   Even if there are more than one message coming from wireA, they will be serialized by the
+		//   endpoint, so only one sender is needed
 
 		// TODO Finish this
 
