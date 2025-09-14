@@ -535,7 +535,7 @@ func main() {
 				// Peer name taken from the mesh
 				for _, peer := range bdir.Cluster.Peers {
 					if peer.PeerId == bdir.PeerID {
-						bdir.PeerName, _ = bdir.GetMeshNodeName(peer.PeerName)
+						bdir.PeerName, _ = bdir.AnyNameToMeshName(peer.PeerName)
 						break
 					}
 				}

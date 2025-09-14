@@ -19,7 +19,7 @@ USE IEEE.NUMERIC_STD.ALL;
 {{- end }}
 -- Line index: {{ $lineIdx }}
 
-ENTITY {{.Prefix}}bd_line_{{.NodeName}}_{{ .EdgeName }} IS
+ENTITY {{.Prefix}}bd_line_{{.MeshNodeName}}_{{ .EdgeName }} IS
     GENERIC (
         message_length : INTEGER := {{ .InnerMessLen }} -- Length of the message to be sent, in this length is not included bits used by tx and rx
     );
@@ -44,9 +44,9 @@ ENTITY {{.Prefix}}bd_line_{{.NodeName}}_{{ .EdgeName }} IS
         r_valid : OUT STD_LOGIC := '0'; -- Signal indicating that the received message is valid
         r_error : OUT STD_LOGIC := '0' -- Signal indicating that an error occurred during reception
     );
-END {{.Prefix}}bd_line_{{.NodeName}}_{{ .EdgeName }};
+END {{.Prefix}}bd_line_{{.MeshNodeName}}_{{ .EdgeName }};
 
-ARCHITECTURE Behavioral OF {{.Prefix}}bd_line_{{.NodeName}}_{{ .EdgeName }} IS
+ARCHITECTURE Behavioral OF {{.Prefix}}bd_line_{{.MeshNodeName}}_{{ .EdgeName }} IS
     SIGNAL message_to_send : STD_LOGIC_VECTOR (message_length + 1 DOWNTO 0) := (OTHERS => '0');
     SIGNAL send_data_enable : STD_LOGIC := '0';
     SIGNAL send_busy : STD_LOGIC := '0';
@@ -82,7 +82,7 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_line_{{.NodeName}}_{{ .EdgeName }} IS
 BEGIN
 
     -- Instantiate the bond_tx component
-    {{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}}_inst : ENTITY work.{{.Prefix}}bond_tx_{{.NodeName}}_{{.EdgeName}}
+    {{.Prefix}}bond_tx_{{.MeshNodeName}}_{{.EdgeName}}_inst : ENTITY work.{{.Prefix}}bond_tx_{{.MeshNodeName}}_{{.EdgeName}}
         GENERIC MAP(
             message_length => message_length + 2 -- +2 for the message length plus bits used by tx and rx
         )
@@ -99,7 +99,7 @@ BEGIN
         );
 
     -- Instantiate the bond_rx component
-    {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_inst : ENTITY work.{{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}
+    {{.Prefix}}bond_rx_{{.MeshNodeName}}_{{.EdgeName}}_inst : ENTITY work.{{.Prefix}}bond_rx_{{.MeshNodeName}}_{{.EdgeName}}
         GENERIC MAP(
             message_length => message_length + 2 -- +2 for the message length plus bits used by tx and rx
         )

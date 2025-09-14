@@ -11,7 +11,16 @@ func (be *BondirectElement) GenerateTransceiver(prefix, nodeName, edgeName, dire
 
 	// Fill Template Data with the request values
 	be.TData.Prefix = prefix
-	be.TData.NodeName = nodeName
+	if clusterNodeName, err := be.AnyNameToClusterName(nodeName); err == nil {
+		be.TData.NodeName = clusterNodeName
+	} else {
+		return "", err
+	}
+	if meshNodeName, err := be.AnyNameToMeshName(nodeName); err == nil {
+		be.TData.MeshNodeName = meshNodeName
+	} else {
+		return "", err
+	}
 	be.TData.EdgeName = edgeName
 	if name, err := be.GetTransceiverName(nodeName, edgeName, direction); err == nil {
 		be.TData.TransName = name
@@ -90,7 +99,7 @@ func (be *BondirectElement) GetTransceiverSignals(trName string) ([]string, []st
 
 func (be *BondirectElement) GetTransceiverName(nodeName, lineName, direction string) (string, error) {
 	// Using cluster names to find the mesh node name (that can be different)
-	if meshNodeName, err := be.GetMeshNodeName(nodeName); err == nil {
+	if meshNodeName, err := be.AnyNameToMeshName(nodeName); err == nil {
 		nodeName = meshNodeName
 	} else {
 		return "", fmt.Errorf("failed to get mesh node name: %v", err)

@@ -2171,7 +2171,7 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	}
 
 	if bondirectModule {
-		peerName := bondirectParams["peer_name"]
+		peerName := bondirectParams["mesh_node_name"]
 		result += "\tbd_endpoint_" + peerName + " bd_endpoint_" + peerName + "_main (\n"
 		result += "\t\t.clk(" + clk_name + "),\n"
 		result += "\t\t.reset(reset),\n"

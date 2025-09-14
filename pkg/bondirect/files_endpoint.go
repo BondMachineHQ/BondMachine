@@ -8,7 +8,7 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
-ENTITY {{.Prefix}}bd_endpoint_{{.NodeName}} IS
+ENTITY {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
     GENERIC (
 	rsize : INTEGER := {{.Rsize}} -- Size of the register
         message_length : INTEGER := {{.InnerMessLen}} -- Length of the message to be sent, in this length is not included bits used by tx and rx
@@ -43,9 +43,9 @@ ENTITY {{.Prefix}}bd_endpoint_{{.NodeName}} IS
 	{{- end }}
 
     );
-END {{.Prefix}}bd_endpoint_{{.NodeName}};
+END {{.Prefix}}bd_endpoint_{{.MeshNodeName}};
 
-ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.NodeName}} IS
+ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 	-- BM Cache signals
 		-- BM Inputs
 		{{- range .Inputs }}
@@ -98,7 +98,7 @@ BEGIN
     	-- Instantiate the lines
 	{{- range $i := iter (len .Lines) }}
 	{{- $lineName:= index $.Lines $i }}
-	{{$.Prefix}}bd_line_{{$.NodeName}}_{{ $lineName }}_inst : ENTITY work.{{$.Prefix}}bd_line_{{$.NodeName}}_{{ $lineName }}
+	{{$.Prefix}}bd_line_{{$.MeshNodeName}}_{{ $lineName }}_inst : ENTITY work.{{$.Prefix}}bd_line_{{$.MeshNodeName}}_{{ $lineName }}
 	GENERIC MAP(
 		message_length => {{ $.InnerMessLen }},
 	)
@@ -128,6 +128,16 @@ BEGIN
 		r_busy => {{$lineName}}_r_busy,
 		r_valid => {{$lineName}}_r_valid,
 		r_error => {{$lineName}}_r_error
+	);
+	{{- end }}
+
+	-- Instantiations of the queues for every line
+	{{- range $i := iter (len .Lines) }}
+	{{- $lineName:= index $.Lines $i }}
+	{{$.Prefix}}bond_queue_{{$.MeshNodeName}}_{{ $lineName }}_inst : ENTITY work.{{$.Prefix}}bond_queue_{{$.MeshNodeName}}_{{ $lineName }}
+	PORT MAP(
+		clk => clk,
+		reset => reset
 	);
 	{{- end }}
 

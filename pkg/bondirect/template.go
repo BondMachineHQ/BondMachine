@@ -12,7 +12,8 @@ const (
 type TData struct {
 	// Define the fields for Tdata
 	Prefix        string
-	NodeName      string
+	NodeName      string // Cluster name of the node
+	MeshNodeName  string // Mesh name of the node
 	EdgeName      string
 	TransName     string
 	Rsize         int               // Register size
@@ -60,6 +61,12 @@ func (be *BondirectElement) PopulateIOData(nodeName string) error {
 	inputs := make([]string, 0)
 	outputs := make([]string, 0)
 
+	if clusterNodeName, err := be.AnyNameToClusterName(nodeName); err == nil {
+		nodeName = clusterNodeName
+	} else {
+		return fmt.Errorf("failed to get cluster node name: %v", err)
+	}
+
 	found := false
 	for _, node := range be.Cluster.Peers {
 		if node.PeerName == nodeName {
@@ -96,7 +103,7 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 	wiresOutNames := make([][]string, 0)
 
 	// Using cluster names to find the mesh node name (that can be different)
-	if meshNodeName, err := be.GetMeshNodeName(nodeName); err == nil {
+	if meshNodeName, err := be.AnyNameToMeshName(nodeName); err == nil {
 		nodeName = meshNodeName
 	} else {
 		return fmt.Errorf("failed to get mesh node name: %v", err)

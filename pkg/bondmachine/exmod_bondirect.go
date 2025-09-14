@@ -38,7 +38,8 @@ func (sl *Bondirect_extra) Get_Params() *ExtraParams {
 	for _, peer := range sl.Cluster.Peers {
 		if peer.PeerId == sl.PeerID {
 			mypeer = peer
-			result.Params["peer_name"], _ = sl.GetMeshNodeName(peer.PeerName)
+			result.Params["mesh_node_name"], _ = sl.AnyNameToMeshName(peer.PeerName)
+			result.Params["node_name"], _ = sl.AnyNameToClusterName(peer.PeerName)
 			break
 		}
 
