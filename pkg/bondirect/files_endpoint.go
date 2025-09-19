@@ -46,6 +46,16 @@ ENTITY {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 END {{.Prefix}}bd_endpoint_{{.MeshNodeName}};
 
 ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
+	-- CONSTANTS
+	CONSTANT ACTION_UPDATE_DATA : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
+	CONSTANT ACTION_UPDATE_VALID : STD_LOGIC_VECTOR(1 DOWNTO 0) := "01";
+	CONSTANT ACTION_UPDATE_RECV : STD_LOGIC_VECTOR(1 DOWNTO 0) := "10";
+
+	CONSTANT SEND_IDLE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
+	CONSTANT SEND_PREPARE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "001";
+	CONSTANT SEND_WAIT_ACK : STD_LOGIC_VECTOR(2 DOWNTO 0) := "010";
+	
+
 	-- BM Cache signals
 		-- BM Inputs
 		{{- range .Inputs }}
@@ -86,11 +96,38 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
         	{{$lineName}}_r_valid : STD_LOGIC := '0'; -- Signal indicating that the received message is valid
         	{{$lineName}}_r_error : STD_LOGIC := '0' -- Signal indicating that an error occurred during reception
 	{{- end }}
-	-- Every line has its own queue for outgoing messages, so we need to instantiate one queue per line
-	-- The queues are implemented using the verilog queue module offered in bmstack
-	-- Each queue has several senders, some for the BM outputs meant for that line, and some for
-	-- routed messages from other lines
-	-- Each queue has only one receiver, the process that sends messages to the line
+	-- Signals for the queues
+		-- Every line has its own queue for outgoing messages, so we need to instantiate one queue per line
+		-- The queues are implemented using the verilog queue module offered in bmstack
+		-- Each queue has several senders, some for the BM outputs meant for that line, and some for
+		-- routed messages from other lines
+		-- Each queue has only one receiver, the process that sends messages to the line
+	{{- range $i := iter (len .Lines) }}
+	{{- $lineName:= index $.Lines $i }}
+	{{- range $j := iter (ios (index $.IOSenders $i)) }}
+		{{ (index (index $.IOSenders $i) $j).SignalName }}Data : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
+		{{ (index (index $.IOSenders $i) $j).SignalName }}Write : STD_LOGIC := '0';
+		{{ (index (index $.IOSenders $i) $j).SignalName }}Ack : STD_LOGIC;
+	{{- end }}
+	{{- range $j := iter (len (index $.RouteSenders $i)) }}
+		{{ index (index $.RouteSenders $i) $j }}Data : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
+		{{ index (index $.RouteSenders $i) $j }}Write : STD_LOGIC := '0';
+		{{ index (index $.RouteSenders $i) $j }}Ack : STD_LOGIC;
+	{{- end }}
+		{{ $lineName }}_queue_receiverData : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0);
+		{{ $lineName }}_queue_receiverRead : STD_LOGIC := '0';
+		{{ $lineName }}_queue_receiverAck : STD_LOGIC;
+		{{ $lineName }}_queue_full : STD_LOGIC;
+		{{ $lineName }}_queue_empty : STD_LOGIC;
+	{{- end }}
+
+	-- State machines
+	{{- range $i := iter (len .Lines) }}
+		{{- range $j := iter (ios (index $.IOSenders $i)) }}
+		{{- $signalName := (index (index $.IOSenders $i) $j).SignalName }}
+		{{ $signalName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := SEND_IDLE;
+		{{- end }}
+	{{- end }}
 BEGIN
 
 	-- Instantiations
@@ -137,6 +174,21 @@ BEGIN
 	{{$.Prefix}}bond_queue_{{$.MeshNodeName}}_{{ $lineName }}_inst : ENTITY work.{{$.Prefix}}bond_queue_{{$.MeshNodeName}}_{{ $lineName }}
 	PORT MAP(
 		clk => clk,
+	{{- range $j := iter (ios (index $.IOSenders $i)) }}
+		{{ (index (index $.IOSenders $i) $j).SignalName }}Data => {{ (index (index $.IOSenders $i) $j).SignalName }}Data,
+		{{ (index (index $.IOSenders $i) $j).SignalName }}Write => {{ (index (index $.IOSenders $i) $j).SignalName }}Write,
+		{{ (index (index $.IOSenders $i) $j).SignalName }}Ack => {{ (index (index $.IOSenders $i) $j).SignalName }}Ack,
+	{{- end }}
+	{{- range $j := iter (len (index $.RouteSenders $i)) }}
+		{{ index (index $.RouteSenders $i) $j }}Data => {{ index (index $.RouteSenders $i) $j }}Data,
+		{{ index (index $.RouteSenders $i) $j }}Write => {{ index (index $.RouteSenders $i) $j }}Write,
+		{{ index (index $.RouteSenders $i) $j }}Ack => {{ index (index $.RouteSenders $i) $j }}Ack,
+	{{- end }}
+		{{ $lineName }}_queue_receiverData => {{ $lineName }}_queue_receiverData,
+		{{ $lineName }}_queue_receiverRead => {{ $lineName }}_queue_receiverRead,
+		{{ $lineName }}_queue_receiverAck => {{ $lineName }}_queue_receiverAck,
+		full => {{ $lineName }}_queue_full,
+		empty => {{ $lineName }}_queue_empty,
 		reset => reset
 	);
 	{{- end }}
@@ -205,6 +257,119 @@ BEGIN
 	END PROCESS;	
 
 	{{- end }}
+
+	{{- range $i := iter (len .Lines) }}
+	{{- $lineName:= index $.Lines $i }}
+	-- Processes for the line {{ $lineName }}
+		-- Processes to send messages to the line from local BM
+		{{- range $j := iter (ios (index $.IOSenders $i)) }}
+		{{- $signalName := (index (index $.IOSenders $i) $j).SignalName }}
+		{{- $associatedIO := (index (index $.IOSenders $i) $j).AssociatedIO }}
+		{{- $signalHeader := (index (index $.IOSenders $i) $j).DestHeader }}
+		{{- if eq (index (index $.IOSenders $i) $j).SignalType "data" }}
+			{{ $signalName }}_send_proc : PROCESS (clk, reset)
+			BEGIN
+				IF reset = '1' THEN
+					{{ $signalName }}_send_SM <= '0';
+					{{ $associatedIO }}_need_reset <= '0';
+				ELSIF rising_edge(clk) THEN
+					CASE {{ $signalName }}_send_SM IS
+						WHEN SEND_IDLE =>
+							IF {{ $associatedIO }}_need = '1' THEN
+								{{ $signalName }}_send_SM <= SEND_PREPARE;
+							END IF;
+						WHEN SEND_PREPARE =>
+							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_DATA & {{ $associatedIO }}_local;
+							{{ $signalName }}Write <= '1';
+							{{ $signalName }}_send_SM <= SEND_WAIT_ACK;
+							{{ $associatedIO }}_need_reset <= '1';
+						WHEN SEND_WAIT_ACK =>
+							{{ $associatedIO }}_need_reset <= '0';
+							if {{ $signalName }}Ack = '1' THEN
+								{{ $signalName }}Write <= '0';
+								{{ $signalName }}_send_SM <= SEND_IDLE;
+							END IF;
+					END CASE;
+			END PROCESS;
+		{{- end }}
+		{{- if eq (index (index $.IOSenders $i) $j).SignalType "valid" }}
+			{{ $signalName }}_send_proc : PROCESS (clk, reset)
+			BEGIN
+				IF reset = '1' THEN
+					{{ $signalName }}_send_SM <= '0';
+					{{ $associatedIO }}_valid_need_reset <= '0';
+				ELSIF rising_edge(clk) THEN
+					CASE {{ $signalName }}_send_SM IS
+						WHEN SEND_IDLE =>
+							IF {{ $associatedIO }}_valid_need = '1' THEN
+								{{ $signalName }}_send_SM <= SEND_PREPARE;
+							END IF;
+						WHEN SEND_PREPARE =>
+							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_VALID & (OTHERS => '0');
+							{{ $signalName }}Write <= '1';
+							{{ $signalName }}_send_SM <= SEND_WAIT_ACK;
+							{{ $associatedIO }}_valid_need_reset <= '1';
+						WHEN SEND_WAIT_ACK =>
+							{{ $associatedIO }}_valid_need_reset <= '0';
+							if {{ $signalName }}Ack = '1' THEN
+								{{ $signalName }}Write <= '0';
+								{{ $signalName }}_send_SM <= SEND_IDLE;
+							END IF;
+					END CASE;
+			END PROCESS;
+		
+		{{- end }}
+		{{- if eq (index (index $.IOSenders $i) $j).SignalType "recv" }}
+			{{ $signalName }}_send_proc : PROCESS (clk, reset)
+			BEGIN
+				IF reset = '1' THEN
+					{{ $signalName }}_send_SM <= '0';
+					{{ $associatedIO }}_recv_need_reset <= '0';
+				ELSIF rising_edge(clk) THEN
+					CASE {{ $signalName }}_send_SM IS
+						WHEN SEND_IDLE =>
+							IF {{ $associatedIO }}_recv_need = '1' THEN
+								{{ $signalName }}_send_SM <= SEND_PREPARE;
+							END IF;
+						WHEN SEND_PREPARE =>
+							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_RECV & (OTHERS => '0');
+							{{ $signalName }}Write <= '1';
+							{{ $signalName }}_send_SM <= SEND_WAIT_ACK;
+							{{ $associatedIO }}_recv_need_reset <= '1';
+						WHEN SEND_WAIT_ACK =>
+							{{ $associatedIO }}_recv_need_reset <= '0';
+							if {{ $signalName }}Ack = '1' THEN
+								{{ $signalName }}Write <= '0';
+								{{ $signalName }}_send_SM <= SEND_IDLE;
+							END IF;
+					END CASE;
+			END PROCESS;
+		{{- end }}
+		{{- end }}
+
+		-- Process to handle sending messages to the line. The messages are taken from the queue
+		-- and sent to the line one by one
+		{{ $lineName }}_send_proc : PROCESS (clk, reset)
+		BEGIN
+			IF reset = '1' THEN
+				{{ $lineName }}_s_message <= (OTHERS => '0');
+				{{ $lineName }}_s_valid <= '0';
+			ELSIF rising_edge(clk) THEN
+			END IF;
+		END PROCESS;
+
+	-- Process to handle received messages from the line
+	{{ $lineName }}_receive_proc : PROCESS (clk, reset)
+	BEGIN
+		IF reset = '1' THEN
+			{{ $lineName }}_queue_receiverRead <= '0';
+		ELSIF rising_edge(clk) THEN
+		END IF;
+		-- TODO: Finish the receive process
+	END PROCESS;
+	
+	{{- end }}
+
 END Behavioral;
 	`
 )
