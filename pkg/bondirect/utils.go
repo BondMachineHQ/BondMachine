@@ -2,6 +2,7 @@ package bondirect
 
 import (
 	"fmt"
+	"strconv"
 )
 
 func (be *BondirectElement) NamesConsistency() error {
@@ -97,4 +98,17 @@ func (be *BondirectElement) AnyNameToMeshName(nodeName string) (string, error) {
 	}
 
 	return "", fmt.Errorf("node %s not found in either cluster or mesh", nodeName)
+}
+
+func zerosPrefix(num int, value string) string {
+	result := value
+	for i := 0; i < num-len(value); i++ {
+		result = "0" + result
+	}
+	return result
+}
+
+func getBinary(i int) string {
+	result := strconv.FormatInt(int64(i), 2)
+	return result
 }
