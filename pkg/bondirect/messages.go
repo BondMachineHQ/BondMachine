@@ -38,6 +38,9 @@ func (be *BondirectElement) SolveMessages() (map[string]NodeMessages, error) {
 		nodeMessages[nodeName] = NodeMessages{
 			PeerId:                 mesh.Nodes[nodeName].PeerId,
 			Origins:                &[]string{},
+			OriginsHeader:          &[]string{},
+			OriginIO:               &[]string{},
+			OriginsType:            &[]string{},
 			OriginsNextHop:         &[]string{},
 			Destinations:           &[]string{},
 			DestinationsPrevHop:    &[]string{},
@@ -90,13 +93,19 @@ func (be *BondirectElement) SolveMessages() (map[string]NodeMessages, error) {
 
 		// Process the path
 		for i, step := range path.Nodes {
-			fmt.Println(path.Nodes, path.Via)
+			// fmt.Println(path.Nodes, path.Via)
 			if i == 0 {
 				// First step
 				*nodeMessages[step].Origins = append(*nodeMessages[step].Origins, messDataName)
+				*nodeMessages[step].OriginsHeader = append(*nodeMessages[step].OriginsHeader, zerosPrefix(be.NodeBits, getBinary(to.BmId))+zerosPrefix(be.IOBits, getBinary(to.Index)))
+				*nodeMessages[step].OriginIO = append(*nodeMessages[step].OriginIO, fmt.Sprintf("output%s", idxFrom))
+				*nodeMessages[step].OriginsType = append(*nodeMessages[step].OriginsType, "data")
 				*nodeMessages[step].OriginsNextHop = append(*nodeMessages[step].OriginsNextHop, path.Nodes[1])
 				*nodeMessages[step].OriginsNextHopVia = append(*nodeMessages[step].OriginsNextHopVia, path.Via[1])
 				*nodeMessages[step].Origins = append(*nodeMessages[step].Origins, messValidName)
+				*nodeMessages[step].OriginsHeader = append(*nodeMessages[step].OriginsHeader, zerosPrefix(be.NodeBits, getBinary(to.BmId))+zerosPrefix(be.IOBits, getBinary(to.Index)))
+				*nodeMessages[step].OriginIO = append(*nodeMessages[step].OriginIO, fmt.Sprintf("output%s", idxFrom))
+				*nodeMessages[step].OriginsType = append(*nodeMessages[step].OriginsType, "valid")
 				*nodeMessages[step].OriginsNextHop = append(*nodeMessages[step].OriginsNextHop, path.Nodes[1])
 				*nodeMessages[step].OriginsNextHopVia = append(*nodeMessages[step].OriginsNextHopVia, path.Via[1])
 				*nodeMessages[step].Destinations = append(*nodeMessages[step].Destinations, messRecvName)
@@ -111,6 +120,9 @@ func (be *BondirectElement) SolveMessages() (map[string]NodeMessages, error) {
 				*nodeMessages[step].DestinationsPrevHopVia = append(*nodeMessages[step].DestinationsPrevHopVia, path.Via[i])
 				*nodeMessages[step].DestinationsPrevHopVia = append(*nodeMessages[step].DestinationsPrevHopVia, path.Via[i])
 				*nodeMessages[step].Origins = append(*nodeMessages[step].Origins, messRecvName)
+				*nodeMessages[step].OriginsHeader = append(*nodeMessages[step].OriginsHeader, zerosPrefix(be.NodeBits, getBinary(from.BmId))+zerosPrefix(be.IOBits, getBinary(from.Index)))
+				*nodeMessages[step].OriginIO = append(*nodeMessages[step].OriginIO, fmt.Sprintf("output%s", idxTo))
+				*nodeMessages[step].OriginsType = append(*nodeMessages[step].OriginsType, "recv")
 				*nodeMessages[step].OriginsNextHop = append(*nodeMessages[step].OriginsNextHop, path.Nodes[i-1])
 				*nodeMessages[step].OriginsNextHopVia = append(*nodeMessages[step].OriginsNextHopVia, path.Via[i])
 			} else {

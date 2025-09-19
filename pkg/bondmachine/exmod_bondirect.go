@@ -216,7 +216,7 @@ func (sl *Bondirect_extra) ExtraFiles() ([]string, []string) {
 	myMessages := maps[peerName]
 
 	for _, line := range sl.Lines {
-		fmt.Println("Generating queue for line", line)
+		// fmt.Println("Generating queue for line", line)
 		// Every line (let's call it wireB) has an input queue with several senders and one receiver
 		// Senders are:
 		// - One for every message coming from the local peer (bm out data and valid, bm in recv)
