@@ -63,6 +63,9 @@ type Path struct {
 type NodeMessages struct {
 	PeerId                 uint32
 	Origins                *[]string
+	OriginsHeader          *[]string
+	OriginsType            *[]string // "data", "valid" or "recv"
+	OriginIO               *[]string // Associated IO signal name
 	OriginsNextHop         *[]string
 	OriginsNextHopVia      *[]string
 	Destinations           *[]string
