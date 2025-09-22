@@ -55,6 +55,11 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 	CONSTANT SEND_PREPARE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "001";
 	CONSTANT SEND_WAIT_ACK : STD_LOGIC_VECTOR(2 DOWNTO 0) := "010";
 	
+	CONSTANT QSEND_IDLE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
+
+	CONSTANT QRECV_IDLE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
+	CONSTANT QRECV_WAIT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "001";
+	CONSTANT QRECV_PROCESS : STD_LOGIC_VECTOR(2 DOWNTO 0) := "010";
 
 	-- BM Cache signals
 		-- BM Inputs
@@ -109,10 +114,10 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 		{{ (index (index $.IOSenders $i) $j).SignalName }}Write : STD_LOGIC := '0';
 		{{ (index (index $.IOSenders $i) $j).SignalName }}Ack : STD_LOGIC;
 	{{- end }}
-	{{- range $j := iter (len (index $.RouteSenders $i)) }}
-		{{ index (index $.RouteSenders $i) $j }}Data : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
-		{{ index (index $.RouteSenders $i) $j }}Write : STD_LOGIC := '0';
-		{{ index (index $.RouteSenders $i) $j }}Ack : STD_LOGIC;
+	{{- range $j := iter (ios (index $.RouteSenders $i)) }}
+		{{ (index (index $.RouteSenders $i) $j).SignalName }}Data : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
+		{{ (index (index $.RouteSenders $i) $j).SignalName }}Write : STD_LOGIC := '0';
+		{{ (index (index $.RouteSenders $i) $j).SignalName }}Ack : STD_LOGIC;
 	{{- end }}
 		{{ $lineName }}_queue_receiverData : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0);
 		{{ $lineName }}_queue_receiverRead : STD_LOGIC := '0';
@@ -121,12 +126,39 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 		{{ $lineName }}_queue_empty : STD_LOGIC;
 	{{- end }}
 
+	-- Signals for the receive
+	{{- range $i := iter (len .Lines) }}
+	{{- $lineName:= index $.Lines $i }}
+		-- Signals for receiving messages from the line {{ $lineName }}
+		{{ $lineName }}_received_message : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
+		{{ $lineName }}_recv_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := QRECV_IDLE;
+	{{- end }}
+
 	-- State machines
 	{{- range $i := iter (len .Lines) }}
-		{{- range $j := iter (ios (index $.IOSenders $i)) }}
-		{{- $signalName := (index (index $.IOSenders $i) $j).SignalName }}
-		{{ $signalName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := SEND_IDLE;
-		{{- end }}
+	{{- $lineName:= index $.Lines $i }}
+		-- State machines for the line {{ index $.Lines $i }}
+			-- One state machine per IO sender towards the line
+			-- The state machines are used to send messages from the BM outputs to the line
+			-- The state machines take care of sending one message at a time, waiting for the ack
+			-- before sending the next message
+			-- The state machines also take care of resetting the need signals in the BM outputs
+			-- after sending the message
+			-- The state machines have three states: IDLE, PREPARE, WAIT_ACK
+			-- In the IDLE state, the state machine waits for the need signal to be set in the BM output
+			-- In the PREPARE state, the state machine prepares the message to be sent and sets the write signal
+			-- In the WAIT_ACK state, the state machine waits for the ack signal to be set by the queue
+			-- After receiving the ack, the state machine goes back to the IDLE state
+			-- The state machines also reset the need signals in the BM outputs after sending the message
+			{{- range $j := iter (ios (index $.IOSenders $i)) }}
+			{{- $signalName := (index (index $.IOSenders $i) $j).SignalName }}
+			{{ $signalName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := SEND_IDLE;
+			{{- end }}
+			-- State machine to send messages from the queue to the line
+			-- This state machine takes care of sending messages from the queue to the line
+			-- It checks if the queue is not empty and if the line is not busy before sending a message
+			-- It sends one message at a time, waiting for the line to be ready before sending the next message
+			{{ $lineName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := QSEND_IDLE;
 	{{- end }}
 BEGIN
 
@@ -179,10 +211,10 @@ BEGIN
 		{{ (index (index $.IOSenders $i) $j).SignalName }}Write => {{ (index (index $.IOSenders $i) $j).SignalName }}Write,
 		{{ (index (index $.IOSenders $i) $j).SignalName }}Ack => {{ (index (index $.IOSenders $i) $j).SignalName }}Ack,
 	{{- end }}
-	{{- range $j := iter (len (index $.RouteSenders $i)) }}
-		{{ index (index $.RouteSenders $i) $j }}Data => {{ index (index $.RouteSenders $i) $j }}Data,
-		{{ index (index $.RouteSenders $i) $j }}Write => {{ index (index $.RouteSenders $i) $j }}Write,
-		{{ index (index $.RouteSenders $i) $j }}Ack => {{ index (index $.RouteSenders $i) $j }}Ack,
+	{{- range $j := iter (ios (index $.RouteSenders $i)) }}
+		{{ (index (index $.RouteSenders $i) $j).SignalName }}Data => {{ (index (index $.RouteSenders $i) $j).SignalName }}Data,
+		{{ (index (index $.RouteSenders $i) $j).SignalName }}Write => {{ (index (index $.RouteSenders $i) $j).SignalName }}Write,
+		{{ (index (index $.RouteSenders $i) $j).SignalName }}Ack => {{ (index (index $.RouteSenders $i) $j).SignalName }}Ack,
 	{{- end }}
 		{{ $lineName }}_queue_receiverData => {{ $lineName }}_queue_receiverData,
 		{{ $lineName }}_queue_receiverRead => {{ $lineName }}_queue_receiverRead,
@@ -265,7 +297,7 @@ BEGIN
 		{{- range $j := iter (ios (index $.IOSenders $i)) }}
 		{{- $signalName := (index (index $.IOSenders $i) $j).SignalName }}
 		{{- $associatedIO := (index (index $.IOSenders $i) $j).AssociatedIO }}
-		{{- $signalHeader := (index (index $.IOSenders $i) $j).DestHeader }}
+		{{- $signalHeader := (index (index $.IOSenders $i) $j).IOHeader }}
 		{{- if eq (index (index $.IOSenders $i) $j).SignalType "data" }}
 			{{ $signalName }}_send_proc : PROCESS (clk, reset)
 			BEGIN
@@ -305,7 +337,7 @@ BEGIN
 								{{ $signalName }}_send_SM <= SEND_PREPARE;
 							END IF;
 						WHEN SEND_PREPARE =>
-							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_VALID & (OTHERS => '0');
+							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_VALID & {{ $associatedIO }}_valid_local & (OTHERS => '0');
 							{{ $signalName }}Write <= '1';
 							{{ $signalName }}_send_SM <= SEND_WAIT_ACK;
 							{{ $associatedIO }}_valid_need_reset <= '1';
@@ -332,7 +364,7 @@ BEGIN
 								{{ $signalName }}_send_SM <= SEND_PREPARE;
 							END IF;
 						WHEN SEND_PREPARE =>
-							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_RECV & (OTHERS => '0');
+							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_RECV & {{ $associatedIO }}_recv_local & (OTHERS => '0');
 							{{ $signalName }}Write <= '1';
 							{{ $signalName }}_send_SM <= SEND_WAIT_ACK;
 							{{ $associatedIO }}_recv_need_reset <= '1';
@@ -355,18 +387,109 @@ BEGIN
 				{{ $lineName }}_s_message <= (OTHERS => '0');
 				{{ $lineName }}_s_valid <= '0';
 			ELSIF rising_edge(clk) THEN
+				CASE {{ $lineName }}_send_SM IS
+					WHEN QSEND_IDLE =>
+						{{ $lineName }}_queue_receiverRead <= '1';
+						{{ $lineName }}_send_SM <= QSEND_WAIT;
+					WHEN QSEND_WAIT =>
+						IF {{ $lineName }}_queue_receiverAck = '1' THEN
+							{{ $lineName }}_queue_receiverRead <= '0';
+							{{ $lineName }}_s_message <= {{ $lineName }}_queue_receiverData;
+							{{ $lineName }}_s_valid <= '1';
+							{{ $lineName }}_send_SM <= QSEND_SEND;
+						END IF;
+					WHEN QSEND_RETRY =>
+						{{ $lineName }}_s_valid <= '1';
+						{{ $lineName }}_send_SM <= QSEND_SEND;
+					WHEN QSEND_SEND =>
+						IF {{ $lineName }}_s_busy = '0' AND {{ $lineName }}_s_ok = '1' THEN
+							-- Message was sent successfully
+							{{ $lineName }}_s_valid <= '0';
+							{{ $lineName }}_send_SM <= QSEND_IDLE;
+						ELSIF {{ $lineName }}_s_busy = '0' AND {{ $lineName }}_s_error = '1' THEN
+							-- An error occurred during transmission, retry sending the message
+							{{ $lineName }}_s_valid <= '0';
+							{{ $lineName }}_send_SM <= QSEND_RETRY;
+						END IF;
+				END CASE;
+
 			END IF;
 		END PROCESS;
 
-	-- Process to handle received messages from the line
-	{{ $lineName }}_receive_proc : PROCESS (clk, reset)
-	BEGIN
-		IF reset = '1' THEN
-			{{ $lineName }}_queue_receiverRead <= '0';
-		ELSIF rising_edge(clk) THEN
-		END IF;
-		-- TODO: Finish the receive process
-	END PROCESS;
+		-- Process to handle received messages from the line
+		{{ $lineName }}_receive_proc : PROCESS (clk, reset)
+		BEGIN
+			IF reset = '1' THEN
+				{{ $lineName }}_recv_SM <= QRECV_IDLE;
+				{{ $lineName }}_received_message <= (OTHERS => '0');
+			ELSIF rising_edge(clk) THEN
+				CASE {{ $lineName }}_recv_SM IS
+					WHEN QRECV_IDLE =>
+						IF {{ $lineName }}_r_busy = '1' THEN
+							{{ $lineName }}_recv_SM <= QRECV_WAIT;
+						END IF;
+					WHEN QRECV_WAIT =>
+						IF {{ $lineName }}_r_busy = '0' AND {{ $lineName }}_r_error = '1' THEN
+							-- An error occurred during reception, handle it here
+							{{ $lineName }}_recv_SM <= QRECV_IDLE;
+						ELSIF {{ $lineName }}_r_busy = '0' AND {{ $lineName }}_r_valid = '1' THEN
+							{{ $lineName }}_received_message <= {{ $lineName }}_r_message;
+							{{ $lineName }}_recv_SM <= QRECV_PROCESS;
+						END IF;
+					WHEN QRECV_PROCESS =>
+						CASE {{ $lineName }}_received_message(message_length - 1 DOWNTO message_length - {{$.IOBits}} - {{$.NodeBits}} - 2) IS
+							{{- range $j := iter (ios (index $.IOReceivers $i)) }}
+							{{- $signalName := (index (index $.IOReceivers $i) $j).SignalName }}
+							{{- $associatedIO := (index (index $.IOReceivers $i) $j).AssociatedIO }}
+							{{- $signalHeader := (index (index $.IOReceivers $i) $j).IOHeader }}
+							{{- if eq (index (index $.IOReceivers $i) $j).SignalType "data" }}
+							WHEN "{{ $signalHeader }}00" =>
+								{{ $associatedIO }}_local <= {{ $lineName }}_received_message(message_length - {{$.IOBits}} - {{$.NodeBits}} - 3 DOWNTO 0);
+								{{ $lineName }}_recv_SM <= QRECV_IDLE;
+							{{- end }}
+							{{- if eq (index (index $.IOReceivers $i) $j).SignalType "valid" }}
+							WHEN "{{ $signalHeader }}01" =>
+								{{ $associatedIO }}_valid_local <= {{ $lineName }}_received_message(message_length - {{$.IOBits}} - {{$.NodeBits}} - 3);
+								{{ $lineName }}_recv_SM <= QRECV_IDLE;
+							{{- end }}
+							{{- if eq (index (index $.IOReceivers $i) $j).SignalType "recv" }}
+							WHEN "{{ $signalHeader }}10" =>
+								{{ $associatedIO }}_recv_local <= {{ $lineName }}_received_message(message_length - {{$.IOBits}} - {{$.NodeBits}} - 3);
+								{{ $lineName }}_recv_SM <= QRECV_IDLE;
+							{{- end }}
+							{{- end }}
+							WHEN OTHERS =>
+								CASE {{ $lineName }}_received_message(message_length - 1 DOWNTO message_length - {{$.IOBits}} - {{$.NodeBits}}) IS
+								-- Check for routed messages
+								{{- range $j := iter (ios (index $.RouteSenders $i)) }}
+								{{- $signalName := (index (index $.RouteSenders $i) $j).SignalName }}
+								{{- $signalHeader := (index (index $.RouteSenders $i) $j).IOHeader }}
+								WHEN {{ $signalHeader }} =>
+									-- This message is meant to be routed to another line
+									-- Prepare the message for routing
+									CASE {{ $signalName }}_send_SM IS
+									WHEN SEND_IDLE =>
+										{{ $signalName }}_send_SM <= SEND_PREPARE;
+									WHEN SEND_PREPARE =>
+										{{ $signalName }}Data <= {{ $lineName }}_received_message;
+										{{ $signalName }}Write <= '1';
+										{{ $signalName }}_send_SM <= SEND_WAIT_ACK;
+									WHEN SEND_WAIT_ACK =>
+										if {{ $signalName }}Ack = '1' THEN
+											{{ $signalName }}Write <= '0';
+											{{ $signalName }}_send_SM <= SEND_IDLE;
+											{{ $lineName }}_recv_SM <= QRECV_IDLE;
+										END IF;
+									END CASE;
+								{{- end }}
+								WHEN OTHERS =>
+									-- Unknown header, ignore the message or handle the error
+									{{ $lineName }}_recv_SM <= QRECV_IDLE;
+								END CASE;
+						END CASE;
+				END CASE;
+			END IF;
+		END PROCESS;
 	
 	{{- end }}
 

@@ -69,9 +69,13 @@ type NodeMessages struct {
 	OriginsNextHop         *[]string
 	OriginsNextHopVia      *[]string
 	Destinations           *[]string
+	DestinationsHeader     *[]string
+	DestinationsType       *[]string // "data", "valid" or "recv"
+	DestinationIO          *[]string // Associated IO signal name
 	DestinationsPrevHop    *[]string
 	DestinationsPrevHopVia *[]string
 	Routes                 *[]string
+	RoutesHeader           *[]string
 	RoutesPrevHop          *[]string
 	RoutesPrevHopVia       *[]string
 	RoutesNextHop          *[]string

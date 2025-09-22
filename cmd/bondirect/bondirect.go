@@ -191,9 +191,11 @@ func main() {
 	}
 
 	if *dumpTemplateData {
-		if myMesh == nil || myCluster == nil {
-			fmt.Println("Both Bondirect Mesh and Cluster Spec must be provided to dump template data.")
+		if myMesh == nil || myCluster == nil || *nodeName == "" {
+			fmt.Println("Both Bondirect Mesh, Cluster Spec and Node Name must be provided to dump template data.")
 		} else {
+			be.PopulateIOData(*nodeName)
+			be.PopulateWireData(*nodeName)
 			fmt.Print(be.DumpTemplateData())
 		}
 		return

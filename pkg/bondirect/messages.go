@@ -43,9 +43,13 @@ func (be *BondirectElement) SolveMessages() (map[string]NodeMessages, error) {
 			OriginsType:            &[]string{},
 			OriginsNextHop:         &[]string{},
 			Destinations:           &[]string{},
+			DestinationsHeader:     &[]string{},
+			DestinationsType:       &[]string{},
+			DestinationIO:          &[]string{},
 			DestinationsPrevHop:    &[]string{},
 			DestinationsPrevHopVia: &[]string{},
 			Routes:                 &[]string{},
+			RoutesHeader:           &[]string{},
 			RoutesNextHop:          &[]string{},
 			RoutesPrevHop:          &[]string{},
 			RoutesPrevHopVia:       &[]string{},
@@ -109,35 +113,47 @@ func (be *BondirectElement) SolveMessages() (map[string]NodeMessages, error) {
 				*nodeMessages[step].OriginsNextHop = append(*nodeMessages[step].OriginsNextHop, path.Nodes[1])
 				*nodeMessages[step].OriginsNextHopVia = append(*nodeMessages[step].OriginsNextHopVia, path.Via[1])
 				*nodeMessages[step].Destinations = append(*nodeMessages[step].Destinations, messRecvName)
+				*nodeMessages[step].DestinationsHeader = append(*nodeMessages[step].DestinationsHeader, zerosPrefix(be.NodeBits, getBinary(from.BmId))+zerosPrefix(be.IOBits, getBinary(from.Index)))
+				*nodeMessages[step].DestinationIO = append(*nodeMessages[step].DestinationIO, fmt.Sprintf("output%s", idxFrom))
+				*nodeMessages[step].DestinationsType = append(*nodeMessages[step].DestinationsType, "recv")
 				*nodeMessages[step].DestinationsPrevHop = append(*nodeMessages[step].DestinationsPrevHop, path.Nodes[1])
 				*nodeMessages[step].DestinationsPrevHopVia = append(*nodeMessages[step].DestinationsPrevHopVia, path.Via[1])
 			} else if i == len(path.Nodes)-1 {
 				// Last step
 				*nodeMessages[step].Destinations = append(*nodeMessages[step].Destinations, messDataName)
 				*nodeMessages[step].Destinations = append(*nodeMessages[step].Destinations, messValidName)
+				*nodeMessages[step].DestinationsHeader = append(*nodeMessages[step].DestinationsHeader, zerosPrefix(be.NodeBits, getBinary(to.BmId))+zerosPrefix(be.IOBits, getBinary(to.Index)))
+				*nodeMessages[step].DestinationsHeader = append(*nodeMessages[step].DestinationsHeader, zerosPrefix(be.NodeBits, getBinary(to.BmId))+zerosPrefix(be.IOBits, getBinary(to.Index)))
+				*nodeMessages[step].DestinationIO = append(*nodeMessages[step].DestinationIO, fmt.Sprintf("input%s", idxTo))
+				*nodeMessages[step].DestinationIO = append(*nodeMessages[step].DestinationIO, fmt.Sprintf("input%s", idxTo))
+				*nodeMessages[step].DestinationsType = append(*nodeMessages[step].DestinationsType, "data")
+				*nodeMessages[step].DestinationsType = append(*nodeMessages[step].DestinationsType, "valid")
 				*nodeMessages[step].DestinationsPrevHop = append(*nodeMessages[step].DestinationsPrevHop, path.Nodes[i-1])
 				*nodeMessages[step].DestinationsPrevHop = append(*nodeMessages[step].DestinationsPrevHop, path.Nodes[i-1])
 				*nodeMessages[step].DestinationsPrevHopVia = append(*nodeMessages[step].DestinationsPrevHopVia, path.Via[i])
 				*nodeMessages[step].DestinationsPrevHopVia = append(*nodeMessages[step].DestinationsPrevHopVia, path.Via[i])
 				*nodeMessages[step].Origins = append(*nodeMessages[step].Origins, messRecvName)
 				*nodeMessages[step].OriginsHeader = append(*nodeMessages[step].OriginsHeader, zerosPrefix(be.NodeBits, getBinary(from.BmId))+zerosPrefix(be.IOBits, getBinary(from.Index)))
-				*nodeMessages[step].OriginIO = append(*nodeMessages[step].OriginIO, fmt.Sprintf("output%s", idxTo))
+				*nodeMessages[step].OriginIO = append(*nodeMessages[step].OriginIO, fmt.Sprintf("input%s", idxTo))
 				*nodeMessages[step].OriginsType = append(*nodeMessages[step].OriginsType, "recv")
 				*nodeMessages[step].OriginsNextHop = append(*nodeMessages[step].OriginsNextHop, path.Nodes[i-1])
 				*nodeMessages[step].OriginsNextHopVia = append(*nodeMessages[step].OriginsNextHopVia, path.Via[i])
 			} else {
 				// Intermediate step
 				*nodeMessages[step].Routes = append(*nodeMessages[step].Routes, messDataName)
+				*nodeMessages[step].RoutesHeader = append(*nodeMessages[step].RoutesHeader, zerosPrefix(be.NodeBits, getBinary(to.BmId))+zerosPrefix(be.IOBits, getBinary(to.Index)))
 				*nodeMessages[step].RoutesNextHop = append(*nodeMessages[step].RoutesNextHop, path.Nodes[i+1])
 				*nodeMessages[step].RoutesNextHopVia = append(*nodeMessages[step].RoutesNextHopVia, path.Via[i+1])
 				*nodeMessages[step].RoutesPrevHop = append(*nodeMessages[step].RoutesPrevHop, path.Nodes[i-1])
 				*nodeMessages[step].RoutesPrevHopVia = append(*nodeMessages[step].RoutesPrevHopVia, path.Via[i])
 				*nodeMessages[step].Routes = append(*nodeMessages[step].Routes, messValidName)
+				*nodeMessages[step].RoutesHeader = append(*nodeMessages[step].RoutesHeader, zerosPrefix(be.NodeBits, getBinary(to.BmId))+zerosPrefix(be.IOBits, getBinary(to.Index)))
 				*nodeMessages[step].RoutesNextHop = append(*nodeMessages[step].RoutesNextHop, path.Nodes[i+1])
 				*nodeMessages[step].RoutesNextHopVia = append(*nodeMessages[step].RoutesNextHopVia, path.Via[i+1])
 				*nodeMessages[step].RoutesPrevHop = append(*nodeMessages[step].RoutesPrevHop, path.Nodes[i-1])
 				*nodeMessages[step].RoutesPrevHopVia = append(*nodeMessages[step].RoutesPrevHopVia, path.Via[i])
 				*nodeMessages[step].Routes = append(*nodeMessages[step].Routes, messRecvName)
+				*nodeMessages[step].RoutesHeader = append(*nodeMessages[step].RoutesHeader, zerosPrefix(be.NodeBits, getBinary(from.BmId))+zerosPrefix(be.IOBits, getBinary(from.Index)))
 				*nodeMessages[step].RoutesNextHop = append(*nodeMessages[step].RoutesNextHop, path.Nodes[i-1])
 				*nodeMessages[step].RoutesNextHopVia = append(*nodeMessages[step].RoutesNextHopVia, path.Via[i])
 				*nodeMessages[step].RoutesPrevHop = append(*nodeMessages[step].RoutesPrevHop, path.Nodes[i+1])

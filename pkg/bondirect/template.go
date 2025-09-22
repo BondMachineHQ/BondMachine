@@ -9,11 +9,11 @@ const (
 	ActionsNum = 3
 )
 
-type IOSender struct {
+type IOSpec struct {
 	SignalName   string
 	SignalType   string // "data", "valid" or "recv"
 	AssociatedIO string // Associated IO signal name
-	DestHeader   string // Destination header for data and valid signals
+	IOHeader     string // Header for data,valid and recv signals
 }
 
 type TData struct {
@@ -32,8 +32,9 @@ type TData struct {
 	Inputs        []string          // List of input signals
 	Outputs       []string          // List of output signals
 	Lines         []string          // List of line signals
-	IOSenders     [][]IOSender      // List of input signal senders, the first dimension is the line index, the second dimension is the input index
-	RouteSenders  [][]string        // List of route signal senders, the first dimension is the line index, the second dimension is the route index
+	IOSenders     [][]IOSpec        // List of input signal senders, the first dimension is the line index, the second dimension is the input index
+	RouteSenders  [][]IOSpec        // List of route signal senders, the first dimension is the line index, the second dimension is the route index
+	IOReceivers   [][]IOSpec        // List of output signal receivers, the first dimension is the line index, the second dimension is the output index
 	TrIn          []string          // List of transceivers for incoming signals
 	TrOut         []string          // List of transceivers for outgoing signals
 	WiresIn       [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
@@ -184,44 +185,81 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 
 	// fmt.Println("Tdata:", be.TData)
 	if maps, err := be.SolveMessages(); err == nil {
-		myMessages := maps[nodeName]
-		for _, line := range be.Lines {
-			origins := *(myMessages.Origins)
-			originsHeader := *(myMessages.OriginsHeader)
-			originsType := *(myMessages.OriginsType)
-			originsAssociatedIO := *(myMessages.OriginIO)
-			originsNextHopVia := *(myMessages.OriginsNextHopVia)
-			routes := *(myMessages.Routes)
-			routesNextHopVia := *(myMessages.RoutesNextHopVia)
-			routesPrevHopVia := *(myMessages.RoutesPrevHopVia)
 
-			ioSenders := make([]IOSender, 0)
+		myMessages := maps[nodeName]
+
+		origins := *(myMessages.Origins)
+		originsHeader := *(myMessages.OriginsHeader)
+		originsType := *(myMessages.OriginsType)
+		originsAssociatedIO := *(myMessages.OriginIO)
+		originsNextHopVia := *(myMessages.OriginsNextHopVia)
+		destinations := *(myMessages.Destinations)
+		destinationsHeader := *(myMessages.DestinationsHeader)
+		destinationsType := *(myMessages.DestinationsType)
+		destinationsAssociatedIO := *(myMessages.DestinationIO)
+		destinationsPrevHopVia := *(myMessages.DestinationsPrevHopVia)
+		routes := *(myMessages.Routes)
+		routesHeader := *(myMessages.RoutesHeader)
+		routesNextHopVia := *(myMessages.RoutesNextHopVia)
+		routesPrevHopVia := *(myMessages.RoutesPrevHopVia)
+
+		for _, line := range be.Lines {
+
+			ioSenders := make([]IOSpec, 0)
 			for i, msg := range origins {
 				destWire := originsNextHopVia[i]
 				if destWire == line {
-					newSender := IOSender{SignalName: msg}
+					newSender := IOSpec{SignalName: msg}
 					newSender.SignalType = originsType[i]
 					newSender.AssociatedIO = originsAssociatedIO[i]
-					newSender.DestHeader = originsHeader[i]
+					newSender.IOHeader = originsHeader[i]
 					ioSenders = append(ioSenders, newSender)
 				}
 			}
 
-			wire2wireSenders := make(map[string]struct{})
-			for i, _ := range routes {
-				prevWire := routesPrevHopVia[i]
-				nextWire := routesNextHopVia[i]
-				if nextWire == line {
-					wire2wireSenders[prevWire+"_to_"+nextWire+"_sender"] = struct{}{}
+			ioReceivers := make([]IOSpec, 0)
+			for i, msg := range destinations {
+				srcWire := destinationsPrevHopVia[i]
+				if srcWire == line {
+					newReceiver := IOSpec{SignalName: msg}
+					newReceiver.SignalType = destinationsType[i]
+					newReceiver.AssociatedIO = destinationsAssociatedIO[i]
+					newReceiver.IOHeader = destinationsHeader[i]
+					ioReceivers = append(ioReceivers, newReceiver)
 				}
 			}
 
-			w2wSenders := make([]string, 0)
-			for w2wSender, _ := range wire2wireSenders {
-				w2wSenders = append(w2wSenders, w2wSender)
+			wire2wireSenders := make(map[string]map[string]struct{})
+			for i := range routes {
+				prevWire := routesPrevHopVia[i]
+				nextWire := routesNextHopVia[i]
+				if prevWire == line {
+					if val, exists := wire2wireSenders[prevWire+"_to_"+nextWire+"_sender"]; !exists {
+						newMap := make(map[string]struct{})
+						newMap[routesHeader[i]] = struct{}{}
+						wire2wireSenders[prevWire+"_to_"+nextWire+"_sender"] = newMap
+					} else {
+						val[routesHeader[i]] = struct{}{}
+						wire2wireSenders[prevWire+"_to_"+nextWire+"_sender"] = val
+					}
+				}
 			}
+
+			w2wSenders := make([]IOSpec, 0)
+			for w2wSender, header := range wire2wireSenders {
+				newSender := IOSpec{SignalName: w2wSender}
+				for h := range header {
+					newSender.IOHeader += "\"" + h + "\"|"
+				}
+				if len(newSender.IOHeader) > 0 {
+					newSender.IOHeader = newSender.IOHeader[:len(newSender.IOHeader)-1]
+				}
+				w2wSenders = append(w2wSenders, newSender)
+			}
+
 			be.TData.IOSenders = append(be.TData.IOSenders, ioSenders)
 			be.TData.RouteSenders = append(be.TData.RouteSenders, w2wSenders)
+			be.TData.IOReceivers = append(be.TData.IOReceivers, ioReceivers)
 		}
 	} else {
 		return fmt.Errorf("failed to solve messages: %v", err)
@@ -242,6 +280,7 @@ func (be *BondirectElement) DumpTemplateData() string {
 	result += fmt.Sprintf("Lines: %v\n", be.TData.Lines)
 	result += fmt.Sprintf("IO Senders: %v\n", be.TData.IOSenders)
 	result += fmt.Sprintf("Route Senders: %v\n", be.TData.RouteSenders)
+	result += fmt.Sprintf("IO Receivers: %v\n", be.TData.IOReceivers)
 	result += fmt.Sprintf("Transceivers In: %v\n", be.TData.TrIn)
 	result += fmt.Sprintf("Transceivers Out: %v\n", be.TData.TrOut)
 	result += fmt.Sprintf("Wires In: %v\n", be.TData.WiresIn)
@@ -273,7 +312,7 @@ var funcMap = template.FuncMap{
 	"len": func(s []string) int {
 		return len(s)
 	},
-	"ios": func(s []IOSender) int {
+	"ios": func(s []IOSpec) int {
 		return len(s)
 	},
 	"iter": func(n int) []int {

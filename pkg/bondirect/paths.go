@@ -21,20 +21,33 @@ func (be *BondirectElement) ShowPaths() {
 	fmt.Println("Messages paths:")
 	for _, mp := range messPaths {
 		fmt.Println(" -", mp.PeerId)
-		fmt.Println("   - Origins:", *mp.Origins)
-		fmt.Println("     Origins Next Hop:", *mp.OriginsNextHop)
-		fmt.Println("     Origins Next Hop Via:", *mp.OriginsNextHopVia)
-		fmt.Println("   - Destinations:", *mp.Destinations)
-		fmt.Println("     Destinations Prev Hop:", *mp.DestinationsPrevHop)
-		fmt.Println("     Destinations Prev Hop Via:", *mp.DestinationsPrevHopVia)
-		fmt.Println("   - Routes:", *mp.Routes)
-		fmt.Println("     Routes Prev Hop:", *mp.RoutesPrevHop)
-		fmt.Println("     Routes Prev Hop Via:", *mp.RoutesPrevHopVia)
-		fmt.Println("     Routes Next Hop:", *mp.RoutesNextHop)
-		fmt.Println("     Routes Next Hop Via:", *mp.RoutesNextHopVia)
+		fmt.Println(mp)
 	}
 }
 
+func (nm NodeMessages) String() string {
+	result := ""
+	mp := nm
+	result += fmt.Sprintln("   - Origins:", *mp.Origins)
+	result += fmt.Sprintln("     Origins Header:", *mp.OriginsHeader)
+	result += fmt.Sprintln("     Origins IO:", *mp.OriginIO)
+	result += fmt.Sprintln("     Origins Type:", *mp.OriginsType)
+	result += fmt.Sprintln("     Origins Next Hop:", *mp.OriginsNextHop)
+	result += fmt.Sprintln("     Origins Next Hop Via:", *mp.OriginsNextHopVia)
+	result += fmt.Sprintln("   - Destinations:", *mp.Destinations)
+	result += fmt.Sprintln("     Destinations Header:", *mp.DestinationsHeader)
+	result += fmt.Sprintln("     Destinations IO:", *mp.DestinationIO)
+	result += fmt.Sprintln("     Destinations Type:", *mp.DestinationsType)
+	result += fmt.Sprintln("     Destinations Prev Hop:", *mp.DestinationsPrevHop)
+	result += fmt.Sprintln("     Destinations Prev Hop Via:", *mp.DestinationsPrevHopVia)
+	result += fmt.Sprintln("   - Routes:", *mp.Routes)
+	result += fmt.Sprintln("     Routes Header:", *mp.RoutesHeader)
+	result += fmt.Sprintln("     Routes Prev Hop:", *mp.RoutesPrevHop)
+	result += fmt.Sprintln("     Routes Prev Hop Via:", *mp.RoutesPrevHopVia)
+	result += fmt.Sprintln("     Routes Next Hop:", *mp.RoutesNextHop)
+	result += fmt.Sprintln("     Routes Next Hop Via:", *mp.RoutesNextHopVia)
+	return result
+}
 func (be *BondirectElement) GetPaths() ([]Path, error) {
 
 	mesh := be.Mesh
