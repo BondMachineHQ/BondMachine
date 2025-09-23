@@ -201,13 +201,13 @@ func (sl *Bondirect_extra) ExtraFiles() ([]string, []string) {
 
 	// Endpoint
 	epCode, _ := sl.GenerateEndpoint("", nodeName)
-	files = append(files, "bd_endpoint_"+sl.PeerName+".vhd")
+	files = append(files, "03-bd_endpoint_"+sl.PeerName+".vhd")
 	code = append(code, epCode)
 
 	// Lines
 	for _, line := range sl.Lines {
 		lineCode, _ := sl.GenerateLine("", nodeName, line)
-		files = append(files, "bd_line_"+sl.PeerName+"_"+line+".vhd")
+		files = append(files, "02-bd_line_"+sl.PeerName+"_"+line+".vhd")
 		code = append(code, lineCode)
 	}
 	// Queues
@@ -244,7 +244,7 @@ func (sl *Bondirect_extra) ExtraFiles() ([]string, []string) {
 			destWire := originsNextHopVia[i]
 			if destWire == line {
 				// This message is destined to this line, so it has a sender
-				s.Senders = append(s.Senders, msg+"_to_"+destWire+"_sender")
+				s.Senders = append(s.Senders, msg)
 			}
 		}
 
@@ -277,9 +277,9 @@ func (sl *Bondirect_extra) ExtraFiles() ([]string, []string) {
 	for _, line := range sl.Lines {
 		trCodeIn, _ := sl.GenerateTransceiver("", nodeName, line, "in")
 		trCodeOut, _ := sl.GenerateTransceiver("", nodeName, line, "out")
-		files = append(files, "bond_tx_"+sl.PeerName+"_"+line+"_out.vhd")
+		files = append(files, "01-bond_tx_"+sl.PeerName+"_"+line+"_out.vhd")
 		code = append(code, trCodeOut)
-		files = append(files, "bond_rx_"+sl.PeerName+"_"+line+"_in.vhd")
+		files = append(files, "01-bond_rx_"+sl.PeerName+"_"+line+"_in.vhd")
 		code = append(code, trCodeIn)
 	}
 

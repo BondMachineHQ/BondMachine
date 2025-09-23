@@ -11,20 +11,20 @@ ENTITY {{.Prefix}}bond_tx_{{.MeshNodeName}}_{{.EdgeName}} IS
         message_length : INTEGER := {{add .InnerMessLen 2}}; -- Length of the message to be sent including 2 extra bits
         num_wires : INTEGER := {{.TransParams.NumWires}}; -- Number of wires in the bond direct interface
         counters_length : INTEGER := {{.TransParams.CountersLen}}; -- Length of the counters used in the design
-        out_clock_wait: INTEGER := {{.TransParams.OutClockWait}}; -- Number of clock cycles to wait before toggling the output clock
+        out_clock_wait: INTEGER := {{.TransParams.OutClockWait}} -- Number of clock cycles to wait before toggling the output clock
     );
     PORT (
         clk : IN STD_LOGIC;
-        reset : IN STD_LOGIC;
         message : IN STD_LOGIC_VECTOR (message_length-1 DOWNTO 0);
         data_enable : IN STD_LOGIC;
         busy : OUT STD_LOGIC;
         tx_clk : OUT STD_LOGIC;
 {{- $iSeq := ""}}
 {{- range $i := (iter (int .TransParams.NumWires )) }}
-        tx_data{{ $i }} : IN STD_LOGIC;
+        tx_data{{ $i }} : OUT STD_LOGIC;
         {{- $iSeq = printf "%s'1' & " $iSeq }}
 {{- end }}
+        reset : IN STD_LOGIC
     );
 END {{.Prefix}}bond_tx_{{.MeshNodeName}}_{{.EdgeName}};
 

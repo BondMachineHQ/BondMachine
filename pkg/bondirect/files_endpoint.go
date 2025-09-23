@@ -10,12 +10,11 @@ USE IEEE.NUMERIC_STD.ALL;
 
 ENTITY {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
     GENERIC (
-	rsize : INTEGER := {{.Rsize}} -- Size of the register
+	rsize : INTEGER := {{.Rsize}}; -- Size of the register
         message_length : INTEGER := {{.InnerMessLen}} -- Length of the message to be sent, in this length is not included bits used by tx and rx
     );
     PORT (
         clk : IN STD_LOGIC; -- Clock signal for the component
-        reset : IN STD_LOGIC; -- Reset signal to initialize the component
 	-- Interface towards the BM
 	-- BM Inputs (are my outputs)
 	{{- range .Inputs }}
@@ -41,7 +40,7 @@ ENTITY {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 	{{index $.Lines $i}}{{index $.TrOut $i}}{{index (index $.WiresOut $i) $j}} : OUT STD_LOGIC;
 	{{- end }}
 	{{- end }}
-
+	reset : IN STD_LOGIC -- Reset signal to initialize the component
     );
 END {{.Prefix}}bd_endpoint_{{.MeshNodeName}};
 
@@ -56,6 +55,9 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 	CONSTANT SEND_WAIT_ACK : STD_LOGIC_VECTOR(2 DOWNTO 0) := "010";
 	
 	CONSTANT QSEND_IDLE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
+	CONSTANT QSEND_SEND : STD_LOGIC_VECTOR(2 DOWNTO 0) := "001";
+	CONSTANT QSEND_WAIT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "010";
+	CONSTANT QSEND_RETRY : STD_LOGIC_VECTOR(2 DOWNTO 0) := "011";
 
 	CONSTANT QRECV_IDLE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
 	CONSTANT QRECV_WAIT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "001";
@@ -64,42 +66,42 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 	-- BM Cache signals
 		-- BM Inputs
 		{{- range .Inputs }}
-		{{ . }}_local: STD_LOGIC_VECTOR(rsize-1 DOWNTO 0);
-		{{ . }}_valid_local: STD_LOGIC := '0';
-		{{ . }}_recv_local: STD_LOGIC := '0';
+		SIGNAL {{ . }}_local: STD_LOGIC_VECTOR(rsize-1 DOWNTO 0);
+		SIGNAL {{ . }}_valid_local: STD_LOGIC := '0';
+		SIGNAL {{ . }}_recv_local: STD_LOGIC := '0';
 		{{- end }}
 		-- BM Outputs
 		{{- range .Outputs }}
-		{{ . }}_local: STD_LOGIC_VECTOR(rsize-1 DOWNTO 0);
-		{{ . }}_valid_local: STD_LOGIC := '0';
-		{{ . }}_recv_local: STD_LOGIC := '0';
+		SIGNAL {{ . }}_local: STD_LOGIC_VECTOR(rsize-1 DOWNTO 0);
+		SIGNAL {{ . }}_valid_local: STD_LOGIC := '0';
+		SIGNAL {{ . }}_recv_local: STD_LOGIC := '0';
 		{{- end }}
 	-- BM need signals
 		-- BM Inputs
 		{{- range .Inputs }}
-		{{ . }}_recv_need: STD_LOGIC := '0';
-		{{ . }}_recv_need_reset: STD_LOGIC := '0';
+		SIGNAL {{ . }}_recv_need: STD_LOGIC := '0';
+		SIGNAL {{ . }}_recv_need_reset: STD_LOGIC := '0';
 		{{- end }}
 		-- BM Outputs
 		{{- range .Outputs }}
-		{{ . }}_need: STD_LOGIC := '0';
-		{{ . }}_need_reset: STD_LOGIC := '0';
-		{{ . }}_valid_need: STD_LOGIC := '0';
-		{{ . }}_valid_need_reset: STD_LOGIC := '0';
+		SIGNAL {{ . }}_need: STD_LOGIC := '0';
+		SIGNAL {{ . }}_need_reset: STD_LOGIC := '0';
+		SIGNAL {{ . }}_valid_need: STD_LOGIC := '0';
+		SIGNAL {{ . }}_valid_need_reset: STD_LOGIC := '0';
 		{{- end }}
 	-- Signals towards the lines
 	{{- range $i := iter (len .Lines) }}
 	{{- $lineName:= index $.Lines $i }}
 		-- Signals towards the line {{ $lineName }}
-		{{$lineName}}_s_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0); -- Message to be sent to the other FPGA
-        	{{$lineName}}_s_valid : STD_LOGIC; -- Signal indicating that the message is valid
-        	{{$lineName}}_s_busy : STD_LOGIC := '0'; -- Signal indicating that the component is busy while transmitting
-        	{{$lineName}}_s_ok : STD_LOGIC := '0'; -- Signal indicating that the outgoing transmission was successful
-        	{{$lineName}}_s_error : STD_LOGIC := '0'; -- Signal indicating that an error occurred during transmission
-        	{{$lineName}}_r_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0) := (OTHERS => '0'); -- Message received from the other FPGA
-        	{{$lineName}}_r_busy : STD_LOGIC := '0'; -- Signal indicating that the component is busy while receiving
-        	{{$lineName}}_r_valid : STD_LOGIC := '0'; -- Signal indicating that the received message is valid
-        	{{$lineName}}_r_error : STD_LOGIC := '0' -- Signal indicating that an error occurred during reception
+		SIGNAL {{$lineName}}_s_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0); -- Message to be sent to the other FPGA
+        	SIGNAL {{$lineName}}_s_valid : STD_LOGIC; -- Signal indicating that the message is valid
+        	SIGNAL {{$lineName}}_s_busy : STD_LOGIC := '0'; -- Signal indicating that the component is busy while transmitting
+        	SIGNAL {{$lineName}}_s_ok : STD_LOGIC := '0'; -- Signal indicating that the outgoing transmission was successful
+        	SIGNAL {{$lineName}}_s_error : STD_LOGIC := '0'; -- Signal indicating that an error occurred during transmission
+        	SIGNAL {{$lineName}}_r_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0) := (OTHERS => '0'); -- Message received from the other FPGA
+        	SIGNAL {{$lineName}}_r_busy : STD_LOGIC := '0'; -- Signal indicating that the component is busy while receiving
+        	SIGNAL {{$lineName}}_r_valid : STD_LOGIC := '0'; -- Signal indicating that the received message is valid
+        	SIGNAL {{$lineName}}_r_error : STD_LOGIC := '0'; -- Signal indicating that an error occurred during reception
 	{{- end }}
 	-- Signals for the queues
 		-- Every line has its own queue for outgoing messages, so we need to instantiate one queue per line
@@ -110,28 +112,28 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 	{{- range $i := iter (len .Lines) }}
 	{{- $lineName:= index $.Lines $i }}
 	{{- range $j := iter (ios (index $.IOSenders $i)) }}
-		{{ (index (index $.IOSenders $i) $j).SignalName }}Data : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
-		{{ (index (index $.IOSenders $i) $j).SignalName }}Write : STD_LOGIC := '0';
-		{{ (index (index $.IOSenders $i) $j).SignalName }}Ack : STD_LOGIC;
+		SIGNAL {{ (index (index $.IOSenders $i) $j).SignalName }}Data : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
+		SIGNAL {{ (index (index $.IOSenders $i) $j).SignalName }}Write : STD_LOGIC := '0';
+		SIGNAL {{ (index (index $.IOSenders $i) $j).SignalName }}Ack : STD_LOGIC;
 	{{- end }}
 	{{- range $j := iter (ios (index $.RouteSenders $i)) }}
-		{{ (index (index $.RouteSenders $i) $j).SignalName }}Data : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
-		{{ (index (index $.RouteSenders $i) $j).SignalName }}Write : STD_LOGIC := '0';
-		{{ (index (index $.RouteSenders $i) $j).SignalName }}Ack : STD_LOGIC;
+		SIGNAL {{ (index (index $.RouteSenders $i) $j).SignalName }}Data : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
+		SIGNAL {{ (index (index $.RouteSenders $i) $j).SignalName }}Write : STD_LOGIC := '0';
+		SIGNAL {{ (index (index $.RouteSenders $i) $j).SignalName }}Ack : STD_LOGIC;
 	{{- end }}
-		{{ $lineName }}_queue_receiverData : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0);
-		{{ $lineName }}_queue_receiverRead : STD_LOGIC := '0';
-		{{ $lineName }}_queue_receiverAck : STD_LOGIC;
-		{{ $lineName }}_queue_full : STD_LOGIC;
-		{{ $lineName }}_queue_empty : STD_LOGIC;
+		SIGNAL {{ $lineName }}_queue_receiverData : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0);
+		SIGNAL {{ $lineName }}_queue_receiverRead : STD_LOGIC := '0';
+		SIGNAL {{ $lineName }}_queue_receiverAck : STD_LOGIC;
+		SIGNAL {{ $lineName }}_queue_full : STD_LOGIC;
+		SIGNAL {{ $lineName }}_queue_empty : STD_LOGIC;
 	{{- end }}
 
 	-- Signals for the receive
 	{{- range $i := iter (len .Lines) }}
 	{{- $lineName:= index $.Lines $i }}
 		-- Signals for receiving messages from the line {{ $lineName }}
-		{{ $lineName }}_received_message : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
-		{{ $lineName }}_recv_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := QRECV_IDLE;
+		SIGNAL {{ $lineName }}_received_message : STD_LOGIC_VECTOR(message_length - 1 DOWNTO 0) := (OTHERS => '0');
+		SIGNAL {{ $lineName }}_recv_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := QRECV_IDLE;
 	{{- end }}
 
 	-- State machines
@@ -152,13 +154,13 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 			-- The state machines also reset the need signals in the BM outputs after sending the message
 			{{- range $j := iter (ios (index $.IOSenders $i)) }}
 			{{- $signalName := (index (index $.IOSenders $i) $j).SignalName }}
-			{{ $signalName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := SEND_IDLE;
+			SIGNAL {{ $signalName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := SEND_IDLE;
 			{{- end }}
 			-- State machine to send messages from the queue to the line
 			-- This state machine takes care of sending messages from the queue to the line
 			-- It checks if the queue is not empty and if the line is not busy before sending a message
 			-- It sends one message at a time, waiting for the line to be ready before sending the next message
-			{{ $lineName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := QSEND_IDLE;
+			SIGNAL {{ $lineName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := QSEND_IDLE;
 	{{- end }}
 BEGIN
 
@@ -169,7 +171,7 @@ BEGIN
 	{{- $lineName:= index $.Lines $i }}
 	{{$.Prefix}}bd_line_{{$.MeshNodeName}}_{{ $lineName }}_inst : ENTITY work.{{$.Prefix}}bd_line_{{$.MeshNodeName}}_{{ $lineName }}
 	GENERIC MAP(
-		message_length => {{ $.InnerMessLen }},
+		message_length => {{ $.InnerMessLen }}
 	)
 	PORT MAP(
 		clk => clk,
@@ -250,11 +252,13 @@ BEGIN
 			{{ . }}_recv_need <= '0';
 		ELSE
 			{{ . }}_recv_local <= {{ . }}_recv;
-			IF {{ . }}_recv_local \= {{ . }}_recv THEN
+			IF {{ . }}_recv_local /= {{ . }}_recv THEN
 				{{ . }}_recv_need <= '1';
 			END IF;
 		END IF;
+	END IF;
 	END PROCESS;
+
 	{{- end }}
 	-- BM Outputs
 	{{- range .Outputs }}
@@ -267,10 +271,11 @@ BEGIN
 			{{ . }}_valid_need <= '0';
 		ELSE
 			{{ . }}_valid_local <= {{ . }}_valid;
-			IF {{ . }}_valid_local \= {{ . }}_valid THEN
+			IF {{ . }}_valid_local /= {{ . }}_valid THEN
 				{{ . }}_valid_need <= '1';
 			END IF;
 		END IF;
+	END IF;
 	END PROCESS;
 
 	{{ . }}_need_proc : PROCESS (clk, reset)
@@ -282,10 +287,11 @@ BEGIN
 			{{ . }}_need <= '0';
 		ELSE
 			{{ . }}_local <= {{ . }};
-			IF {{ . }}_local \= {{ . }} THEN
+			IF {{ . }}_local /= {{ . }} THEN
 				{{ . }}_need <= '1';
 			END IF;
 		END IF;
+	END IF;
 	END PROCESS;	
 
 	{{- end }}
@@ -302,7 +308,7 @@ BEGIN
 			{{ $signalName }}_send_proc : PROCESS (clk, reset)
 			BEGIN
 				IF reset = '1' THEN
-					{{ $signalName }}_send_SM <= '0';
+					{{ $signalName }}_send_SM <= SEND_IDLE;
 					{{ $associatedIO }}_need_reset <= '0';
 				ELSIF rising_edge(clk) THEN
 					CASE {{ $signalName }}_send_SM IS
@@ -321,14 +327,17 @@ BEGIN
 								{{ $signalName }}Write <= '0';
 								{{ $signalName }}_send_SM <= SEND_IDLE;
 							END IF;
+						WHEN OTHERS =>
+							{{ $signalName }}_send_SM <= SEND_IDLE;
 					END CASE;
+				END IF;
 			END PROCESS;
 		{{- end }}
 		{{- if eq (index (index $.IOSenders $i) $j).SignalType "valid" }}
 			{{ $signalName }}_send_proc : PROCESS (clk, reset)
 			BEGIN
 				IF reset = '1' THEN
-					{{ $signalName }}_send_SM <= '0';
+					{{ $signalName }}_send_SM <= SEND_IDLE;
 					{{ $associatedIO }}_valid_need_reset <= '0';
 				ELSIF rising_edge(clk) THEN
 					CASE {{ $signalName }}_send_SM IS
@@ -337,7 +346,7 @@ BEGIN
 								{{ $signalName }}_send_SM <= SEND_PREPARE;
 							END IF;
 						WHEN SEND_PREPARE =>
-							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_VALID & {{ $associatedIO }}_valid_local & (OTHERS => '0');
+							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_VALID & {{ $associatedIO }}_valid_local & (rsize -2 DOWNTO 0 => '0');
 							{{ $signalName }}Write <= '1';
 							{{ $signalName }}_send_SM <= SEND_WAIT_ACK;
 							{{ $associatedIO }}_valid_need_reset <= '1';
@@ -347,7 +356,10 @@ BEGIN
 								{{ $signalName }}Write <= '0';
 								{{ $signalName }}_send_SM <= SEND_IDLE;
 							END IF;
+						WHEN OTHERS =>
+							{{ $signalName }}_send_SM <= SEND_IDLE;
 					END CASE;
+				END IF;
 			END PROCESS;
 		
 		{{- end }}
@@ -355,7 +367,7 @@ BEGIN
 			{{ $signalName }}_send_proc : PROCESS (clk, reset)
 			BEGIN
 				IF reset = '1' THEN
-					{{ $signalName }}_send_SM <= '0';
+					{{ $signalName }}_send_SM <= SEND_IDLE;
 					{{ $associatedIO }}_recv_need_reset <= '0';
 				ELSIF rising_edge(clk) THEN
 					CASE {{ $signalName }}_send_SM IS
@@ -364,7 +376,7 @@ BEGIN
 								{{ $signalName }}_send_SM <= SEND_PREPARE;
 							END IF;
 						WHEN SEND_PREPARE =>
-							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_RECV & {{ $associatedIO }}_recv_local & (OTHERS => '0');
+							{{ $signalName }}Data <= "{{ $signalHeader }}" & ACTION_UPDATE_RECV & {{ $associatedIO }}_recv_local & (rsize -2 DOWNTO 0 => '0');
 							{{ $signalName }}Write <= '1';
 							{{ $signalName }}_send_SM <= SEND_WAIT_ACK;
 							{{ $associatedIO }}_recv_need_reset <= '1';
@@ -374,7 +386,10 @@ BEGIN
 								{{ $signalName }}Write <= '0';
 								{{ $signalName }}_send_SM <= SEND_IDLE;
 							END IF;
+						WHEN OTHERS =>
+							{{ $signalName }}_send_SM <= SEND_IDLE;
 					END CASE;
+				END IF;
 			END PROCESS;
 		{{- end }}
 		{{- end }}
@@ -411,8 +426,9 @@ BEGIN
 							{{ $lineName }}_s_valid <= '0';
 							{{ $lineName }}_send_SM <= QSEND_RETRY;
 						END IF;
+					WHEN OTHERS =>
+						{{ $lineName }}_send_SM <= QSEND_IDLE;
 				END CASE;
-
 			END IF;
 		END PROCESS;
 
@@ -487,6 +503,8 @@ BEGIN
 									{{ $lineName }}_recv_SM <= QRECV_IDLE;
 								END CASE;
 						END CASE;
+					WHEN OTHERS =>
+						{{ $lineName }}_recv_SM <= QRECV_IDLE;	
 				END CASE;
 			END IF;
 		END PROCESS;
