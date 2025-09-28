@@ -63,8 +63,6 @@ BEGIN
 {{- range $i := (iter (int .TransParams.NumWires )) }}
                         tx_data{{ $i }} <= sending({{ $i }});
 {{- end }}
-                    ELSIF int_clk = '1' THEN
-                        int_clk <= '0';
                         sending <= {{$iSeq}} sending(sending'high DOWNTO {{.TransParams.NumWires}});
                         busy_sr <= '0' & busy_sr(busy_sr'high DOWNTO 1);
                     ELSE
