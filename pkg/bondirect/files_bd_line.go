@@ -230,7 +230,6 @@ BEGIN
             r_busy <= '0';
             r_valid <= '0';
             r_error <= '0';
-            receive_failed <= '0';
             message_to_validate <= (OTHERS => '0');
             ack_send_needed <= '0';
             reply_send_needed <= '0';
