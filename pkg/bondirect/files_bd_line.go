@@ -56,7 +56,7 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_line_{{.MeshNodeName}}_{{ .EdgeName }} 
     SIGNAL wait_for_reply : STD_LOGIC := '0'; -- Signal to indicate if we are waiting for a reply
     SIGNAL message_waiting_for_reply : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0) := (OTHERS => '0');
     SIGNAL receive_busy : STD_LOGIC := '0';
-    SIGNAL receive_failed : STD_LOGIC := '0';
+    SIGNAL receive_failed : STD_LOGIC;
     SIGNAL ack_result : STD_LOGIC := '0'; -- Result of the ACK operation
     SIGNAL ack_send_needed : STD_LOGIC := '0'; -- Signal to indicate if an ACK is needed to be sent
     SIGNAL ack_send_needed_reset : STD_LOGIC := '0'; -- Signal to reset the ack_send_needed signal
