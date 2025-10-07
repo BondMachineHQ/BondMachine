@@ -11,6 +11,7 @@ USE IEEE.NUMERIC_STD.ALL;
 ENTITY {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
     GENERIC (
 	rsize : INTEGER := {{.Rsize}}; -- Size of the register
+	counters_length : INTEGER := 32; -- Length of the counters used in the design
         message_length : INTEGER := {{.InnerMessLen}} -- Length of the message to be sent, in this length is not included bits used by tx and rx
     );
     PORT (
@@ -58,10 +59,13 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 	CONSTANT QSEND_SEND : STD_LOGIC_VECTOR(2 DOWNTO 0) := "001";
 	CONSTANT QSEND_WAIT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "010";
 	CONSTANT QSEND_RETRY : STD_LOGIC_VECTOR(2 DOWNTO 0) := "011";
+	CONSTANT QSEND_WAITBUSY : STD_LOGIC_VECTOR(2 DOWNTO 0) := "100";
 
 	CONSTANT QRECV_IDLE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
 	CONSTANT QRECV_WAIT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "001";
 	CONSTANT QRECV_PROCESS : STD_LOGIC_VECTOR(2 DOWNTO 0) := "010";
+
+	SIGNAL counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');
 
 	-- BM Cache signals
 		-- BM Inputs
@@ -93,15 +97,15 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 	{{- range $i := iter (len .Lines) }}
 	{{- $lineName:= index $.Lines $i }}
 		-- Signals towards the line {{ $lineName }}
-		SIGNAL {{$lineName}}_s_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0); -- Message to be sent to the other FPGA
-        	SIGNAL {{$lineName}}_s_valid : STD_LOGIC; -- Signal indicating that the message is valid
-        	SIGNAL {{$lineName}}_s_busy : STD_LOGIC := '0'; -- Signal indicating that the component is busy while transmitting
-        	SIGNAL {{$lineName}}_s_ok : STD_LOGIC := '0'; -- Signal indicating that the outgoing transmission was successful
-        	SIGNAL {{$lineName}}_s_error : STD_LOGIC := '0'; -- Signal indicating that an error occurred during transmission
-        	SIGNAL {{$lineName}}_r_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0) := (OTHERS => '0'); -- Message received from the other FPGA
-        	SIGNAL {{$lineName}}_r_busy : STD_LOGIC := '0'; -- Signal indicating that the component is busy while receiving
-        	SIGNAL {{$lineName}}_r_valid : STD_LOGIC := '0'; -- Signal indicating that the received message is valid
-        	SIGNAL {{$lineName}}_r_error : STD_LOGIC := '0'; -- Signal indicating that an error occurred during reception
+		SIGNAL {{$lineName}}_s_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0) := (OTHERS => '0'); -- Message to be sent to the other FPGA
+        	SIGNAL {{$lineName}}_s_valid : STD_LOGIC := '0'; -- Signal indicating that the message is valid
+        	SIGNAL {{$lineName}}_s_busy : STD_LOGIC; -- Signal indicating that the component is busy while transmitting
+        	SIGNAL {{$lineName}}_s_ok : STD_LOGIC; -- Signal indicating that the outgoing transmission was successful
+        	SIGNAL {{$lineName}}_s_error : STD_LOGIC; -- Signal indicating that an error occurred during transmission
+        	SIGNAL {{$lineName}}_r_message : STD_LOGIC_VECTOR (message_length - 1 DOWNTO 0); -- Message received from the other FPGA
+        	SIGNAL {{$lineName}}_r_busy : STD_LOGIC; -- Signal indicating that the component is busy while receiving
+        	SIGNAL {{$lineName}}_r_valid : STD_LOGIC; -- Signal indicating that the received message is valid
+        	SIGNAL {{$lineName}}_r_error : STD_LOGIC; -- Signal indicating that an error occurred during reception
 	{{- end }}
 	-- Signals for the queues
 		-- Every line has its own queue for outgoing messages, so we need to instantiate one queue per line
@@ -404,29 +408,43 @@ BEGIN
 			ELSIF rising_edge(clk) THEN
 				CASE {{ $lineName }}_send_SM IS
 					WHEN QSEND_IDLE =>
-						{{ $lineName }}_queue_receiverRead <= '1';
-						{{ $lineName }}_send_SM <= QSEND_WAIT;
+						IF COUNTER = 0 THEN
+							{{ $lineName }}_queue_receiverRead <= '1';
+							{{ $lineName }}_send_SM <= QSEND_WAIT;
+						ELSE
+							COUNTER <= COUNTER - 1;
+						END IF;
 					WHEN QSEND_WAIT =>
 						IF {{ $lineName }}_queue_receiverAck = '1' THEN
 							{{ $lineName }}_queue_receiverRead <= '0';
 							{{ $lineName }}_s_message <= {{ $lineName }}_queue_receiverData;
 							{{ $lineName }}_s_valid <= '1';
+							{{ $lineName }}_send_SM <= QSEND_WAITBUSY;
+						END IF;
+					WHEN QSEND_WAITBUSY =>
+						IF {{ $lineName }}_s_busy = '1' THEN
+							{{ $lineName }}_s_valid <= '0';
 							{{ $lineName }}_send_SM <= QSEND_SEND;
 						END IF;
 					WHEN QSEND_RETRY =>
-						{{ $lineName }}_s_valid <= '1';
-						{{ $lineName }}_send_SM <= QSEND_SEND;
+						IF COUNTER = 0 THEN
+							{{ $lineName }}_s_valid <= '1';
+							{{ $lineName }}_send_SM <= QSEND_WAITBUSY;
+						ELSE
+							COUNTER <= COUNTER - 1;
+						END IF;
 					WHEN QSEND_SEND =>
 						IF {{ $lineName }}_s_busy = '0' AND {{ $lineName }}_s_ok = '1' THEN
 							-- Message was sent successfully
-							{{ $lineName }}_s_valid <= '0';
 							{{ $lineName }}_send_SM <= QSEND_IDLE;
+							COUNTER <= to_unsigned(1000000, counters_length); -- Wait for some time before retrying
 						ELSIF {{ $lineName }}_s_busy = '0' AND {{ $lineName }}_s_error = '1' THEN
 							-- An error occurred during transmission, retry sending the message
-							{{ $lineName }}_s_valid <= '0';
 							{{ $lineName }}_send_SM <= QSEND_RETRY;
+							COUNTER <= to_unsigned(1000000, counters_length); -- Wait for some time before retrying
 						END IF;
 					WHEN OTHERS =>
+						COUNTER <= to_unsigned(1000000, counters_length); -- Wait for some time before retrying
 						{{ $lineName }}_send_SM <= QSEND_IDLE;
 				END CASE;
 			END IF;
