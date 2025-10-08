@@ -309,9 +309,9 @@ BEGIN
                             WHEN P1 => -- The phase1 of the ACK sending process is preparing the ACK message
                                 -- Prepare the ACK message to send
                                 IF ack_result = '1' THEN
-                                    message_to_send <= MSG_ACK & "00000000"; -- ACK message
+                                    message_to_send <= MSG_ACK & (message_length - 1 DOWNTO 0 => '0'); -- ACK message
                                 ELSE
-                                    message_to_send <= MSG_NACK & "00000000"; -- NACK message
+                                    message_to_send <= MSG_NACK & (message_length - 1 DOWNTO 0 => '0'); -- NACK message
                                 END IF;
                                 send_data_enable <= '1'; -- Enable data sending
                                 current_phase <= P2; -- Move to next phase
