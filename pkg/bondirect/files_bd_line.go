@@ -22,7 +22,7 @@ USE IEEE.NUMERIC_STD.ALL;
 ENTITY {{.Prefix}}bd_line_{{.MeshNodeName}}_{{ .EdgeName }} IS
     GENERIC (
         rsize : INTEGER := {{.Rsize}}; -- Size of the register
-        message_length : INTEGER := {{ .InnerMessLen }} -- Length of the message to be sent, in this length is not included bits used by tx and rx
+        message_length : INTEGER := {{ .InnerMessLen }}; -- Length of the message to be sent, in this length is not included bits used by tx and rx
         counters_length : INTEGER := 32 -- Length of the counters used for timeouts
     );
     PORT (
