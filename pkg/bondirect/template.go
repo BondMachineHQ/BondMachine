@@ -2,6 +2,7 @@ package bondirect
 
 import (
 	"fmt"
+	"sort"
 	"text/template"
 )
 
@@ -80,12 +81,12 @@ func (be *BondirectElement) PopulateIOData(nodeName string) error {
 	found := false
 	for _, node := range be.Cluster.Peers {
 		if node.PeerName == nodeName {
-			for _, inp := range node.Inputs {
-				inName := fmt.Sprintf("input%d", inp)
+			for i, _ := range node.Inputs {
+				inName := fmt.Sprintf("input%d", i)
 				inputs = append(inputs, inName)
 			}
-			for _, out := range node.Outputs {
-				outName := fmt.Sprintf("output%d", out)
+			for i, _ := range node.Outputs {
+				outName := fmt.Sprintf("output%d", i)
 				outputs = append(outputs, outName)
 			}
 			found = true
@@ -121,7 +122,15 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 
 	// fmt.Println("Populating wire data for node:", nodeName)
 
-	for lineName, line := range be.Mesh.Edges {
+	// Get the keys of the edges map in a sorted order
+	var lineNames []string
+	for lineName := range be.Mesh.Edges {
+		lineNames = append(lineNames, lineName)
+	}
+	sort.Strings(lineNames)
+
+	for _, lineName := range lineNames {
+		line := be.Mesh.Edges[lineName]
 
 		if line.NodeA == nodeName {
 			// Check if NodeB is in the cluster
@@ -233,7 +242,7 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 			for i := range routes {
 				prevWire := routesPrevHopVia[i]
 				nextWire := routesNextHopVia[i]
-				if prevWire == line {
+				if nextWire == line {
 					if val, exists := wire2wireSenders[prevWire+"_to_"+nextWire+"_sender"]; !exists {
 						newMap := make(map[string]struct{})
 						newMap[routesHeader[i]] = struct{}{}

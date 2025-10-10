@@ -65,8 +65,6 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 	CONSTANT QRECV_WAIT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "001";
 	CONSTANT QRECV_PROCESS : STD_LOGIC_VECTOR(2 DOWNTO 0) := "010";
 
-	SIGNAL counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');
-
 	-- BM Cache signals
 		-- BM Inputs
 		{{- range .Inputs }}
@@ -140,6 +138,11 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 		SIGNAL {{ $lineName }}_recv_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := QRECV_IDLE;
 	{{- end }}
 
+	{{- range $i := iter (len .Lines) }}
+	{{- $lineName:= index $.Lines $i }}
+	SIGNAL {{ $lineName }}_counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');
+	{{- end }}
+
 	-- State machines
 	{{- range $i := iter (len .Lines) }}
 	{{- $lineName:= index $.Lines $i }}
@@ -166,6 +169,15 @@ ARCHITECTURE Behavioral OF {{.Prefix}}bd_endpoint_{{.MeshNodeName}} IS
 			-- It sends one message at a time, waiting for the line to be ready before sending the next message
 			SIGNAL {{ $lineName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := QSEND_IDLE;
 	{{- end }}
+
+	{{- range $i := iter (len .Lines) }}
+		{{- range $j := iter (ios (index $.RouteSenders $i)) }}
+			{{- $signalName := (index (index $.RouteSenders $i) $j).SignalName }}
+			SIGNAL {{ $signalName }}_send_SM : STD_LOGIC_VECTOR(2 DOWNTO 0) := SEND_IDLE;
+		{{- end }}
+	{{- end }}
+
+	
 BEGIN
 
 	-- Instantiations
@@ -408,11 +420,11 @@ BEGIN
 			ELSIF rising_edge(clk) THEN
 				CASE {{ $lineName }}_send_SM IS
 					WHEN QSEND_IDLE =>
-						IF COUNTER = 0 THEN
+						IF {{ $lineName }}_counter = 0 THEN
 							{{ $lineName }}_queue_receiverRead <= '1';
 							{{ $lineName }}_send_SM <= QSEND_WAIT;
 						ELSE
-							COUNTER <= COUNTER - 1;
+							{{ $lineName }}_counter <= {{ $lineName }}_counter - 1;
 						END IF;
 					WHEN QSEND_WAIT =>
 						IF {{ $lineName }}_queue_receiverAck = '1' THEN
@@ -427,24 +439,24 @@ BEGIN
 							{{ $lineName }}_send_SM <= QSEND_SEND;
 						END IF;
 					WHEN QSEND_RETRY =>
-						IF COUNTER = 0 THEN
+						IF {{ $lineName }}_counter = 0 THEN
 							{{ $lineName }}_s_valid <= '1';
 							{{ $lineName }}_send_SM <= QSEND_WAITBUSY;
 						ELSE
-							COUNTER <= COUNTER - 1;
+							{{ $lineName }}_counter <= {{ $lineName }}_counter - 1;
 						END IF;
 					WHEN QSEND_SEND =>
 						IF {{ $lineName }}_s_busy = '0' AND {{ $lineName }}_s_ok = '1' THEN
 							-- Message was sent successfully
 							{{ $lineName }}_send_SM <= QSEND_IDLE;
-							COUNTER <= to_unsigned(1000000, counters_length); -- Wait for some time before retrying
+							{{ $lineName }}_counter <= to_unsigned(1000000, counters_length); -- Wait for some time before retrying
 						ELSIF {{ $lineName }}_s_busy = '0' AND {{ $lineName }}_s_error = '1' THEN
 							-- An error occurred during transmission, retry sending the message
 							{{ $lineName }}_send_SM <= QSEND_RETRY;
-							COUNTER <= to_unsigned(1000000, counters_length); -- Wait for some time before retrying
+							{{ $lineName }}_counter <= to_unsigned(1000000, counters_length); -- Wait for some time before retrying
 						END IF;
 					WHEN OTHERS =>
-						COUNTER <= to_unsigned(1000000, counters_length); -- Wait for some time before retrying
+						{{ $lineName }}_counter <= to_unsigned(1000000, counters_length); -- Wait for some time before retrying
 						{{ $lineName }}_send_SM <= QSEND_IDLE;
 				END CASE;
 			END IF;
@@ -514,6 +526,8 @@ BEGIN
 											{{ $signalName }}_send_SM <= SEND_IDLE;
 											{{ $lineName }}_recv_SM <= QRECV_IDLE;
 										END IF;
+									WHEN OTHERS =>
+										{{ $signalName }}_send_SM <= SEND_IDLE;
 									END CASE;
 								{{- end }}
 								WHEN OTHERS =>
