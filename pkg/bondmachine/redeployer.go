@@ -42,12 +42,13 @@ func (rd *Redeployer) Dot(conf *Config) string {
 	for i, peer := range cl.Peers {
 
 		peerid := int(peer.PeerId)
+		peerName := peer.PeerName
 
 		result += "\tsubgraph cluster_b" + strconv.Itoa(int(i)) + " {\n"
 		if GV_config(GVPEER) != "" {
 			result += "\t" + GV_config(GVPEER) + ";\n"
 		}
-		result += "\t\tlabel=\"BM " + strconv.Itoa(int(i)) + "\";\n"
+		result += "\t\tlabel=\"BM " + strconv.Itoa(peerid) + ": " + peerName + "\";\n"
 		inps := int(len(peer.Inputs))
 		outs := int(len(peer.Outputs))
 		chs := int(len(peer.Channels))
