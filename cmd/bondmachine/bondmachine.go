@@ -154,11 +154,18 @@ var bmapiDataType = flag.String("bmapi-data-type", "float32", "Data type for the
 var board_slow = flag.Bool("board-slow", false, "Board slow support")
 var board_slow_factor = flag.Int("board-slow-factor", 1, "Board slow factor")
 
+var counter = flag.Bool("counter", false, "Counter support")
+var counterMap = flag.String("counter-map", "", "Counter mappings")
+var counterSlowFactor = flag.String("counter-slow-factor", "23", "Counter slow factor")
+
 var uart = flag.Bool("uart", false, "UART support")
 var uartMapFile = flag.String("uart-mapfile", "", "UART mappings")
 
 var basys3_7segment = flag.Bool("basys3-7segment", false, "Basys3 7 segments display support")
 var basys3_7segment_map = flag.String("basys3-7segment-map", "", "Basys3 7 segments display mappings")
+
+var basys3Leds = flag.Bool("basys3-leds", false, "Basys3 leds support")
+var basys3LedsMap = flag.String("basys3-leds-map", "", "Basys3 leds mappings")
 
 var iceBreakerLeds = flag.Bool("icebreaker-leds", false, "Icebreaker leds support")
 var iceBreakerLedsMap = flag.String("icebreaker-leds-map", "", "Icebreaker leds mappings")
@@ -610,6 +617,22 @@ func main() {
 				b37s := new(bondmachine.B37s)
 				b37s.Mapped_output = *basys3_7segment_map
 				extramodules = append(extramodules, b37s)
+			}
+
+			if *basys3Leds {
+				B3L := new(bondmachine.Basys3Leds)
+				B3L.MappedOutput = *basys3LedsMap
+				extramodules = append(extramodules, B3L)
+			}
+
+			if *counter {
+				cnt := new(bondmachine.CounterExtra)
+				cnt.MappedInput = *counterMap
+				cnt.SlowFactor = *counterSlowFactor
+				if err := cnt.Check(bmach); err != nil {
+					panic(err)
+				}
+				extramodules = append(extramodules, cnt)
 			}
 
 			if *iceBreakerLeds {
