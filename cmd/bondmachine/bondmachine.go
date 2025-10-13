@@ -166,6 +166,7 @@ var basys3_7segment_map = flag.String("basys3-7segment-map", "", "Basys3 7 segme
 
 var basys3Leds = flag.Bool("basys3-leds", false, "Basys3 leds support")
 var basys3LedsMap = flag.String("basys3-leds-map", "", "Basys3 leds mappings")
+var basys3LedsName = flag.String("basys3-leds-name", "led", "Basys3 leds name")
 
 var iceBreakerLeds = flag.Bool("icebreaker-leds", false, "Icebreaker leds support")
 var iceBreakerLedsMap = flag.String("icebreaker-leds-map", "", "Icebreaker leds mappings")
@@ -620,15 +621,22 @@ func main() {
 			}
 
 			if *basys3Leds {
-				B3L := new(bondmachine.Basys3Leds)
-				B3L.MappedOutput = *basys3LedsMap
-				extramodules = append(extramodules, B3L)
+				b3l := new(bondmachine.Basys3Leds)
+				b3l.MappedOutput = *basys3LedsMap
+				b3l.LedName = *basys3LedsName
+				if *register_size > 16 {
+					panic(errors.New("Basys3 leds can be mapped to a maximum of 16 bits"))
+				}
+				b3l.Width = strconv.Itoa(*register_size)
+				extramodules = append(extramodules, b3l)
+
 			}
 
 			if *counter {
 				cnt := new(bondmachine.CounterExtra)
 				cnt.MappedInput = *counterMap
 				cnt.SlowFactor = *counterSlowFactor
+				cnt.Width = strconv.Itoa(*register_size - 1)
 				if err := cnt.Check(bmach); err != nil {
 					panic(err)
 				}

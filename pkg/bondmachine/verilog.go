@@ -1502,9 +1502,17 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	var inames []string
 	var onames []string
 
+	counter_module := false
+	var counter_params map[string]string
+	counter_mapped := ""
+
 	basys3_7segment_module := false
 	var basys3_7segment_params map[string]string
 	basys3_7segment_mapped := ""
+
+	basys3_leds_module := false
+	var basys3_leds_params map[string]string
+	basys3_leds_mapped := ""
 
 	icebreakerLedsModule := false
 	var icebreakerLedsModuleParams map[string]string
@@ -1582,6 +1590,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			inames = strings.Split(bondirectParams["inputs"], ",")
 			onames = strings.Split(bondirectParams["outputs"], ",")
 		}
+		if mod.Get_Name() == "counter" {
+			counter_module = true
+			counter_params = mod.Get_Params().Params
+		}
 		if mod.Get_Name() == "basys3_7segment" {
 			basys3_7segment_module = true
 			basys3_7segment_params = mod.Get_Params().Params
@@ -1590,6 +1602,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			} else {
 				// TODO proper error handling
 			}
+		}
+		if mod.Get_Name() == "basys3_leds" {
+			basys3_leds_module = true
+			basys3_leds_params = mod.Get_Params().Params
 		}
 		if mod.Get_Name() == "icebreaker_leds" {
 			icebreakerLedsModule = true
@@ -1695,6 +1711,13 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		result += "\toutput enable_D3,\n"
 		result += "\toutput enable_D4,\n"
 		result += "\toutput dp,\n"
+	}
+
+	if basys3_leds_module {
+		ledName := basys3_leds_params["led_name"]
+		width, _ := strconv.Atoi(basys3_leds_params["width"])
+		result += "\toutput [" + strconv.Itoa(width-1) + ":0] " + ledName + ",\n"
+
 	}
 
 	if icebreakerLedsModule {
@@ -1912,6 +1935,16 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			}
 		}
 
+		if counter_module {
+			if iname == counter_params["mapped_input"] {
+				resolved_io[iname] = "counter"
+				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Input" + strconv.Itoa(i) + ";\n"
+				result += "\twire Input" + strconv.Itoa(i) + "_valid;\n"
+				result += "\twire Input" + strconv.Itoa(i) + "_received;\n"
+				counter_mapped = "Input" + strconv.Itoa(i)
+			}
+		}
+
 	}
 
 	// The External_inputs connected are defined as input port
@@ -1975,6 +2008,15 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				resolved_io[oname] = "basys3_7segment"
 				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
 				basys3_7segment_mapped = "Output" + strconv.Itoa(i)
+			}
+		}
+		if basys3_leds_module {
+			if oname == basys3_leds_params["mapped_output"] {
+				resolved_io[oname] = "basys3_leds"
+				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
+				result += "\twire Output" + strconv.Itoa(i) + "_valid;\n"
+				result += "\twire Output" + strconv.Itoa(i) + "_received;\n"
+				basys3_leds_mapped = "Output" + strconv.Itoa(i)
 			}
 		}
 		if icebreakerLedsModule {
@@ -2220,6 +2262,16 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		result = result[:len(result)-2] + "\n"
 
 		result += "\t);\n"
+	}
+
+	if counter_module {
+		result += "\tcounter counter_inst(" + clk_name + ", reset"
+		result += ", " + counter_mapped + ", " + counter_mapped + "_valid, " + counter_mapped + "_received"
+		result += ");\n"
+	}
+
+	if basys3_leds_module {
+		result += "\tbasys3leds basys3leds_inst(" + clk_name + ", reset, " + basys3_leds_mapped + ", " + basys3_leds_mapped + "_valid, " + basys3_leds_mapped + "_received, " + basys3_leds_params["led_name"] + ");\n"
 	}
 
 	if basys3_7segment_module {
