@@ -19,32 +19,33 @@ type IOSpec struct {
 
 type TData struct {
 	// Define the fields for Tdata
-	Prefix        string
-	NodeName      string // Cluster name of the node
-	MeshNodeName  string // Mesh name of the node
-	EdgeName      string
-	TransName     string
-	Rsize         int               // Register size
-	NodeNum       int               // Number of nodes
-	NodeBits      int               // Bits needed for node addressing
-	IONum         int               // Maximum number of inputs or outputs Among all nodes
-	IOBits        int               // Bits needed for IO addressing
-	InnerMessLen  int               // Length of inner messages
-	Inputs        []string          // List of input signals
-	Outputs       []string          // List of output signals
-	Lines         []string          // List of line signals
-	IOSenders     [][]IOSpec        // List of input signal senders, the first dimension is the line index, the second dimension is the input index
-	RouteSenders  [][]IOSpec        // List of route signal senders, the first dimension is the line index, the second dimension is the route index
-	IOReceivers   [][]IOSpec        // List of output signal receivers, the first dimension is the line index, the second dimension is the output index
-	TrIn          []string          // List of transceivers for incoming signals
-	TrOut         []string          // List of transceivers for outgoing signals
-	WiresIn       [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
-	WiresInNames  [][]string        // List of wire signal port names, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
-	WiresOut      [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
-	WiresOutNames [][]string        // List of wire signal port names, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
-	NodeParams    map[string]string // Additional parameters for the specified node
-	EdgeParams    map[string]string // Additional parameters for the specified edge
-	TransParams   map[string]string // Additional parameters for the specified transceiver
+	Prefix         string
+	NodeName       string // Cluster name of the node
+	MeshNodeName   string // Mesh name of the node
+	EdgeName       string
+	TransName      string
+	Rsize          int               // Register size
+	NodeNum        int               // Number of nodes
+	NodeBits       int               // Bits needed for node addressing
+	IONum          int               // Maximum number of inputs or outputs Among all nodes
+	IOBits         int               // Bits needed for IO addressing
+	InnerMessLen   int               // Length of inner messages
+	Inputs         []string          // List of input signals
+	Outputs        []string          // List of output signals
+	Lines          []string          // List of line signals
+	IOSenders      [][]IOSpec        // List of input signal senders, the first dimension is the line index, the second dimension is the input index
+	RouteSenders   [][]IOSpec        // List of route signal senders, the first dimension is the line index, the second dimension is the route index
+	RouteReceivers [][]IOSpec        // List of route signal receivers, the first dimension is the line index, the second dimension is the route index
+	IOReceivers    [][]IOSpec        // List of output signal receivers, the first dimension is the line index, the second dimension is the output index
+	TrIn           []string          // List of transceivers for incoming signals
+	TrOut          []string          // List of transceivers for outgoing signals
+	WiresIn        [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
+	WiresInNames   [][]string        // List of wire signal port names, the first dimension is the line index, the second dimension is the incoming wire index (the 0 is the clock)
+	WiresOut       [][]string        // List of wire signals, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
+	WiresOutNames  [][]string        // List of wire signal port names, the first dimension is the line index, the second dimension is the outgoing wire index (the 0 is the clock)
+	NodeParams     map[string]string // Additional parameters for the specified node
+	EdgeParams     map[string]string // Additional parameters for the specified edge
+	TransParams    map[string]string // Additional parameters for the specified transceiver
 }
 
 func (be *BondirectElement) InitTData() {
@@ -239,6 +240,7 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 			}
 
 			wire2wireSenders := make(map[string]map[string]struct{})
+			wire2wireReceivers := make(map[string]map[string]struct{})
 			for i := range routes {
 				prevWire := routesPrevHopVia[i]
 				nextWire := routesNextHopVia[i]
@@ -252,9 +254,20 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 						wire2wireSenders[prevWire+"_to_"+nextWire+"_sender"] = val
 					}
 				}
+				if prevWire == line {
+					if val, exists := wire2wireReceivers[prevWire+"_to_"+nextWire+"_sender"]; !exists {
+						newMap := make(map[string]struct{})
+						newMap[routesHeader[i]] = struct{}{}
+						wire2wireReceivers[prevWire+"_to_"+nextWire+"_sender"] = newMap
+					} else {
+						val[routesHeader[i]] = struct{}{}
+						wire2wireReceivers[prevWire+"_to_"+nextWire+"_sender"] = val
+					}
+				}
 			}
 
 			w2wSenders := make([]IOSpec, 0)
+			w2wReceivers := make([]IOSpec, 0)
 			for w2wSender, header := range wire2wireSenders {
 				newSender := IOSpec{SignalName: w2wSender}
 				for h := range header {
@@ -265,9 +278,20 @@ func (be *BondirectElement) PopulateWireData(nodeName string) error {
 				}
 				w2wSenders = append(w2wSenders, newSender)
 			}
+			for w2wReceiver, header := range wire2wireReceivers {
+				newReceiver := IOSpec{SignalName: w2wReceiver}
+				for h := range header {
+					newReceiver.IOHeader += "\"" + h + "\"|"
+				}
+				if len(newReceiver.IOHeader) > 0 {
+					newReceiver.IOHeader = newReceiver.IOHeader[:len(newReceiver.IOHeader)-1]
+				}
+				w2wReceivers = append(w2wReceivers, newReceiver)
+			}
 
 			be.TData.IOSenders = append(be.TData.IOSenders, ioSenders)
 			be.TData.RouteSenders = append(be.TData.RouteSenders, w2wSenders)
+			be.TData.RouteReceivers = append(be.TData.RouteReceivers, w2wReceivers)
 			be.TData.IOReceivers = append(be.TData.IOReceivers, ioReceivers)
 		}
 	} else {
@@ -289,6 +313,7 @@ func (be *BondirectElement) DumpTemplateData() string {
 	result += fmt.Sprintf("Lines: %v\n", be.TData.Lines)
 	result += fmt.Sprintf("IO Senders: %v\n", be.TData.IOSenders)
 	result += fmt.Sprintf("Route Senders: %v\n", be.TData.RouteSenders)
+	result += fmt.Sprintf("Route Receivers: %v\n", be.TData.RouteReceivers)
 	result += fmt.Sprintf("IO Receivers: %v\n", be.TData.IOReceivers)
 	result += fmt.Sprintf("Transceivers In: %v\n", be.TData.TrIn)
 	result += fmt.Sprintf("Transceivers Out: %v\n", be.TData.TrOut)

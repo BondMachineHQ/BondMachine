@@ -507,9 +507,9 @@ BEGIN
 							WHEN OTHERS =>
 								CASE {{ $lineName }}_received_message(message_length - 1 DOWNTO message_length - {{$.IOBits}} - {{$.NodeBits}}) IS
 								-- Check for routed messages
-								{{- range $j := iter (ios (index $.RouteSenders $i)) }}
-								{{- $signalName := (index (index $.RouteSenders $i) $j).SignalName }}
-								{{- $signalHeader := (index (index $.RouteSenders $i) $j).IOHeader }}
+								{{- range $j := iter (ios (index $.RouteReceivers $i)) }}
+								{{- $signalName := (index (index $.RouteReceivers $i) $j).SignalName }}
+								{{- $signalHeader := (index (index $.RouteReceivers $i) $j).IOHeader }}
 								WHEN {{ $signalHeader }} =>
 									-- This message is meant to be routed to another line
 									-- Prepare the message for routing
