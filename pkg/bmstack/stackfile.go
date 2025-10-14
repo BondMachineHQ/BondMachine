@@ -93,7 +93,7 @@ module {{ .ModuleName }}(clk,
             {{- range $key, $value := .Senders }}
             {{ $value }}Ack <= 1'b0;
             {{- end }}
-            sendSM <= {{bits (len .Receivers)}}'d0;
+            sendSM <= {{bits (len .Senders)}}'d0;
             recvSM <= {{bits (len .Receivers)}}'d0;
             for (i=0;i<{{ .Depth }};i=i+1) begin
                 memory[i]<={{ $.DataSize}}'d0;
