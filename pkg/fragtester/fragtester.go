@@ -87,6 +87,7 @@ func (ft *FragTester) AnalyzeFragment(fragment string) error {
 			ft.Vars = append(ft.Vars, param)
 			continue
 		}
+		// TODO fix regex to allow different order of resin and resout
 		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resin>resin:[\w:]+).+(?P<resout>resout:[\w:]+)$`)
 		if re.MatchString(line) {
 			name := re.ReplaceAllString(line, "${name}")
