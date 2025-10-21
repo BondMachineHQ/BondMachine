@@ -1,0 +1,50 @@
+package bondirect
+
+import (
+	"bytes"
+	"text/template"
+)
+
+func (be *BondirectElement) GenerateLine(prefix, nodeName, edgeName string) (string, error) {
+	// Implementation for generating a Line
+
+	// Fill Template Data with the request values
+	be.TData.Prefix = prefix
+	if clusterNodeName, err := be.AnyNameToClusterName(nodeName); err == nil {
+		be.TData.NodeName = clusterNodeName
+	} else {
+		return "", err
+	}
+	if meshNodeName, err := be.AnyNameToMeshName(nodeName); err == nil {
+		be.TData.MeshNodeName = meshNodeName
+	} else {
+		return "", err
+	}
+	be.TData.EdgeName = edgeName
+
+	if err := be.PopulateIOData(nodeName); err != nil {
+		return "", err
+	}
+	if err := be.PopulateWireData(nodeName); err != nil {
+		return "", err
+	}
+
+	be.PopulateEdgeParams(edgeName)
+
+	// Define the line template
+	ln := bdLine
+	var f bytes.Buffer
+
+	t, err := template.New("line").Funcs(funcMap).Parse(ln)
+	if err != nil {
+		return "", err
+	}
+
+	// Execute the template with the filled data
+	err = t.Execute(&f, be.TData)
+	if err != nil {
+		return "", err
+	}
+
+	return f.String(), nil
+}
