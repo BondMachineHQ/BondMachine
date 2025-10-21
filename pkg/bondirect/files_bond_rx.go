@@ -6,13 +6,13 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 
-ENTITY {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} IS
+ENTITY {{.Prefix}}bond_rx_{{.MeshNodeName}}_{{.EdgeName}} IS
     GENERIC (
         message_length : INTEGER := {{add .InnerMessLen 2}}; -- Length of the message to be received, including 2 extra bits
         num_wires : INTEGER := {{.TransParams.NumWires}}; -- Number of wires in the bond direct connection
         counters_length : INTEGER := {{.TransParams.CountersLen}}; -- Length of the counters used in the design
         clk_grace_wait : INTEGER := {{.TransParams.ClkGraceWait}}; -- Number of stable clock cycles before accepting the clock
-        clk_timeout: INTEGER := {{.TransParams.ClkTimeout}};
+        clk_timeout: INTEGER := {{.TransParams.ClkTimeout}}
     );
     PORT (
         clk : IN STD_LOGIC;
@@ -28,17 +28,17 @@ ENTITY {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} 
         busy : OUT STD_LOGIC := '0';
         failed : OUT STD_LOGIC := '0'
     );
-END {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}};
+END {{.Prefix}}bond_rx_{{.MeshNodeName}}_{{.EdgeName}};
 
-ARCHITECTURE Behavioral OF {{.Prefix}}bond_rx_{{.NodeName}}_{{.EdgeName}}_{{.TransParams.NumWires}} IS
+ARCHITECTURE Behavioral OF {{.Prefix}}bond_rx_{{.MeshNodeName}}_{{.EdgeName}} IS
     TYPE state_type IS (IDLE, RECV, DONE, FAIL);
     SIGNAL current_state : state_type := IDLE;
     SIGNAL int_clk : STD_LOGIC := '0';
     SIGNAL int_clk_prev : STD_LOGIC := '0';
     CONSTANT clk_grace_period : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(clk_grace_wait, counters_length);
     CONSTANT timeout : unsigned(counters_length-1 DOWNTO 0) := to_unsigned(clk_timeout, counters_length);
-    CONSTANT ones : STD_LOGIC_VECTOR(adjusted_length-2 DOWNTO 0) := (OTHERS => '1');
     CONSTANT adjusted_length : INTEGER := ((message_length + num_wires - 1) / num_wires) * num_wires; -- Adjusted message length to be a multiple of num_wires
+    CONSTANT ones : STD_LOGIC_VECTOR(adjusted_length-2 DOWNTO 0) := (OTHERS => '1');
     CONSTANT extra_bits : INTEGER := adjusted_length - message_length;
     CONSTANT readings: INTEGER := adjusted_length / num_wires;
     SIGNAL timeout_counter : unsigned(counters_length-1 DOWNTO 0) := (OTHERS => '0');

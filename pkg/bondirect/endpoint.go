@@ -10,7 +10,16 @@ func (be *BondirectElement) GenerateEndpoint(prefix, nodeName string) (string, e
 
 	// Fill Template Data with the request values
 	be.TData.Prefix = prefix
-	be.TData.NodeName = nodeName
+	if clusterNodeName, err := be.AnyNameToClusterName(nodeName); err == nil {
+		be.TData.NodeName = clusterNodeName
+	} else {
+		return "", err
+	}
+	if meshNodeName, err := be.AnyNameToMeshName(nodeName); err == nil {
+		be.TData.MeshNodeName = meshNodeName
+	} else {
+		return "", err
+	}
 	if err := be.PopulateIOData(nodeName); err != nil {
 		return "", err
 	}

@@ -57,13 +57,27 @@ type Path struct {
 	NodeA string   `json:"NodeA"`
 	NodeB string   `json:"NodeB"`
 	Nodes []string `json:"Nodes"`
+	Via   []string `json:"Via"`
 }
 
 type NodeMessages struct {
-	PeerId             uint32
-	Origins            *[]string
-	OriginDestinations *[]string
-	Destinations       *[]string
-	Routes             *[]string
-	RouteDestinations  *[]string
+	PeerId                 uint32
+	Origins                *[]string
+	OriginsHeader          *[]string
+	OriginsType            *[]string // "data", "valid" or "recv"
+	OriginIO               *[]string // Associated IO signal name
+	OriginsNextHop         *[]string
+	OriginsNextHopVia      *[]string
+	Destinations           *[]string
+	DestinationsHeader     *[]string
+	DestinationsType       *[]string // "data", "valid" or "recv"
+	DestinationIO          *[]string // Associated IO signal name
+	DestinationsPrevHop    *[]string
+	DestinationsPrevHopVia *[]string
+	Routes                 *[]string
+	RoutesHeader           *[]string
+	RoutesPrevHop          *[]string
+	RoutesPrevHopVia       *[]string
+	RoutesNextHop          *[]string
+	RoutesNextHopVia       *[]string
 }

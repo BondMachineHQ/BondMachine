@@ -8,7 +8,7 @@ func (be *BondirectElement) PopulateNodeParams(nodeName string) {
 	params := make(map[string]string)
 
 	// Using cluster names to find the mesh node name (that can be different)
-	if meshNodeName, err := be.GetMeshNodeName(nodeName); err == nil {
+	if meshNodeName, err := be.AnyNameToMeshName(nodeName); err == nil {
 		nodeName = meshNodeName
 	} else {
 		return
@@ -49,7 +49,7 @@ func (be *BondirectElement) PopulateTransParams(transName string) {
 	params["ClkTimeout"] = "1000000"
 	params["NumWires"] = "1" // Default values
 
-	if numWires, err := be.GetTransceiverSignals(transName); err == nil {
+	if numWires, _, err := be.GetTransceiverSignals(transName); err == nil {
 		params["NumWires"] = fmt.Sprintf("%d", len(numWires)-1) // Exclude clock
 	}
 

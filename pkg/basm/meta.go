@@ -262,15 +262,20 @@ func (bi *BasmInstance) filteredMetaAdd(el *bmline.BasmElement, key string, valu
 			return errors.New("Unknown filinkdef %meta: " + key)
 		}
 	case "ioatt":
-		switch key {
-		case "cp":
-		case "type":
-		case "mapfrom":
-		case "mapto":
-		case "mapname":
-		case "index":
-		default:
-			return errors.New("Unknown ioatt %meta: " + key)
+		re := regexp.MustCompile(`^ext.*$`)
+		// Allow any key starting with ext to pass, they are user defined external signals
+		if re.MatchString(key) {
+		} else {
+			switch key {
+			case "cp":
+			case "type":
+			case "mapfrom":
+			case "mapto":
+			case "mapname":
+			case "index":
+			default:
+				return errors.New("Unknown ioatt %meta: " + key)
+			}
 		}
 	case "soatt":
 		switch key {

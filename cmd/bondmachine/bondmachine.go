@@ -154,11 +154,19 @@ var bmapiDataType = flag.String("bmapi-data-type", "float32", "Data type for the
 var board_slow = flag.Bool("board-slow", false, "Board slow support")
 var board_slow_factor = flag.Int("board-slow-factor", 1, "Board slow factor")
 
+var counter = flag.Bool("counter", false, "Counter support")
+var counterMap = flag.String("counter-map", "", "Counter mappings")
+var counterSlowFactor = flag.String("counter-slow-factor", "23", "Counter slow factor")
+
 var uart = flag.Bool("uart", false, "UART support")
 var uartMapFile = flag.String("uart-mapfile", "", "UART mappings")
 
 var basys3_7segment = flag.Bool("basys3-7segment", false, "Basys3 7 segments display support")
 var basys3_7segment_map = flag.String("basys3-7segment-map", "", "Basys3 7 segments display mappings")
+
+var basys3Leds = flag.Bool("basys3-leds", false, "Basys3 leds support")
+var basys3LedsMap = flag.String("basys3-leds-map", "", "Basys3 leds mappings")
+var basys3LedsName = flag.String("basys3-leds-name", "led", "Basys3 leds name")
 
 var iceBreakerLeds = flag.Bool("icebreaker-leds", false, "Icebreaker leds support")
 var iceBreakerLedsMap = flag.String("icebreaker-leds-map", "", "Icebreaker leds mappings")
@@ -490,9 +498,11 @@ func main() {
 
 				config := new(bondirect.Config)
 				config.Rsize = uint8(*register_size)
+				bdir.BondirectElement = new(bondirect.BondirectElement)
 
 				bdir.Config = config
 				bdir.Flavor = *bondirectFlavor
+				bdir.PeerID = uint32(*peerID)
 
 				if *clusterSpec != "" {
 					if cluster, err := bmcluster.UnmarshalCluster(*clusterSpec); err != nil {
@@ -519,6 +529,8 @@ func main() {
 					if mapfileJSON, err := os.ReadFile(*bondirectMapfile); err == nil {
 						if err := json.Unmarshal([]byte(mapfileJSON), bmdirmap); err != nil {
 							panic(err)
+						} else {
+							bdir.Maps = bmdirmap
 						}
 					} else {
 						panic(err)
@@ -527,6 +539,22 @@ func main() {
 				} else {
 					panic(errors.New("bondirect mapfile needed"))
 				}
+
+				// Peer name taken from the mesh
+				for _, peer := range bdir.Cluster.Peers {
+					if peer.PeerId == bdir.PeerID {
+						bdir.PeerName, _ = bdir.AnyNameToMeshName(peer.PeerName)
+						break
+					}
+				}
+
+				clusterNodeName, err := bdir.BondirectElement.AnyNameToClusterName(bdir.PeerName)
+				if err != nil {
+					panic(err)
+				}
+				bdir.BondirectElement.InitTData()
+				bdir.BondirectElement.PopulateIOData(clusterNodeName)
+				bdir.BondirectElement.PopulateWireData(clusterNodeName)
 
 				extramodules = append(extramodules, bdir)
 			}
@@ -590,6 +618,29 @@ func main() {
 				b37s := new(bondmachine.B37s)
 				b37s.Mapped_output = *basys3_7segment_map
 				extramodules = append(extramodules, b37s)
+			}
+
+			if *basys3Leds {
+				b3l := new(bondmachine.Basys3Leds)
+				b3l.MappedOutput = *basys3LedsMap
+				b3l.LedName = *basys3LedsName
+				if *register_size > 16 {
+					panic(errors.New("Basys3 leds can be mapped to a maximum of 16 bits"))
+				}
+				b3l.Width = strconv.Itoa(*register_size)
+				extramodules = append(extramodules, b3l)
+
+			}
+
+			if *counter {
+				cnt := new(bondmachine.CounterExtra)
+				cnt.MappedInput = *counterMap
+				cnt.SlowFactor = *counterSlowFactor
+				cnt.Width = strconv.Itoa(*register_size - 1)
+				if err := cnt.Check(bmach); err != nil {
+					panic(err)
+				}
+				extramodules = append(extramodules, cnt)
 			}
 
 			if *iceBreakerLeds {
