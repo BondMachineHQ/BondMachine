@@ -1,10 +1,14 @@
 package fragtester
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
 )
 
 type FragTester struct {
@@ -284,4 +288,27 @@ func (ft *FragTester) WriteSympy() (string, error) {
 func (ft *FragTester) WriteStatistics() (string, error) {
 	result := "{\"" + ft.Name + ft.NameSuffix + "\": 1}\n"
 	return result, nil
+}
+
+func (ft *FragTester) CreateMappingFile(filename string) error {
+	ioMap := new(bondmachine.IOmap)
+	ioMap.Assoc = make(map[string]string)
+
+	for i := range ft.Inputs {
+		ioMap.Assoc["i"+strconv.Itoa(i)] = strconv.Itoa(i)
+	}
+	for i := range ft.Outputs {
+		ioMap.Assoc["o"+strconv.Itoa(i)] = strconv.Itoa(i)
+	}
+
+	// Write the file
+	mapBytes, err := json.Marshal(ioMap)
+	if err != nil {
+		return fmt.Errorf("failed to marshal I/O map: %v", err)
+	}
+	if err := os.WriteFile(filename, mapBytes, 0644); err != nil {
+		return fmt.Errorf("failed to write I/O map file: %v", err)
+	}
+
+	return nil
 }
