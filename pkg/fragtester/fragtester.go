@@ -87,14 +87,42 @@ func (ft *FragTester) AnalyzeFragment(fragment string) error {
 			ft.Vars = append(ft.Vars, param)
 			continue
 		}
-		// TODO fix regex to allow different order of resin and resout
-		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resin>resin:[\w:]+).+(?P<resout>resout:[\w:]+)$`)
+		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resin>resin:[\w:]+).+(?P<resout>resout:[\w:]+).*$`)
 		if re.MatchString(line) {
 			name := re.ReplaceAllString(line, "${name}")
 			resin := re.ReplaceAllString(line, "${resin}")
 			resout := re.ReplaceAllString(line, "${resout}")
 			ft.Name = name
 			ft.Inputs = strings.Split(resin, ":")[1:]
+			ft.Outputs = strings.Split(resout, ":")[1:]
+			continue
+		}
+		// Support both resin:... resout:... and resout:... resin:...
+		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resout>resout:[\w:]+).+(?P<resin>resin:[\w:]+).*$`)
+		if re.MatchString(line) {
+			name := re.ReplaceAllString(line, "${name}")
+			resin := re.ReplaceAllString(line, "${resin}")
+			resout := re.ReplaceAllString(line, "${resout}")
+			ft.Name = name
+			ft.Inputs = strings.Split(resin, ":")[1:]
+			ft.Outputs = strings.Split(resout, ":")[1:]
+			continue
+		}
+		// Support only resin:...
+		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resin>resin:[\w:]+).*$`)
+		if re.MatchString(line) {
+			name := re.ReplaceAllString(line, "${name}")
+			resin := re.ReplaceAllString(line, "${resin}")
+			ft.Name = name
+			ft.Inputs = strings.Split(resin, ":")[1:]
+			continue
+		}
+		// Support only resout:...
+		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resout>resout:[\w:]+).*$`)
+		if re.MatchString(line) {
+			name := re.ReplaceAllString(line, "${name}")
+			resout := re.ReplaceAllString(line, "${resout}")
+			ft.Name = name
 			ft.Outputs = strings.Split(resout, ":")[1:]
 			continue
 		}
