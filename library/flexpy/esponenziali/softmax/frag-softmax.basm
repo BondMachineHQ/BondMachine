@@ -1,0 +1,35 @@
+%fragment softmax iomode:sync template:true resout:r9
+%meta literal resin {{ with $last := adds "10" .Params.inputs }}{{range $y := intRange "10" $last }}{{printf "r%d:" $y}}{{end}}{{end}}
+	mov	r8, {{$.Params.typeprefix}}0.0
+{{ with $last := adds "10" .Params.inputs }}
+{{range $y := intRange "10" $last}}
+{{printf "mov r1,r%d\n" $y}}
+        mov     r0, {{$.Params.typeprefix}}1.0
+        mov     r2, {{$.Params.typeprefix}}1.0
+        mov     r3, {{$.Params.typeprefix}}1.0
+        mov     r4, {{$.Params.typeprefix}}1.0
+        mov     r5, {{$.Params.typeprefix}}1.0
+        mov     r7, {{$.Params.expprec}}
+loop{{printf "%d" $y}}:
+        {{$.Params.multop}}   r2, r1
+        {{$.Params.multop}}   r3, r4
+        {{$.Params.addop}}    r4, r5
+        mov     r6, r2
+        {{$.Params.divop}}    r6, r3
+
+        {{$.Params.addop}}    r0, r6
+
+        dec     r7
+        jz      r7,exit{{printf "%d" $y}}
+        j       loop{{printf "%d" $y}}
+exit{{printf "%d" $y}}:
+{{$zs := adds "10" $.Params.pos}}
+{{$z := atoi $zs}}
+{{if eq $y $z}} 
+	mov	r9, r0
+{{end}}
+	{{$.Params.addop}}	r8, r0
+{{end}}
+{{end}}
+	{{$.Params.divop}}	r9, r8
+%endfragment

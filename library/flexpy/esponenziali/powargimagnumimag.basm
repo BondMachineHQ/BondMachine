@@ -1,0 +1,8 @@
+;TODO
+; power of an immaginary number passed as an argument and the other as an immaginary immediate value
+; r0 is the imaginary part of the number passed as an argument
+; {{ .Params.numberimag }} is the imaginary part of the immediate value
+%fragment powargimagnumimag template:true default_setop:rset resin:r0 resout:r0
+	{{ .Params.setop }} r1, {{ .Params.numberimag }}
+	{{ .Params.powop }}	r0, r1
+%endfragment

@@ -1,0 +1,106 @@
+;fragtester instance expprec 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
+;sympy from sympy import *
+;sympy x = Symbol('x', real=False)
+;sympy symbols = [x]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,0.5)),
+;sympy     'imag: x': list(np.arange(-5,5,0.5)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = exp(x)  
+;
+;
+; exponential function of complex number passed as argument
+; r0 is the real part of the number
+; r1 is the imaginary part of the number
+; Result: exp(a + bi) = exp(a) * (cos(b) + i*sin(b))
+%fragment expargfull template:true default_expprec:20 resin:r0:r1 resout:r0:r1 default_prefix:0f
+	; First, compute exp(a) where a is the real part (r0)
+	mov     r2, {{ .Params.prefix }}1.0 ; r2 = exp(a) result
+        mov     r3, {{ .Params.prefix }}1.0 ; r3 = index for exp
+        mov     r4, {{ .Params.prefix }}1.0 ; r4 = denominator for exp (n!)
+        mov     r5, {{ .Params.prefix }}1.0 ; r5 = numerator for exp (a^n)
+        mov     r6, {{ .Params.prefix }}1.0 ; r6 = temp for division
+	mov     r7, {{ .Params.prefix }}1.0 ; r7 = increment value
+	mov     r8, {{ .Params.expprec }} ; r8 = precision counter for exp(a)
+	
+loop_exp:
+	{{ .Params.multop }}	r4, r3 ; denominator progression (n!)
+	{{ .Params.multop }}	r5, r0 ; numerator progression (a^n)
+	{{ .Params.addop }}	r3, r7 ; increment index
+	
+	cpy	r6, r5
+	{{ .Params.divop }}	r6, r4
+	{{ .Params.addop }}	r2, r6 ; r2 += a^n / n!
+	
+	dec	r8
+	jz	r8, init_trig
+	j	loop_exp
+	
+init_trig:
+	; Now compute cos(b) and sin(b) where b is the imaginary part (r1)
+	; cos(b) calculation
+	mov     r9, {{ .Params.prefix }}1.0 ; r9 = cos(b) result
+        mov     r10, {{ .Params.prefix }}1.0 ; r10 = index for cos
+        mov     r11, {{ .Params.prefix }}1.0 ; r11 = denominator for cos
+        mov     r12, {{ .Params.prefix }}1.0 ; r12 = numerator for cos
+        
+	; sin(b) calculation
+	mov     r13, r1 ; r13 = sin(b) result, starts with b
+	mov     r14, {{ .Params.prefix }}2.0 ; r14 = index for sin (starts at 2)
+	mov     r15, {{ .Params.prefix }}1.0 ; r15 = denominator for sin
+	mov     r16, r1 ; r16 = numerator for sin, starts with b
+	
+	mov     r8, {{ .Params.expprec }} ; r8 = precision counter for trig
+	
+loop_trig:
+	; Compute next cos term
+	mov     r6, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r11, r6 ; sign inversion
+	mov     r6, {{ .Params.prefix }}1.0
+	
+	{{ .Params.multop }}	r11, r10 ; factorial progression
+	{{ .Params.multop }}	r12, r1 ; numerator progression
+	{{ .Params.addop }}	r10, r7 ; increment index
+	
+	{{ .Params.multop }}	r11, r10 ; factorial progression (second step)
+	{{ .Params.multop }}	r12, r1 ; numerator progression (second step)
+	{{ .Params.addop }}	r10, r7 ; increment index
+	
+	cpy	r6, r12
+	{{ .Params.divop }}	r6, r11
+	{{ .Params.addop }}	r9, r6 ; add term to cos result
+	
+	; Compute next sin term
+	mov     r6, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r15, r6 ; sign inversion
+	mov     r6, {{ .Params.prefix }}1.0
+	
+	{{ .Params.multop }}	r15, r14 ; factorial progression
+	{{ .Params.multop }}	r16, r1 ; numerator progression
+	{{ .Params.addop }}	r14, r7 ; increment index
+	
+	{{ .Params.multop }}	r15, r14 ; factorial progression (second step)
+	{{ .Params.multop }}	r16, r1 ; numerator progression (second step)
+	{{ .Params.addop }}	r14, r7 ; increment index
+	
+	cpy	r6, r16
+	{{ .Params.divop }}	r6, r15
+	{{ .Params.addop }}	r13, r6 ; add term to sin result
+	
+	dec	r8
+	jz	r8, multiply
+	j	loop_trig
+	
+multiply:
+	; Multiply exp(a) by (cos(b) + i*sin(b))
+	; Real part = exp(a) * cos(b)
+	; Imaginary part = exp(a) * sin(b)
+	{{ .Params.multop }}	r9, r2 ; r9 = exp(a) * cos(b)
+	{{ .Params.multop }}	r13, r2 ; r13 = exp(a) * sin(b)
+	
+	cpy	r0, r9 ; real part
+	cpy	r1, r13 ; imaginary part
+	nop	
+%endfragment

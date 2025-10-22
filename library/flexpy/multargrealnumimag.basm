@@ -1,0 +1,17 @@
+;fragtester range numberreal arange(-5,5,2)
+;sympy from sympy import *
+;sympy x = Symbol('x', real=True)
+;sympy symbols = [x]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = x * ({{ .Params.numberimag }}*I)
+;
+;
+; product of a real real argument and an immediate imag number 
+; r0 is the real part of the argument 
+; {{ .Params.numberimag }} is the immaginary part of the number to add
+%fragment multargrealnumimag template:true default_setop:rset resin:r0 resout:r0 default_prefix:0f
+	{{ .Params.setop }}	r1, {{ .Params.prefix }}{{ .Params.numberimag }}
+	{{ .Params.multop }}	r0, r1
+%endfragment

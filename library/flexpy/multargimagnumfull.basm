@@ -1,0 +1,26 @@
+;fragtester range numberreal arange(-5,5,2)
+;fragtester range numberimag arange(-5,5,2)
+;sympy from sympy import *
+;sympy x = Symbol('x', real=True)
+;sympy symbols = [x]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
+;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy     spExpr = x * I *({{ .Params.numberreal }} + {{ .Params.numberimag }}*I)
+;
+;
+; product between imaginary arg and a complex immediate number 
+; r0 is the immaginary part of arg 
+; {{ .Params.numberreal }} is the real part of the immediate value
+; {{ .Params.numberimag }} is the imaginary part of the immediate value
+%fragment multargimagnumfull template:true default_setop:rset resin:r0 resout:r0:r1 default_prefix:0f
+	{{ .Params.setop }} 	r2, {{ .Params.prefix }}{{ .Params.numberimag }}
+	{{ .Params.setop }} 	r1, {{ .Params.prefix }}{{ .Params.numberreal }}
+	{{ .Params.multop }} 	r1, r0
+	{{ .Params.multop }} 	r0, r2
+	{{ .Params.setop }} 	r2, {{ .Params.prefix }}-1
+	{{ .Params.multop }} 	r0, r2
+%endfragment
+
