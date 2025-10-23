@@ -8,6 +8,7 @@
 ;sympy     'real: y': list(np.arange(-5,5,2)),
 ;sympy     'imag: y': list(np.arange(-5,5,2)),
 ;sympy     }
+;sympy with evaluate(False):
 ;sympy     spExpr = x * I *({{ .Params.numberreal }} + {{ .Params.numberimag }}*I)
 ;
 ;

@@ -14,7 +14,7 @@
 ; product of an imaginary arg with an real immediate value
 ; r0 is the imaginary part of the first arg 
 ; {{ .Params.numberreal }} is the real part of the immediate value
-%fragment multargimagnumreal template:true default_setop:rset resin:r0:r1 resout:r0 default_prefix:0f
+%fragment multargimagnumreal template:true default_setop:rset resin:r0 resout:r0 default_prefix:0f
 	{{ .Params.setop }}     r1, {{ .Params.prefix }}{{ .Params.numberreal }}
 	{{ .Params.multop }}    r0, r1
 %endfragment
