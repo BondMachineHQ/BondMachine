@@ -278,7 +278,15 @@ func (ft *FragTester) WriteBasm() (string, error) {
 }
 
 func (ft *FragTester) WriteSympy() (string, error) {
-	if result, err := ft.ApplyTemplate(); err != nil {
+	if result, err := ft.ApplySympyTemplate(); err != nil {
+		return "", err
+	} else {
+		return result, nil
+	}
+}
+
+func (ft *FragTester) WriteApp(flavor string) (string, error) {
+	if result, err := ft.ApplyAppTemplate(flavor); err != nil {
 		return "", err
 	} else {
 		return result, nil

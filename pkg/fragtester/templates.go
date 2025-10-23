@@ -9,11 +9,24 @@ import (
 
 type templateData struct {
 	Params  map[string]string
+	Inputs  []string
+	Outputs []string
 	funcMap template.FuncMap
 }
 
 func (ft *FragTester) createBasicTemplateData() *templateData {
 	result := new(templateData)
+
+	result.Params = make(map[string]string)
+	for k, v := range ft.Params {
+		result.Params[k] = v
+	}
+
+	result.Inputs = make([]string, len(ft.Inputs))
+	copy(result.Inputs, ft.Inputs)
+
+	result.Outputs = make([]string, len(ft.Outputs))
+	copy(result.Outputs, ft.Outputs)
 
 	funcMap := template.FuncMap{
 		"inc": func(i int) int {
@@ -67,14 +80,31 @@ func (ft *FragTester) createBasicTemplateData() *templateData {
 	return result
 }
 
-func (ft *FragTester) ApplyTemplate() (string, error) {
+func (ft *FragTester) ApplySympyTemplate() (string, error) {
 	data := ft.Sympy
 	templateData := ft.createBasicTemplateData()
-	templateData.Params = make(map[string]string)
-	for k, v := range ft.Params {
-		templateData.Params[k] = v
-	}
 	t, err := template.New("sympy").Funcs(templateData.funcMap).Parse(data)
+	if err != nil {
+		return "", err
+	}
+	var f bytes.Buffer
+	err = t.Execute(&f, *templateData)
+	if err != nil {
+		return "", err
+	}
+	return f.String(), nil
+}
+
+func (ft *FragTester) ApplyAppTemplate(flavor string) (string, error) {
+	var data string
+	switch flavor {
+	case "cpynqapi":
+		data = CPynqApi
+	default:
+		return "", errors.New("unknown app template flavor: " + flavor)
+	}
+	templateData := ft.createBasicTemplateData()
+	t, err := template.New("app").Funcs(templateData.funcMap).Parse(data)
 	if err != nil {
 		return "", err
 	}

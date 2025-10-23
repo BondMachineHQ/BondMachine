@@ -143,6 +143,14 @@ func main() {
 		}
 	}
 
+	if *buildApp && *appFile != "" {
+		if appSource, err := ft.WriteApp(*appFlavor); err == nil {
+			os.WriteFile(*appFile, []byte(appSource), 0644)
+		} else {
+			panic(err)
+		}
+	}
+
 	if *saveBasm != "" {
 		if basmFile, err := ft.WriteBasm(); err == nil {
 			os.WriteFile(*saveBasm, []byte(basmFile), 0644)
