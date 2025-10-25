@@ -1,5 +1,5 @@
 ; complex number full operations
 %fragment numfull template:true default_setop:rset resout:r0:r1
-	{{ .Params.setop }}	r0, {{ .Params.numberreal }}
-	{{ .Params.setop }}	r1, {{ .Params.numberimag }}
+	{{ .Params.setop }}	r0, {{ .Params.prefix }}{{ .Params.numberreal }}
+	{{ .Params.setop }}	r1, {{ .Params.prefix }}{{ .Params.numberimag }}
 %endfragment

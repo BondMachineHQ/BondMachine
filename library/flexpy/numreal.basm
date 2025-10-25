@@ -1,4 +1,4 @@
 ; real number
 %fragment numreal template:true default_setop:rset resout:r0
-	{{ .Params.setop }}	r0, {{ .Params.numberreal }}
+	{{ .Params.setop }}	r0, {{.Params.prefix}}{{ .Params.numberreal }}
 %endfragment
