@@ -14,7 +14,7 @@
 ; power of a real number (argument) raised to a natural number (immediate value)
 ; r0 is the base (real argument)
 ; {{ .Params.numberreal }} is the exponent (natural number immediate value)
-%fragment powargrealnumreal template:true default_exponent:0 default_setop:rset resin:r0 resout:r1 default_prefix:0f
+%fragment powargimagnumintpos template:true default_exponent:0 default_setop:rset resin:r0 resout:r1 default_prefix:0f
 	{{ .Params.setop }}	r2, {{ .Params.numberint }} ; load the exponent
 	mov     r1, {{ .Params.prefix }}1.0 ; r1 is the result, starts at 1.0
 

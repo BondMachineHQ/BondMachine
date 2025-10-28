@@ -1,0 +1,36 @@
+;fragtester range numberint intRange(0,10)
+;sympy from sympy import *
+;sympy x = Symbol('x', real=True)
+;sympy symbols = [x]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,0.5)),
+;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = x ** {{ .Params.numbint }}
+;
+;
+; power of a real number (argument) raised to a natural number (immediate value)
+; r0 is the base (real argument)
+; {{ .Params.numberreal }} is the exponent (natural number immediate value)
+%fragment powargfullnumintpos template:true default_exponent:0 default_setop:rset resin:r0 resout:r1 default_prefix:0f
+	{{ .Params.setop }}	r2, {{ .Params.numberint }} ; load the exponent
+	mov     r1, {{ .Params.prefix }}1.0 ; r1 is the result, starts at 1.0
+
+	;mov	r3, {{ .Params.prefix }}2.0
+	;mov     r3, 2	
+
+	; Check if exponent is zero
+	jz	r2, exit
+	
+loop:
+	{{ .Params.multop }}	r1, r0 ; multiply result by base
+	dec	r2 ; decrement exponent counter
+	
+	jz	r2, exit ; if counter reaches 0, exit
+	j	loop ;
+	
+exit:
+	nop	
+%endfragment
