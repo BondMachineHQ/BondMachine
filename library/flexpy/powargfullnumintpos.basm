@@ -1,35 +1,69 @@
 ;fragtester range numberint intRange(0,10)
 ;sympy from sympy import *
-;sympy x = Symbol('x', real=True)
+;sympy x = Symbol('x', real=False)
 ;sympy symbols = [x]
 ;sympy testRanges = {'real: x': list(np.arange(-5,5,0.5)),
-;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'imag: x': list(np.arange(-5,5,0.5)),
 ;sympy     'real: y': list(np.arange(-5,5,2)),
 ;sympy     'imag: y': list(np.arange(-5,5,2)),
 ;sympy     }
 ;sympy with evaluate(False):
-;sympy     spExpr = x ** {{ .Params.numbint }}
+;sympy     spExpr = x ** {{ .Params.exponent }}
 ;
 ;
-; power of a real number (argument) raised to a natural number (immediate value)
-; r0 is the base (real argument)
-; {{ .Params.numberreal }} is the exponent (natural number immediate value)
-%fragment powargfullnumintpos template:true default_exponent:0 default_setop:rset resin:r0 resout:r1 default_prefix:0f
-	{{ .Params.setop }}	r2, {{ .Params.numberint }} ; load the exponent
-	mov     r1, {{ .Params.prefix }}1.0 ; r1 is the result, starts at 1.0
-
-	;mov	r3, {{ .Params.prefix }}2.0
-	;mov     r3, 2	
-
+; power of a complex number (argument) raised to a natural number (immediate value)
+; r0 is the real part of the base
+; r1 is the imaginary part of the base
+; {{ .Params.exponent }} is the exponent (natural number immediate value)
+; Result: (a+bi)^n where a is in r0, b is in r1
+%fragment powargfullnumintpos template:true default_exponent:0 default_setop:rset resin:r0:r1 resout:r0:r1 default_prefix:0f
+	{{ .Params.setop }}	r7, {{ .Params.exponent }} ; load the exponent
+	
 	; Check if exponent is zero
-	jz	r2, exit
+	jz	r7, exponent_zero
+	
+	; Store the base in r8:r9 for repeated multiplication
+	cpy	r8, r0 ; r8 = real part of base
+	cpy	r9, r1 ; r9 = imaginary part of base
+	
+	; Initialize result to the base (first power)
+	; r0 and r1 already contain the base
+	
+	; Decrement counter since we already have base^1
+	dec	r7
+	jz	r7, exit ; if exponent was 1, we're done
 	
 loop:
-	{{ .Params.multop }}	r1, r0 ; multiply result by base
-	dec	r2 ; decrement exponent counter
+	; Multiply result (r0:r1) by base (r8:r9)
+	; multargfullargfull needs: r0:r1 (first) * r2:r3 (second) -> r0:r1
+	; Copy base to r2:r3
+	cpy	r2, r8
+	cpy	r3, r9
 	
-	jz	r2, exit ; if counter reaches 0, exit
-	j	loop ;
+	; Perform complex multiplication: (r0:r1) * (r2:r3) -> (r0:r1)
+	; Formula: (a+bi)(c+di) = (ac-bd) + (ad+bc)i
+	{{ .Params.setop }}	r4, {{ .Params.prefix }}-1
+	cpy	r5, r1
+	cpy	r6, r0
+	{{ .Params.multop }}	r0, r2
+	{{ .Params.multop }}	r5, r3
+	{{ .Params.multop }}	r5, r4
+	{{ .Params.addop }}	r0, r5
+	
+	{{ .Params.multop }}	r1, r2
+	{{ .Params.multop }}	r6, r3
+	{{ .Params.addop }}	r1, r6
+	
+	; Decrement exponent counter
+	dec	r7
+	jz	r7, exit ; if counter reaches 0, exit
+	j	loop
+	
+exponent_zero:
+	; (a+bi)^0 = 1 (real part = 1, imaginary part = 0)
+	mov     r0, {{ .Params.prefix }}1.0
+	mov     r1, {{ .Params.prefix }}0.0
+	j	exit
 	
 exit:
 	nop	

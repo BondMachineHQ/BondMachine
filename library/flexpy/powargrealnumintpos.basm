@@ -18,9 +18,6 @@
 	{{ .Params.setop }}	r2, {{ .Params.exponent }} ; load the exponent
 	mov     r1, {{ .Params.prefix }}1.0 ; r1 is the result, starts at 1.0
 
-	;mov	r3, {{ .Params.prefix }}2.0
-	;mov     r3, 2	
-
 	; Check if exponent is zero
 	jz	r2, exit
 	
