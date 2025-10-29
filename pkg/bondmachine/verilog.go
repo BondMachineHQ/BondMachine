@@ -1473,6 +1473,14 @@ func (bmach *Bondmachine) Write_verilog_udpbond(module_name string, flavor strin
 	return "", errors.New("No udpbond module found")
 }
 
+func (bmach *Bondmachine) WriteVerilogBondirect(module_name string, flavor string, iomaps *IOmap, extramods []ExtraModule) (string, error) {
+	for _, mod := range extramods {
+		if mod.Get_Name() == "bondirect" {
+		}
+	}
+	return "", errors.New("No bondirect module found")
+}
+
 func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, flavor string, iomaps *IOmap, extramods []ExtraModule) string {
 
 	resolved_io := make(map[string]string)
@@ -1488,12 +1496,23 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	udpbond_module := false
 	var udpbond_params map[string]string
 
+	bondirectModule := false
+	var bondirectParams map[string]string
+
 	var inames []string
 	var onames []string
+
+	counter_module := false
+	var counter_params map[string]string
+	counter_mapped := ""
 
 	basys3_7segment_module := false
 	var basys3_7segment_params map[string]string
 	basys3_7segment_mapped := ""
+
+	basys3_leds_module := false
+	var basys3_leds_params map[string]string
+	basys3_leds_mapped := ""
 
 	icebreakerLedsModule := false
 	var icebreakerLedsModuleParams map[string]string
@@ -1559,6 +1578,22 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			inames = strings.Split(udpbond_params["inputs"], ",")
 			onames = strings.Split(udpbond_params["outputs"], ",")
 		}
+		if mod.Get_Name() == "bondirect" {
+			bondirectModule = true
+			bondirectParams = mod.Get_Params().Params
+			// fmt.Println(bondirectParams)
+			if subresult, ok := bmach.WriteVerilogBondirect("bondirect", flavor, iomaps, extramods); ok == nil {
+				result += subresult
+			} else {
+				// TODO proper error handling
+			}
+			inames = strings.Split(bondirectParams["inputs"], ",")
+			onames = strings.Split(bondirectParams["outputs"], ",")
+		}
+		if mod.Get_Name() == "counter" {
+			counter_module = true
+			counter_params = mod.Get_Params().Params
+		}
 		if mod.Get_Name() == "basys3_7segment" {
 			basys3_7segment_module = true
 			basys3_7segment_params = mod.Get_Params().Params
@@ -1567,6 +1602,10 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			} else {
 				// TODO proper error handling
 			}
+		}
+		if mod.Get_Name() == "basys3_leds" {
+			basys3_leds_module = true
+			basys3_leds_params = mod.Get_Params().Params
 		}
 		if mod.Get_Name() == "icebreaker_leds" {
 			icebreakerLedsModule = true
@@ -1674,6 +1713,13 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		result += "\toutput dp,\n"
 	}
 
+	if basys3_leds_module {
+		ledName := basys3_leds_params["led_name"]
+		width, _ := strconv.Atoi(basys3_leds_params["width"])
+		result += "\toutput [" + strconv.Itoa(width-1) + ":0] " + ledName + ",\n"
+
+	}
+
 	if icebreakerLedsModule {
 		result += "\toutput led1,\n"
 		result += "\toutput led2,\n"
@@ -1729,6 +1775,23 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		result += "\toutput wifi_enable,\n"
 		result += "\tinput wifi_rx,\n"
 		result += "\toutput wifi_tx,\n"
+	}
+
+	if bondirectModule {
+		if portsIn, ok := bondirectParams["inports"]; ok {
+			for _, port := range strings.Split(portsIn, ",") {
+				if port != "" {
+					result += "\tinput " + port + ",\n"
+				}
+			}
+		}
+		if portsOut, ok := bondirectParams["outports"]; ok {
+			for _, port := range strings.Split(portsOut, ",") {
+				if port != "" {
+					result += "\toutput " + port + ",\n"
+				}
+			}
+		}
 	}
 
 	if uartModule {
@@ -1839,6 +1902,17 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			}
 		}
 
+		if bondirectModule {
+			for _, bdIname := range inames {
+				if iname == bdIname {
+					resolved_io[iname] = "bondirect"
+					result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Input" + strconv.Itoa(i) + ";\n"
+					result += "\twire Input" + strconv.Itoa(i) + "_valid;\n"
+					result += "\twire Input" + strconv.Itoa(i) + "_received;\n"
+					break
+				}
+			}
+		}
 		if ps2KeyboardModule {
 			if iname == ps2KeyboardParams["mapped_input"] {
 				resolved_io[iname] = "ps2keyboard"
@@ -1861,6 +1935,16 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 			}
 		}
 
+		if counter_module {
+			if iname == counter_params["mapped_input"] {
+				resolved_io[iname] = "counter"
+				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Input" + strconv.Itoa(i) + ";\n"
+				result += "\twire Input" + strconv.Itoa(i) + "_valid;\n"
+				result += "\twire Input" + strconv.Itoa(i) + "_received;\n"
+				counter_mapped = "Input" + strconv.Itoa(i)
+			}
+		}
+
 	}
 
 	// The External_inputs connected are defined as input port
@@ -1876,8 +1960,8 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				if oname == ethoname {
 					resolved_io[oname] = "etherbond"
 					result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
-					result += "\twire Onput" + strconv.Itoa(i) + "_valid;\n"
-					result += "\twire Onput" + strconv.Itoa(i) + "_received;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_valid;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_received;\n"
 					break
 				}
 			}
@@ -1888,8 +1972,20 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				if oname == ethoname {
 					resolved_io[oname] = "udpbond"
 					result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
-					result += "\twire Onput" + strconv.Itoa(i) + "_valid;\n"
-					result += "\twire Onput" + strconv.Itoa(i) + "_received;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_valid;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_received;\n"
+					break
+				}
+			}
+		}
+
+		if bondirectModule {
+			for _, bdOname := range onames {
+				if oname == bdOname {
+					resolved_io[oname] = "bondirect"
+					result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_valid;\n"
+					result += "\twire Output" + strconv.Itoa(i) + "_received;\n"
 					break
 				}
 			}
@@ -1912,6 +2008,15 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 				resolved_io[oname] = "basys3_7segment"
 				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
 				basys3_7segment_mapped = "Output" + strconv.Itoa(i)
+			}
+		}
+		if basys3_leds_module {
+			if oname == basys3_leds_params["mapped_output"] {
+				resolved_io[oname] = "basys3_leds"
+				result += "\twire [" + strconv.Itoa(int(bmach.Rsize)-1) + ":0] Output" + strconv.Itoa(i) + ";\n"
+				result += "\twire Output" + strconv.Itoa(i) + "_valid;\n"
+				result += "\twire Output" + strconv.Itoa(i) + "_received;\n"
+				basys3_leds_mapped = "Output" + strconv.Itoa(i)
 			}
 		}
 		if icebreakerLedsModule {
@@ -1940,14 +2045,45 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	result += "\n"
 	clockString := clk_name
 
-	// Processing per-extramodule initializazions
+	// Processing per-extramodule initializations
 	if conf.CommentedVerilog {
-		result += "\t// Processing per-extramodule initializazions\n"
+		result += "\t// Processing per-extramodule initializations\n"
 	}
 
 	if slow_module {
 		result += "\treg [31:0] divider;\n\n"
 		clockString = "divider[" + slow_params["slow_factor"] + "]"
+	}
+
+	if bondirectModule {
+		if portsIn, ok := bondirectParams["inports"]; ok {
+			if sigIn, ok := bondirectParams["insignals"]; ok {
+				inports := strings.Split(portsIn, ",")
+				signals := strings.Split(sigIn, ",")
+				if len(inports) == len(signals) {
+					for idx, port := range inports {
+						if port != "" && signals[idx] != "" {
+							result += "\twire " + signals[idx] + ";\n"
+							result += "\tassign " + signals[idx] + " = " + port + ";\n"
+						}
+					}
+				}
+			}
+		}
+		if portsOut, ok := bondirectParams["outports"]; ok {
+			if sigOut, ok := bondirectParams["outsignals"]; ok {
+				outports := strings.Split(portsOut, ",")
+				signals := strings.Split(sigOut, ",")
+				if len(outports) == len(signals) {
+					for idx, port := range outports {
+						if port != "" && signals[idx] != "" {
+							result += "\twire " + signals[idx] + ";\n"
+							result += "\tassign " + port + " = " + signals[idx] + ";\n"
+						}
+					}
+				}
+			}
+		}
 	}
 
 	if vgatext800x600Module {
@@ -2020,7 +2156,7 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 
 	result += ");\n\n"
 
-	// Processing BM connected firwmwares
+	// Processing BM connected firmwares
 	if conf.CommentedVerilog {
 		result += "\t// Processing BM connected firmwares\n"
 	}
@@ -2074,6 +2210,68 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 		}
 
 		result += ");\n"
+	}
+
+	if bondirectModule {
+		peerName := bondirectParams["mesh_node_name"]
+		result += "\tbd_endpoint_" + peerName + " bd_endpoint_" + peerName + "_main (\n"
+		result += "\t\t.clk(" + clk_name + "),\n"
+		result += "\t\t.reset(reset),\n"
+
+		for j, iname := range inames {
+			for i := 0; i < bmach.Inputs; i++ {
+				iiname := Get_input_name(i)
+				if iiname == iname {
+					result += "\t\t.input" + strconv.Itoa(j) + "(Input" + strconv.Itoa(i) + "),\n"
+					result += "\t\t.input" + strconv.Itoa(j) + "_valid(Input" + strconv.Itoa(i) + "_valid),\n"
+					result += "\t\t.input" + strconv.Itoa(j) + "_recv(Input" + strconv.Itoa(i) + "_received),\n"
+				}
+			}
+		}
+
+		for j, oname := range onames {
+			for i := 0; i < bmach.Outputs; i++ {
+				ooname := Get_output_name(i)
+				if ooname == oname {
+					result += "\t\t.output" + strconv.Itoa(j) + "(Output" + strconv.Itoa(i) + "),\n"
+					result += "\t\t.output" + strconv.Itoa(j) + "_valid(Output" + strconv.Itoa(i) + "_valid),\n"
+					result += "\t\t.output" + strconv.Itoa(j) + "_recv(Output" + strconv.Itoa(i) + "_received),\n"
+				}
+			}
+		}
+
+		if sigIn, ok := bondirectParams["insignals"]; ok {
+			signals := strings.Split(sigIn, ",")
+			for _, sig := range signals {
+				if sig != "" {
+					result += "\t\t." + sig + "(" + sig + "),\n"
+				}
+			}
+		}
+
+		if sigOut, ok := bondirectParams["outsignals"]; ok {
+			signals := strings.Split(sigOut, ",")
+			for _, sig := range signals {
+				if sig != "" {
+					result += "\t\t." + sig + "(" + sig + "),\n"
+				}
+			}
+		}
+
+		// Remove last comma
+		result = result[:len(result)-2] + "\n"
+
+		result += "\t);\n"
+	}
+
+	if counter_module {
+		result += "\tcounter counter_inst(" + clk_name + ", reset"
+		result += ", " + counter_mapped + ", " + counter_mapped + "_valid, " + counter_mapped + "_received"
+		result += ");\n"
+	}
+
+	if basys3_leds_module {
+		result += "\tbasys3leds basys3leds_inst(" + clk_name + ", reset, " + basys3_leds_mapped + ", " + basys3_leds_mapped + "_valid, " + basys3_leds_mapped + "_received, " + basys3_leds_params["led_name"] + ");\n"
 	}
 
 	if basys3_7segment_module {

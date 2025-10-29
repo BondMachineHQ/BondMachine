@@ -1,0 +1,135 @@
+;fragtester range numberint intRange(0,10)
+;sympy from sympy import *
+;sympy x = Symbol('x', real=True)
+;sympy symbols = [x]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,0.5)),
+;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = (x * I) ** {{ .Params.exponent }}
+;
+;
+; power of an imaginary number (argument) raised to a natural number (immediate value)
+; r0 is the imaginary coefficient (real value) of the imaginary number
+; {{ .Params.exponent }} is the exponent (natural number immediate value)
+; Result: (x*I)^n where x is in r0
+; Output: r0 contains the non-zero component (real or imaginary part depending on exponent mod 4)
+%fragment powargimagnumintpos template:true default_exponent:0 default_setop:rset resin:r0 resout:r0 default_prefix:0f
+	{{ .Params.setop }}	r2, {{ .Params.exponent }} ; load the exponent
+	mov     r3, {{ .Params.prefix }}1.0 ; r3 is the magnitude result, starts at 1.0
+	
+	; Check if exponent is zero
+	jz	r2, exponent_zero
+	
+	; Calculate magnitude: x^n
+	cpy	r4, r2 ; copy exponent for loop counter
+magnitude_loop:
+	{{ .Params.multop }}	r3, r0 ; multiply result by base
+	dec	r4 ; decrement exponent counter
+	jz	r4, magnitude_done ; if counter reaches 0, exit
+	j	magnitude_loop
+	
+magnitude_done:
+	; Now r3 contains x^n (the magnitude)
+	; Determine phase based on exponent mod 4
+	; r2 still contains the original exponent
+	
+	; Calculate n mod 4 using repeated subtraction
+	cpy	r4, r2 ; copy exponent
+	
+mod4_loop:
+	; Check if r4 is 0, 1, 2, 3, or >= 4 by trying to decrement 4 times
+	cpy	r6, r4
+	jz	r6, mod4_is_0 ; if r4 = 0
+	dec	r6
+	jz	r6, mod4_is_1 ; if r4 = 1
+	dec	r6
+	jz	r6, mod4_is_2 ; if r4 = 2
+	dec	r6
+	jz	r6, mod4_is_3 ; if r4 = 3
+	dec	r6
+	jz	r6, mod4_is_0 ; if r4 = 4 (mod 4 = 0)
+	
+	; If we're here, r4 > 4, so subtract 4 and continue
+	cpy	r4, r6 ; r4 = r4 - 4 (r6 already has r4-4)
+	j	mod4_loop
+
+mod4_is_0:
+	{{ .Params.setop }}	r4, {{ .Params.prefix }}0.0
+	j	mod4_done
+	
+mod4_is_1:
+	{{ .Params.setop }}	r4, {{ .Params.prefix }}1.0
+	j	mod4_done
+	
+mod4_is_2:
+	{{ .Params.setop }}	r4, {{ .Params.prefix }}2.0
+	j	mod4_done
+	
+mod4_is_3:
+	{{ .Params.setop }}	r4, {{ .Params.prefix }}3.0
+	j	mod4_done
+	
+mod4_done:
+	; r4 now contains n mod 4 (value 0, 1, 2, or 3)
+	
+	; Check each case using decrements
+	cpy	r5, r4 ; copy n mod 4
+	jz	r5, case_0 ; if n mod 4 = 0
+	
+	dec	r5 ; r5 = r4 - 1
+	jz	r5, case_1 ; if n mod 4 = 1
+	
+	dec	r5 ; r5 = r4 - 2
+	jz	r5, case_2 ; if n mod 4 = 2
+	
+	; else n mod 4 = 3
+	j	case_3
+	
+exponent_zero:
+	; (x*I)^0 = 1 (result is real = 1)
+	mov     r0, {{ .Params.prefix }}1.0
+	j	done
+	
+case_0:
+	; n mod 4 = 0: result = x^n (real, positive)
+	cpy	r0, r3 ; real part = x^n
+	mov     r1, {{ .Params.prefix }}0.0 ; imaginary part = 0
+	j	exit
+	
+case_1:
+	; n mod 4 = 1: result = x^n * I (imaginary, positive)
+	mov     r0, {{ .Params.prefix }}0.0 ; real part = 0
+	cpy	r1, r3 ; imaginary part = x^n
+	j	exit
+	
+case_2:
+	; n mod 4 = 2: result = -x^n (real, negative)
+	cpy	r0, r3
+	{{ .Params.setop }}	r5, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r0, r5 ; real part = -x^n
+	mov     r1, {{ .Params.prefix }}0.0 ; imaginary part = 0
+	j	exit
+	
+case_3:
+	; n mod 4 = 3: result = -x^n * I (imaginary, negative)
+	mov     r0, {{ .Params.prefix }}0.0 ; real part = 0
+	cpy	r1, r3
+	{{ .Params.setop }}	r5, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r1, r5 ; imaginary part = -x^n
+	j	exit
+	
+exit:
+	; Consolidate result: if r0 is zero, move r1 to r0
+	cpy	r5, r0
+	jz	r5, use_r1
+	j	done
+	
+use_r1:
+	cpy	r0, r1
+	
+done:
+	nop	
+%endfragment

@@ -1,0 +1,22 @@
+;fragtester
+;sympy from sympy import *
+;sympy x = Symbol('x', real=True)
+;sympy y = Symbol('y', real=False)
+;sympy symbols = [x, y]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
+;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = x * y
+;
+;
+; product of a real arg and a full complex arg
+; r0 is the real part of the first number 
+; r1 is the real part of the second number 
+; r2 is the imaginary part of the second number 
+%fragment multargrealargfull template:true default_setop:rset resin:r0:r1:r2 resout:r1:r2
+	{{ .Params.multop }}	r1, r0
+	{{ .Params.multop }}	r2, r0
+%endfragment
