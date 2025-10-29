@@ -1,0 +1,9 @@
+;TODO
+; power of a complex number passed as argument to an immediate immaginary number
+; r0 is the real part of the argument
+; r1 is the imaginary part of the argument
+; {{ .Params.numberimag }} is the immaginary part of the number to pow
+%fragment pownumimagargfull template:true default_setop:rset resin:r0:r1 resout:r0:r1
+	{{ .Params.setop }}	r2, {{ .Params.numberreal }}
+	{{ .Params.powop }}	r1, r2
+%endfragment

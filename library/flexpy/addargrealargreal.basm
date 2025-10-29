@@ -1,3 +1,17 @@
+;fragtester
+;sympy from sympy import *
+;sympy x = Symbol('x', real=True)
+;sympy y = Symbol('y', real=True)
+;sympy symbols = [x, y]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
+;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = x + y
+;
+;
 ; addition of two real numbers passed as arguments
 ; r0 is the real part of the first number
 ; r1 is the real part of the second number

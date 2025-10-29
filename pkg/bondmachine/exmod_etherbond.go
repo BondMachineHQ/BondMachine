@@ -1,14 +1,16 @@
 package bondmachine
 
 import (
+	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/etherbond"
+
 	//"fmt"
 	"strconv"
 )
 
 type Etherbond_extra struct {
 	Config  *etherbond.Config
-	Cluster *etherbond.Cluster
+	Cluster *bmcluster.Cluster
 	Macs    *etherbond.Macs
 	PeerID  uint32
 	Maps    *IOmap
@@ -27,7 +29,7 @@ func (sl *Etherbond_extra) Get_Params() *ExtraParams {
 	result.Params["cluster_id"] = strconv.Itoa(int(sl.Cluster.ClusterId))
 	result.Params["mac"] = sl.Mac
 
-	var mypeer etherbond.Peer
+	var mypeer bmcluster.Peer
 
 	for _, peer := range sl.Cluster.Peers {
 		if peer.PeerId == sl.PeerID {

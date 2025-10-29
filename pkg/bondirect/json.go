@@ -5,13 +5,13 @@ import (
 	"os"
 )
 
-func UnmarshallMesh(c *Config, mesh_file string) (*Mesh, error) {
+func UnmarshalMesh(c *Config, meshFile string) (*Mesh, error) {
 
-	cluster := new(Mesh)
+	mesh := new(Mesh)
 
-	if _, err := os.Stat(mesh_file); err == nil {
-		if jsonFile, err := os.ReadFile(mesh_file); err == nil {
-			if err := json.Unmarshal([]byte(jsonFile), cluster); err != nil {
+	if _, err := os.Stat(meshFile); err == nil {
+		if jsonFile, err := os.ReadFile(meshFile); err == nil {
+			if err := json.Unmarshal([]byte(jsonFile), mesh); err != nil {
 				return nil, err
 			}
 		} else {
@@ -21,24 +21,5 @@ func UnmarshallMesh(c *Config, mesh_file string) (*Mesh, error) {
 		return nil, err
 	}
 
-	return cluster, nil
-}
-
-func UnmarshallCluster(c *Config, cluster_file string) (*Cluster, error) {
-
-	cluster := new(Cluster)
-
-	if _, err := os.Stat(cluster_file); err == nil {
-		if jsonFile, err := os.ReadFile(cluster_file); err == nil {
-			if err := json.Unmarshal([]byte(jsonFile), cluster); err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
-		}
-	} else {
-		return nil, err
-	}
-
-	return cluster, nil
+	return mesh, nil
 }

@@ -1,0 +1,10 @@
+;TODO
+; power of an immaginary number passed as an argument and the other as a complex immediate value
+; r0 is the imaginary part of the number passed as an argument
+; {{ .Params.numberreal }} is the real part of the immediate value
+; {{ .Params.numberimag }} is the imaginary part of the immediate value
+%fragment powargimagnumfull template:true template_setop:rset resin:r0 resout:r1:r0
+	{{ .Params.setop }} 	r2, {{ .Params.numberimag }}
+	{{ .Params.powop }} 	r0, r2
+	{{ .Params.setop }} 	r1, {{ .Params.numberreal }}
+%endfragment

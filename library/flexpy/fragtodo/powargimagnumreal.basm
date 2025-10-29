@@ -1,0 +1,7 @@
+;TODO
+; power of an immaginary number passed as an argument and the other as a real immediate value
+; r0 is the imaginary part of the number passed as an argument
+; {{ .Params.numberreal }} is the real part of the immediate value
+%fragment powargimagnumreal template:true default_setop:rset resin:r0 resout:r1:r0
+	{{ .Params.setop }} r1, {{ .Params.numberreal }}
+%endfragment

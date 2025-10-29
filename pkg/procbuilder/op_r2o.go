@@ -52,6 +52,8 @@ func (op R2o) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 			result += "\treg " + strings.ToLower(Get_output_name(j)) + "_val;\n"
 		}
 
+		result += "\treg waitsm;\n"
+		result += "\tinitial waitsm = 1'b0;\n"
 		result += "\n"
 
 		for j := 0; j < int(arch.M); j++ {
