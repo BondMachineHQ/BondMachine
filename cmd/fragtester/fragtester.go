@@ -19,8 +19,15 @@ var describe = flag.Bool("describe", false, "Describe the fragment without runni
 var sequence = flag.Int("seq", 0, "Sequence to run")
 
 var saveBasm = flag.String("save-basm", "", "Create a basm file")
-var saveExpression = flag.String("save-expression", "", "Create a expression file")
+var saveExpression = flag.String("save-expression", "", "Create an expression file")
 var saveStatistics = flag.String("save-statistics", "", "Create a statistics file")
+
+var createBmApi = flag.String("create-bmapi", "", "Create a mapping file for the BondMachine I/O over BMAPI")
+
+var buildApp = flag.Bool("build-app", false, "Build an hardware connected app")
+var appFlavor = flag.String("app-flavor", "", "App flavor for the selected operating mode")
+var appFlavorList = flag.Bool("app-flavor-list", false, "List of available app flavors")
+var appFile = flag.String("app-file", "a.out", "App file to be used as output")
 
 var neuronLibPath = flag.String("neuron-lib-path", "", "Path to the neuron library to use")
 var fragmentFile = flag.String("fragment-file", "", "Name of the fragment file")
@@ -129,6 +136,20 @@ func main() {
 	}
 
 	ft.ApplySequence(*sequence)
+
+	if *createBmApi != "" {
+		if err := ft.CreateMappingFile(*createBmApi); err != nil {
+			panic(err)
+		}
+	}
+
+	if *buildApp && *appFile != "" {
+		if appSource, err := ft.WriteApp(*appFlavor); err == nil {
+			os.WriteFile(*appFile, []byte(appSource), 0644)
+		} else {
+			panic(err)
+		}
+	}
 
 	if *saveBasm != "" {
 		if basmFile, err := ft.WriteBasm(); err == nil {

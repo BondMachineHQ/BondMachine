@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondgo"
 	"github.com/BondMachineHQ/BondMachine/pkg/etherbond"
 	"github.com/BondMachineHQ/BondMachine/pkg/udpbond"
@@ -272,7 +273,7 @@ func main() {
 					if *useEtherbond {
 						if *save_etherbond_cluster != "" {
 
-							var external_cluster *etherbond.Cluster
+							var external_cluster *bmcluster.Cluster
 
 							if *etherbond_external != "" {
 
@@ -283,7 +284,7 @@ func main() {
 									ebconfig.Debug = true
 								}
 
-								if external_cluster_t, err := etherbond.UnmarshallCluster(ebconfig, *etherbond_external); err != nil {
+								if external_cluster_t, err := bmcluster.UnmarshalCluster(*etherbond_external); err != nil {
 									panic(err)
 								} else {
 									external_cluster = external_cluster_t

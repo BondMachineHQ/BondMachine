@@ -3,7 +3,8 @@ package basm
 import "errors"
 
 const (
-	passTemplateResolver = uint64(1) << iota
+	passClusterChecker = uint64(1) << iota
+	passTemplateResolver
 	passMetadataInfer1
 	passMacroResolver
 	passCallResolver
@@ -50,6 +51,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passCallResolver:          callResolver,
 		passMacroResolver:         macroResolver,
 		passTemplateFinalizer:     templateFinalizer,
+		passClusterChecker:        clusterChecker,
 	}
 }
 
@@ -76,6 +78,7 @@ func getPassFunctionName() map[uint64]string {
 		passCallResolver:          "callResolver",
 		passMacroResolver:         "macroResolver",
 		passTemplateFinalizer:     "templateFinalizer",
+		passClusterChecker:        "clusterChecker",
 	}
 }
 
@@ -103,6 +106,7 @@ func IsOptionalPass(frontEnd string) map[uint64]bool {
 			passCallResolver:          true,
 			passMacroResolver:         true,
 			passTemplateFinalizer:     true,
+			passClusterChecker:        true,
 		}
 	} else {
 		return map[uint64]bool{
@@ -127,6 +131,7 @@ func IsOptionalPass(frontEnd string) map[uint64]bool {
 			passCallResolver:          false,
 			passMacroResolver:         false,
 			passTemplateFinalizer:     true,
+			passClusterChecker:        false,
 		}
 	}
 }
@@ -158,6 +163,7 @@ func GetPassMnemonic() map[uint64]string {
 		passCallResolver:          "callresolver",
 		passMacroResolver:         "macroresolver",
 		passTemplateFinalizer:     "templatefinalizer",
+		passClusterChecker:        "clusterchecker",
 	}
 
 }

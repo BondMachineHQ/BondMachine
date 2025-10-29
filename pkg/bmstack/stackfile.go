@@ -93,7 +93,7 @@ module {{ .ModuleName }}(clk,
             {{- range $key, $value := .Senders }}
             {{ $value }}Ack <= 1'b0;
             {{- end }}
-            sendSM <= {{bits (len .Receivers)}}'d0;
+            sendSM <= {{bits (len .Senders)}}'d0;
             recvSM <= {{bits (len .Receivers)}}'d0;
             for (i=0;i<{{ .Depth }};i=i+1) begin
                 memory[i]<={{ $.DataSize}}'d0;
@@ -167,7 +167,7 @@ module {{ .ModuleName }}(clk,
 
             // Read ack process
             {{- range $key, $value := .Receivers }}
-            if ({{ $value }}Read && !{{ $value }}Ack && recvSM=={{ bits (len $.Senders) }}'d{{ $key }} && !empty) begin
+            if ({{ $value }}Read && !{{ $value }}Ack && recvSM=={{ bits (len $.Receivers) }}'d{{ $key }} && !empty) begin
                 {{ $value }}Ack <= 1'b1;
             end
             else begin
@@ -179,7 +179,7 @@ module {{ .ModuleName }}(clk,
 
             // Write ack process
             {{- range $key, $value := .Senders }}
-            if (!(readneed && !empty) && {{ $value }}Write && !{{ $value }}Ack && sendSM=={{ bits (len $.Receivers) }}'d{{ $key }} && !full) begin
+            if (!(readneed && !empty) && {{ $value }}Write && !{{ $value }}Ack && sendSM=={{ bits (len $.Senders) }}'d{{ $key }} && !full) begin
                 {{ $value }}Ack <= 1'b1;
             end
             else begin

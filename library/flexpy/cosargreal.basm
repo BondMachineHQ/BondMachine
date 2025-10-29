@@ -13,7 +13,7 @@
 ;
 ; cosine of real number passed as argument
 ; r0 is the real part of the number
-%fragment cosargreal template:true default_cosprec:2 resin:r0 resout:r1
+%fragment cosargreal template:true default_cosprec:20 resin:r0 resout:r1 default_prefix:0f
 	mov     r1, {{ .Params.prefix }}1.0 ; r1 is the result
         mov     r2, {{ .Params.prefix }}1.0 ; r2 is the index
         mov     r3, {{ .Params.prefix }}1.0 ; r3 is the denominator

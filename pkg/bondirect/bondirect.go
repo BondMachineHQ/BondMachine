@@ -1,47 +1,83 @@
 package bondirect
 
+import "github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
+
+type BondirectElement struct {
+	*Config            // Configuration settings
+	*bmcluster.Cluster // Reference to the cluster
+	*Mesh              // Reference to the mesh
+	*TData             // Metadata
+}
+
 // Config struct
 type Config struct {
 	Rsize uint8
 	Debug bool
 }
 
-type Peer struct {
-	PeerId   uint32
-	Channels []uint32
-	Inputs   []uint32
-	Outputs  []uint32
-}
-
-type Cluster struct {
-	ClusterId uint32
-	Peers     []Peer
-}
-
-// Mesh description
-
-type EdgesList []string
-
-type NodesParams struct {
-	Data map[string]string
-}
-
-type EdgesParams struct {
-	From  string
-	To    string
-	Wires uint8
-	Clock uint8
-	Data  map[string]string
-}
-
+// Mesh JSON structures
 type Mesh struct {
-	Adjacency map[string]EdgesList
-	Nodes     map[string]NodesParams
-	Edges     map[string]EdgesParams
+	Transceivers []Transceiver   `json:"Transceivers"`
+	Nodes        map[string]Node `json:"Nodes"`
+	Edges        map[string]Edge `json:"Edges"`
 }
 
-//
+type Transceiver struct {
+	Type    string            `json:"Type"`
+	Name    string            `json:"Name"`
+	Signals map[string]Signal `json:"Signals"`
+	Data    map[string]string `json:"Data"`
+}
 
-type Ips struct {
-	Assoc map[string]string
+type Signal struct {
+	Type string `json:"Type"`
+	Name string `json:"Name"`
+}
+
+type Node struct {
+	PeerId uint32            `json:"PeerId"`
+	Data   map[string]string `json:"Data"`
+}
+
+type Edge struct {
+	NodeA    string            `json:"NodeA"`
+	NodeB    string            `json:"NodeB"`
+	FromAtoB EdgeDirection     `json:"FromAtoB"`
+	FromBtoA EdgeDirection     `json:"FromBtoA"`
+	Data     map[string]string `json:"Data"`
+}
+
+type EdgeDirection struct {
+	ATransceiver string            `json:"ATransceiver"`
+	BTransceiver string            `json:"BTransceiver"`
+	Data         map[string]string `json:"Data"`
+}
+
+type Path struct {
+	NodeA string   `json:"NodeA"`
+	NodeB string   `json:"NodeB"`
+	Nodes []string `json:"Nodes"`
+	Via   []string `json:"Via"`
+}
+
+type NodeMessages struct {
+	PeerId                 uint32
+	Origins                *[]string
+	OriginsHeader          *[]string
+	OriginsType            *[]string // "data", "valid" or "recv"
+	OriginIO               *[]string // Associated IO signal name
+	OriginsNextHop         *[]string
+	OriginsNextHopVia      *[]string
+	Destinations           *[]string
+	DestinationsHeader     *[]string
+	DestinationsType       *[]string // "data", "valid" or "recv"
+	DestinationIO          *[]string // Associated IO signal name
+	DestinationsPrevHop    *[]string
+	DestinationsPrevHopVia *[]string
+	Routes                 *[]string
+	RoutesHeader           *[]string
+	RoutesPrevHop          *[]string
+	RoutesPrevHopVia       *[]string
+	RoutesNextHop          *[]string
+	RoutesNextHopVia       *[]string
 }

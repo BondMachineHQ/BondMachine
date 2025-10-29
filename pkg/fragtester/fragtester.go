@@ -1,10 +1,14 @@
 package fragtester
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
 )
 
 type FragTester struct {
@@ -87,13 +91,42 @@ func (ft *FragTester) AnalyzeFragment(fragment string) error {
 			ft.Vars = append(ft.Vars, param)
 			continue
 		}
-		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resin>resin:[\w:]+).+(?P<resout>resout:[\w:]+)$`)
+		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resin>resin:[\w:]+).+(?P<resout>resout:[\w:]+).*$`)
 		if re.MatchString(line) {
 			name := re.ReplaceAllString(line, "${name}")
 			resin := re.ReplaceAllString(line, "${resin}")
 			resout := re.ReplaceAllString(line, "${resout}")
 			ft.Name = name
 			ft.Inputs = strings.Split(resin, ":")[1:]
+			ft.Outputs = strings.Split(resout, ":")[1:]
+			continue
+		}
+		// Support both resin:... resout:... and resout:... resin:...
+		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resout>resout:[\w:]+).+(?P<resin>resin:[\w:]+).*$`)
+		if re.MatchString(line) {
+			name := re.ReplaceAllString(line, "${name}")
+			resin := re.ReplaceAllString(line, "${resin}")
+			resout := re.ReplaceAllString(line, "${resout}")
+			ft.Name = name
+			ft.Inputs = strings.Split(resin, ":")[1:]
+			ft.Outputs = strings.Split(resout, ":")[1:]
+			continue
+		}
+		// Support only resin:...
+		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resin>resin:[\w:]+).*$`)
+		if re.MatchString(line) {
+			name := re.ReplaceAllString(line, "${name}")
+			resin := re.ReplaceAllString(line, "${resin}")
+			ft.Name = name
+			ft.Inputs = strings.Split(resin, ":")[1:]
+			continue
+		}
+		// Support only resout:...
+		re = regexp.MustCompile(`^%fragment\s+(?P<name>\w+).+(?P<resout>resout:[\w:]+).*$`)
+		if re.MatchString(line) {
+			name := re.ReplaceAllString(line, "${name}")
+			resout := re.ReplaceAllString(line, "${resout}")
+			ft.Name = name
 			ft.Outputs = strings.Split(resout, ":")[1:]
 			continue
 		}
@@ -245,7 +278,15 @@ func (ft *FragTester) WriteBasm() (string, error) {
 }
 
 func (ft *FragTester) WriteSympy() (string, error) {
-	if result, err := ft.ApplyTemplate(); err != nil {
+	if result, err := ft.ApplySympyTemplate(); err != nil {
+		return "", err
+	} else {
+		return result, nil
+	}
+}
+
+func (ft *FragTester) WriteApp(flavor string) (string, error) {
+	if result, err := ft.ApplyAppTemplate(flavor); err != nil {
 		return "", err
 	} else {
 		return result, nil
@@ -255,4 +296,27 @@ func (ft *FragTester) WriteSympy() (string, error) {
 func (ft *FragTester) WriteStatistics() (string, error) {
 	result := "{\"" + ft.Name + ft.NameSuffix + "\": 1}\n"
 	return result, nil
+}
+
+func (ft *FragTester) CreateMappingFile(filename string) error {
+	ioMap := new(bondmachine.IOmap)
+	ioMap.Assoc = make(map[string]string)
+
+	for i := range ft.Inputs {
+		ioMap.Assoc["i"+strconv.Itoa(i)] = strconv.Itoa(i)
+	}
+	for i := range ft.Outputs {
+		ioMap.Assoc["o"+strconv.Itoa(i)] = strconv.Itoa(i)
+	}
+
+	// Write the file
+	mapBytes, err := json.Marshal(ioMap)
+	if err != nil {
+		return fmt.Errorf("failed to marshal I/O map: %v", err)
+	}
+	if err := os.WriteFile(filename, mapBytes, 0644); err != nil {
+		return fmt.Errorf("failed to write I/O map file: %v", err)
+	}
+
+	return nil
 }
