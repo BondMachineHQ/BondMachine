@@ -24,6 +24,8 @@ var saveStatistics = flag.String("save-statistics", "", "Create a statistics fil
 
 var createBmApi = flag.String("create-bmapi", "", "Create a mapping file for the BondMachine I/O over BMAPI")
 
+var createSicv2Endpoints = flag.String("sicv2-endpoints", "", "Create SICv2 endpoints")
+
 var buildApp = flag.Bool("build-app", false, "Build an hardware connected app")
 var appFlavor = flag.String("app-flavor", "", "App flavor for the selected operating mode")
 var appFlavorList = flag.Bool("app-flavor-list", false, "List of available app flavors")
@@ -175,4 +177,11 @@ func main() {
 		}
 	}
 
+	if *createSicv2Endpoints != "" {
+		if sicv2Ends, err := ft.WriteSicv2Endpoints(); err == nil {
+			os.WriteFile(*createSicv2Endpoints, []byte(sicv2Ends), 0644)
+		} else {
+			panic(err)
+		}
+	}
 }

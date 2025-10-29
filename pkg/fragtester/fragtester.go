@@ -298,6 +298,14 @@ func (ft *FragTester) WriteStatistics() (string, error) {
 	return result, nil
 }
 
+func (ft *FragTester) WriteSicv2Endpoints() (string, error) {
+	if len(ft.Inputs) == 0 || len(ft.Outputs) == 0 {
+		return "", fmt.Errorf("cannot create SICv2 endpoints without inputs and outputs")
+	}
+
+	return fmt.Sprintf("i0,o%d", len(ft.Outputs)-1), nil
+}
+
 func (ft *FragTester) CreateMappingFile(filename string) error {
 	ioMap := new(bondmachine.IOmap)
 	ioMap.Assoc = make(map[string]string)
