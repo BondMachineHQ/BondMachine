@@ -123,6 +123,7 @@ func init() {
 	Allopcodes = append(Allopcodes, Rsc{})
 	Allopcodes = append(Allopcodes, Rset{})
 	Allopcodes = append(Allopcodes, Sic{})
+	Allopcodes = append(Allopcodes, Sicv2{})
 	Allopcodes = append(Allopcodes, S2r{})
 	Allopcodes = append(Allopcodes, Saj{})
 	Allopcodes = append(Allopcodes, Sbc{})
