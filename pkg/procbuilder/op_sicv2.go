@@ -31,7 +31,7 @@ func (op Sicv2) Op_show_assembler(arch *Arch) string {
 func (op Sicv2) Op_get_instruction_len(arch *Arch) int {
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
-	return opBits + int(arch.R) + int(inBits) // The bits for the opcode + bits for a register + bits for the input
+	return opBits + int(arch.R) + 2*int(inBits) // The bits for the opcode + bits for a register + bits for two inputs
 }
 
 func (op Sicv2) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
@@ -78,25 +78,20 @@ func (op Sicv2) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 
 			for j := 0; j < int(arch.N); j++ {
 				result += "							" + strings.ToUpper(Get_input_name(j)) + " : begin\n"
-				result += "								if (sic_state == 1'b1)\n"
-				result += "								begin\n"
-				result += "									if (sic_reg == " + strings.ToLower(Get_input_name(j)) + ")\n"
-				result += "									begin\n"
-				result += "										_" + strings.ToLower(Get_register_name(i)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + " + 1'b1;\n"
-				result += "									end\n"
-				result += "									else\n"
-				result += "									begin\n"
-				result += "										sic_state <= #1 1'b0;\n"
-				result += NextInstruction(conf, arch, 9, "_pc + 1'b1")
-				result += "									end\n"
-				result += "								end\n"
-				result += "								else\n"
-				result += "								begin\n"
-				result += "									sic_state <= #1 1'b1;\n"
-				result += "									_" + strings.ToLower(Get_register_name(i)) + " <= #1 0;\n"
-				result += "									sic_reg <= #1 " + strings.ToLower(Get_input_name(j)) + ";\n"
-				result += "								end\n"
-				result += "							$display(\"SIC " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_input_name(j)) + "\");\n"
+				if inBits == 1 {
+					result += "								case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)-1) + "])\n"
+				} else {
+					result += "								case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-2*int(inBits)) + "])\n"
+				}
+				for k := 0; k < int(arch.N); k++ {
+					result += "								" + strings.ToUpper(Get_input_name(k)) + " : begin\n"
+					result += "									_" + strings.ToLower(Get_input_name(k)) + "_recv <= #1 1'b1;\n"
+					result += "								end\n"
+				}
+				result += "								endcase\n"
+
+				// result += NextInstruction(conf, arch, 9, "_pc + 1'b1")
+				result += "								$display(\"SIC " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_input_name(j)) + "\");\n"
 				result += "							end\n"
 
 			}
@@ -117,19 +112,19 @@ func (op Sicv2) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 }
 
 func (op Sicv2) Assembler(arch *Arch, words []string) (string, error) {
-	opbits := arch.Opcodes_bits()
-	inpbits := arch.Inputs_bits()
-	rom_word := arch.Max_word()
+	opBits := arch.Opcodes_bits()
+	inBits := arch.Inputs_bits()
+	romWord := arch.Max_word()
 
-	reg_num := 2
-	reg_num = reg_num << (arch.R - 1)
+	regNum := 2
+	regNum = regNum << (arch.R - 1)
 
-	if len(words) != 2 {
+	if len(words) != 3 {
 		return "", Prerror{"Wrong arguments number"}
 	}
 
 	result := ""
-	for i := 0; i < reg_num; i++ {
+	for i := 0; i < regNum; i++ {
 		if words[0] == strings.ToLower(Get_register_name(i)) {
 			result += zeros_prefix(int(arch.R), get_binary(i))
 			break
@@ -141,12 +136,18 @@ func (op Sicv2) Assembler(arch *Arch, words []string) (string, error) {
 	}
 
 	if partial, err := Process_input(words[1], int(arch.N)); err == nil {
-		result += zeros_prefix(inpbits, partial)
+		result += zeros_prefix(inBits, partial)
 	} else {
 		return "", Prerror{err.Error()}
 	}
 
-	for i := opbits + int(arch.R) + inpbits; i < rom_word; i++ {
+	if partial, err := Process_input(words[2], int(arch.N)); err == nil {
+		result += zeros_prefix(inBits, partial)
+	} else {
+		return "", Prerror{err.Error()}
+	}
+
+	for i := opBits + int(arch.R) + 2*inBits; i < romWord; i++ {
 		result += "0"
 	}
 
@@ -154,15 +155,19 @@ func (op Sicv2) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Sicv2) Disassembler(arch *Arch, instr string) (string, error) {
-	inpbits := arch.Inputs_bits()
-	reg_id := get_id(instr[:arch.R])
-	result := strings.ToLower(Get_register_name(reg_id)) + " "
-	inp_id := get_id(instr[arch.R : int(arch.R)+inpbits])
-	result += strings.ToLower(Get_input_name(inp_id))
+	inBits := arch.Inputs_bits()
+	regId := get_id(instr[:arch.R])
+	result := strings.ToLower(Get_register_name(regId)) + " "
+	inpId1 := get_id(instr[arch.R : int(arch.R)+inBits])
+	result += strings.ToLower(Get_input_name(inpId1)) + " "
+	inpId2 := get_id(instr[int(arch.R)+inBits : int(arch.R)+2*inBits])
+	result += strings.ToLower(Get_input_name(inpId2)) + " "
+
 	return result, nil
 }
 
 func (op Sicv2) Simulate(vm *VM, instr string) error {
+	// TODO: implement me
 	inpbits := vm.Mach.Inputs_bits()
 	reg_bits := vm.Mach.R
 	reg := get_id(instr[:reg_bits])
@@ -175,8 +180,11 @@ func (op Sicv2) Simulate(vm *VM, instr string) error {
 					vm.Registers[reg] = vm.Registers[reg].(uint8) + 1
 				case 16:
 					vm.Registers[reg] = vm.Registers[reg].(uint16) + 1
+				case 32:
+					vm.Registers[reg] = vm.Registers[reg].(uint32) + 1
+				case 64:
+					vm.Registers[reg] = vm.Registers[reg].(uint64) + 1
 				default:
-					// TODO Fix
 				}
 			} else {
 				vm.Extra_states["sic_state"] = false
@@ -190,8 +198,11 @@ func (op Sicv2) Simulate(vm *VM, instr string) error {
 				vm.Registers[reg] = uint8(0)
 			case 16:
 				vm.Registers[reg] = uint16(0)
+			case 32:
+				vm.Registers[reg] = uint32(0)
+			case 64:
+				vm.Registers[reg] = uint64(0)
 			default:
-				// TODO Fix
 			}
 		}
 	} else {
@@ -202,19 +213,22 @@ func (op Sicv2) Simulate(vm *VM, instr string) error {
 			vm.Registers[reg] = uint8(0)
 		case 16:
 			vm.Registers[reg] = uint16(0)
+		case 32:
+			vm.Registers[reg] = uint32(0)
+		case 64:
+			vm.Registers[reg] = uint64(0)
 		default:
-			// TODO Fix
 		}
 	}
 	return nil
 }
 
 func (op Sicv2) Generate(arch *Arch) string {
-	inpbits := arch.Inputs_bits()
-	reg_num := 1 << arch.R
-	reg := rand.Intn(reg_num)
+	inBits := arch.Inputs_bits()
+	regNum := 1 << arch.R
+	reg := rand.Intn(regNum)
 	inp := rand.Intn(int(arch.N))
-	return zeros_prefix(int(arch.R), get_binary(reg)) + zeros_prefix(inpbits, get_binary(inp))
+	return zeros_prefix(int(arch.R), get_binary(reg)) + zeros_prefix(inBits, get_binary(inp))
 }
 
 func (op Sicv2) Required_shared() (bool, []string) {
@@ -256,7 +270,7 @@ func (Op Sicv2) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, er
 	if len(seq0) > 0 && types0 == O_REGISTER && len(seq1) > 0 && types1 == O_INPUT {
 
 		result := make([]UsageNotify, 2+len(seq1))
-		newnot0 := UsageNotify{C_OPCODE, "sic", I_NIL}
+		newnot0 := UsageNotify{C_OPCODE, "sicv2", I_NIL}
 		result[0] = newnot0
 		newnot1 := UsageNotify{C_REGSIZE, S_NIL, len(seq0)}
 		result[1] = newnot1
