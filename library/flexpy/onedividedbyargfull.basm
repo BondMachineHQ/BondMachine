@@ -1,9 +1,9 @@
-;fragtester range numberint intRange(0,10)
+;fragtester
 ;sympy from sympy import *
 ;sympy x = Symbol('x', real=False)
 ;sympy symbols = [x]
 ;sympy testRanges = {'real: x': list(np.arange(-5,5,0.5)),
-;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'imag: x': list(np.arange(-5,5,0.5)),
 ;sympy     'real: y': list(np.arange(-5,5,2)),
 ;sympy     'imag: y': list(np.arange(-5,5,2)),
 ;sympy     }
@@ -11,26 +11,35 @@
 ;sympy     spExpr = 1 / x
 ;
 ;
-; power of a real number (argument) raised to a natural number (immediate value)
-; r0 is the base (real argument)
-; {{ .Params.numberreal }} is the exponent (natural number immediate value)
-%fragment onedividedbyargfull template:true default_exponent:0 default_setop:rset resin:r0 resout:r1 default_prefix:0f
-	{{ .Params.setop }}	r2, {{ .Params.exponent }} ; load the exponent
-	mov     r1, {{ .Params.prefix }}1.0 ; r1 is the result, starts at 1.0
-
-	;mov	r3, {{ .Params.prefix }}2.0
-	;mov     r3, 2	
-
-	; Check if exponent is zero
-	jz	r2, exit
+; one divided by a complex number passed as argument
+; r0 is the real part of the divisor
+; r1 is the imaginary part of the divisor
+; Result: 1/(a+bi) = (a-bi)/(a²+b²) = a/(a²+b²) - bi/(a²+b²)
+%fragment onedividedbyargfull template:true default_setop:rset resin:r0:r1 resout:r0:r1 default_prefix:0f
+	; Save original values
+	cpy	r2, r0 ; r2 = a
+	cpy	r3, r1 ; r3 = b
 	
-loop:
-	{{ .Params.multop }}	r1, r0 ; multiply result by base
-	dec	r2 ; decrement exponent counter
+	; Calculate a²
+	cpy	r4, r0
+	{{ .Params.multop }}	r4, r0 ; r4 = a²
 	
-	jz	r2, exit ; if counter reaches 0, exit
-	j	loop ;
+	; Calculate b²
+	cpy	r5, r1
+	{{ .Params.multop }}	r5, r1 ; r5 = b²
 	
-exit:
+	; Calculate denominator: a² + b²
+	{{ .Params.addop }}	r4, r5 ; r4 = a² + b²
+	
+	; Calculate real part: a / (a² + b²)
+	cpy	r0, r2 ; r0 = a
+	{{ .Params.divop }}	r0, r4 ; r0 = a / (a² + b²)
+	
+	; Calculate imaginary part: -b / (a² + b²)
+	cpy	r1, r3 ; r1 = b
+	{{ .Params.setop }}	r6, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r1, r6 ; r1 = -b
+	{{ .Params.divop }}	r1, r4 ; r1 = -b / (a² + b²)
+	
 	nop	
 %endfragment
