@@ -1,0 +1,24 @@
+;fragtester range numberimag arange(-5,5,2)
+;sympy from sympy import *
+;sympy x = Symbol('x', real=False)
+;sympy symbols = [x]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
+;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = x * {{ .Params.numberimag }}*I
+;
+;
+; product of a complex number passed as argument to an immediate imaginary number
+; r0 is the real part of the argument
+; r1 is the imaginary part of the argument
+; {{ .Params.numberimag }} is the imaginary part of the number to mult
+%fragment multargfullnumimag template:true default_setop:rset resin:r0:r1 resout:r1:r0
+	{{ .Params.setop }}	r2, {{ .Params.prefix }}{{ .Params.numberimag }}
+	{{ .Params.setop }}	r3, {{ .Params.prefix }}-1
+	{{ .Params.multop }}	r1, r2
+	{{ .Params.multop }}	r1, r3
+	{{ .Params.multop }}	r0, r2
+%endfragment

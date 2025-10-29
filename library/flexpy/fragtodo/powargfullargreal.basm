@@ -1,0 +1,8 @@
+;TODO
+; power of a complex number passed as argument to a real number passed as argument
+; r0 is the real part of the first number
+; r1 is the imaginary part of the first number
+; r2 is the real part of the second number
+%fragment powargfullargreal template:true resin:r0:r1:r2 resout:r0:r1
+	{{ .Params.powop }}	r0, r2
+%endfragment

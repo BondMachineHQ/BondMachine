@@ -1,0 +1,77 @@
+;fragtester instance expprec 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
+;sympy from sympy import *
+;sympy x = Symbol('x', real=True)
+;sympy symbols = [x]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,0.1)),
+;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = exp(x * I)  
+;
+;
+; exponential function of imaginary number passed as argument
+; r0 is the imaginary part of the number (the coefficient of i)
+; Result: exp(i*y) = cos(y) + i*sin(y)
+%fragment expargimag template:true default_expprec:20 resin:r0 resout:r1:r0 default_prefix:0f
+	; Initialize for cos(y) calculation (real part)
+	mov     r1, {{ .Params.prefix }}1.0 ; r1 is cos result (real part)
+        mov     r2, {{ .Params.prefix }}1.0 ; r2 is the index for cos
+        mov     r3, {{ .Params.prefix }}1.0 ; r3 is the denominator for cos
+        mov     r4, {{ .Params.prefix }}1.0 ; r4 is the numerator for cos
+        
+	; Initialize for sin(y) calculation (imaginary part)
+	mov     r5, r0 ; r5 is sin result (imaginary part), starts with y
+	mov     r6, {{ .Params.prefix }}2.0 ; r6 is the index for sin (starts at 2 to build 3!)
+	mov     r7, {{ .Params.prefix }}1.0 ; r7 is the denominator for sin
+	mov     r8, r0 ; r8 is the numerator for sin, starts with y
+	
+	mov     r9, {{ .Params.expprec }} ; r9 is the precision counter
+	mov     r10, {{ .Params.prefix }}1.0 ; r10 used for increment
+	mov     r11, {{ .Params.prefix }}1.0 ; r11 is temp for division
+	
+loop:
+	; Compute next cos term: -y^(2n) / (2n)!
+	mov     r12, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r3, r12 ; sign inversion
+	mov     r12, {{ .Params.prefix }}1.0
+	
+	{{ .Params.multop }}	r3, r2 ; factorial progression
+	{{ .Params.multop }}	r4, r0 ; numerator progression
+	{{ .Params.addop }}	r2, r10 ; increment index
+	
+	{{ .Params.multop }}	r3, r2 ; factorial progression (second step)
+	{{ .Params.multop }}	r4, r0 ; numerator progression (second step)
+	{{ .Params.addop }}	r2, r10 ; increment index
+	
+	cpy	r11, r4
+	{{ .Params.divop }}	r11, r3
+	{{ .Params.addop }}	r1, r11 ; add term to cos result
+	
+	; Compute next sin term: -y^(2n+1) / (2n+1)!
+	mov     r12, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r7, r12 ; sign inversion
+	mov     r12, {{ .Params.prefix }}1.0
+	
+	{{ .Params.multop }}	r7, r6 ; factorial progression
+	{{ .Params.multop }}	r8, r0 ; numerator progression
+	{{ .Params.addop }}	r6, r10 ; increment index
+	
+	{{ .Params.multop }}	r7, r6 ; factorial progression (second step)
+	{{ .Params.multop }}	r8, r0 ; numerator progression (second step)
+	{{ .Params.addop }}	r6, r10 ; increment index
+	
+	cpy	r11, r8
+	{{ .Params.divop }}	r11, r7
+	{{ .Params.addop }}	r5, r11 ; add term to sin result
+	
+	dec	r9 ; decrement precision counter
+	jz	r9, exit
+	j	loop
+	
+exit:
+	cpy	r0, r5 ; r0 = sin(y) (imaginary part)
+	; r1 already contains cos(y) (real part)
+	nop	
+%endfragment

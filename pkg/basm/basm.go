@@ -25,39 +25,44 @@ const (
 type BasmInstance struct {
 	*bminfo.BMinfo
 	*bmconfig.BmConfig
-	extra            string
-	verbose          bool
-	debug            bool
-	isWithinMacro    string
-	isWithinSection  string
-	isWithinFragment string
-	isWithinChunk    string
-	isSymbolled      string
-	lineMeta         string
-	macros           map[string]*BasmMacro
-	sections         map[string]*BasmSection
-	fragments        map[string]*BasmFragment
-	chunks           map[string]*BasmChunk
-	symbols          map[string]int64 // -1 for undefined, >=0 for defined and value
-	passes           uint64
-	optimizations    map[int]struct{}
-	matchers         []*bmline.BasmLine
-	dynMatchers      []*bmline.BasmLine
-	matchersOps      []procbuilder.Opcode
-	dynMatcherOps    []procbuilder.DynamicInstruction
-	bm               *bondmachine.Bondmachine
-	result           *bondmachine.Bondmachine
-	outBCOF          *bcof.BCOFEntry
-	rg               *bmreqs.ReqRoot
-	global           *bmline.BasmElement
-	cps              []*bmline.BasmElement
-	sos              []*bmline.BasmElement
-	ios              []*bmline.BasmElement
-	ioAttach         []*bmline.BasmElement
-	soAttach         []*bmline.BasmElement
-	fis              []*bmline.BasmElement // Fragment instances
-	fiLinks          []*bmline.BasmElement // Fragment links
-	fiLinkAttach     []*bmline.BasmElement // Fragment link attachments
+	extra                 string
+	verbose               bool
+	debug                 bool
+	isClustered           bool
+	clusteredBondMachines []string
+	clusteredNames        map[string]int
+	clusteredMaps         []*bondmachine.IOmap
+	cluster               *Cluster
+	isWithinMacro         string
+	isWithinSection       string
+	isWithinFragment      string
+	isWithinChunk         string
+	isSymbolled           string
+	lineMeta              string
+	macros                map[string]*BasmMacro
+	sections              map[string]*BasmSection
+	fragments             map[string]*BasmFragment
+	chunks                map[string]*BasmChunk
+	symbols               map[string]int64 // -1 for undefined, >=0 for defined and value
+	passes                uint64
+	optimizations         map[int]struct{}
+	matchers              []*bmline.BasmLine
+	dynMatchers           []*bmline.BasmLine
+	matchersOps           []procbuilder.Opcode
+	dynMatcherOps         []procbuilder.DynamicInstruction
+	bm                    *bondmachine.Bondmachine
+	result                *bondmachine.Bondmachine
+	outBCOF               *bcof.BCOFEntry
+	rg                    *bmreqs.ReqRoot
+	global                *bmline.BasmElement
+	cps                   []*bmline.BasmElement
+	sos                   []*bmline.BasmElement
+	ios                   []*bmline.BasmElement
+	ioAttach              []*bmline.BasmElement
+	soAttach              []*bmline.BasmElement
+	fis                   []*bmline.BasmElement // Fragment instances
+	fiLinks               []*bmline.BasmElement // Fragment links
+	fiLinkAttach          []*bmline.BasmElement // Fragment link attachments
 }
 
 // Sections and Macros
@@ -122,6 +127,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		passCallResolver |
 		passMacroResolver |
 		// passTemplateFinalizer |
+		passClusterChecker |
 		0
 
 	bi.matchers = make([]*bmline.BasmLine, 0)
@@ -220,6 +226,12 @@ func (bi *BasmInstance) RunAssembler() error {
 					fmt.Println(purple("Phase "+strconv.Itoa(i+1)) + ": " + red(names[step], " completed"))
 					fmt.Println(purple("Post phase "+strconv.Itoa(i+1)) + " " + bi.String())
 				}
+			}
+			if bi.isClustered {
+				if bi.debug {
+					fmt.Println(purple("Detected clustering, skipping remaining passes and moving to the cluster workflow"))
+				}
+				break
 			}
 		} else {
 			if bi.debug {

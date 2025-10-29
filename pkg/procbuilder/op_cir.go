@@ -189,9 +189,16 @@ func (Op Cir) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 }
 func (Op Cir) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
+	result = append(result, "cir::*--type=reg")
 	return result
 }
 func (Op Cir) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+	switch line.Operation.GetValue() {
+	case "cir":
+		regNeed := line.Elements[0].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		return line, nil
+	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
 func (Op Cir) ExtraFiles(arch *Arch) ([]string, []string) {

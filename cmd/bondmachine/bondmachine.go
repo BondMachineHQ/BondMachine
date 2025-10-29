@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bcof"
+	"github.com/BondMachineHQ/BondMachine/pkg/bmcluster"
 	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
@@ -117,8 +118,8 @@ var simReport = flag.String("sim-report", "", "Simulation report file")
 var emu = flag.Bool("emu", false, "Emulate bond machine")
 var emu_interactions = flag.Int("emu-interactions", 10, "Emulation interaction (0 means forever)")
 
-var cluster_spec = flag.String("cluster-spec", "", "Etherbond or udpbond cluster Spec File ")
-var peer_id = flag.Int("peer-id", -1, "Etherbond or udpbond Peer ID")
+var clusterSpec = flag.String("cluster-spec", "", "Cluster Spec File ")
+var peerID = flag.Int("peer-id", -1, "Peer ID of the BondMachine within the cluster")
 
 var use_etherbond = flag.Bool("use-etherbond", false, "Build including etherbond support")
 var etherbond_flavor = flag.String("etherbond-flavor", "enc60j28", "Choose the type of ethernet device. currently supported: enc60j28.")
@@ -127,14 +128,14 @@ var etherbond_macfile = flag.String("etherbond-macfile", "", "File mapping the b
 
 var use_udpbond = flag.Bool("use-udpbond", false, "Build including udpbond support")
 var udpbond_flavor = flag.String("udpbond-flavor", "esp8266", "Choose the type of network device. currently supported: esp8266.")
-var bondirectMapfile = flag.String("udpbond-mapfile", "", "File mapping the bondmachine IO the udpbond.")
+var udpbondMapfile = flag.String("udpbond-mapfile", "", "File mapping the bondmachine IO the udpbond.")
 var udpbond_ipfile = flag.String("udpbond-ipfile", "", "File mapping the bondmachine peers to IP addresses.")
 var udpbond_netconfig = flag.String("udpbond-netconfig", "", "JSON file containing the network configuration for udpbond")
 
-var use_bondirect = flag.Bool("use-bondirect", false, "Build including bondirect support")
-var bondirect_flavor = flag.String("bondirect-flavor", "basic", "Choose the type of bondirect device. currently supported: basic.")
+var useBondirect = flag.Bool("use-bondirect", false, "Build including bondirect support")
+var bondirectFlavor = flag.String("bondirect-flavor", "basic", "Choose the type of bondirect device. currently supported: basic.")
+var bondirectMapfile = flag.String("bondirect-mapfile", "", "File mapping the bondmachine IO the bondirect.")
 var bondirectMesh = flag.String("bondirect-mesh", "", "Bondirect mesh File ")
-var bondirect_mapfile = flag.String("bondirect-mapfile", "", "File mapping the bondmachine IO the bondirect.")
 
 var usebmapi = flag.Bool("use-bmapi", false, "Build a BMAPI interface")
 var bmapiLanguage = flag.String("bmapi-language", "go", "Choose BMAPI language (go,c,python)")
@@ -153,11 +154,19 @@ var bmapiDataType = flag.String("bmapi-data-type", "float32", "Data type for the
 var board_slow = flag.Bool("board-slow", false, "Board slow support")
 var board_slow_factor = flag.Int("board-slow-factor", 1, "Board slow factor")
 
+var counter = flag.Bool("counter", false, "Counter support")
+var counterMap = flag.String("counter-map", "", "Counter mappings")
+var counterSlowFactor = flag.String("counter-slow-factor", "23", "Counter slow factor")
+
 var uart = flag.Bool("uart", false, "UART support")
 var uartMapFile = flag.String("uart-mapfile", "", "UART mappings")
 
 var basys3_7segment = flag.Bool("basys3-7segment", false, "Basys3 7 segments display support")
 var basys3_7segment_map = flag.String("basys3-7segment-map", "", "Basys3 7 segments display mappings")
+
+var basys3Leds = flag.Bool("basys3-leds", false, "Basys3 leds support")
+var basys3LedsMap = flag.String("basys3-leds-map", "", "Basys3 leds mappings")
+var basys3LedsName = flag.String("basys3-leds-name", "led", "Basys3 leds name")
 
 var iceBreakerLeds = flag.Bool("icebreaker-leds", false, "Icebreaker leds support")
 var iceBreakerLedsMap = flag.String("icebreaker-leds-map", "", "Icebreaker leds mappings")
@@ -360,8 +369,8 @@ func main() {
 				ethb.Config = config
 				ethb.Flavor = *etherbond_flavor
 
-				if *cluster_spec != "" {
-					if cluster, err := etherbond.UnmarshallCluster(config, *cluster_spec); err != nil {
+				if *clusterSpec != "" {
+					if cluster, err := bmcluster.UnmarshalCluster(*clusterSpec); err != nil {
 						panic(err)
 					} else {
 						ethb.Cluster = cluster
@@ -397,8 +406,8 @@ func main() {
 
 				ethb.Macs = macmap
 				ethb.Maps = ethiomap
-				ethb.PeerID = uint32(*peer_id)
-				ethb.Mac = "0288" + fmt.Sprintf("%08d", *peer_id)
+				ethb.PeerID = uint32(*peerID)
+				ethb.Mac = "0288" + fmt.Sprintf("%08d", *peerID)
 
 				if err := ethb.Check(bmach); err != nil {
 					panic(err)
@@ -416,8 +425,8 @@ func main() {
 				udpb.Config = config
 				udpb.Flavor = *udpbond_flavor
 
-				if *cluster_spec != "" {
-					if cluster, err := udpbond.UnmarshallCluster(config, *cluster_spec); err != nil {
+				if *clusterSpec != "" {
+					if cluster, err := udpbond.UnmarshallCluster(config, *clusterSpec); err != nil {
 						panic(err)
 					} else {
 						udpb.Cluster = cluster
@@ -427,8 +436,8 @@ func main() {
 				}
 
 				ethiomap := new(bondmachine.IOmap)
-				if *bondirectMapfile != "" {
-					if mapfile_json, err := os.ReadFile(*bondirectMapfile); err == nil {
+				if *udpbondMapfile != "" {
+					if mapfile_json, err := os.ReadFile(*udpbondMapfile); err == nil {
 						if err := json.Unmarshal([]byte(mapfile_json), ethiomap); err != nil {
 							panic(err)
 						}
@@ -465,8 +474,8 @@ func main() {
 				udpb.NetParams = netparams
 				udpb.Ips = macmap
 				udpb.Maps = ethiomap
-				udpb.PeerID = uint32(*peer_id)
-				if ipst, ok := macmap.Assoc["peer_"+strconv.Itoa(*peer_id)]; ok {
+				udpb.PeerID = uint32(*peerID)
+				if ipst, ok := macmap.Assoc["peer_"+strconv.Itoa(*peerID)]; ok {
 					ip := strings.Split(ipst, "/")[0]
 					port := strings.Split(ipst, ":")[1]
 					udpb.Ip = ip
@@ -484,17 +493,19 @@ func main() {
 				extramodules = append(extramodules, udpb)
 			}
 
-			if *use_bondirect {
+			if *useBondirect {
 				bdir := new(bondmachine.Bondirect_extra)
 
 				config := new(bondirect.Config)
 				config.Rsize = uint8(*register_size)
+				bdir.BondirectElement = new(bondirect.BondirectElement)
 
 				bdir.Config = config
-				bdir.Flavor = *bondirect_flavor
+				bdir.Flavor = *bondirectFlavor
+				bdir.PeerID = uint32(*peerID)
 
-				if *cluster_spec != "" {
-					if cluster, err := bondirect.UnmarshallCluster(config, *cluster_spec); err != nil {
+				if *clusterSpec != "" {
+					if cluster, err := bmcluster.UnmarshalCluster(*clusterSpec); err != nil {
 						panic(err)
 					} else {
 						bdir.Cluster = cluster
@@ -504,7 +515,7 @@ func main() {
 				}
 
 				if *bondirectMesh != "" {
-					if mesh, err := bondirect.UnmarshallMesh(config, *bondirectMesh); err != nil {
+					if mesh, err := bondirect.UnmarshalMesh(config, *bondirectMesh); err != nil {
 						panic(err)
 					} else {
 						bdir.Mesh = mesh
@@ -518,6 +529,8 @@ func main() {
 					if mapfileJSON, err := os.ReadFile(*bondirectMapfile); err == nil {
 						if err := json.Unmarshal([]byte(mapfileJSON), bmdirmap); err != nil {
 							panic(err)
+						} else {
+							bdir.Maps = bmdirmap
 						}
 					} else {
 						panic(err)
@@ -527,23 +540,22 @@ func main() {
 					panic(errors.New("bondirect mapfile needed"))
 				}
 
-				//
-				//				udpb.PeerID = uint32(*peer_id)
-				//				if ipst, ok := macmap.Assoc["peer_"+strconv.Itoa(*peer_id)]; ok {
-				//					ip := strings.Split(ipst, "/")[0]
-				//					port := strings.Split(ipst, ":")[1]
-				//					udpb.Ip = ip
-				//					udpb.Port = port
-				//					_, nip, _ := net.ParseCIDR(strings.Split(ipst, ":")[0])
-				//					brd, _ := lastAddr(nip)
-				//					udpb.Broadcast = brd.String()
-				//					//udpb.Netmask = nip.String()
-				//				} else {
-				//					panic(errors.New("Wrong IP"))
-				//				}
-				//				if err := udpb.Check(bmach); err != nil {
-				//					panic(err)
-				//				}
+				// Peer name taken from the mesh
+				for _, peer := range bdir.Cluster.Peers {
+					if peer.PeerId == bdir.PeerID {
+						bdir.PeerName, _ = bdir.AnyNameToMeshName(peer.PeerName)
+						break
+					}
+				}
+
+				clusterNodeName, err := bdir.BondirectElement.AnyNameToClusterName(bdir.PeerName)
+				if err != nil {
+					panic(err)
+				}
+				bdir.BondirectElement.InitTData()
+				bdir.BondirectElement.PopulateIOData(clusterNodeName)
+				bdir.BondirectElement.PopulateWireData(clusterNodeName)
+
 				extramodules = append(extramodules, bdir)
 			}
 
@@ -606,6 +618,29 @@ func main() {
 				b37s := new(bondmachine.B37s)
 				b37s.Mapped_output = *basys3_7segment_map
 				extramodules = append(extramodules, b37s)
+			}
+
+			if *basys3Leds {
+				b3l := new(bondmachine.Basys3Leds)
+				b3l.MappedOutput = *basys3LedsMap
+				b3l.LedName = *basys3LedsName
+				if *register_size > 16 {
+					panic(errors.New("Basys3 leds can be mapped to a maximum of 16 bits"))
+				}
+				b3l.Width = strconv.Itoa(*register_size)
+				extramodules = append(extramodules, b3l)
+
+			}
+
+			if *counter {
+				cnt := new(bondmachine.CounterExtra)
+				cnt.MappedInput = *counterMap
+				cnt.SlowFactor = *counterSlowFactor
+				cnt.Width = strconv.Itoa(*register_size - 1)
+				if err := cnt.Check(bmach); err != nil {
+					panic(err)
+				}
+				extramodules = append(extramodules, cnt)
 			}
 
 			if *iceBreakerLeds {

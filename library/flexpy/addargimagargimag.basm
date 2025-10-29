@@ -1,4 +1,16 @@
-; addition of two immaginary numbers passed as arguments
+;fragtester
+;sympy from sympy import *
+;sympy x = Symbol('x', real=True)
+;sympy y = Symbol('y', real=True)
+;sympy symbols = [x,y]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
+;sympy     'imag: x': list(np.arange(-5,5,2)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = im(x * I + y * I)
+;; addition of two immaginary numbers passed as arguments
 ; r0 is the immaginary part of the first number
 ; r1 is the immaginary part of the second number
 %fragment addargimagargimag template:true resin:r0:r1 resout:r0
