@@ -188,6 +188,7 @@ var ps2keyboardIoMap = flag.String("ps2-keyboard-io-map", "", "PS2 Keyboard via 
 var ps2keyboard = flag.Bool("ps2-keyboard", false, "PS2 Keyboard support via SO")
 
 var attach_benchmark_core string_slice
+var attachBenchmarkCoreV2 string_slice
 
 var bmInfoFile = flag.String("bminfo-file", "", "File containing the bondmachine extra info")
 var bmRequirementsFile = flag.String("bmrequirements-file", "", "File containing the bondmachine requirements")
@@ -215,6 +216,7 @@ func init() {
 	flag.Var(&connect_processor_shared_object, "connect-processor-shared-object", "Connect a processor to a shared object")
 	flag.Var(&disconnect_processor_shared_object, "disconnect-processor-shared-object", "Disconnect a processor from a shared object")
 	flag.Var(&attach_benchmark_core, "attach-benchmark-core", "Attach a benchmark core")
+	flag.Var(&attachBenchmarkCoreV2, "attach-benchmark-core-v2", "Attach a benchmark core v2")
 
 	flag.Parse()
 
@@ -326,6 +328,11 @@ func main() {
 
 		if &attach_benchmark_core != nil && len(attach_benchmark_core) == 2 {
 			err := bmach.Attach_benchmark_core(attach_benchmark_core)
+			check(err)
+		}
+
+		if &attachBenchmarkCoreV2 != nil && len(attachBenchmarkCoreV2) == 2 {
+			err := bmach.AttachBenchmarkCoreV2(attachBenchmarkCoreV2)
 			check(err)
 		}
 

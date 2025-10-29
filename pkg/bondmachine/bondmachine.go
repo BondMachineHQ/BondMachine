@@ -677,6 +677,73 @@ func (bmach *Bondmachine) Attach_benchmark_core(endpoints []string) error {
 	return nil
 }
 
+func (bmach *Bondmachine) AttachBenchmarkCoreV2(endpoints []string) error {
+	var e0 string
+	var e1 string
+
+	for _, outp := range bmach.Internal_outputs {
+		if outp.String() == endpoints[0] {
+			e0 = endpoints[0]
+		}
+		if outp.String() == endpoints[1] {
+			e1 = endpoints[1]
+		}
+	}
+
+	if e0 != "" && e1 != "" {
+		mybcore := new(procbuilder.Machine)
+
+		myarch := &mybcore.Arch
+
+		myarch.Rsize = uint8(bmach.Rsize)
+
+		myarch.Modes = make([]string, 1)
+		myarch.Modes[0] = "ha"
+
+		opcodes := make([]procbuilder.Opcode, 0)
+
+		for _, op := range procbuilder.Allopcodes {
+			for _, opn := range []string{"sicv2", "r2o", "j"} {
+				if opn == op.Op_get_name() {
+					opcodes = append(opcodes, op)
+					break
+				}
+			}
+		}
+
+		sort.Sort(procbuilder.ByName(opcodes))
+
+		myarch.Op = opcodes
+
+		myarch.R = uint8(1)
+		myarch.L = uint8(0)
+		myarch.N = uint8(2)
+		myarch.M = uint8(1)
+		myarch.O = uint8(2)
+		myarch.Shared_constraints = ""
+
+		prog := "sicv2 r0 i0 i1\nr2o r0 o0\nj 0\n"
+
+		if prog, err := myarch.Assembler([]byte(prog)); err == nil {
+			mybcore.Program = prog
+		} else {
+			fmt.Println(err)
+		}
+
+		bmach.Domains = append(bmach.Domains, mybcore)
+		bmach.Add_processor(len(bmach.Domains) - 1)
+		newpnum := strconv.Itoa(len(bmach.Processors) - 1)
+		bmach.Add_bond([]string{"p" + newpnum + "i0", e0})
+		bmach.Add_bond([]string{"p" + newpnum + "i1", e1})
+		bmach.Add_output()
+		newonum := strconv.Itoa(bmach.Outputs - 1)
+		bmach.Add_bond([]string{"p" + newpnum + "o0", "o" + newonum})
+	} else {
+		return Prerror{"Benchmark core endpoints has to be internal outputs"}
+	}
+	return nil
+}
+
 func (bmach *Bondmachine) Dot(conf *Config, prefix string, vm *VM, oldvmstate *VM) string {
 	// TODO Finish the layout building
 	result := ""
