@@ -17,7 +17,7 @@ type FragTester struct {
 	DataType      string
 	TypePrefix    string
 	Params        map[string]string
-	Ranges        map[string][]float32
+	Ranges        map[string][]string
 	Instances     map[string][]string
 	Vars          []string
 	OpString      string
@@ -37,7 +37,7 @@ func NewFragTester() *FragTester {
 		DataType:      "float32",
 		TypePrefix:    "0f",
 		Params:        make(map[string]string),
-		Ranges:        make(map[string][]float32),
+		Ranges:        make(map[string][]string),
 		Instances:     make(map[string][]string),
 		Vars:          make([]string, 0),
 		OpString:      "",
@@ -69,9 +69,24 @@ func (ft *FragTester) AnalyzeFragment(fragment string) error {
 			fromF, _ := strconv.ParseFloat(from, 32)
 			toF, _ := strconv.ParseFloat(to, 32)
 			stepF, _ := strconv.ParseFloat(step, 32)
-			ft.Ranges[param] = make([]float32, 0)
+			ft.Ranges[param] = make([]string, 0)
 			for i := fromF; i < toF; i += stepF {
-				ft.Ranges[param] = append(ft.Ranges[param], float32(i))
+				ft.Ranges[param] = append(ft.Ranges[param], fmt.Sprintf("%f", i))
+			}
+			ft.Vars = append(ft.Vars, param)
+			continue
+		}
+		re = regexp.MustCompile(`^;fragtester\s+range\s+(?P<param>\w+)\s+(?P<seq>\S+)$`)
+		if re.MatchString(line) {
+			param := re.ReplaceAllString(line, "${param}")
+			seq := re.ReplaceAllString(line, "${seq}")
+			ft.Ranges[param] = make([]string, 0)
+			for _, v := range strings.Split(seq, ",") {
+				v = strings.TrimSpace(v)
+				if v == "" {
+					continue
+				}
+				ft.Ranges[param] = append(ft.Ranges[param], v)
 			}
 			ft.Vars = append(ft.Vars, param)
 			continue
@@ -174,7 +189,7 @@ func (ft *FragTester) ApplySequence(seq int) {
 
 	for i, v := range ft.Vars {
 		if _, ok := ft.Ranges[v]; ok {
-			ft.Params[v] = fmt.Sprintf("%f", ft.Ranges[v][pos[i]])
+			ft.Params[v] = ft.Ranges[v][pos[i]]
 			ft.OpString += fmt.Sprintf(", %s:%s", v, ft.Params[v])
 		}
 		if _, ok := ft.Instances[v]; ok {
@@ -232,9 +247,9 @@ func (ft *FragTester) DescribeFragment() {
 		fmt.Printf("  %s: ", param)
 		for i, v := range rng {
 			if i == len(rng)-1 {
-				fmt.Printf("%f", v)
+				fmt.Printf("%s", v)
 			} else {
-				fmt.Printf("%f, ", v)
+				fmt.Printf("%s, ", v)
 			}
 		}
 		fmt.Printf("\n")
