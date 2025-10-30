@@ -54,3 +54,7 @@ type ByName []Opcode
 func (op ByName) Len() int           { return len(op) }
 func (op ByName) Swap(i, j int)      { op[i], op[j] = op[j], op[i] }
 func (op ByName) Less(i, j int) bool { return op[i].Op_get_name() < op[j].Op_get_name() }
+
+var unique = map[string][]string{
+	"cmpflag": []string{"cmpr", "cmprlt", "cmpv", "jcmpl", "jcmpo", "jcmpa", "jcmprio", "jcmpria", "jncmpl", "jncmpo", "jncmpa", "jncmprio", "jncmpria"},
+}
