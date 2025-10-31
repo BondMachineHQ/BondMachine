@@ -2,7 +2,8 @@
 ;sympy from sympy import *
 ;sympy x = Symbol('x', real=True)
 ;sympy symbols = [x]
-;sympy testRanges = {'real: x': list(np.arange(-5,5,0.5)),
+;sympy a=np.arange(-5,5,0.5)
+;sympy testRanges = {'real: x': list(a[a != 0]),
 ;sympy     'imag: x': list(np.arange(-5,5,2)),
 ;sympy     'real: y': list(np.arange(-5,5,2)),
 ;sympy     'imag: y': list(np.arange(-5,5,2)),
