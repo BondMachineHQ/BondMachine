@@ -257,7 +257,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		}
 	}
 
-	// Set the internal outputs registers and the relative data valid signals
+	// Set the internal outputs registers and the relative data valid signal, for the BM inputs
 	for i, bond := range vm.Bmach.Internal_outputs {
 		switch bond.Map_to {
 		case BMINPUT:
@@ -310,17 +310,17 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		}
 	}
 
-	if sc != nil {
-		if sc.Show_io_pre {
-			result += "\tPre-compute IO: " + vm.DumpIO() + "\n"
-		}
-	}
-
 	// Transfer internal outputd data received to their destination in the processors
 	for i, bond := range vm.Bmach.Internal_outputs {
 		switch bond.Map_to {
 		case CPOUTPUT:
 			vm.Processors[bond.Res_id].OutputsRecv[bond.Ext_id] = vm.InternalOutputsRecv[i]
+		}
+	}
+
+	if sc != nil {
+		if sc.Show_io_pre {
+			result += "\tPre-compute IO: " + vm.DumpIO() + "\n"
 		}
 	}
 
@@ -402,6 +402,7 @@ func (vm *VM) DumpIO() string {
 		} else {
 			result = result + "ERROR, Rsize not supported, only <= 64 bits"
 		}
+		result += "(v:" + strconv.FormatBool(vm.InputsValid[i]) + " r:" + strconv.FormatBool(vm.InputsRecv[i]) + ") "
 	}
 	for i, reg := range vm.Outputs_regs {
 		if vm.Bmach.Rsize <= 8 {
@@ -415,6 +416,7 @@ func (vm *VM) DumpIO() string {
 		} else {
 			result = result + "ERROR, Rsize not supported, only <= 64 bits"
 		}
+		result += "(v:" + strconv.FormatBool(vm.OutputsValid[i]) + " r:" + strconv.FormatBool(vm.OutputsRecv[i]) + ") "
 	}
 	return result
 }
