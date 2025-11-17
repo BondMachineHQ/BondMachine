@@ -81,8 +81,8 @@ type Bondmachine struct {
 	Inputs  int
 	Outputs int
 
-	Internal_inputs  []Bond // These are what internally in considered and input, i.e. Processors inputs and Shell outputs, lets say they are N
-	Internal_outputs []Bond // These are what internally in considered and output, i.e. Processors outputs and Shell inputs, lets say they are M
+	Internal_inputs  []Bond // These are what internally is considered an input, i.e. Processors inputs and Shell outputs, lets say they are N
+	Internal_outputs []Bond // These are what internally is considered an output, i.e. Processors outputs and Shell inputs, lets say they are M
 
 	Links []int // Is the link matrix for Internal_inputs that may be connected only to one Internal_output (they are N!). A value of -1 means the input is unconnected, otherwise it points to the Internal_output id
 

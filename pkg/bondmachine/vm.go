@@ -10,6 +10,8 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/simbox"
 )
 
+type DeferredInstruction func(*VM) bool
+
 type VM struct {
 	Bmach                 *Bondmachine
 	Processors            []*procbuilder.VM
@@ -27,6 +29,8 @@ type VM struct {
 	OutputsRecv         []bool
 	InternalInputsRecv  []bool
 	InternalOutputsRecv []bool
+
+	DeferredInstructions []DeferredInstruction
 
 	EmuDrivers []EmuDriver
 	cmdChan    chan []byte
@@ -250,6 +254,7 @@ func (vm *VM) Launch_processors(s *simbox.Simbox) error {
 func (vm *VM) Step(sc *Sim_config) (string, error) {
 
 	result := ""
+	debug := true
 
 	if sc != nil {
 		if sc.Show_ticks {
@@ -257,10 +262,23 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		}
 	}
 
+	if sc != nil {
+		if sc.Show_io_pre {
+			result += "\tPre-compute IO: " + vm.DumpIO() + "\n"
+		}
+	}
+
+	if debug {
+		result += "\tPre-compute data movement:\n"
+	}
 	// Set the internal outputs registers and the relative data valid signal, for the BM inputs
 	for i, bond := range vm.Bmach.Internal_outputs {
 		switch bond.Map_to {
 		case BMINPUT:
+			if debug {
+				iin, _ := vm.Bmach.GetInternalOutputName(i)
+				result += "\t\tBM Input: " + strconv.Itoa(bond.Res_id) + "(data,valid) -> internal output: " + iin + "(data,valid)\n"
+			}
 			vm.Internal_outputs_regs[i] = vm.Inputs_regs[bond.Res_id]
 			vm.InternalOutputsValid[i] = vm.InputsValid[bond.Res_id]
 		}
@@ -269,6 +287,11 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	// Transfer to the internal inputs registers and the relative data valids the previous outputs according the links
 	for i, j := range vm.Bmach.Links {
 		if j != -1 {
+			if debug {
+				iin, _ := vm.Bmach.GetInternalInputName(i)
+				iout, _ := vm.Bmach.GetInternalOutputName(j)
+				result += "\t\tinternal output: " + iout + "(data,valid) -> internal input: " + iin + "(data,valid)\n"
+			}
 			vm.Internal_inputs_regs[i] = vm.Internal_outputs_regs[j]
 			vm.InternalInputsValid[i] = vm.InternalOutputsValid[j]
 		}
@@ -278,6 +301,10 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	for i, bond := range vm.Bmach.Internal_inputs {
 		switch bond.Map_to {
 		case CPINPUT:
+			if debug {
+				iin, _ := vm.Bmach.GetInternalInputName(i)
+				result += "\t\tinternal input: " + iin + "(data,valid) -> CP Input: " + strconv.Itoa(bond.Res_id) + "(data,valid)\n"
+			}
 			vm.Processors[bond.Res_id].Inputs[bond.Ext_id] = vm.Internal_inputs_regs[i]
 			vm.Processors[bond.Res_id].InputsValid[bond.Ext_id] = vm.InternalInputsValid[i]
 		}
@@ -315,12 +342,6 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		switch bond.Map_to {
 		case CPOUTPUT:
 			vm.Processors[bond.Res_id].OutputsRecv[bond.Ext_id] = vm.InternalOutputsRecv[i]
-		}
-	}
-
-	if sc != nil {
-		if sc.Show_io_pre {
-			result += "\tPre-compute IO: " + vm.DumpIO() + "\n"
 		}
 	}
 

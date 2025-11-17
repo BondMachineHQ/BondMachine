@@ -204,10 +204,12 @@ func (op I2rw) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op I2rw) Simulate(vm *VM, instr string) error {
-	inpbits := vm.Mach.Inputs_bits()
-	reg_bits := vm.Mach.R
-	reg := get_id(instr[:reg_bits])
-	inp := get_id(instr[reg_bits : int(reg_bits)+inpbits])
+	// "reference": {"support_gosim": "ok"}
+	inBits := vm.Mach.Inputs_bits()
+	regBits := vm.Mach.R
+	reg := get_id(instr[:regBits])
+	inp := get_id(instr[regBits : int(regBits)+inBits])
+	// fmt.Println("Entering I2RW", vm.InputsValid[inp], vm.InputsRecv[inp])
 	if vm.InputsValid[inp] {
 		vm.Registers[reg] = vm.Inputs[inp]
 		vm.InputsRecv[inp] = true
@@ -215,6 +217,7 @@ func (op I2rw) Simulate(vm *VM, instr string) error {
 	} else {
 		vm.InputsRecv[inp] = false
 	}
+
 	return nil
 }
 

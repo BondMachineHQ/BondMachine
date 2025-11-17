@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -9,6 +10,13 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmmeta"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
+)
+
+const (
+	SICV2SM_IDLE = uint8(0) + iota
+	SICV2SM_WAIT
+	SICV2SM_COUNT
+	SICV2SM_DONE
 )
 
 type Sicv2 struct{}
@@ -107,11 +115,11 @@ func (op Sicv2) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, r
 }
 
 func (op Sicv2) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
-	// TODO
 	return ""
 }
 
 func (op Sicv2) Assembler(arch *Arch, words []string) (string, error) {
+	// reference: {"support_asm": "ok"}
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
 	romWord := arch.Max_word()
@@ -155,6 +163,7 @@ func (op Sicv2) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Sicv2) Disassembler(arch *Arch, instr string) (string, error) {
+	// reference: {"support_asm": "ok"}
 	inBits := arch.Inputs_bits()
 	regId := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(regId)) + " "
@@ -167,32 +176,37 @@ func (op Sicv2) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Sicv2) Simulate(vm *VM, instr string) error {
-	// TODO: implement me
-	inpbits := vm.Mach.Inputs_bits()
-	reg_bits := vm.Mach.R
-	reg := get_id(instr[:reg_bits])
-	inp := get_id(instr[reg_bits : int(reg_bits)+inpbits])
-	if sic_state, ok := vm.Extra_states["sic_state"]; ok {
-		if sic_state == true {
-			if vm.Extra_states["sic_reg"] == vm.Inputs[inp] {
-				switch vm.Mach.Rsize {
-				case 8:
-					vm.Registers[reg] = vm.Registers[reg].(uint8) + 1
-				case 16:
-					vm.Registers[reg] = vm.Registers[reg].(uint16) + 1
-				case 32:
-					vm.Registers[reg] = vm.Registers[reg].(uint32) + 1
-				case 64:
-					vm.Registers[reg] = vm.Registers[reg].(uint64) + 1
-				default:
-				}
-			} else {
-				vm.Extra_states["sic_state"] = false
-				vm.Pc = vm.Pc + 1
-			}
+	inBits := vm.Mach.Inputs_bits()
+	regBits := vm.Mach.R
+	reg := get_id(instr[:regBits])
+	in0 := get_id(instr[regBits : int(regBits)+inBits])
+	in1 := get_id(instr[int(regBits)+inBits : int(regBits)+2*inBits])
+
+	i0Valid := vm.InputsValid[in0]
+	i1Valid := vm.InputsValid[in1]
+
+	var sicv2State uint8
+	if state, ok := vm.Extra_states["sicv2_state"]; ok {
+		sicv2State = state.(uint8)
+	} else {
+		vm.Extra_states["sicv2_state"] = SICV2SM_WAIT
+		sicv2State = SICV2SM_WAIT
+	}
+
+	fmt.Println(sicv2State)
+
+	switch sicv2State {
+	case SICV2SM_IDLE:
+		if !i0Valid {
+			vm.InputsRecv[in0] = false
 		} else {
-			vm.Extra_states["sic_state"] = true
-			vm.Extra_states["sic_reg"] = vm.Inputs[inp]
+			vm.Extra_states["sicv2_state"] = SICV2SM_WAIT
+			vm.InputsRecv[in0] = true
+		}
+	case SICV2SM_WAIT:
+		if !i0Valid {
+			vm.InputsRecv[in0] = false
+			vm.Extra_states["sicv2_state"] = SICV2SM_COUNT
 			switch vm.Mach.Rsize {
 			case 8:
 				vm.Registers[reg] = uint8(0)
@@ -203,21 +217,33 @@ func (op Sicv2) Simulate(vm *VM, instr string) error {
 			case 64:
 				vm.Registers[reg] = uint64(0)
 			default:
+				return errors.New("go simulation only works on 8,16,32 or 64 bits registers")
 			}
 		}
-	} else {
-		vm.Extra_states["sic_state"] = true
-		vm.Extra_states["sic_reg"] = vm.Inputs[inp]
-		switch vm.Mach.Rsize {
-		case 8:
-			vm.Registers[reg] = uint8(0)
-		case 16:
-			vm.Registers[reg] = uint16(0)
-		case 32:
-			vm.Registers[reg] = uint32(0)
-		case 64:
-			vm.Registers[reg] = uint64(0)
-		default:
+	case SICV2SM_COUNT:
+		if !i1Valid {
+			vm.InputsRecv[in1] = false
+			switch vm.Mach.Rsize {
+			case 8:
+				vm.Registers[reg] = vm.Registers[reg].(uint8) + 1
+			case 16:
+				vm.Registers[reg] = vm.Registers[reg].(uint16) + 1
+			case 32:
+				vm.Registers[reg] = vm.Registers[reg].(uint32) + 1
+			case 64:
+				vm.Registers[reg] = vm.Registers[reg].(uint64) + 1
+			default:
+				return errors.New("go simulation only works on 8,16,32 or 64 bits registers")
+			}
+		} else {
+			vm.Extra_states["sicv2_state"] = SICV2SM_DONE
+			vm.InputsRecv[in1] = true
+		}
+	case SICV2SM_DONE:
+		if !i1Valid {
+			vm.InputsRecv[in1] = false
+			vm.Pc = vm.Pc + 1
+			vm.Extra_states["sicv2_state"] = SICV2SM_IDLE
 		}
 	}
 	return nil

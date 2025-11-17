@@ -215,10 +215,11 @@ func (op R2owa) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op R2owa) Simulate(vm *VM, instr string) error {
-	outbits := vm.Mach.Outputs_bits()
-	reg_bits := vm.Mach.R
-	reg := get_id(instr[:reg_bits])
-	inp := get_id(instr[reg_bits : int(reg_bits)+outbits])
+	// "reference": {"support_gosim":"ok"}
+	outBits := vm.Mach.Outputs_bits()
+	regBits := vm.Mach.R
+	reg := get_id(instr[:regBits])
+	inp := get_id(instr[regBits : int(regBits)+outBits])
 	vm.Outputs[inp] = vm.Registers[reg]
 	vm.OutputsValid[inp] = true
 	if vm.OutputsRecv[inp] {
