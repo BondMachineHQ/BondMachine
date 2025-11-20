@@ -2,7 +2,6 @@ package procbuilder
 
 import (
 	"errors"
-	"fmt"
 )
 
 type DeferredInstruction func(*VM) bool
@@ -18,7 +17,7 @@ func (vm *VM) AddDeferredInstruction(diName string, di DeferredInstruction) erro
 }
 
 func (vm *VM) ExecuteDeferredInstructions() error {
-	fmt.Println("Executing deferred instructions")
+	// fmt.Println("Executing deferred instructions")
 	if vm == nil || vm.DeferredInstructions == nil {
 		return errors.New("VM or DeferredInstructions map is nil")
 	}
@@ -28,7 +27,7 @@ func (vm *VM) ExecuteDeferredInstructions() error {
 			notCompleted[diName] = di
 		}
 	}
-	fmt.Println("Deferred instructions remaining:", len(notCompleted))
+	// fmt.Println("Deferred instructions remaining:", len(notCompleted))
 	vm.DeferredInstructions = notCompleted
 	return nil
 }

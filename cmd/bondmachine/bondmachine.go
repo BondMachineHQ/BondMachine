@@ -113,6 +113,7 @@ var simbox_file = flag.String("simbox-file", "", "Filename of the simulation dat
 
 var sim = flag.Bool("sim", false, "Simulate bond machine")
 var simInteractions = flag.Int("sim-interactions", 10, "Simulation interaction")
+var simStopOnValidOf = flag.Int("sim-stop-on-valid-of", -1, "Stop simulation when a valid output is produced on the given output")
 var simReport = flag.String("sim-report", "", "Simulation report file")
 
 var emu = flag.Bool("emu", false, "Emulate bond machine")
@@ -984,8 +985,23 @@ func main() {
 
 			var oldRecordC *[]string
 
+			if *simStopOnValidOf != -1 {
+				if *simStopOnValidOf >= len(vm.OutputsValid) {
+					log.Fatal("sim-stop-on-valid-of index out of range")
+				}
+			}
+
 			// Main simulation loop, tick by tick
 			for i := uint64(0); i < uint64(*simInteractions); i++ {
+
+				if *simStopOnValidOf != -1 {
+					if vm.OutputsValid[*simStopOnValidOf] {
+						if *debug {
+							log.Printf("Stopping simulation at tick %d due to sim-stop-on-valid-of\n", i)
+						}
+						break
+					}
+				}
 
 				// Manage the valid/recv states of the inputs
 				for inIdx, inRecv := range vm.InputsRecv {
