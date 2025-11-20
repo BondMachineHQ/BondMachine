@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -203,6 +204,16 @@ func (op I2rw) Disassembler(arch *Arch, instr string) (string, error) {
 	return result, nil
 }
 
+// Deferred instruction to wait for input to be received when other instructions are executed
+func (vm *VM) waitRecv(inp int) bool {
+	fmt.Println("Waiting I2RW", vm.InputsValid[inp], vm.InputsRecv[inp])
+	if !vm.InputsValid[inp] {
+		vm.InputsRecv[inp] = false
+		return true
+	}
+	return false
+}
+
 func (op I2rw) Simulate(vm *VM, instr string) error {
 	// "reference": {"support_gosim": "ok"}
 	inBits := vm.Mach.Inputs_bits()
@@ -214,6 +225,10 @@ func (op I2rw) Simulate(vm *VM, instr string) error {
 		vm.Registers[reg] = vm.Inputs[inp]
 		vm.InputsRecv[inp] = true
 		vm.Pc = vm.Pc + 1
+		// Spown a deferred instruction to wait for the input to be received
+		vm.AddDeferredInstruction("waitRecv"+strconv.Itoa(inp), func(vm *VM) bool {
+			return vm.waitRecv(inp)
+		})
 	} else {
 		vm.InputsRecv[inp] = false
 	}

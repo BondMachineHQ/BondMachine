@@ -22,6 +22,8 @@ type VM struct {
 	InputsRecv  []bool
 	OutputsRecv []bool
 
+	DeferredInstructions map[string]DeferredInstruction
+
 	Pc           uint64
 	Extra_states map[string]interface{}
 	CmdChan      chan []byte
@@ -92,6 +94,8 @@ func (vm *VM) Init() error {
 	vm.OutputsValid = make([]bool, vm.Mach.M)
 	vm.InputsRecv = make([]bool, vm.Mach.N)
 	vm.OutputsRecv = make([]bool, vm.Mach.M)
+
+	vm.DeferredInstructions = make(map[string]DeferredInstruction)
 
 	vm.Pc = 0
 
@@ -171,6 +175,11 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 
 	if int(vm.Pc) > num_instr {
 		return "", Prerror{"Program counter outside limits"}
+	}
+
+	// Executing deferred instructions before the next instruction
+	if err := vm.ExecuteDeferredInstructions(); err != nil {
+		return "", errors.New("Error executing deferred instructions: " + err.Error())
 	}
 
 	if int(vm.Pc) == num_instr {

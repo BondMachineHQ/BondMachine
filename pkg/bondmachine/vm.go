@@ -10,8 +10,6 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/simbox"
 )
 
-type DeferredInstruction func(*VM) bool
-
 type VM struct {
 	Bmach                 *Bondmachine
 	Processors            []*procbuilder.VM
@@ -30,7 +28,7 @@ type VM struct {
 	InternalInputsRecv  []bool
 	InternalOutputsRecv []bool
 
-	DeferredInstructions []DeferredInstruction
+	DeferredInstructions map[string]DeferredInstruction
 
 	EmuDrivers []EmuDriver
 	cmdChan    chan []byte
@@ -118,6 +116,8 @@ func (vm *VM) Init() error {
 	vm.InternalOutputsValid = make([]bool, len(vm.Bmach.Internal_outputs))
 	vm.InternalInputsRecv = make([]bool, len(vm.Bmach.Internal_inputs))
 	vm.InternalOutputsRecv = make([]bool, len(vm.Bmach.Internal_outputs))
+
+	vm.DeferredInstructions = make(map[string]DeferredInstruction)
 
 	vm.abs_tick = uint64(0)
 
@@ -254,7 +254,7 @@ func (vm *VM) Launch_processors(s *simbox.Simbox) error {
 func (vm *VM) Step(sc *Sim_config) (string, error) {
 
 	result := ""
-	debug := true
+	debug := false
 
 	if sc != nil {
 		if sc.Show_ticks {
@@ -277,7 +277,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		case BMINPUT:
 			if debug {
 				iin, _ := vm.Bmach.GetInternalOutputName(i)
-				result += "\t\tBM Input: " + strconv.Itoa(bond.Res_id) + "(data,valid) -> internal output: " + iin + "(data,valid)\n"
+				result += "\t\t(" + vm.dumpRegister(vm.Inputs_regs[bond.Res_id]) + "," + fmt.Sprintf("%t", vm.InputsValid[bond.Res_id]) + ") BM Input " + strconv.Itoa(bond.Res_id) + "(data,valid) -> internal output: " + iin + "(data,valid)\n"
 			}
 			vm.Internal_outputs_regs[i] = vm.Inputs_regs[bond.Res_id]
 			vm.InternalOutputsValid[i] = vm.InputsValid[bond.Res_id]
@@ -290,7 +290,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 			if debug {
 				iin, _ := vm.Bmach.GetInternalInputName(i)
 				iout, _ := vm.Bmach.GetInternalOutputName(j)
-				result += "\t\tinternal output: " + iout + "(data,valid) -> internal input: " + iin + "(data,valid)\n"
+				result += "\t\t(" + vm.dumpRegister(vm.Internal_outputs_regs[j]) + "," + fmt.Sprintf("%t", vm.InternalOutputsValid[j]) + ") internal output: " + iout + "(data,valid) -> internal input: " + iin + "(data,valid)\n"
 			}
 			vm.Internal_inputs_regs[i] = vm.Internal_outputs_regs[j]
 			vm.InternalInputsValid[i] = vm.InternalOutputsValid[j]
@@ -303,7 +303,7 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		case CPINPUT:
 			if debug {
 				iin, _ := vm.Bmach.GetInternalInputName(i)
-				result += "\t\tinternal input: " + iin + "(data,valid) -> CP Input: " + strconv.Itoa(bond.Res_id) + "(data,valid)\n"
+				result += "\t\t(" + vm.dumpRegister(vm.Internal_inputs_regs[i]) + "," + fmt.Sprintf("%t", vm.InternalInputsValid[i]) + ") internal input: " + iin + "(data,valid) -> CP " + strconv.Itoa(bond.Res_id) + " Input " + strconv.Itoa(bond.Ext_id) + "(data,valid)\n"
 			}
 			vm.Processors[bond.Res_id].Inputs[bond.Ext_id] = vm.Internal_inputs_regs[i]
 			vm.Processors[bond.Res_id].InputsValid[bond.Ext_id] = vm.InternalInputsValid[i]
@@ -314,35 +314,64 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	for i, bond := range vm.Bmach.Internal_inputs {
 		switch bond.Map_to {
 		case BMOUTPUT:
+			if debug {
+				iin, _ := vm.Bmach.GetInternalInputName(i)
+				result += "\t\t(" + fmt.Sprintf("%t", vm.OutputsRecv[bond.Res_id]) + ") BM Output " + strconv.Itoa(bond.Res_id) + " (recv) -> internal input: " + iin + " (recv)\n"
+			}
 			vm.InternalInputsRecv[i] = vm.OutputsRecv[bond.Res_id]
 		}
 	}
 
 	// Set the internal output data received signals
 	dataRecv := make(map[int]bool)
+	andString := make(map[int]string)
 	for i, j := range vm.Bmach.Links {
 		if j != -1 {
 			if val, ok := dataRecv[j]; !ok {
 				dataRecv[j] = vm.InternalInputsRecv[i]
+				if debug {
+					iin, _ := vm.Bmach.GetInternalInputName(i)
+					andString[j] = fmt.Sprintf("(%t) %s", vm.InternalInputsRecv[i], iin)
+				}
 			} else {
 				dataRecv[j] = val && vm.InternalInputsRecv[i]
+				if debug {
+					iin, _ := vm.Bmach.GetInternalInputName(i)
+					andString[j] = andString[j] + fmt.Sprintf(" && (%t) %s", vm.InternalInputsRecv[i], iin)
+				}
 			}
 		}
 	}
 	for i, _ := range vm.Bmach.Internal_outputs {
 		if val, ok := dataRecv[i]; !ok {
 			vm.InternalOutputsRecv[i] = false
+			if debug {
+				iout, _ := vm.Bmach.GetInternalOutputName(i)
+				result += "\t\t(false) -> internal output: " + iout + "(recv)\n"
+			}
 		} else {
 			vm.InternalOutputsRecv[i] = val
+			if debug {
+				iout, _ := vm.Bmach.GetInternalOutputName(i)
+				result += "\t\t(" + fmt.Sprintf("%t", val) + ") internal inputs: " + andString[i] + "(recv) -> internal output: " + iout + "(recv)\n"
+			}
 		}
 	}
 
-	// Transfer internal outputd data received to their destination in the processors
+	// Transfer internal outputs data received to their destination in the processors
 	for i, bond := range vm.Bmach.Internal_outputs {
 		switch bond.Map_to {
 		case CPOUTPUT:
+			if debug {
+				iout, _ := vm.Bmach.GetInternalOutputName(i)
+				result += "\t\t(" + fmt.Sprintf("%t", vm.InternalOutputsRecv[i]) + ") internal output: " + iout + "(recv) -> CP " + strconv.Itoa(bond.Res_id) + " Output " + strconv.Itoa(bond.Ext_id) + "(recv)\n"
+			}
 			vm.Processors[bond.Res_id].OutputsRecv[bond.Ext_id] = vm.InternalOutputsRecv[i]
 		}
+	}
+
+	if debug {
+		result += "\tCompute step:\n"
 	}
 
 	// Order the step to processors
@@ -364,32 +393,31 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 		}
 	}
 
-	if sc != nil {
-		if sc.Show_io_post {
-			result += "\tPost-compute IO: " + vm.DumpIO() + "\n"
-		}
+	if debug {
+		result += "\tPost-compute data movement:\n"
 	}
 
 	// Set the internal outputs registers
 	for i, bond := range vm.Bmach.Internal_outputs {
 		switch bond.Map_to {
 		case CPOUTPUT:
+			if debug {
+				iout, _ := vm.Bmach.GetInternalOutputName(i)
+				result += "\t\t(" + vm.dumpRegister(vm.Processors[bond.Res_id].Outputs[bond.Ext_id]) + "," + fmt.Sprintf("%t", vm.Processors[bond.Res_id].OutputsValid[bond.Ext_id]) + ") CP " + strconv.Itoa(bond.Res_id) + " Output " + strconv.Itoa(bond.Ext_id) + "(data,valid) -> internal output: " + iout + "(data,valid)\n"
+			}
 			vm.Internal_outputs_regs[i] = vm.Processors[bond.Res_id].Outputs[bond.Ext_id]
 			vm.InternalOutputsValid[i] = vm.Processors[bond.Res_id].OutputsValid[bond.Ext_id]
-		}
-	}
-
-	// Set the internal inputs registers data received signals
-	for i, bond := range vm.Bmach.Internal_inputs {
-		switch bond.Map_to {
-		case CPINPUT:
-			vm.InternalInputsRecv[i] = vm.Processors[bond.Res_id].InputsRecv[bond.Ext_id]
 		}
 	}
 
 	// Transfer to the internal inputs registers the previous outputs according the links
 	for i, j := range vm.Bmach.Links {
 		if j != -1 {
+			if debug {
+				iin, _ := vm.Bmach.GetInternalInputName(i)
+				iout, _ := vm.Bmach.GetInternalOutputName(j)
+				result += "\t\t(" + vm.dumpRegister(vm.Internal_outputs_regs[j]) + "," + fmt.Sprintf("%t", vm.InternalOutputsValid[j]) + ") internal output: " + iout + "(data,valid) -> internal input: " + iin + "(data,valid)\n"
+			}
 			vm.Internal_inputs_regs[i] = vm.Internal_outputs_regs[j]
 			vm.InternalInputsValid[i] = vm.InternalOutputsValid[j]
 		}
@@ -399,14 +427,97 @@ func (vm *VM) Step(sc *Sim_config) (string, error) {
 	for i, bond := range vm.Bmach.Internal_inputs {
 		switch bond.Map_to {
 		case BMOUTPUT:
+			if debug {
+				iin, _ := vm.Bmach.GetInternalInputName(i)
+				result += "\t\t(" + vm.dumpRegister(vm.Internal_inputs_regs[i]) + "," + fmt.Sprintf("%t", vm.InternalInputsValid[i]) + ") internal input: " + iin + "(data,valid) -> BM Output " + strconv.Itoa(bond.Res_id) + "(data,valid)\n"
+			}
 			vm.Outputs_regs[bond.Res_id] = vm.Internal_inputs_regs[i]
 			vm.OutputsValid[bond.Res_id] = vm.InternalInputsValid[i]
+		}
+	}
+
+	// Set the internal inputs registers data received signals
+	for i, bond := range vm.Bmach.Internal_inputs {
+		switch bond.Map_to {
+		case CPINPUT:
+			if debug {
+				iin, _ := vm.Bmach.GetInternalInputName(i)
+				result += "\t\t(" + fmt.Sprintf("%t", vm.Processors[bond.Res_id].InputsRecv[bond.Ext_id]) + ") CP " + strconv.Itoa(bond.Res_id) + " Input " + strconv.Itoa(bond.Ext_id) + "(recv) -> internal input: " + iin + " (recv)\n"
+			}
+			vm.InternalInputsRecv[i] = vm.Processors[bond.Res_id].InputsRecv[bond.Ext_id]
+		}
+	}
+
+	// Set the internal output data received signals
+	dataRecv = make(map[int]bool)
+	andString = make(map[int]string)
+	for i, j := range vm.Bmach.Links {
+		if j != -1 {
+			if val, ok := dataRecv[j]; !ok {
+				dataRecv[j] = vm.InternalInputsRecv[i]
+				if debug {
+					iin, _ := vm.Bmach.GetInternalInputName(i)
+					andString[j] = fmt.Sprintf("(%t) %s", vm.InternalInputsRecv[i], iin)
+				}
+			} else {
+				dataRecv[j] = val && vm.InternalInputsRecv[i]
+				if debug {
+					iin, _ := vm.Bmach.GetInternalInputName(i)
+					andString[j] = andString[j] + fmt.Sprintf(" && (%t) %s", vm.InternalInputsRecv[i], iin)
+				}
+			}
+		}
+	}
+	for i, _ := range vm.Bmach.Internal_outputs {
+		if val, ok := dataRecv[i]; !ok {
+			vm.InternalOutputsRecv[i] = false
+			if debug {
+				iout, _ := vm.Bmach.GetInternalOutputName(i)
+				result += "\t\t(false) -> internal output: " + iout + "(recv)\n"
+			}
+		} else {
+			vm.InternalOutputsRecv[i] = val
+			if debug {
+				iout, _ := vm.Bmach.GetInternalOutputName(i)
+				result += "\t\t(" + fmt.Sprintf("%t", val) + ") internal inputs: " + andString[i] + "(recv) -> internal output: " + iout + "(recv)\n"
+			}
+		}
+	}
+
+	// Transfer internal outputs data received to their destination in the BM inputs
+	for i, bond := range vm.Bmach.Internal_outputs {
+		switch bond.Map_to {
+		case BMINPUT:
+			if debug {
+				iout, _ := vm.Bmach.GetInternalOutputName(i)
+				result += "\t\t(" + fmt.Sprintf("%t", vm.InternalOutputsRecv[i]) + ") internal output: " + iout + "(recv) -> BM Input " + strconv.Itoa(bond.Res_id) + "(recv)\n"
+			}
+			vm.InputsRecv[bond.Res_id] = vm.InternalOutputsRecv[i]
+		}
+	}
+
+	if sc != nil {
+		if sc.Show_io_post {
+			result += "\tPost-compute IO: " + vm.DumpIO() + "\n"
 		}
 	}
 
 	vm.abs_tick++
 
 	return result, nil
+}
+
+func (vm *VM) dumpRegister(reg any) string {
+	if vm.Bmach.Rsize <= 8 {
+		return zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint8))))
+	} else if vm.Bmach.Rsize <= 16 {
+		return zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint16))))
+	} else if vm.Bmach.Rsize <= 32 {
+		return zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint32))))
+	} else if vm.Bmach.Rsize <= 64 {
+		return zeros_prefix(int(vm.Bmach.Rsize), get_binary(int(reg.(uint64))))
+	}
+	return ""
 }
 
 func (vm *VM) DumpIO() string {
