@@ -24,11 +24,11 @@ func TestSuspendedRulesAreSkipped(t *testing.T) {
 	}
 
 	// Initialize simulation config
-	sc := &Sim_config{}
+	sc := &SimConfig{}
 	conf := &Config{Debug: false}
 	err := sc.Init(sbox, vm, conf)
 	if err != nil {
-		t.Fatalf("Failed to initialize Sim_config: %v", err)
+		t.Fatalf("Failed to initialize SimConfig: %v", err)
 	}
 
 	// Verify that active rules are applied
@@ -64,11 +64,11 @@ func TestSuspendedSetRulesAreSkipped(t *testing.T) {
 	}
 
 	// Initialize simulation drive
-	sd := &Sim_drive{}
+	sd := &SimDrive{}
 	conf := &Config{}
 	err := sd.Init(conf, sbox, vm)
 	if err != nil {
-		t.Fatalf("Failed to initialize Sim_drive: %v", err)
+		t.Fatalf("Failed to initialize SimDrive: %v", err)
 	}
 
 	// Verify that the active rule's tick is present

@@ -44,19 +44,19 @@ func (vm *VM) CopyState(vmsource *VM) {
 
 // Simbox rules are converted in a sim drive when the simulation starts and applied during the simulation
 type Sim_tick_set map[int]interface{}
-type Sim_drive struct {
+type SimDrive struct {
 	Injectables []*interface{}
 	AbsSet      map[uint64]Sim_tick_set
 }
 
 // This is initializated when the simulation starts and filled on the way
 type Sim_tick_get map[int]interface{}
-type Sim_report struct {
+type SimReport struct {
 	Reportables []*interface{}
 	AbsGet      map[uint64]Sim_tick_get
 }
 
-type Sim_config struct {
+type SimConfig struct {
 	Show_pc          bool
 	Show_instruction bool
 	Show_disasm      bool
@@ -160,7 +160,7 @@ func (vm *VM) Init() error {
 	return nil
 }
 
-func (vm *VM) Step(psc *Sim_config) (string, error) {
+func (vm *VM) Step(psc *SimConfig) (string, error) {
 	result := ""
 
 	if psc != nil {
@@ -300,7 +300,7 @@ func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 	return nil, Prerror{mnemonic + " unknown"}
 }
 
-func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM) error {
+func (sc *SimConfig) Init(s *simbox.Simbox, vm *VM) error {
 
 	if s != nil {
 
@@ -333,7 +333,7 @@ func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM) error {
 	return nil
 }
 
-func (sd *Sim_drive) Init(s *simbox.Simbox, vm *VM) error {
+func (sd *SimDrive) Init(s *simbox.Simbox, vm *VM) error {
 
 	if s != nil {
 
@@ -406,7 +406,7 @@ func (sd *Sim_drive) Init(s *simbox.Simbox, vm *VM) error {
 	return nil
 }
 
-func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
+func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 
 	if s != nil {
 

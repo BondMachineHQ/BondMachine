@@ -49,7 +49,7 @@ func (vm *VM) CopyState(vmsource *VM) {
 	// TODO Finish
 }
 
-type Sim_config struct {
+type SimConfig struct {
 	Show_ticks     bool
 	Show_io_pre    bool
 	Show_io_post   bool
@@ -60,7 +60,7 @@ type Sim_config struct {
 
 // Simbox rules are converted in a sim drive when the simulation starts and applied during the simulation
 type Sim_tick_set map[int]interface{}
-type Sim_drive struct {
+type SimDrive struct {
 	Injectables []*interface{}
 	NeedValid   map[int]int
 	AbsSet      map[uint64]Sim_tick_set
@@ -70,7 +70,7 @@ type Sim_drive struct {
 // This is initializated when the simulation starts and filled on the way
 type Sim_tick_get map[int]interface{}
 type Sim_tick_show map[int]bool
-type Sim_report struct {
+type SimReport struct {
 	Reportables      []*interface{}
 	Showables        []*interface{}
 	ReportablesTypes []string
@@ -82,7 +82,7 @@ type Sim_report struct {
 	PerShow          map[uint64]Sim_tick_show
 }
 
-func (vm *VM) Processor_execute(psc *procbuilder.Sim_config, instruct <-chan int, resp chan<- int, result_chan chan<- string, proc_id int) {
+func (vm *VM) Processor_execute(psc *procbuilder.SimConfig, instruct <-chan int, resp chan<- int, result_chan chan<- string, proc_id int) {
 	for {
 		switch <-instruct {
 		case 0:
@@ -239,7 +239,7 @@ func (vm *VM) Launch_processors(s *simbox.Simbox) error {
 	go vm.EmuDriverDispatcher()
 	for i := 0; i < len(vm.Processors); i++ {
 
-		psc := new(procbuilder.Sim_config)
+		psc := new(procbuilder.SimConfig)
 		pscerr := psc.Init(s, vm.Processors[i])
 		check(pscerr)
 
@@ -251,7 +251,7 @@ func (vm *VM) Launch_processors(s *simbox.Simbox) error {
 	return nil
 }
 
-func (vm *VM) Step(sc *Sim_config) (string, error) {
+func (vm *VM) Step(sc *SimConfig) (string, error) {
 
 	result := ""
 	debug := false
@@ -621,7 +621,7 @@ func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 	return nil, errors.New("unknown mnemonic " + mnemonic)
 }
 
-func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM, conf *Config) error {
+func (sc *SimConfig) Init(s *simbox.Simbox, vm *VM, conf *Config) error {
 
 	if s != nil {
 
@@ -655,7 +655,7 @@ func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM, conf *Config) error {
 	return nil
 }
 
-func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
+func (sd *SimDrive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 
 	inj := make([]*interface{}, 0)
 	needValid := make(map[int]int)
@@ -786,7 +786,7 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 	return nil
 }
 
-func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
+func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 
 	rep := make([]*interface{}, 0)
 	sho := make([]*interface{}, 0)

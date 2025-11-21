@@ -464,17 +464,17 @@ func main() {
 			err := vm.Init()
 			check(err)
 
-			sconfig := new(procbuilder.Sim_config)
+			sconfig := new(procbuilder.SimConfig)
 			scerr := sconfig.Init(sbox, vm)
 			check(scerr)
 
 			// Build the simulation driver
-			sdrive := new(procbuilder.Sim_drive)
+			sdrive := new(procbuilder.SimDrive)
 			sderr := sdrive.Init(sbox, vm)
 			check(sderr)
 
 			// Build the simultion report
-			srep := new(procbuilder.Sim_report)
+			srep := new(procbuilder.SimReport)
 			srerr := srep.Init(sbox, vm)
 			check(srerr)
 

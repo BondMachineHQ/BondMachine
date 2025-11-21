@@ -928,17 +928,17 @@ func main() {
 			var pstatevm *bondmachine.VM
 
 			// Build the simulation configuration
-			sconfig := new(bondmachine.Sim_config)
+			sconfig := new(bondmachine.SimConfig)
 			scerr := sconfig.Init(sbox, vm, conf)
 			check(scerr)
 
 			// Build the simulation driver
-			sdrive := new(bondmachine.Sim_drive)
+			sdrive := new(bondmachine.SimDrive)
 			sderr := sdrive.Init(conf, sbox, vm)
 			check(sderr)
 
 			// Build the simultion report
-			srep := new(bondmachine.Sim_report)
+			srep := new(bondmachine.SimReport)
 			srerr := srep.Init(sbox, vm)
 			check(srerr)
 
@@ -1235,7 +1235,7 @@ func main() {
 			check(err)
 
 			// the emulation configuration is not really needed
-			sconfig := new(bondmachine.Sim_config)
+			sconfig := new(bondmachine.SimConfig)
 			scerr := sconfig.Init(nil, vm, conf)
 			check(scerr)
 

@@ -24,13 +24,13 @@ func (bmach *Bondmachine) Fitness_default(in *simbox.Simbox, exp *simbox.Simbox,
 	}
 
 	// Build the simulation configuration
-	sconfig := new(Sim_config)
+	sconfig := new(SimConfig)
 	if err := sconfig.Init(in, vm, nil); err != nil {
 		return 0, err
 	}
 
 	// Build the simulation driver
-	sdrive := new(Sim_drive)
+	sdrive := new(SimDrive)
 	if err := sdrive.Init(nil, in, vm); err != nil {
 		return 0, err
 	}
@@ -46,7 +46,7 @@ func (bmach *Bondmachine) Fitness_default(in *simbox.Simbox, exp *simbox.Simbox,
 	}
 
 	// Build the simulation report
-	srep := new(Sim_report)
+	srep := new(SimReport)
 	if err := srep.Init(out, vm); err != nil {
 		return 0, err
 	}
