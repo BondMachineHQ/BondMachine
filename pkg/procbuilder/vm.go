@@ -305,6 +305,10 @@ func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM) error {
 	if s != nil {
 
 		for _, rule := range s.Rules {
+			// Skip suspended rules
+			if rule.Suspended {
+				continue
+			}
 			// Intercept the set rules
 			if rule.Timec == simbox.TIMEC_NONE && rule.Action == simbox.ACTION_CONFIG {
 				switch rule.Object {
@@ -337,6 +341,10 @@ func (sd *Sim_drive) Init(s *simbox.Simbox, vm *VM) error {
 		act := make(map[uint64]Sim_tick_set)
 
 		for _, rule := range s.Rules {
+			// Skip suspended rules
+			if rule.Suspended {
+				continue
+			}
 			fmt.Println(rule)
 			// Intercept the set rules
 			if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_SET {
@@ -406,6 +414,10 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 		str := make(map[uint64]Sim_tick_get)
 
 		for _, rule := range s.Rules {
+			// Skip suspended rules
+			if rule.Suspended {
+				continue
+			}
 			fmt.Println(rule)
 			// Intercept the set rules
 			if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_GET {
