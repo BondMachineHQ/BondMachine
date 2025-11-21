@@ -37,6 +37,8 @@ var verify = flag.Bool("verify", false, "Verify the simbox against a machine fil
 var list = flag.Bool("list", false, "List rules")
 var add = flag.String("add", "", "Add e rule")
 var del = flag.Int("del", -1, "Remove a rule")
+var suspend = flag.Int("suspend", -1, "Suspend a rule")
+var unsuspend = flag.Int("unsuspend", -1, "Unsuspend (reactivate) a rule")
 
 func check(e error) {
 	if e != nil {
@@ -78,6 +80,12 @@ func main() {
 			check(err)
 		} else if *del != -1 {
 			err := sBox.Del(*del)
+			check(err)
+		} else if *suspend != -1 {
+			err := sBox.Suspend(*suspend)
+			check(err)
+		} else if *unsuspend != -1 {
+			err := sBox.Reactivate(*unsuspend)
 			check(err)
 		}
 

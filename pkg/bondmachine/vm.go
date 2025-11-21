@@ -626,6 +626,10 @@ func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM, conf *Config) error {
 	if s != nil {
 
 		for _, rule := range s.Rules {
+			// Skip suspended rules
+			if rule.Suspended {
+				continue
+			}
 			if conf.Debug {
 				fmt.Println("Loading simbox rule:", rule)
 			}
@@ -659,6 +663,10 @@ func (sd *Sim_drive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 	perset := make(map[uint64]Sim_tick_set)
 
 	for _, rule := range s.Rules {
+		// Skip suspended rules
+		if rule.Suspended {
+			continue
+		}
 		// Intercept the set rules
 		if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_SET {
 			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
@@ -791,6 +799,10 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 	pershow := make(map[uint64]Sim_tick_show)
 
 	for _, rule := range s.Rules {
+		// Skip suspended rules
+		if rule.Suspended {
+			continue
+		}
 		// Intercept the get rules from config action
 		if rule.Timec == simbox.TIMEC_NONE && rule.Action == simbox.ACTION_CONFIG {
 			objects := make([]string, 0)
