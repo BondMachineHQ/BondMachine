@@ -860,6 +860,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 						objects = append(objects, fmt.Sprintf("p%dr%d", i, j))
 					}
 				}
+			}
 			for _, obj := range objects {
 				if loc, err := vm.GetElementLocation(obj); err == nil {
 					ipos := -1
@@ -880,7 +881,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 				}
 			}
 		}
-		
+
 		// Intercept the get rules on valid time
 		if rule.Timec == simbox.TIMEC_ON_VALID && rule.Action == simbox.ACTION_GET {
 			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
