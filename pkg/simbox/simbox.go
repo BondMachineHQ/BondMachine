@@ -134,11 +134,12 @@ func (r *Simbox) Add(adds string) error {
 		if words[0] == "absolute" && words[2] == "set" {
 			if tick, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_ABS,
-					Tick:   uint64(tick),
-					Action: ACTION_SET,
-					Object: words[3],
-					Extra:  words[4],
+					Timec:     TIMEC_ABS,
+					Tick:      uint64(tick),
+					Action:    ACTION_SET,
+					Object:    words[3],
+					Extra:     words[4],
+					Suspended: false,
 				})
 				return nil
 			}
@@ -146,11 +147,12 @@ func (r *Simbox) Add(adds string) error {
 		if words[0] == "relative" && words[2] == "set" {
 			if every, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_REL,
-					Tick:   uint64(every),
-					Action: ACTION_SET,
-					Object: words[3],
-					Extra:  words[4],
+					Timec:     TIMEC_REL,
+					Tick:      uint64(every),
+					Action:    ACTION_SET,
+					Object:    words[3],
+					Extra:     words[4],
+					Suspended: false,
 				})
 				return nil
 			}
@@ -158,11 +160,12 @@ func (r *Simbox) Add(adds string) error {
 		if words[0] == "absolute" && words[2] == "get" {
 			if tick, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_ABS,
-					Tick:   uint64(tick),
-					Action: ACTION_GET,
-					Object: words[3],
-					Extra:  words[4],
+					Timec:     TIMEC_ABS,
+					Tick:      uint64(tick),
+					Action:    ACTION_GET,
+					Object:    words[3],
+					Extra:     words[4],
+					Suspended: false,
 				})
 				return nil
 			}
@@ -170,11 +173,12 @@ func (r *Simbox) Add(adds string) error {
 		if words[0] == "relative" && words[2] == "get" {
 			if every, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_REL,
-					Tick:   uint64(every),
-					Action: ACTION_GET,
-					Object: words[3],
-					Extra:  words[4],
+					Timec:     TIMEC_REL,
+					Tick:      uint64(every),
+					Action:    ACTION_GET,
+					Object:    words[3],
+					Extra:     words[4],
+					Suspended: false,
 				})
 				return nil
 			}
@@ -182,11 +186,12 @@ func (r *Simbox) Add(adds string) error {
 		if words[0] == "absolute" && words[2] == "show" {
 			if tick, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_ABS,
-					Tick:   uint64(tick),
-					Action: ACTION_SHOW,
-					Object: words[3],
-					Extra:  words[4],
+					Timec:     TIMEC_ABS,
+					Tick:      uint64(tick),
+					Action:    ACTION_SHOW,
+					Object:    words[3],
+					Extra:     words[4],
+					Suspended: false,
 				})
 				return nil
 			}
@@ -194,11 +199,12 @@ func (r *Simbox) Add(adds string) error {
 		if words[0] == "relative" && words[2] == "show" {
 			if every, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_REL,
-					Tick:   uint64(every),
-					Action: ACTION_SHOW,
-					Object: words[3],
-					Extra:  words[4],
+					Timec:     TIMEC_REL,
+					Tick:      uint64(every),
+					Action:    ACTION_SHOW,
+					Object:    words[3],
+					Extra:     words[4],
+					Suspended: false,
 				})
 				return nil
 			}
@@ -207,22 +213,24 @@ func (r *Simbox) Add(adds string) error {
 		if words[0] == "absolute" && words[2] == "get" {
 			if tick, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_ABS,
-					Tick:   uint64(tick),
-					Action: ACTION_GET,
-					Object: words[3],
-					Extra:  "unsigned",
+					Timec:     TIMEC_ABS,
+					Tick:      uint64(tick),
+					Action:    ACTION_GET,
+					Object:    words[3],
+					Extra:     "unsigned",
+					Suspended: false,
 				})
 				return nil
 			}
 		} else if words[0] == "absolute" && words[2] == "show" {
 			if tick, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_ABS,
-					Tick:   uint64(tick),
-					Action: ACTION_SHOW,
-					Object: words[3],
-					Extra:  "unsigned",
+					Timec:     TIMEC_ABS,
+					Tick:      uint64(tick),
+					Action:    ACTION_SHOW,
+					Object:    words[3],
+					Extra:     "unsigned",
+					Suspended: false,
 				})
 				return nil
 			}
@@ -230,59 +238,65 @@ func (r *Simbox) Add(adds string) error {
 		if words[0] == "relative" && words[2] == "get" {
 			if every, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_REL,
-					Tick:   uint64(every),
-					Action: ACTION_GET,
-					Object: words[3],
-					Extra:  "unsigned",
+					Timec:     TIMEC_REL,
+					Tick:      uint64(every),
+					Action:    ACTION_GET,
+					Object:    words[3],
+					Extra:     "unsigned",
+					Suspended: false,
 				})
 				return nil
 			}
 		} else if words[0] == "relative" && words[2] == "show" {
 			if every, err := strconv.Atoi(words[1]); err == nil {
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_REL,
-					Tick:   uint64(every),
-					Action: ACTION_SHOW,
-					Object: words[3],
-					Extra:  "unsigned",
+					Timec:     TIMEC_REL,
+					Tick:      uint64(every),
+					Action:    ACTION_SHOW,
+					Object:    words[3],
+					Extra:     "unsigned",
+					Suspended: false,
 				})
 				return nil
 			}
 		} else if words[0] == "onvalid" && words[1] == "get" {
 			r.Rules = append(r.Rules, Rule{
-				Timec:  TIMEC_ON_VALID,
-				Tick:   0,
-				Action: ACTION_GET,
-				Object: words[2],
-				Extra:  words[3],
+				Timec:     TIMEC_ON_VALID,
+				Tick:      0,
+				Action:    ACTION_GET,
+				Object:    words[2],
+				Extra:     words[3],
+				Suspended: false,
 			})
 			return nil
 		} else if words[0] == "onvalid" && words[1] == "show" {
 			r.Rules = append(r.Rules, Rule{
-				Timec:  TIMEC_ON_VALID,
-				Tick:   0,
-				Action: ACTION_SHOW,
-				Object: words[2],
-				Extra:  words[3],
+				Timec:     TIMEC_ON_VALID,
+				Tick:      0,
+				Action:    ACTION_SHOW,
+				Object:    words[2],
+				Extra:     words[3],
+				Suspended: false,
 			})
 			return nil
 		} else if words[0] == "onrecv" && words[1] == "get" {
 			r.Rules = append(r.Rules, Rule{
-				Timec:  TIMEC_ON_RECV,
-				Tick:   0,
-				Action: ACTION_GET,
-				Object: words[2],
-				Extra:  words[3],
+				Timec:     TIMEC_ON_RECV,
+				Tick:      0,
+				Action:    ACTION_GET,
+				Object:    words[2],
+				Extra:     words[3],
+				Suspended: false,
 			})
 			return nil
 		} else if words[0] == "onrecv" && words[1] == "show" {
 			r.Rules = append(r.Rules, Rule{
-				Timec:  TIMEC_ON_RECV,
-				Tick:   0,
-				Action: ACTION_SHOW,
-				Object: words[2],
-				Extra:  words[3],
+				Timec:     TIMEC_ON_RECV,
+				Tick:      0,
+				Action:    ACTION_SHOW,
+				Object:    words[2],
+				Extra:     words[3],
+				Suspended: false,
 			})
 			return nil
 		}
@@ -291,75 +305,83 @@ func (r *Simbox) Add(adds string) error {
 			switch words[1] {
 			case "get_all":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "get_all",
-					Extra:  words[2],
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "get_all",
+					Extra:     words[2],
+					Suspended: false,
 				})
 				return nil
 			case "get_all_internal":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "get_all_internal",
-					Extra:  words[2],
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "get_all_internal",
+					Extra:     words[2],
+					Suspended: false,
 				})
 				return nil
 			case "show_all":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_all",
-					Extra:  words[2],
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_all",
+					Extra:     words[2],
+					Suspended: false,
 				})
 				return nil
 			case "show_all_internal":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_all_internal",
-					Extra:  words[2],
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_all_internal",
+					Extra:     words[2],
+					Suspended: false,
 				})
 				return nil
 			}
 		} else if words[0] == "onvalid" && words[1] == "get" {
 			r.Rules = append(r.Rules, Rule{
-				Timec:  TIMEC_ON_VALID,
-				Tick:   0,
-				Action: ACTION_GET,
-				Object: words[2],
-				Extra:  "unsigned",
+				Timec:     TIMEC_ON_VALID,
+				Tick:      0,
+				Action:    ACTION_GET,
+				Object:    words[2],
+				Extra:     "unsigned",
+				Suspended: false,
 			})
 			return nil
 		} else if words[0] == "onvalid" && words[1] == "show" {
 			r.Rules = append(r.Rules, Rule{
-				Timec:  TIMEC_ON_VALID,
-				Tick:   0,
-				Action: ACTION_SHOW,
-				Object: words[2],
-				Extra:  "unsigned",
+				Timec:     TIMEC_ON_VALID,
+				Tick:      0,
+				Action:    ACTION_SHOW,
+				Object:    words[2],
+				Extra:     "unsigned",
+				Suspended: false,
 			})
 			return nil
 		} else if words[0] == "onrecv" && words[1] == "get" {
 			r.Rules = append(r.Rules, Rule{
-				Timec:  TIMEC_ON_RECV,
-				Tick:   0,
-				Action: ACTION_GET,
-				Object: words[2],
-				Extra:  "unsigned",
+				Timec:     TIMEC_ON_RECV,
+				Tick:      0,
+				Action:    ACTION_GET,
+				Object:    words[2],
+				Extra:     "unsigned",
+				Suspended: false,
 			})
 			return nil
 		} else if words[0] == "onrecv" && words[1] == "show" {
 			r.Rules = append(r.Rules, Rule{
-				Timec:  TIMEC_ON_RECV,
-				Tick:   0,
-				Action: ACTION_SHOW,
-				Object: words[2],
-				Extra:  "unsigned",
+				Timec:     TIMEC_ON_RECV,
+				Tick:      0,
+				Action:    ACTION_SHOW,
+				Object:    words[2],
+				Extra:     "unsigned",
+				Suspended: false,
 			})
 			return nil
 		}
@@ -368,101 +390,112 @@ func (r *Simbox) Add(adds string) error {
 			switch words[1] {
 			case "show_pc":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_pc",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_pc",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "show_instruction":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_instruction",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_instruction",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "show_disasm":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_disasm",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_disasm",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "show_ticks":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_ticks",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_ticks",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "get_ticks":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "get_ticks",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "get_ticks",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "show_proc_regs_pre":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_proc_regs_pre",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_proc_regs_pre",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "show_proc_regs_post":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_proc_regs_post",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_proc_regs_post",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "show_proc_io_pre":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_proc_io_pre",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_proc_io_pre",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "show_proc_io_post":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_proc_io_post",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_proc_io_post",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "show_io_pre":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_io_pre",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_io_pre",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			case "show_io_post":
 				r.Rules = append(r.Rules, Rule{
-					Timec:  TIMEC_NONE,
-					Tick:   0,
-					Action: ACTION_CONFIG,
-					Object: "show_io_post",
-					Extra:  "",
+					Timec:     TIMEC_NONE,
+					Tick:      0,
+					Action:    ACTION_CONFIG,
+					Object:    "show_io_post",
+					Extra:     "",
+					Suspended: false,
 				})
 				return nil
 			}
