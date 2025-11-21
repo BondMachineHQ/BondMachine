@@ -43,17 +43,17 @@ func (vm *VM) CopyState(vmsource *VM) {
 }
 
 // Simbox rules are converted in a sim drive when the simulation starts and applied during the simulation
-type Sim_tick_set map[int]interface{}
+type SimTickSet map[int]interface{}
 type SimDrive struct {
 	Injectables []*interface{}
-	AbsSet      map[uint64]Sim_tick_set
+	AbsSet      map[uint64]SimTickSet
 }
 
 // This is initializated when the simulation starts and filled on the way
-type Sim_tick_get map[int]interface{}
+type SimTickGet map[int]interface{}
 type SimReport struct {
 	Reportables []*interface{}
-	AbsGet      map[uint64]Sim_tick_get
+	AbsGet      map[uint64]SimTickGet
 }
 
 type SimConfig struct {
@@ -338,7 +338,7 @@ func (sd *SimDrive) Init(s *simbox.Simbox, vm *VM) error {
 	if s != nil {
 
 		inj := make([]*interface{}, 0)
-		act := make(map[uint64]Sim_tick_set)
+		act := make(map[uint64]SimTickSet)
 
 		for _, rule := range s.Rules {
 			// Skip suspended rules
@@ -411,7 +411,7 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 	if s != nil {
 
 		rep := make([]*interface{}, 0)
-		str := make(map[uint64]Sim_tick_get)
+		str := make(map[uint64]SimTickGet)
 
 		for _, rule := range s.Rules {
 			// Skip suspended rules

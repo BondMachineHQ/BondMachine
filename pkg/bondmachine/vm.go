@@ -59,42 +59,42 @@ type SimConfig struct {
 }
 
 // Simbox rules are converted in a sim drive when the simulation starts and applied during the simulation
-type Sim_tick_set map[int]interface{}
+type SimTickSet map[int]interface{}
 type SimDrive struct {
 	Injectables []*interface{}
 	NeedValid   map[int]int
-	AbsSet      map[uint64]Sim_tick_set
-	PerSet      map[uint64]Sim_tick_set
+	AbsSet      map[uint64]SimTickSet
+	PerSet      map[uint64]SimTickSet
 }
 
 // This is initializated when the simulation starts and filled on the way
-type Sim_tick_get map[int]interface{}
-type Sim_tick_show map[int]bool
+type SimTickGet map[int]interface{}
+type SimTickShow map[int]bool
 type SimReport struct {
 	Reportables      []*interface{}
 	Showables        []*interface{}
 	ReportablesTypes []string
 	ShowablesTypes   []string
 	ReportablesNames []string
-	AbsGet           map[uint64]Sim_tick_get
-	PerGet           map[uint64]Sim_tick_get
-	AbsShow          map[uint64]Sim_tick_show
-	PerShow          map[uint64]Sim_tick_show
+	AbsGet           map[uint64]SimTickGet
+	PerGet           map[uint64]SimTickGet
+	AbsShow          map[uint64]SimTickShow
+	PerShow          map[uint64]SimTickShow
 }
 
-func (vm *VM) Processor_execute(psc *procbuilder.SimConfig, instruct <-chan int, resp chan<- int, result_chan chan<- string, proc_id int) {
+func (vm *VM) Processor_execute(psc *procbuilder.SimConfig, instruct <-chan int, resp chan<- int, resultChan chan<- string, procId int) {
 	for {
 		switch <-instruct {
 		case 0:
-			resp <- proc_id
+			resp <- procId
 			break
 		case 1:
-			result, err := vm.Processors[proc_id].Step(psc)
-			resp <- proc_id
+			result, err := vm.Processors[procId].Step(psc)
+			resp <- procId
 			if err == nil {
-				result_chan <- result
+				resultChan <- result
 			} else {
-				result_chan <- ""
+				resultChan <- ""
 			}
 		}
 	}
@@ -659,8 +659,8 @@ func (sd *SimDrive) Init(c *Config, s *simbox.Simbox, vm *VM) error {
 
 	inj := make([]*interface{}, 0)
 	needValid := make(map[int]int)
-	absset := make(map[uint64]Sim_tick_set)
-	perset := make(map[uint64]Sim_tick_set)
+	absset := make(map[uint64]SimTickSet)
+	perset := make(map[uint64]SimTickSet)
 
 	for _, rule := range s.Rules {
 		// Skip suspended rules
@@ -793,10 +793,10 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 	repTypes := make([]string, 0)
 	shoTypes := make([]string, 0)
 	repNames := make([]string, 0)
-	absget := make(map[uint64]Sim_tick_get)
-	perget := make(map[uint64]Sim_tick_get)
-	absshow := make(map[uint64]Sim_tick_show)
-	pershow := make(map[uint64]Sim_tick_show)
+	absget := make(map[uint64]SimTickGet)
+	perget := make(map[uint64]SimTickGet)
+	absshow := make(map[uint64]SimTickShow)
+	pershow := make(map[uint64]SimTickShow)
 
 	for _, rule := range s.Rules {
 		// Skip suspended rules
