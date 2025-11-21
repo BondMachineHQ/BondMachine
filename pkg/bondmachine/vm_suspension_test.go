@@ -32,15 +32,15 @@ func TestSuspendedRulesAreSkipped(t *testing.T) {
 	}
 
 	// Verify that active rules are applied
-	if !sc.Show_ticks {
+	if !sc.ShowTicks {
 		t.Error("show_ticks should be enabled (rule was not suspended)")
 	}
-	if !sc.Show_io_post {
+	if !sc.ShowIoPost {
 		t.Error("show_io_post should be enabled (rule was not suspended)")
 	}
 
 	// Verify that suspended rules are NOT applied
-	if sc.Show_io_pre {
+	if sc.ShowIoPre {
 		t.Error("show_io_pre should NOT be enabled (rule was suspended)")
 	}
 }

@@ -62,8 +62,8 @@ type SimConfig struct {
 	Show_disasm      bool
 	Show_regs_pre    bool
 	Show_regs_post   bool
-	Show_io_pre      bool
-	Show_io_post     bool
+	ShowIoPre        bool
+	ShowIoPost       bool
 }
 
 func (vm *VM) Init() error {
@@ -208,7 +208,7 @@ func (vm *VM) Step(psc *SimConfig) (string, error) {
 				}
 			}
 			if psc != nil {
-				if psc.Show_io_pre {
+				if psc.ShowIoPre {
 					result += "\t\tPre-compute IO: " + vm.DumpIO() + "\n"
 				}
 				if psc.Show_regs_pre {
@@ -221,7 +221,7 @@ func (vm *VM) Step(psc *SimConfig) (string, error) {
 			}
 
 			if psc != nil {
-				if psc.Show_io_pre {
+				if psc.ShowIoPre {
 					result += "\t\tPost-compute IO: " + vm.DumpIO() + "\n"
 				}
 				if psc.Show_regs_pre {
@@ -323,9 +323,9 @@ func (sc *SimConfig) Init(s *simbox.Simbox, vm *VM) error {
 				case "show_proc_regs_post":
 					sc.Show_regs_post = true
 				case "show_proc_io_pre":
-					sc.Show_io_pre = true
+					sc.ShowIoPre = true
 				case "show_proc_io_post":
-					sc.Show_io_post = true
+					sc.ShowIoPost = true
 				}
 			}
 		}

@@ -50,9 +50,9 @@ func (vm *VM) CopyState(vmsource *VM) {
 }
 
 type SimConfig struct {
-	Show_ticks     bool
-	Show_io_pre    bool
-	Show_io_post   bool
+	ShowTicks      bool
+	ShowIoPre      bool
+	ShowIoPost     bool
 	GetTicks       bool
 	GetAll         bool
 	GetAllInternal bool
@@ -87,7 +87,6 @@ func (vm *VM) Processor_execute(psc *procbuilder.SimConfig, instruct <-chan int,
 		switch <-instruct {
 		case 0:
 			resp <- procId
-			break
 		case 1:
 			result, err := vm.Processors[procId].Step(psc)
 			resp <- procId
@@ -257,13 +256,13 @@ func (vm *VM) Step(sc *SimConfig) (string, error) {
 	debug := false
 
 	if sc != nil {
-		if sc.Show_ticks {
+		if sc.ShowTicks {
 			result += "Absolute tick:" + strconv.Itoa(int(vm.abs_tick)) + "\n"
 		}
 	}
 
 	if sc != nil {
-		if sc.Show_io_pre {
+		if sc.ShowIoPre {
 			result += "\tPre-compute IO: " + vm.DumpIO() + "\n"
 		}
 	}
@@ -497,7 +496,7 @@ func (vm *VM) Step(sc *SimConfig) (string, error) {
 	}
 
 	if sc != nil {
-		if sc.Show_io_post {
+		if sc.ShowIoPost {
 			result += "\tPost-compute IO: " + vm.DumpIO() + "\n"
 		}
 	}
@@ -637,11 +636,11 @@ func (sc *SimConfig) Init(s *simbox.Simbox, vm *VM, conf *Config) error {
 			if rule.Timec == simbox.TIMEC_NONE && rule.Action == simbox.ACTION_CONFIG {
 				switch rule.Object {
 				case "show_ticks":
-					sc.Show_ticks = true
+					sc.ShowTicks = true
 				case "show_io_pre":
-					sc.Show_io_pre = true
+					sc.ShowIoPre = true
 				case "show_io_post":
-					sc.Show_io_post = true
+					sc.ShowIoPost = true
 				case "get_ticks":
 					sc.GetTicks = true
 				case "get_all":
