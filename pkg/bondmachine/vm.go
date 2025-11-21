@@ -791,7 +791,7 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 	pershow := make(map[uint64]Sim_tick_show)
 
 	for _, rule := range s.Rules {
-		// Intercept the get_all rules
+		// Intercept the get rules from config action
 		if rule.Timec == simbox.TIMEC_NONE && rule.Action == simbox.ACTION_CONFIG {
 			objects := make([]string, 0)
 			switch rule.Object {
@@ -814,7 +814,6 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 						objects = append(objects, fmt.Sprintf("p%dr%d", i, j))
 					}
 				}
-
 			}
 			for _, obj := range objects {
 				if loc, err := vm.GetElementLocation(obj); err == nil {
@@ -833,6 +832,95 @@ func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
 						} else {
 							repTypes = append(repTypes, rule.Extra)
 						}
+					}
+				}
+			}
+		}
+
+		// Intercept the show rules from config action
+		if rule.Timec == simbox.TIMEC_NONE && rule.Action == simbox.ACTION_CONFIG {
+			objects := make([]string, 0)
+			switch rule.Object {
+			case "show_all":
+				for i, _ := range vm.Bmach.Internal_inputs {
+					objects = append(objects, vm.Bmach.Internal_inputs[i].String())
+				}
+				for i, _ := range vm.Bmach.Internal_outputs {
+					objects = append(objects, vm.Bmach.Internal_outputs[i].String())
+				}
+			case "show_all_internal":
+				for i, _ := range vm.Bmach.Internal_inputs {
+					objects = append(objects, vm.Bmach.Internal_inputs[i].String())
+				}
+				for i, _ := range vm.Bmach.Internal_outputs {
+					objects = append(objects, vm.Bmach.Internal_outputs[i].String())
+				}
+				for i, procVm := range vm.Processors {
+					for j, _ := range procVm.Registers {
+						objects = append(objects, fmt.Sprintf("p%dr%d", i, j))
+					}
+				}
+			for _, obj := range objects {
+				if loc, err := vm.GetElementLocation(obj); err == nil {
+					ipos := -1
+					for i, iloc := range sho {
+						if iloc == loc {
+							ipos = i
+							break
+						}
+					}
+					if ipos == -1 {
+						sho = append(sho, loc)
+						if rule.Extra == "" {
+							shoTypes = append(shoTypes, "unsigned")
+						} else {
+							shoTypes = append(shoTypes, rule.Extra)
+						}
+					}
+				}
+			}
+		}
+		
+		// Intercept the get rules on valid time
+		if rule.Timec == simbox.TIMEC_ON_VALID && rule.Action == simbox.ACTION_GET {
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
+				ipos := -1
+				for i, iloc := range rep {
+					if iloc == loc {
+						ipos = i
+						break
+					}
+				}
+				if ipos == -1 {
+					ipos = len(rep)
+					rep = append(rep, loc)
+					repNames = append(repNames, rule.Object)
+					if rule.Extra == "" {
+						repTypes = append(repTypes, "unsigned")
+					} else {
+						repTypes = append(repTypes, rule.Extra)
+					}
+				}
+			}
+		}
+
+		// Intercept the show rules on valid time
+		if rule.Timec == simbox.TIMEC_ON_VALID && rule.Action == simbox.ACTION_SHOW {
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
+				ipos := -1
+				for i, iloc := range sho {
+					if iloc == loc {
+						ipos = i
+						break
+					}
+				}
+				if ipos == -1 {
+					ipos = len(sho)
+					sho = append(sho, loc)
+					if rule.Extra == "" {
+						shoTypes = append(shoTypes, "unsigned")
+					} else {
+						shoTypes = append(shoTypes, rule.Extra)
 					}
 				}
 			}

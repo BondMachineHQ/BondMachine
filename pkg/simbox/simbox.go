@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	TIMEC_ABS  uint8 = 0 + iota // Rules in absolute time
-	TIMEC_NONE                  // Rules with no temporal components
-	TIMEC_REL                   // Relative time aka periodic
+	TIMEC_ABS      uint8 = 0 + iota // Rules in absolute time
+	TIMEC_NONE                      // Rules with no temporal components
+	TIMEC_REL                       // Relative time aka periodic
+	TIMEC_ON_VALID                  // On valid signal
 )
 
 const (
