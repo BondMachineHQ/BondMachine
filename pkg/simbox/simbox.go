@@ -23,11 +23,12 @@ const (
 )
 
 type Rule struct {
-	Timec  uint8  // Time constraint type: absolute, relative, none, on valid, on receive
-	Tick   uint64 // Tick (if applicable)
-	Action uint8  // Action: set, get, show, config
-	Object string // Object: register, memory, io, config option
-	Extra  string // Extra info: unsigned, signed, hex, etc.
+	Timec     uint8  // Time constraint type: absolute, relative, none, on valid, on receive
+	Tick      uint64 // Tick (if applicable)
+	Action    uint8  // Action: set, get, show, config
+	Object    string // Object: register, memory, io, config option
+	Extra     string // Extra info: unsigned, signed, hex, etc.
+	Suspended bool   // Whether the rule is suspended
 }
 
 type Simbox struct {
@@ -94,7 +95,11 @@ func (rule Rule) String() string {
 func (r *Simbox) Print() string {
 	result := ""
 	for i, rule := range r.Rules {
-		result = result + fmt.Sprintf("%03d - ", i) + rule.String() + "\n"
+		suspendedMarker := ""
+		if rule.Suspended {
+			suspendedMarker = " [SUSPENDED]"
+		}
+		result = result + fmt.Sprintf("%03d - ", i) + rule.String() + suspendedMarker + "\n"
 	}
 	return result
 }
@@ -102,6 +107,22 @@ func (r *Simbox) Print() string {
 func (r *Simbox) Del(idx int) error {
 	if idx < len(r.Rules) {
 		r.Rules = append(r.Rules[:idx], r.Rules[idx+1:]...)
+		return nil
+	}
+	return errors.New("index out of range")
+}
+
+func (r *Simbox) Suspend(idx int) error {
+	if idx < len(r.Rules) {
+		r.Rules[idx].Suspended = true
+		return nil
+	}
+	return errors.New("index out of range")
+}
+
+func (r *Simbox) Reactivate(idx int) error {
+	if idx < len(r.Rules) {
+		r.Rules[idx].Suspended = false
 		return nil
 	}
 	return errors.New("index out of range")

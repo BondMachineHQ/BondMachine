@@ -41,7 +41,7 @@ func (bmach *Bondmachine) Fitness_default(in *simbox.Simbox, exp *simbox.Simbox,
 	for _, rule := range exp.Rules {
 		// Intercept the set rules
 		if rule.Action == simbox.ACTION_SET {
-			out.Rules = append(out.Rules, simbox.Rule{rule.Timec, rule.Tick, simbox.ACTION_GET, rule.Object, ""})
+			out.Rules = append(out.Rules, simbox.Rule{rule.Timec, rule.Tick, simbox.ACTION_GET, rule.Object, "", false})
 		}
 	}
 
