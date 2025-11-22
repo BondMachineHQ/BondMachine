@@ -71,15 +71,15 @@ type SimDrive struct {
 type SimTickGet map[int]interface{}
 type SimTickShow map[int]bool
 type SimReport struct {
-	Reportables      []*interface{}
-	Showables        []*interface{}
-	ReportablesTypes []string
-	ShowablesTypes   []string
-	ReportablesNames []string
-	AbsGet           map[uint64]SimTickGet
-	PerGet           map[uint64]SimTickGet
-	AbsShow          map[uint64]SimTickShow
-	PerShow          map[uint64]SimTickShow
+	Reportables      []*interface{}         // Direct pointers to the elements that is possible to report
+	Showables        []*interface{}         // Direct pointers to the elements that is possible to show
+	ReportablesTypes []string               // Types of the reportables elements
+	ShowablesTypes   []string               // Types of the showables elements
+	ReportablesNames []string               // Names of the reportables elements
+	AbsGet           map[uint64]SimTickGet  // Absolute tick -> map[index in Reportables]value
+	PerGet           map[uint64]SimTickGet  // Periodic tick -> map[index in Reportables]value
+	AbsShow          map[uint64]SimTickShow // Absolute tick -> map[index in Showables]bool
+	PerShow          map[uint64]SimTickShow // Periodic tick -> map[index in Showables]bool
 }
 
 func (vm *VM) Processor_execute(psc *procbuilder.SimConfig, instruct <-chan int, resp chan<- int, resultChan chan<- string, procId int) {
