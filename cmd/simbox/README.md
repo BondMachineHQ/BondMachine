@@ -31,6 +31,7 @@ simbox -simbox-file rules.json -list
 ```
 
 **Example output:**
+
 ```
 000 - absolute:10:set:i0:5
 001 - relative:5:get:o0:unsigned
@@ -48,6 +49,7 @@ simbox -simbox-file rules.json -add "absolute:10:set:i0:5"
 ```
 
 **Rule syntax:**
+
 - Absolute time rule: `absolute:<tick>:<action>:<object>:<extra>`
 - Relative/periodic rule: `relative:<interval>:<action>:<object>:<extra>`
 - On valid signal: `onvalid:<action>:<object>:<extra>`
@@ -55,11 +57,13 @@ simbox -simbox-file rules.json -add "absolute:10:set:i0:5"
 - Configuration rule: `config:<option>`
 
 **Actions:**
+
 - `set`: Set a value to an object
 - `get`: Get a value from an object
 - `show`: Show a value from an object
 
 **Examples:**
+
 ```bash
 # Set input i0 to 5 at absolute tick 10
 simbox -simbox-file rules.json -add "absolute:10:set:i0:5"
@@ -158,6 +162,7 @@ Rules are indexed starting from 0. Use the `-list` option to see the current ind
 ## Error Handling
 
 The tool will panic with an error message if:
+
 - The simbox file is not specified
 - An invalid rule syntax is provided
 - A rule index is out of range
