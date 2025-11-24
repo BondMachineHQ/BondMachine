@@ -63,7 +63,10 @@ func TestCopyState(t *testing.T) {
 	}
 
 	// Copy state
-	destVM.CopyState(sourceVM)
+	err = destVM.CopyState(sourceVM)
+	if err != nil {
+		t.Fatalf("Failed to copy state: %v", err)
+	}
 
 	// Verify all register copies
 	if destVM.Inputs_regs[0].(uint8) != 42 {
@@ -173,7 +176,10 @@ func TestCopyStateIndependence(t *testing.T) {
 	}
 
 	// Copy state
-	destVM.CopyState(sourceVM)
+	err = destVM.CopyState(sourceVM)
+	if err != nil {
+		t.Fatalf("Failed to copy state: %v", err)
+	}
 
 	// Modify source VM after copy
 	sourceVM.Inputs_regs[0] = uint8(100)
@@ -234,7 +240,10 @@ func TestCopyStateDifferentRegisterSizes(t *testing.T) {
 				t.Fatalf("Failed to initialize dest VM: %v", err)
 			}
 
-			destVM.CopyState(sourceVM)
+			err = destVM.CopyState(sourceVM)
+			if err != nil {
+				t.Fatalf("Failed to copy state: %v", err)
+			}
 
 			if destVM.Inputs_regs[0] != tc.value {
 				t.Errorf("Register value not copied correctly: expected %v, got %v", tc.value, destVM.Inputs_regs[0])

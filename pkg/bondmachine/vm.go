@@ -49,10 +49,12 @@ type VM struct {
 	abs_tick uint64
 }
 
-func (vm *VM) CopyState(vmSource *VM) {
+func (vm *VM) CopyState(vmSource *VM) error {
 	// Copy processor states
 	for i, pState := range vmSource.Processors {
-		vm.Processors[i].CopyState(pState)
+		if err := vm.Processors[i].CopyState(pState); err != nil {
+			return fmt.Errorf("failed to copy processor %d state: %w", i, err)
+		}
 	}
 
 	// Copy input/output registers
@@ -79,6 +81,8 @@ func (vm *VM) CopyState(vmSource *VM) {
 
 	// Copy absolute tick counter
 	vm.abs_tick = vmSource.abs_tick
+
+	return nil
 }
 
 type SimConfig struct {

@@ -1031,7 +1031,8 @@ func main() {
 					check(err)
 					f.Close()
 
-					pstatevm.CopyState(vm)
+					err = pstatevm.CopyState(vm)
+					check(err)
 				}
 
 				result, err := vm.Step(sconfig)
