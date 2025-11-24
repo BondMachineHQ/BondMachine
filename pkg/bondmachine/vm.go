@@ -50,6 +50,11 @@ type VM struct {
 }
 
 func (vm *VM) CopyState(vmSource *VM) error {
+	// Validate inputs
+	if vm == nil || vmSource == nil {
+		return errors.New("cannot copy state from or to a nil VM")
+	}
+
 	// Copy processor states
 	for i, pState := range vmSource.Processors {
 		if err := vm.Processors[i].CopyState(pState); err != nil {

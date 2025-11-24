@@ -251,3 +251,43 @@ func TestCopyStateDifferentRegisterSizes(t *testing.T) {
 		})
 	}
 }
+
+func TestCopyStateNilHandling(t *testing.T) {
+	sourceVM := &VM{
+		Bmach: &Bondmachine{
+			Rsize:            8,
+			Inputs:           1,
+			Outputs:          1,
+			Internal_inputs:  []Bond{},
+			Internal_outputs: []Bond{},
+			Processors:       []int{},
+			Domains:          []*procbuilder.Machine{},
+		},
+	}
+
+	err := sourceVM.Init()
+	if err != nil {
+		t.Fatalf("Failed to initialize source VM: %v", err)
+	}
+
+	// Test nil destination
+	var nilVM *VM
+	err = nilVM.CopyState(sourceVM)
+	if err == nil {
+		t.Error("Expected error when copying to nil VM, got nil")
+	}
+
+	// Test nil source
+	destVM := &VM{
+		Bmach: sourceVM.Bmach,
+	}
+	err = destVM.Init()
+	if err != nil {
+		t.Fatalf("Failed to initialize dest VM: %v", err)
+	}
+
+	err = destVM.CopyState(nil)
+	if err == nil {
+		t.Error("Expected error when copying from nil VM, got nil")
+	}
+}
