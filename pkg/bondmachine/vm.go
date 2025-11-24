@@ -3,6 +3,7 @@ package bondmachine
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"regexp"
 	"strconv"
 
@@ -49,10 +50,35 @@ type VM struct {
 }
 
 func (vm *VM) CopyState(vmSource *VM) {
+	// Copy processor states
 	for i, pState := range vmSource.Processors {
 		vm.Processors[i].CopyState(pState)
 	}
-	// TODO Finish
+
+	// Copy input/output registers
+	copy(vm.Inputs_regs, vmSource.Inputs_regs)
+	copy(vm.Outputs_regs, vmSource.Outputs_regs)
+	copy(vm.Internal_inputs_regs, vmSource.Internal_inputs_regs)
+	copy(vm.Internal_outputs_regs, vmSource.Internal_outputs_regs)
+
+	// Copy valid flags
+	copy(vm.InputsValid, vmSource.InputsValid)
+	copy(vm.OutputsValid, vmSource.OutputsValid)
+	copy(vm.InternalInputsValid, vmSource.InternalInputsValid)
+	copy(vm.InternalOutputsValid, vmSource.InternalOutputsValid)
+
+	// Copy recv flags
+	copy(vm.InputsRecv, vmSource.InputsRecv)
+	copy(vm.OutputsRecv, vmSource.OutputsRecv)
+	copy(vm.InternalInputsRecv, vmSource.InternalInputsRecv)
+	copy(vm.InternalOutputsRecv, vmSource.InternalOutputsRecv)
+
+	// Copy deferred instructions map
+	vm.DeferredInstructions = make(map[string]DeferredInstruction)
+	maps.Copy(vm.DeferredInstructions, vmSource.DeferredInstructions)
+
+	// Copy absolute tick counter
+	vm.abs_tick = vmSource.abs_tick
 }
 
 type SimConfig struct {
