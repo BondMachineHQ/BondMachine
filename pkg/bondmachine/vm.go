@@ -10,6 +10,12 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/simbox"
 )
 
+const (
+	EVENTONVALID = uint8(0) + iota
+	EVENTONRECV
+	EVENTONCHANGE
+)
+
 type VM struct {
 	Bmach                 *Bondmachine
 	Processors            []*procbuilder.VM
@@ -42,9 +48,9 @@ type VM struct {
 	abs_tick uint64
 }
 
-func (vm *VM) CopyState(vmsource *VM) {
-	for i, pstate := range vmsource.Processors {
-		vm.Processors[i].CopyState(pstate)
+func (vm *VM) CopyState(vmSource *VM) {
+	for i, pState := range vmSource.Processors {
+		vm.Processors[i].CopyState(pState)
 	}
 	// TODO Finish
 }
@@ -67,19 +73,27 @@ type SimDrive struct {
 	PerSet      map[uint64]SimTickSet
 }
 
-// This is initializated when the simulation starts and filled on the way
+type simEvent struct {
+	event  uint8
+	object string
+}
+
+// This is initialized when the simulation starts and filled on the way
+type SimTickMark map[int]struct{}
 type SimTickGet map[int]interface{}
 type SimTickShow map[int]bool
 type SimReport struct {
-	Reportables      []*interface{}         // Direct pointers to the elements that is possible to report
-	Showables        []*interface{}         // Direct pointers to the elements that is possible to show
-	ReportablesTypes []string               // Types of the reportables elements
-	ShowablesTypes   []string               // Types of the showables elements
-	ReportablesNames []string               // Names of the reportables elements
-	AbsGet           map[uint64]SimTickGet  // Absolute tick -> map[index in Reportables]value
-	PerGet           map[uint64]SimTickGet  // Periodic tick -> map[index in Reportables]value
-	AbsShow          map[uint64]SimTickShow // Absolute tick -> map[index in Showables]bool
-	PerShow          map[uint64]SimTickShow // Periodic tick -> map[index in Showables]bool
+	Reportables      []*interface{}           // Direct pointers to the elements that is possible to report
+	Showables        []*interface{}           // Direct pointers to the elements that is possible to show
+	ReportablesTypes []string                 // Types of the reportables elements
+	ShowablesTypes   []string                 // Types of the showables elements
+	ReportablesNames []string                 // Names of the reportables elements
+	AbsGet           map[uint64]SimTickGet    // Absolute tick -> map[index in Reportables]value
+	PerGet           map[uint64]SimTickGet    // Periodic tick -> map[index in Reportables]value
+	AbsShow          map[uint64]SimTickShow   // Absolute tick -> map[index in Showables]bool
+	PerShow          map[uint64]SimTickShow   // Periodic tick -> map[index in Showables]bool
+	EventGet         map[simEvent]SimTickMark // Events that trigger a get -> map[index in Reportables]value, the value is generated alongside the tick
+	EventShow        map[simEvent]SimTickMark // Events that trigger a show -> map[index in Showables]
 }
 
 func (vm *VM) Processor_execute(psc *procbuilder.SimConfig, instruct <-chan int, resp chan<- int, resultChan chan<- string, procId int) {
@@ -796,6 +810,8 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 	perget := make(map[uint64]SimTickGet)
 	absshow := make(map[uint64]SimTickShow)
 	pershow := make(map[uint64]SimTickShow)
+	eventget := make(map[simEvent]SimTickMark)
+	eventshow := make(map[simEvent]SimTickMark)
 
 	for _, rule := range s.Rules {
 		// Skip suspended rules
@@ -907,6 +923,7 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 					ipos = len(rep)
 					rep = append(rep, loc)
 					repNames = append(repNames, rule.Object)
+					eventget[simEvent{event: EVENTONVALID, object: rule.Object}] = map[int]struct{}{ipos: struct{}{}}
 					if rule.Extra == "" {
 						repTypes = append(repTypes, "unsigned")
 					} else {
@@ -929,6 +946,7 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(sho)
 					sho = append(sho, loc)
+					eventshow[simEvent{event: EVENTONVALID, object: rule.Object}] = map[int]struct{}{ipos: struct{}{}}
 					if rule.Extra == "" {
 						shoTypes = append(shoTypes, "unsigned")
 					} else {
@@ -1115,6 +1133,8 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 	sd.PerGet = perget
 	sd.AbsShow = absshow
 	sd.PerShow = pershow
+	sd.EventGet = eventget
+	sd.EventShow = eventshow
 
 	return nil
 }

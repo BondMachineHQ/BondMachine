@@ -3,6 +3,7 @@ package procbuilder
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/simbox"
@@ -29,17 +30,34 @@ type VM struct {
 	CmdChan      chan []byte
 }
 
-func (vm *VM) CopyState(vmsource *VM) {
-	for i, reg := range vmsource.Registers {
-		vm.Registers[i] = reg
+// CopyState copies the state from vmSource to vm
+func (vm *VM) CopyState(vmSource *VM) error {
+	if vm == nil || vmSource == nil {
+		return errors.New("cannot copy state from or to a nil VM")
 	}
-	for i, inp := range vmsource.Inputs {
-		vm.Inputs[i] = inp
-	}
-	for i, outp := range vmsource.Outputs {
-		vm.Outputs[i] = outp
-	}
-	// TODO FINISH
+
+	vm.CpID = 0             // Copying to a new VM, reset CpID
+	vm.Mach = vmSource.Mach // Assuming Machine is immutable, just copy the reference
+
+	copy(vm.Registers, vmSource.Registers)
+	copy(vm.Memory, vmSource.Memory)
+	copy(vm.Inputs, vmSource.Inputs)
+	copy(vm.Outputs, vmSource.Outputs)
+	copy(vm.InputsValid, vmSource.InputsValid)
+	copy(vm.OutputsValid, vmSource.OutputsValid)
+	copy(vm.InputsRecv, vmSource.InputsRecv)
+	copy(vm.OutputsRecv, vmSource.OutputsRecv)
+
+	vm.DeferredInstructions = make(map[string]DeferredInstruction)
+	maps.Copy(vm.DeferredInstructions, vmSource.DeferredInstructions)
+
+	vm.Extra_states = make(map[string]interface{})
+	maps.Copy(vm.Extra_states, vmSource.Extra_states)
+
+	vm.Pc = vmSource.Pc
+	vm.CmdChan = vmSource.CmdChan
+
+	return nil
 }
 
 // Simbox rules are converted in a sim drive when the simulation starts and applied during the simulation
