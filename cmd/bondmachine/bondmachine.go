@@ -925,6 +925,11 @@ func main() {
 			err := vm.Init()
 			check(err)
 
+			oldVm := new(bondmachine.VM)
+			oldVm.Bmach = bmach
+			err = oldVm.Init()
+			check(err)
+
 			var pstatevm *bondmachine.VM
 
 			// Build the simulation configuration
@@ -937,11 +942,17 @@ func main() {
 			sderr := sdrive.Init(conf, sbox, vm)
 			check(sderr)
 
-			// Build the simultion report
+			// Build the simulation report
 			srep := new(bondmachine.SimReport)
 			srerr := srep.Init(sbox, vm)
 			check(srerr)
 
+			// Build the simulation report for the old VM
+			srepOld := new(bondmachine.SimReport)
+			srerrOld := srepOld.Init(sbox, oldVm)
+			check(srerrOld)
+
+			// Launch the processors
 			lerr := vm.Launch_processors(sbox)
 			check(lerr)
 
@@ -1076,6 +1087,24 @@ func main() {
 					}
 				}
 
+				// This will get value to show on events
+				slist, err := bondmachine.EventListShow(srep, srepOld, vm, oldVm)
+				if err != nil {
+					log.Fatal(err)
+				}
+				for k, _ := range slist {
+					alredtIn := false
+					for _, v := range showList {
+						if v == k {
+							alredtIn = true
+							break
+						}
+					}
+					if !alredtIn {
+						showList = append(showList, k)
+					}
+				}
+
 				sort.Ints(showList)
 
 				// Show the tick values
@@ -1145,6 +1174,9 @@ func main() {
 								}
 							}
 						}
+
+						// TODO get from events
+
 					}
 
 					// sort.Ints(repList)
@@ -1214,6 +1246,9 @@ func main() {
 						oldRecordC = &recordC
 					}
 				}
+
+				err = oldVm.CopyState(vm)
+				check(err)
 			}
 		} else if *emu {
 

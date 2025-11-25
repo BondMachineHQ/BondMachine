@@ -35,11 +35,15 @@ func (sr *SimReport) String() string {
 	if len(sr.Showables) > 0 {
 		result += fmt.Sprintf("Showable elements (SHOW): %d\n", len(sr.Showables))
 		for i, elem := range sr.Showables {
+			name := ""
+			if i < len(sr.ShowablesNames) {
+				name = sr.ShowablesNames[i]
+			}
 			elemType := "unsigned"
 			if i < len(sr.ShowablesTypes) {
 				elemType = sr.ShowablesTypes[i]
 			}
-			result += fmt.Sprintf("  [%d] (%s) @ %p\n", i, elemType, elem)
+			result += fmt.Sprintf("  [%d] %s (%s) @ %p\n", i, name, elemType, elem)
 		}
 		result += "\n"
 	}
@@ -167,14 +171,20 @@ func (sr *SimReport) String() string {
 			result += fmt.Sprintf("\nTick %d: ", tick)
 
 			count := 0
-			for idx, enabled := range tickData {
-				if enabled {
-					if count > 0 {
-						result += ", "
-					}
-					result += fmt.Sprintf("[%d]", idx)
-					count++
+			for idx := range tickData {
+				if count > 0 {
+					result += ", "
 				}
+				name := ""
+				if idx < len(sr.ShowablesNames) {
+					name = sr.ShowablesNames[idx]
+				}
+				if name != "" {
+					result += fmt.Sprintf("%s[%d]", name, idx)
+				} else {
+					result += fmt.Sprintf("[%d]", idx)
+				}
+				count++
 			}
 			result += "\n"
 		}
@@ -202,14 +212,20 @@ func (sr *SimReport) String() string {
 			result += fmt.Sprintf("\nPeriod %d: ", period)
 
 			count := 0
-			for idx, enabled := range periodData {
-				if enabled {
-					if count > 0 {
-						result += ", "
-					}
-					result += fmt.Sprintf("[%d]", idx)
-					count++
+			for idx := range periodData {
+				if count > 0 {
+					result += ", "
 				}
+				name := ""
+				if idx < len(sr.ShowablesNames) {
+					name = sr.ShowablesNames[idx]
+				}
+				if name != "" {
+					result += fmt.Sprintf("%s[%d]", name, idx)
+				} else {
+					result += fmt.Sprintf("[%d]", idx)
+				}
+				count++
 			}
 			result += "\n"
 		}
@@ -268,4 +284,28 @@ func (sr *SimReport) formatValue(value interface{}, elemType string) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
+}
+
+func EventListShow(srep *SimReport, srepOld *SimReport, vm *VM, oldVm *VM) (SimTickShow, error) {
+	result := make(SimTickShow)
+
+	for event, pointers := range srep.EventShow {
+		switch event.event {
+		case EVENTONVALID:
+			// This is a case where we need to unwrap boolean pointers
+			iposv := pointers[1]
+			NewValisRef := (*srep.EventData[iposv]).(*bool)
+			OldValisRef := (*srepOld.EventData[iposv]).(*bool)
+			newValid := *NewValisRef
+			oldValid := *OldValisRef
+			if newValid != oldValid && newValid {
+				ipos := pointers[0]
+				result[ipos] = struct{}{}
+			}
+		case EVENTONCHANGE:
+		case EVENTONRECV:
+		}
+	}
+
+	return result, nil
 }

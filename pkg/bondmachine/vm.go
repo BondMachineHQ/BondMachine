@@ -114,21 +114,23 @@ type simEvent struct {
 }
 
 // This is initialized when the simulation starts and filled on the way
-type SimTickMark map[int]struct{}
 type SimTickGet map[int]interface{}
-type SimTickShow map[int]bool
+type SimTickShow map[int]struct{}
+type EventPointers [2]int // [0] -> index in Reportables/Showables, [1] -> index in the event data slice
 type SimReport struct {
-	Reportables      []*interface{}           // Direct pointers to the elements that is possible to report
-	Showables        []*interface{}           // Direct pointers to the elements that is possible to show
-	ReportablesTypes []string                 // Types of the reportables elements
-	ShowablesTypes   []string                 // Types of the showables elements
-	ReportablesNames []string                 // Names of the reportables elements
-	AbsGet           map[uint64]SimTickGet    // Absolute tick -> map[index in Reportables]value
-	PerGet           map[uint64]SimTickGet    // Periodic tick -> map[index in Reportables]value
-	AbsShow          map[uint64]SimTickShow   // Absolute tick -> map[index in Showables]bool
-	PerShow          map[uint64]SimTickShow   // Periodic tick -> map[index in Showables]bool
-	EventGet         map[simEvent]SimTickMark // Events that trigger a get -> map[index in Reportables]value, the value is generated alongside the tick
-	EventShow        map[simEvent]SimTickMark // Events that trigger a show -> map[index in Showables]
+	Reportables      []*interface{}             // Direct pointers to the elements that is possible to report
+	Showables        []*interface{}             // Direct pointers to the elements that is possible to show
+	EventData        []*interface{}             // Data associated to events, for example valid, recv signals
+	ReportablesTypes []string                   // Types of the reportables elements
+	ShowablesTypes   []string                   // Types of the showables elements
+	ReportablesNames []string                   // Names of the reportables elements
+	ShowablesNames   []string                   // Names of the showables elements
+	AbsGet           map[uint64]SimTickGet      // Absolute tick -> map[index in Reportables]value
+	PerGet           map[uint64]SimTickGet      // Periodic tick -> map[index in Reportables]value
+	EventGet         map[simEvent]EventPointers // Events that trigger a get -> map to pointers in Reportables and EventData
+	AbsShow          map[uint64]SimTickShow     // Absolute tick -> map[index in Showables]struct{}
+	PerShow          map[uint64]SimTickShow     // Periodic tick -> map[index in Showables]struct{}
+	EventShow        map[simEvent]EventPointers // Events that trigger a show -> map to pointers in Showables and EventData
 }
 
 func (vm *VM) Processor_execute(psc *procbuilder.SimConfig, instruct <-chan int, resp chan<- int, resultChan chan<- string, procId int) {
@@ -604,6 +606,16 @@ func (vm *VM) DumpIO() string {
 func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 	// TODO include others
 
+	// This function returns a pointer to the element identified by the mnemonic. The elements within
+	// The VM are of the type interface{} to allow for different register sizes. So this function returns
+	// A pointer to an interface{} that can be casted to the right type by the caller.
+	// However, for boolean elements (like valid and recv signals) the function returns a pointer to a any
+	// that can be casted to a *bool by the caller. (It is a sort of embedding a *bool into an interface{})
+	// This is done to avoid returning a pointer to a bool directly, which would not match the *interface{}
+	// The caller must be aware of this behavior and handle the casting accordingly.
+	// The blocks where this is true are marked with a comment.
+
+	// Input registers
 	re := regexp.MustCompile("^i(?P<input>[0-9]+)$")
 	if re.MatchString(mnemonic) {
 		inputNum := re.ReplaceAllString(mnemonic, "${input}")
@@ -613,12 +625,52 @@ func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 			}
 		}
 	}
+	re = regexp.MustCompile("^i(?P<input>[0-9]+)v$")
+	if re.MatchString(mnemonic) {
+		inputNum := re.ReplaceAllString(mnemonic, "${input}")
+		if i, err := strconv.Atoi(inputNum); err == nil {
+			if i < len(vm.InputsValid) {
+				var result any = &vm.InputsValid[i] // Pointer to bool embedded in interface{}
+				return &result, nil
+			}
+		}
+	}
+	re = regexp.MustCompile("^i(?P<input>[0-9]+)r$")
+	if re.MatchString(mnemonic) {
+		inputNum := re.ReplaceAllString(mnemonic, "${input}")
+		if i, err := strconv.Atoi(inputNum); err == nil {
+			if i < len(vm.InputsRecv) {
+				var result any = &vm.InputsRecv[i] // Pointer to bool embedded in interface{}
+				return &result, nil
+			}
+		}
+	}
 	re = regexp.MustCompile("^o(?P<output>[0-9]+)$")
 	if re.MatchString(mnemonic) {
 		outputNum := re.ReplaceAllString(mnemonic, "${output}")
 		if i, err := strconv.Atoi(outputNum); err == nil {
 			if i < len(vm.Outputs_regs) {
 				return &vm.Outputs_regs[i], nil
+			}
+		}
+	}
+	re = regexp.MustCompile("^o(?P<output>[0-9]+)v$")
+	if re.MatchString(mnemonic) {
+		outputNum := re.ReplaceAllString(mnemonic, "${output}")
+		if i, err := strconv.Atoi(outputNum); err == nil {
+			if i < len(vm.OutputsValid) {
+				var result any = &vm.OutputsValid[i] // Pointer to bool embedded in interface{}
+				return &result, nil
+			}
+		}
+	}
+	re = regexp.MustCompile("^o(?P<output>[0-9]+)r$")
+	if re.MatchString(mnemonic) {
+		outputNum := re.ReplaceAllString(mnemonic, "${output}")
+		if i, err := strconv.Atoi(outputNum); err == nil {
+			if i < len(vm.OutputsRecv) {
+				var result any = &vm.OutputsRecv[i] // Pointer to bool embedded in interface{}
+				return &result, nil
 			}
 		}
 	}
@@ -838,15 +890,17 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 
 	rep := make([]*interface{}, 0)
 	sho := make([]*interface{}, 0)
+	ev := make([]*interface{}, 0)
 	repTypes := make([]string, 0)
 	shoTypes := make([]string, 0)
 	repNames := make([]string, 0)
+	shoNames := make([]string, 0)
 	absget := make(map[uint64]SimTickGet)
 	perget := make(map[uint64]SimTickGet)
 	absshow := make(map[uint64]SimTickShow)
 	pershow := make(map[uint64]SimTickShow)
-	eventget := make(map[simEvent]SimTickMark)
-	eventshow := make(map[simEvent]SimTickMark)
+	eventget := make(map[simEvent]EventPointers)
+	eventshow := make(map[simEvent]EventPointers)
 
 	for _, rule := range s.Rules {
 		// Skip suspended rules
@@ -934,6 +988,7 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 					}
 					if ipos == -1 {
 						sho = append(sho, loc)
+						shoNames = append(shoNames, obj)
 						if rule.Extra == "" {
 							shoTypes = append(shoTypes, "unsigned")
 						} else {
@@ -946,8 +1001,9 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 
 		// Intercept the get rules on valid time
 		if rule.Timec == simbox.TIMEC_ON_VALID && rule.Action == simbox.ACTION_GET {
+			// Getting the location of the object to report
+			ipos := -1
 			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
-				ipos := -1
 				for i, iloc := range rep {
 					if iloc == loc {
 						ipos = i
@@ -958,7 +1014,7 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 					ipos = len(rep)
 					rep = append(rep, loc)
 					repNames = append(repNames, rule.Object)
-					eventget[simEvent{event: EVENTONVALID, object: rule.Object}] = map[int]struct{}{ipos: struct{}{}}
+
 					if rule.Extra == "" {
 						repTypes = append(repTypes, "unsigned")
 					} else {
@@ -966,12 +1022,29 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 					}
 				}
 			}
+			// Getting the location of the valid signal of the object to report
+			iposv := -1
+			if loc, err := vm.GetElementLocation(rule.Object + "v"); err == nil {
+				for i, iloc := range ev {
+					if iloc == loc {
+						iposv = i
+						break
+					}
+				}
+				if iposv == -1 {
+					iposv = len(ev)
+					ev = append(ev, loc)
+				}
+			}
+			if (ipos != -1) && (iposv != -1) {
+				eventget[simEvent{event: EVENTONVALID, object: rule.Object}] = [2]int{ipos, iposv}
+			}
 		}
 
 		// Intercept the show rules on valid time
 		if rule.Timec == simbox.TIMEC_ON_VALID && rule.Action == simbox.ACTION_SHOW {
+			ipos := -1
 			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
-				ipos := -1
 				for i, iloc := range sho {
 					if iloc == loc {
 						ipos = i
@@ -981,13 +1054,29 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(sho)
 					sho = append(sho, loc)
-					eventshow[simEvent{event: EVENTONVALID, object: rule.Object}] = map[int]struct{}{ipos: struct{}{}}
+					shoNames = append(shoNames, rule.Object)
 					if rule.Extra == "" {
 						shoTypes = append(shoTypes, "unsigned")
 					} else {
 						shoTypes = append(shoTypes, rule.Extra)
 					}
 				}
+			}
+			iposv := -1
+			if locv, err := vm.GetElementLocation(rule.Object + "v"); err == nil {
+				for i, iloc := range ev {
+					if iloc == locv {
+						iposv = i
+						break
+					}
+				}
+				if iposv == -1 {
+					iposv = len(ev)
+					ev = append(ev, locv)
+				}
+			}
+			if (ipos != -1) && (iposv != -1) {
+				eventshow[simEvent{event: EVENTONVALID, object: rule.Object}] = [2]int{ipos, iposv}
 			}
 		}
 
@@ -1108,6 +1197,7 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(sho)
 					sho = append(sho, loc)
+					shoNames = append(shoNames, rule.Object)
 					if rule.Extra == "" {
 						shoTypes = append(shoTypes, "unsigned")
 					} else {
@@ -1116,10 +1206,10 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 				}
 
 				if strOnTick, ok := absshow[rule.Tick]; ok {
-					strOnTick[ipos] = true
+					strOnTick[ipos] = struct{}{}
 				} else {
-					str_on_tick := make(map[int]bool)
-					str_on_tick[ipos] = true
+					str_on_tick := make(map[int]struct{})
+					str_on_tick[ipos] = struct{}{}
 					absshow[rule.Tick] = str_on_tick
 				}
 			} else {
@@ -1139,6 +1229,7 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 				if ipos == -1 {
 					ipos = len(sho)
 					sho = append(sho, loc)
+					shoNames = append(shoNames, rule.Object)
 					if rule.Extra == "" {
 						shoTypes = append(shoTypes, "unsigned")
 					} else {
@@ -1147,10 +1238,10 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 				}
 
 				if strOnTick, ok := pershow[rule.Tick]; ok {
-					strOnTick[ipos] = true
+					strOnTick[ipos] = struct{}{}
 				} else {
-					strOnTick := make(map[int]bool)
-					strOnTick[ipos] = true
+					strOnTick := make(map[int]struct{})
+					strOnTick[ipos] = struct{}{}
 					pershow[rule.Tick] = strOnTick
 				}
 			} else {
@@ -1161,9 +1252,11 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 
 	sd.Reportables = rep
 	sd.Showables = sho
+	sd.EventData = ev
 	sd.ReportablesTypes = repTypes
 	sd.ShowablesTypes = shoTypes
 	sd.ReportablesNames = repNames
+	sd.ShowablesNames = shoNames
 	sd.AbsGet = absget
 	sd.PerGet = perget
 	sd.AbsShow = absshow
