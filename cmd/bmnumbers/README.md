@@ -82,7 +82,7 @@ bmnumbers -use-files -cast unsigned input.csv
 
 The supported number types are listed in the following table.
 
-| Type Name | Prefixes | Description | Static | Lenght |
+| Type Name | Prefixes | Description | Static | Length |
 | ---- | ------- | ----------- | ------ | ------ |
 | unsigned | none <br> 0u <br> 0d | Unsigned integer | yes | any |
 | signed | 0s <br> 0sd | Signed integer | yes | any |
