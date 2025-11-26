@@ -219,11 +219,11 @@ func (op R2owa) Simulate(vm *VM, instr string) error {
 	outBits := vm.Mach.Outputs_bits()
 	regBits := vm.Mach.R
 	reg := get_id(instr[:regBits])
-	inp := get_id(instr[regBits : int(regBits)+outBits])
-	vm.Outputs[inp] = vm.Registers[reg]
-	vm.OutputsValid[inp] = true
-	if vm.OutputsRecv[inp] {
-		vm.OutputsValid[inp] = false
+	outp := get_id(instr[regBits : int(regBits)+outBits])
+	vm.Outputs[outp] = vm.Registers[reg]
+	vm.OutputsValid[outp] = true
+	if vm.OutputsRecv[outp] {
+		vm.OutputsValid[outp] = false
 		vm.Pc = vm.Pc + 1
 	}
 	return nil
