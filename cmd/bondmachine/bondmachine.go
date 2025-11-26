@@ -1005,60 +1005,66 @@ func main() {
 			// Main simulation loop, tick by tick
 			for i := uint64(0); i < uint64(*simInteractions); i++ {
 
+				shutDownSim := false
+
 				if *simStopOnValidOf != -1 {
 					if vm.OutputsValid[*simStopOnValidOf] {
 						if *debug {
 							log.Printf("Stopping simulation at tick %d due to sim-stop-on-valid-of\n", i)
 						}
-						break
+						shutDownSim = true
+						// The simulation will stop, but we want to show the last values
+						// so we execute the show/report part after this block
 					}
 				}
 
-				// Manage the valid/recv states of the inputs
-				for inIdx, inRecv := range vm.InputsRecv {
-					if inRecv {
-						vm.InputsValid[inIdx] = false
-					}
-				}
-
-				// This will get actions eventually to do on this tick
-				if act, exist_actions := sdrive.AbsSet[i]; exist_actions {
-					for k, val := range act {
-						*sdrive.Injectables[k] = val
-						if inIdx, ok := sdrive.NeedValid[k]; ok {
-							vm.InputsValid[inIdx] = true
+				if !shutDownSim {
+					// Manage the valid/recv states of the inputs
+					for inIdx, inRecv := range vm.InputsRecv {
+						if inRecv {
+							vm.InputsValid[inIdx] = false
 						}
 					}
-				}
 
-				// TODO Periodic set
-
-				if *emit_dot {
-					gvfile := bmach.Dot(conf, "", vm, pstatevm)
-					filename := fmt.Sprintf("graphviz%0"+intlen_s+"d", int(i))
-					f, err := os.Create(filename + ".dot")
-					check(err)
-					_, err = f.WriteString(gvfile)
-					check(err)
-					f.Close()
-
-					err = pstatevm.CopyState(vm)
-					check(err)
-				}
-
-				result, err := vm.Step(sconfig)
-				check(err)
-
-				// Manage the valid/recv states of the outputs
-				for outIdx, outValid := range vm.OutputsValid {
-					if outValid {
-						vm.OutputsRecv[outIdx] = true
-					} else {
-						vm.OutputsRecv[outIdx] = false
+					// This will get actions eventually to do on this tick
+					if act, exist_actions := sdrive.AbsSet[i]; exist_actions {
+						for k, val := range act {
+							*sdrive.Injectables[k] = val
+							if inIdx, ok := sdrive.NeedValid[k]; ok {
+								vm.InputsValid[inIdx] = true
+							}
+						}
 					}
-				}
 
-				fmt.Print(result)
+					// TODO Periodic set
+
+					if *emit_dot {
+						gvfile := bmach.Dot(conf, "", vm, pstatevm)
+						filename := fmt.Sprintf("graphviz%0"+intlen_s+"d", int(i))
+						f, err := os.Create(filename + ".dot")
+						check(err)
+						_, err = f.WriteString(gvfile)
+						check(err)
+						f.Close()
+
+						err = pstatevm.CopyState(vm)
+						check(err)
+					}
+
+					result, err := vm.Step(sconfig)
+					check(err)
+
+					// Manage the valid/recv states of the outputs
+					for outIdx, outValid := range vm.OutputsValid {
+						if outValid {
+							vm.OutputsRecv[outIdx] = true
+						} else {
+							vm.OutputsRecv[outIdx] = false
+						}
+					}
+
+					fmt.Print(result)
+				}
 
 				showList := make([]int, 0, len(srep.Showables))
 
@@ -1088,7 +1094,7 @@ func main() {
 				}
 
 				// This will get value to show on events
-				slist, err := bondmachine.EventListShow(srep, srepOld, vm, oldVm)
+				slist, err := bondmachine.EventListShow(shutDownSim, srep, srepOld, vm, oldVm)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -1245,6 +1251,10 @@ func main() {
 						}
 						oldRecordC = &recordC
 					}
+				}
+
+				if shutDownSim {
+					break
 				}
 
 				err = oldVm.CopyState(vm)

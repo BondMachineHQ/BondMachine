@@ -15,6 +15,7 @@ const (
 	EVENTONVALID = uint8(0) + iota
 	EVENTONRECV
 	EVENTONCHANGE
+	EVENTONEXIT
 )
 
 type VM struct {
@@ -1077,6 +1078,61 @@ func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 			}
 			if (ipos != -1) && (iposv != -1) {
 				eventshow[simEvent{event: EVENTONVALID, object: rule.Object}] = [2]int{ipos, iposv}
+			}
+		}
+		// Intercept the get rules on exit time
+		if rule.Timec == simbox.TIMEC_ON_EXIT && rule.Action == simbox.ACTION_GET {
+			ipos := -1
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
+				for i, iloc := range rep {
+					if iloc == loc {
+						ipos = i
+						break
+					}
+				}
+				if ipos == -1 {
+					ipos = len(rep)
+					rep = append(rep, loc)
+					repNames = append(repNames, rule.Object)
+					if rule.Extra == "" {
+						repTypes = append(repTypes, "unsigned")
+					} else {
+						repTypes = append(repTypes, rule.Extra)
+					}
+				}
+			}
+
+			// The exit event does not need other signals
+			if ipos != -1 {
+				eventget[simEvent{event: EVENTONEXIT, object: rule.Object}] = [2]int{ipos, -1}
+			}
+		}
+
+		// Intercept the show rules on exit time
+		if rule.Timec == simbox.TIMEC_ON_EXIT && rule.Action == simbox.ACTION_SHOW {
+			ipos := -1
+			if loc, err := vm.GetElementLocation(rule.Object); err == nil {
+				for i, iloc := range sho {
+					if iloc == loc {
+						ipos = i
+						break
+					}
+				}
+				if ipos == -1 {
+					ipos = len(sho)
+					sho = append(sho, loc)
+					shoNames = append(shoNames, rule.Object)
+					if rule.Extra == "" {
+						shoTypes = append(shoTypes, "unsigned")
+					} else {
+						shoTypes = append(shoTypes, rule.Extra)
+					}
+				}
+			}
+
+			// The exit event does not need other signals
+			if ipos != -1 {
+				eventshow[simEvent{event: EVENTONEXIT, object: rule.Object}] = [2]int{ipos, -1}
 			}
 		}
 

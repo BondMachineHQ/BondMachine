@@ -1,6 +1,8 @@
 package bondmachine
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func (sr *SimReport) String() string {
 	if sr == nil {
@@ -286,11 +288,17 @@ func (sr *SimReport) formatValue(value interface{}, elemType string) string {
 	}
 }
 
-func EventListShow(srep *SimReport, srepOld *SimReport, vm *VM, oldVm *VM) (SimTickShow, error) {
+func EventListShow(inShutDown bool, srep *SimReport, srepOld *SimReport, vm *VM, oldVm *VM) (SimTickShow, error) {
 	result := make(SimTickShow)
 
 	for event, pointers := range srep.EventShow {
 		switch event.event {
+		case EVENTONEXIT:
+			// Show on shutdown
+			if inShutDown {
+				ipos := pointers[0]
+				result[ipos] = struct{}{}
+			}
 		case EVENTONVALID:
 			// This is a case where we need to unwrap boolean pointers
 			iposv := pointers[1]
@@ -303,9 +311,15 @@ func EventListShow(srep *SimReport, srepOld *SimReport, vm *VM, oldVm *VM) (SimT
 				result[ipos] = struct{}{}
 			}
 		case EVENTONCHANGE:
+			// TODO: Finish this
 		case EVENTONRECV:
+			// TODO: Finish this
+		default:
+			return nil, fmt.Errorf("unknown event type %d in EventListShow", event.event)
 		}
 	}
 
 	return result, nil
 }
+
+// TODO: EventListGet to be implemented

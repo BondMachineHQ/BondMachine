@@ -13,6 +13,7 @@ const (
 	TIMEC_REL                       // Relative time aka periodic
 	TIMEC_ON_VALID                  // On valid signal
 	TIMEC_ON_RECV                   // On receive signal
+	TIMEC_ON_EXIT                   // When simulation ends
 )
 
 const (
@@ -87,6 +88,13 @@ func (rule Rule) String() string {
 			return "onrecv:get:" + rule.Object + ":" + rule.Extra
 		case ACTION_SHOW:
 			return "onrecv:show:" + rule.Object + ":" + rule.Extra
+		}
+	case TIMEC_ON_EXIT:
+		switch rule.Action {
+		case ACTION_GET:
+			return "onexit:get:" + rule.Object + ":" + rule.Extra
+		case ACTION_SHOW:
+			return "onexit:show:" + rule.Object + ":" + rule.Extra
 		}
 	}
 	return ""
@@ -299,6 +307,26 @@ func (r *Simbox) Add(adds string) error {
 				Suspended: false,
 			})
 			return nil
+		} else if words[0] == "onexit" && words[1] == "get" {
+			r.Rules = append(r.Rules, Rule{
+				Timec:     TIMEC_ON_EXIT,
+				Tick:      0,
+				Action:    ACTION_GET,
+				Object:    words[2],
+				Extra:     words[3],
+				Suspended: false,
+			})
+			return nil
+		} else if words[0] == "onexit" && words[1] == "show" {
+			r.Rules = append(r.Rules, Rule{
+				Timec:     TIMEC_ON_EXIT,
+				Tick:      0,
+				Action:    ACTION_SHOW,
+				Object:    words[2],
+				Extra:     words[3],
+				Suspended: false,
+			})
+			return nil
 		}
 	} else if len(words) == 3 {
 		if words[0] == "config" {
@@ -377,6 +405,26 @@ func (r *Simbox) Add(adds string) error {
 		} else if words[0] == "onrecv" && words[1] == "show" {
 			r.Rules = append(r.Rules, Rule{
 				Timec:     TIMEC_ON_RECV,
+				Tick:      0,
+				Action:    ACTION_SHOW,
+				Object:    words[2],
+				Extra:     "unsigned",
+				Suspended: false,
+			})
+			return nil
+		} else if words[0] == "onexit" && words[1] == "get" {
+			r.Rules = append(r.Rules, Rule{
+				Timec:     TIMEC_ON_EXIT,
+				Tick:      0,
+				Action:    ACTION_GET,
+				Object:    words[2],
+				Extra:     "unsigned",
+				Suspended: false,
+			})
+			return nil
+		} else if words[0] == "onexit" && words[1] == "show" {
+			r.Rules = append(r.Rules, Rule{
+				Timec:     TIMEC_ON_EXIT,
 				Tick:      0,
 				Action:    ACTION_SHOW,
 				Object:    words[2],
