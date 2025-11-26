@@ -188,11 +188,20 @@ func (op Sicv2) Simulate(vm *VM, instr string) error {
 	if state, ok := vm.Extra_states["sicv2_state"]; ok {
 		sicv2State = state.(uint8)
 	} else {
-		vm.Extra_states["sicv2_state"] = SICV2SM_WAIT
-		sicv2State = SICV2SM_WAIT
+		vm.Extra_states["sicv2_state"] = SICV2SM_IDLE
+		sicv2State = SICV2SM_IDLE
 	}
 
-	// fmt.Println(sicv2State)
+	// switch sicv2State {
+	// case SICV2SM_IDLE:
+	// 	fmt.Println("SICV2 STATE: IDLE")
+	// case SICV2SM_WAIT:
+	// 	fmt.Println("SICV2 STATE: WAIT")
+	// case SICV2SM_COUNT:
+	// 	fmt.Println("SICV2 STATE: COUNT")
+	// case SICV2SM_DONE:
+	// 	fmt.Println("SICV2 STATE: DONE")
+	// }
 
 	switch sicv2State {
 	case SICV2SM_IDLE:
