@@ -703,7 +703,7 @@ func (bmach *Bondmachine) AttachBenchmarkCoreV2(endpoints []string) error {
 		opcodes := make([]procbuilder.Opcode, 0)
 
 		for _, op := range procbuilder.Allopcodes {
-			for _, opn := range []string{"sicv2", "r2o", "j"} {
+			for _, opn := range []string{"sicv2", "r2owa", "j"} {
 				if opn == op.Op_get_name() {
 					opcodes = append(opcodes, op)
 					break
@@ -722,7 +722,7 @@ func (bmach *Bondmachine) AttachBenchmarkCoreV2(endpoints []string) error {
 		myarch.O = uint8(2)
 		myarch.Shared_constraints = ""
 
-		prog := "sicv2 r0 i0 i1\nr2o r0 o0\nj 0\n"
+		prog := "sicv2 r0 i0 i1\nr2owa r0 o0\nj 0\n"
 
 		if prog, err := myarch.Assembler([]byte(prog)); err == nil {
 			mybcore.Program = prog

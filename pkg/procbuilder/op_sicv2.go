@@ -2,7 +2,6 @@ package procbuilder
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -193,7 +192,7 @@ func (op Sicv2) Simulate(vm *VM, instr string) error {
 		sicv2State = SICV2SM_WAIT
 	}
 
-	fmt.Println(sicv2State)
+	// fmt.Println(sicv2State)
 
 	switch sicv2State {
 	case SICV2SM_IDLE:
