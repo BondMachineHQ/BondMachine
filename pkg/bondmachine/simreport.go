@@ -9,7 +9,7 @@ func (sr *SimReport) String() string {
 		return "Empty SimReport"
 	}
 
-	if len(sr.Reportables) == 0 && len(sr.Showables) == 0 && len(sr.AbsGet) == 0 && len(sr.PerGet) == 0 {
+	if len(sr.Reportables) == 0 && len(sr.Showables) == 0 && len(sr.AbsGet) == 0 && len(sr.PerGet) == 0 && len(sr.EventGet) == 0 && len(sr.EventShow) == 0 {
 		return "No reportable data"
 	}
 
@@ -46,6 +46,15 @@ func (sr *SimReport) String() string {
 				elemType = sr.ShowablesTypes[i]
 			}
 			result += fmt.Sprintf("  [%d] %s (%s) @ %p\n", i, name, elemType, elem)
+		}
+		result += "\n"
+	}
+
+	// List event data elements
+	if len(sr.EventData) > 0 {
+		result += fmt.Sprintf("Event data elements: %d\n", len(sr.EventData))
+		for i, elem := range sr.EventData {
+			result += fmt.Sprintf("  [%d] @ %p\n", i, elem)
 		}
 		result += "\n"
 	}
@@ -152,6 +161,16 @@ func (sr *SimReport) String() string {
 		result += "\n"
 	}
 
+	// Report event-based GET values
+	if len(sr.EventGet) > 0 {
+		result += fmt.Sprintf("Event-based GET captures (%d event(s)):\n", len(sr.EventGet))
+		for event, pointers := range sr.EventGet {
+			result += fmt.Sprintf("\nEvent: %v (object: %s)\n", event.event, event.object)
+			result += fmt.Sprintf("  Reportable index: %d, Event data index: %d\n", pointers[0], pointers[1])
+		}
+		result += "\n"
+	}
+
 	// Report absolute SHOW values
 	if len(sr.AbsShow) > 0 {
 		// Sort ticks
@@ -230,6 +249,16 @@ func (sr *SimReport) String() string {
 				count++
 			}
 			result += "\n"
+		}
+		result += "\n"
+	}
+
+	// Report event-based SHOW values
+	if len(sr.EventShow) > 0 {
+		result += fmt.Sprintf("Event-based SHOW triggers (%d event(s)):\n", len(sr.EventShow))
+		for event, pointers := range sr.EventShow {
+			result += fmt.Sprintf("\nEvent: %v (object: %s)\n", event.event, event.object)
+			result += fmt.Sprintf("  Showable index: %d, Event data index: %d\n", pointers[0], pointers[1])
 		}
 		result += "\n"
 	}
