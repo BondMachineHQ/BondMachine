@@ -37,16 +37,7 @@ func (op I2rw) Op_get_instruction_len(arch *Arch) int {
 func (op I2rw) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
 	result := ""
 
-	// The extra process will be created and handled by the first waiting operator present in the architecture
-	setflag := true
-	for _, currop := range arch.Op {
-		if currop.Op_get_name() == "i2r" {
-			setflag = false
-			break
-		}
-	}
-
-	if setflag {
+	if arch.OnlyOne(op.Op_get_name(), unique["inputrecv"]) {
 
 		opbits := arch.Opcodes_bits()
 		rom_word := arch.Max_word()
