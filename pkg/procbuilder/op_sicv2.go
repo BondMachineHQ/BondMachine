@@ -45,16 +45,65 @@ func (op Sicv2) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor stri
 	result := "\n"
 	result += "\t//State Machine for SICv2\n"
 	result += "\treg [1:0] sicv2_sm;\n"
+	result += "\tlocalparam SICV2SM_IDLE = 2'b00;\n"
+	result += "\tlocalparam SICV2SM_WAIT = 2'b01;\n"
+	result += "\tlocalparam SICV2SM_COUNT = 2'b10;\n"
+	result += "\tlocalparam SICV2SM_DONE = 2'b11;\n"
 	result += "\n"
 
-	result += "\n"
-	// Data received fro inputs
-	for j := 0; j < int(arch.N); j++ {
-		result += "\treg " + strings.ToLower(Get_input_name(j)) + "_recv;\n"
+	if arch.OnlyOne(op.Op_get_name(), unique["inputrecv"]) {
+
+		opbits := arch.Opcodes_bits()
+		rom_word := arch.Max_word()
+
+		result += "\n"
+		// Data received fro inputs
+		for j := 0; j < int(arch.N); j++ {
+			result += "\treg " + strings.ToLower(Get_input_name(j)) + "_recv;\n"
+		}
+
+		result += "\n"
+
+		for j := 0; j < int(arch.N); j++ {
+
+			objects := make([]string, 1)
+			objects[0] = strings.ToLower(Get_input_name(j))
+
+			// Process for data outputs data valid
+			result += "\talways @(posedge clock_signal, posedge reset_signal)\n"
+			result += "\tbegin\n"
+
+			result += "\t\tif (reset_signal)\n"
+			result += "\t\tbegin\n"
+			result += "\t\t\t" + strings.ToLower(Get_input_name(j)) + "_recv <= #1 1'b0;\n"
+			result += "\t\tend\n"
+			result += "\t\telse\n"
+			result += "\t\tbegin\n"
+
+			if opbits == 1 {
+				result += "\t\t\tcase(current_instruction[" + strconv.Itoa(rom_word-1) + "])\n"
+			} else {
+				result += "\t\t\tcase(current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
+			}
+
+			for _, currop := range arch.Op {
+				result += currop.Op_instruction_verilog_extra_block(arch, flavor, uint8(4), "input_data_received", objects)
+			}
+
+			result += "\t\t\t\tdefault: begin\n"
+			result += "\t\t\t\t\tif (!" + strings.ToLower(Get_input_name(j)) + "_valid)\n"
+			result += "\t\t\t\t\tbegin\n"
+			result += "\t\t\t\t\t\t" + strings.ToLower(Get_input_name(j)) + "_recv <= #1 1'b0;\n"
+			result += "\t\t\t\t\tend\n"
+			result += "\t\t\t\tend\n"
+
+			result += "\t\t\tendcase\n"
+
+			result += "\t\tend\n"
+
+			result += "\tend\n"
+		}
 	}
-
-	result += "\n"
-	// TODO Finire a allineare con i2r
 
 	return result
 }
@@ -62,54 +111,71 @@ func (op Sicv2) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor stri
 func (op Sicv2) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	romWord := arch.Max_word()
 	opBits := arch.Opcodes_bits()
+	tabsNum := 5
+	regNum := 1 << arch.R
 	inBits := arch.Inputs_bits()
 
-	regNum := 1 << arch.R
-
 	result := ""
-	result += "					SICV2: begin\n"
-	if arch.N > 0 {
-		if arch.R == 1 {
-			result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + "])\n"
-		} else {
-			result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)) + "])\n"
-		}
-		for i := 0; i < regNum; i++ {
-			result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
+	result += tabs(tabsNum) + "SICV2: begin\n"
 
-			if inBits == 1 {
-				result += "							case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + "])\n"
-			} else {
-				result += "							case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)) + "])\n"
-			}
-
-			for j := 0; j < int(arch.N); j++ {
-				result += "							" + strings.ToUpper(Get_input_name(j)) + " : begin\n"
-				if inBits == 1 {
-					result += "								case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)-1) + "])\n"
-				} else {
-					result += "								case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-2*int(inBits)) + "])\n"
-				}
-				for k := 0; k < int(arch.N); k++ {
-					result += "								" + strings.ToUpper(Get_input_name(k)) + " : begin\n"
-					result += "									_" + strings.ToLower(Get_input_name(k)) + "_recv <= #1 1'b1;\n"
-					result += "								end\n"
-				}
-				result += "								endcase\n"
-
-				// result += NextInstruction(conf, arch, 9, "_pc + 1'b1")
-				result += "								$display(\"SIC " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_input_name(j)) + "\");\n"
-				result += "							end\n"
-
-			}
-			result += "							endcase\n"
-			result += "						end\n"
-		}
-		result += "						endcase\n"
+	if arch.R == 1 {
+		result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + "])\n"
 	} else {
-		result += "						$display(\"NOP\");\n"
+		result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)) + "])\n"
 	}
-	result += "					end\n"
+	for i := 0; i < regNum; i++ {
+		result += tabs(tabsNum+2) + strings.ToUpper(Get_register_name(i)) + " : begin\n"
+
+		if inBits == 1 {
+			result += tabs(tabsNum+3) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + "])\n"
+		} else {
+			result += tabs(tabsNum+3) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)) + "])\n"
+		}
+
+		for j := 0; j < int(arch.N); j++ {
+			result += tabs(tabsNum+4) + strings.ToUpper(Get_input_name(j)) + " : begin\n"
+			if inBits == 1 {
+				result += tabs(tabsNum+5) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)-1) + "])\n"
+			} else {
+				result += tabs(tabsNum+5) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-2*int(inBits)) + "])\n"
+			}
+			for k := 0; k < int(arch.N); k++ {
+				result += tabs(tabsNum+5) + strings.ToUpper(Get_input_name(k)) + " : begin\n"
+				result += tabs(tabsNum+6) + "case (sicv2_sm)\n"
+				result += tabs(tabsNum+6) + "SICV2SM_IDLE: begin\n"
+				result += tabs(tabsNum+7) + "if (" + strings.ToLower(Get_input_name(j)) + "_valid) begin\n"
+				result += tabs(tabsNum+8) + "sicv2_sm <= SICV2SM_WAIT;\n"
+				result += tabs(tabsNum+7) + "end\n"
+				result += tabs(tabsNum+6) + "end\n"
+				result += tabs(tabsNum+6) + "SICV2SM_WAIT: begin\n"
+				result += tabs(tabsNum+7) + "if (!" + strings.ToLower(Get_input_name(j)) + "_valid) begin\n"
+				result += tabs(tabsNum+8) + "sicv2_sm <= SICV2SM_COUNT;\n"
+				result += tabs(tabsNum+7) + "end\n"
+				result += tabs(tabsNum+6) + "end\n"
+				result += tabs(tabsNum+6) + "SICV2SM_COUNT: begin\n"
+				result += tabs(tabsNum+7) + "if (!" + strings.ToLower(Get_input_name(k)) + "_valid) begin\n"
+				result += tabs(tabsNum+8) + "_" + strings.ToLower(Get_register_name(i)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + " + 1'b1;\n"
+				result += tabs(tabsNum+7) + "end else begin\n"
+				result += tabs(tabsNum+8) + "sicv2_sm <= SICV2SM_IDLE;\n"
+				result += tabs(tabsNum+8) + "_pc <= #1 _pc + 1'b1;\n"
+				result += tabs(tabsNum+7) + "end\n"
+				result += tabs(tabsNum+6) + "end\n"
+				result += tabs(tabsNum+6) + "endcase\n"
+				result += tabs(tabsNum+5) + "end\n"
+			}
+			result += tabs(tabsNum+5) + "endcase\n"
+
+			// result += NextInstruction(conf, arch, 9, "_pc + 1'b1")
+			result += tabs(tabsNum+5) + "$display(\"SICV2 " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_input_name(j)) + " - PC=%d\", _pc);\n"
+			result += tabs(tabsNum+4) + "end\n"
+
+		}
+		result += tabs(tabsNum+3) + "endcase\n"
+		result += tabs(tabsNum+2) + "end\n"
+	}
+	result += tabs(tabsNum+2) + "endcase\n"
+
+	result += tabs(tabsNum+1) + "end\n"
 	return result
 }
 
@@ -175,6 +241,7 @@ func (op Sicv2) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Sicv2) Simulate(vm *VM, instr string) error {
+	// reference: {"support_sim": "testing"}
 	inBits := vm.Mach.Inputs_bits()
 	regBits := vm.Mach.R
 	reg := get_id(instr[:regBits])
@@ -317,15 +384,57 @@ func (Op Sicv2) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, er
 
 	}
 
-	return []UsageNotify{}, errors.New("Wrong parameters")
+	return []UsageNotify{}, errors.New("wrong parameters")
 }
 
 func (Op Sicv2) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
+	opBits := arch.Opcodes_bits()
+	inBits := arch.Inputs_bits()
+	romWord := arch.Max_word()
+
 	result := ""
+
+	pref := strings.Repeat("\t", int(level))
+
 	switch blockname {
+	case "input_data_received":
+		result += pref + "SICV2: begin\n"
+		in1 := ""
+		if inBits == 1 {
+			in1 = "current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + "]"
+		} else {
+			in1 = "current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)) + "]"
+		}
+
+		in2 := ""
+		if inBits == 1 {
+			in2 = "current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)-1) + "]"
+		} else {
+			in2 = "current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-int(inBits)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-2*int(inBits)) + "]"
+		}
+
+		result += pref + "\tif (" + in1 + " == " + strings.ToUpper(objects[0]) + " || " + in2 + " == " + strings.ToUpper(objects[0]) + ") begin\n"
+
+		result += pref + "\t\tif (" + strings.ToLower(objects[0]) + "_valid)\n"
+		result += pref + "\t\tbegin\n"
+		result += pref + "\t\t\t" + strings.ToLower(objects[0]) + "_recv <= #1 1'b1;\n"
+		result += pref + "\t\tend else begin\n"
+		result += pref + "\t\t\t" + strings.ToLower(objects[0]) + "_recv <= #1 1'b0;\n"
+		result += pref + "\t\tend\n"
+		result += pref + "\tend\n"
+
+		result += pref + "\telse begin\n"
+		result += pref + "\t\tif (!" + strings.ToLower(objects[0]) + "_valid)\n"
+		result += pref + "\t\tbegin\n"
+		result += pref + "\t\t\t" + strings.ToLower(objects[0]) + "_recv <= #1 1'b0;\n"
+		result += pref + "\t\tend\n"
+		result += pref + "\tend\n"
+
+		result += pref + "end\n"
 	default:
 		result = ""
 	}
+
 	return result
 }
 func (Op Sicv2) HLAssemblerMatch(arch *Arch) []string {
@@ -333,6 +442,7 @@ func (Op Sicv2) HLAssemblerMatch(arch *Arch) []string {
 	return result
 }
 func (Op Sicv2) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+	// reference: {"support_hlasm": "notapplicable"}
 	return nil, errors.New("HL Assembly normalize failed")
 }
 func (Op Sicv2) ExtraFiles(arch *Arch) ([]string, []string) {
@@ -340,5 +450,6 @@ func (Op Sicv2) ExtraFiles(arch *Arch) ([]string, []string) {
 }
 
 func (Op Sicv2) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+	// reference: {"support_asmeta": "notapplicable"}
 	return nil, nil
 }
