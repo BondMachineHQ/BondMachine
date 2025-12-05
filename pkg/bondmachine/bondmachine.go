@@ -703,7 +703,7 @@ func (bmach *Bondmachine) AttachBenchmarkCoreV2(endpoints []string) error {
 		opcodes := make([]procbuilder.Opcode, 0)
 
 		for _, op := range procbuilder.Allopcodes {
-			for _, opn := range []string{"sicv2", "r2owa", "j"} {
+			for _, opn := range []string{"sicv2", "r2owa", "j", "clr", "inc"} {
 				if opn == op.Op_get_name() {
 					opcodes = append(opcodes, op)
 					break
@@ -719,10 +719,13 @@ func (bmach *Bondmachine) AttachBenchmarkCoreV2(endpoints []string) error {
 		myarch.L = uint8(0)
 		myarch.N = uint8(2)
 		myarch.M = uint8(1)
-		myarch.O = uint8(2)
+		// myarch.O = uint8(3)
 		myarch.Shared_constraints = ""
 
-		prog := "sicv2 r0 i0 i1\nr2owa r0 o0\nj 0\n"
+		prog := "sicv2 r0 i0 i1\nclr r0\ninc r0\nr2owa r0 o0\nj 0\n"
+
+		// ROM size depends on number of lines
+		myarch.O = uint8(Needed_bits(len(strings.Split(prog, "\n"))))
 
 		if prog, err := myarch.Assembler([]byte(prog)); err == nil {
 			mybcore.Program = prog
