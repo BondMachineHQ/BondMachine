@@ -86,8 +86,15 @@ int main(int argc, char *argv[])
 
                         for (int i = 0; i < TOTOUT; i++)
                                 if (i < threshold * BM_OUTPUT)
-                                        if ((i+1)%BM_OUTPUT==0) fprintf(fp, "%lu\n", d2[i]);
-					else fprintf(fp, "%.12f\n", d2[i]);
+                                        if ((i+1)%BM_OUTPUT==0) {
+						unsigned int val = *(unsigned int *)&d2[i];
+						fprintf(fp,"%u\n", val);
+		                                //for (int bit = 31; bit >= 0; bit--)
+                                                //       fprintf(fp, "%d", (val >> bit) & 1);
+                                                //     fprintf(fp, "\n");
+					} else {
+						fprintf(fp, "%.12f\n", d2[i]);
+					}
                 }
 
                 fclose(fp);
