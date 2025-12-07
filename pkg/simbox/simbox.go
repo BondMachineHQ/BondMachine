@@ -24,7 +24,7 @@ const (
 )
 
 type Rule struct {
-	Timec     uint8  // Time constraint type: absolute, relative, none, on valid, on receive
+	Timec     uint8  // Time constraint type: absolute, relative, none, on valid, on receive, on exit
 	Tick      uint64 // Tick (if applicable)
 	Action    uint8  // Action: set, get, show, config
 	Object    string // Object: register, memory, io, config option
