@@ -11,31 +11,45 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
-type I2rw struct{}
+const (
+	SICV3IDLE = uint8(0) + iota
+	SICV3WAIT
+)
 
-func (op I2rw) Op_get_name() string {
-	return "i2rw"
+type Sicv3 struct{}
+
+func (op Sicv3) Op_get_name() string {
+	return "sicv3"
 }
 
-func (op I2rw) Op_get_desc() string {
-	return "Sync input to register"
+func (op Sicv3) Op_get_desc() string {
+	return "Wait for an input change via valid and increments a register"
 }
 
-func (op I2rw) Op_show_assembler(arch *Arch) string {
+func (op Sicv3) Op_show_assembler(arch *Arch) string {
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
-	result := "i2rw [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(inBits) + "(Input)]	// Set a register to the value of the given input [" + strconv.Itoa(opBits+int(arch.R)+inBits) + " waiting for a valid signal]\n"
+	result := "sicv3 [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(inBits) + "(Input)]	// Wait for an input change via valid and increments a register [" + strconv.Itoa(opBits+int(arch.R)+inBits) + "]\n"
 	return result
 }
 
-func (op I2rw) Op_get_instruction_len(arch *Arch) int {
+func (op Sicv3) Op_get_instruction_len(arch *Arch) int {
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
 	return opBits + int(arch.R) + int(inBits) // The bits for the opcode + bits for a register + bits for the input
 }
 
-func (op I2rw) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
+func (op Sicv3) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
 	result := ""
+
+	result += "\n\t// Signals for sicv3 instruction\n"
+	result += "\treg sicv3_state;\n"
+	result += "\tlocalparam SICV3IDLE = 1'b0;\n"
+	result += "\tlocalparam SICV3WAIT = 1'b1;\n"
+	result += "\n"
+	result += "\tinitial begin\n"
+	result += "\t\tsicv3_state = SICV3IDLE;\n"
+	result += "\tend\n"
 
 	if arch.OnlyOne(op.Op_get_name(), unique["inputrecv"]) {
 
@@ -94,7 +108,7 @@ func (op I2rw) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor strin
 	return result
 }
 
-func (op I2rw) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op Sicv3) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	romWord := arch.Max_word()
 	opBits := arch.Opcodes_bits()
 	inpBits := arch.Inputs_bits()
@@ -104,7 +118,7 @@ func (op I2rw) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 	pref := strings.Repeat("\t", 6)
 
 	result := ""
-	result += "					I2RW: begin\n"
+	result += "					SICV3: begin\n"
 	if arch.N > 0 {
 		if arch.R == 1 {
 			result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + "])\n"
@@ -123,11 +137,19 @@ func (op I2rw) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 			for j := 0; j < int(arch.N); j++ {
 				result += "							" + strings.ToUpper(Get_input_name(j)) + " : begin\n"
 
-				result += pref + "\t\tif (" + strings.ToLower(Get_input_name(j)) + "_valid)\n"
-				result += pref + "\t\tbegin\n"
-				result += pref + "\t\t\t_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + strings.ToLower(Get_input_name(j)) + ";\n"
+				result += pref + "\t\tif (" + strings.ToLower(Get_input_name(j)) + "_valid) begin\n"
+				result += pref + "\t\t\tif (sicv3_state == SICV3IDLE) begin\n"
+				result += pref + "\t\t\t\t_" + strings.ToLower(Get_register_name(i)) + " <= #1 " + strconv.Itoa(int(arch.Rsize)) + "'d0;\n"
+				result += pref + "\t\t\t\tsicv3_state <= SICV3WAIT;\n"
+				result += pref + "\t\t\tend else begin\n"
+				result += pref + "\t\t\t\tsicv3_state <= SICV3IDLE;\n"
+				result += pref + "\t\t\tend\n"
 				result += pref + NextInstruction(conf, arch, 3, "_pc + 1'b1")
-				result += pref + "\t\t\t$display(\"I2RW " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_input_name(j)) + "\");\n"
+				result += pref + "\t\t\t$display(\"SICV3 " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_input_name(j)) + "\");\n"
+				result += pref + "\t\tend else begin\n"
+				result += pref + "\t\t\tif (sicv3_state == SICV3WAIT) begin\n"
+				result += pref + "\t\t\t\t_" + strings.ToLower(Get_register_name(i)) + " <= #1 _" + strings.ToLower(Get_register_name(i)) + " + 1;\n"
+				result += pref + "\t\t\tend\n"
 				result += pref + "\t\tend\n"
 				result += "							end\n"
 
@@ -143,11 +165,11 @@ func (op I2rw) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 	return result
 }
 
-func (op I2rw) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
+func (op Sicv3) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (op I2rw) Assembler(arch *Arch, words []string) (string, error) {
+func (op Sicv3) Assembler(arch *Arch, words []string) (string, error) {
 	// {"reference": {"support_asm": "yes"}
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
@@ -185,18 +207,18 @@ func (op I2rw) Assembler(arch *Arch, words []string) (string, error) {
 	return result, nil
 }
 
-func (op I2rw) Disassembler(arch *Arch, instr string) (string, error) {
-	inpbits := arch.Inputs_bits()
-	reg_id := get_id(instr[:arch.R])
-	result := strings.ToLower(Get_register_name(reg_id)) + " "
-	inp_id := get_id(instr[arch.R : int(arch.R)+inpbits])
-	result += strings.ToLower(Get_input_name(inp_id))
+func (op Sicv3) Disassembler(arch *Arch, instr string) (string, error) {
+	// {"reference": {"support_disasm": "yes"}
+	inBits := arch.Inputs_bits()
+	regId := get_id(instr[:arch.R])
+	result := strings.ToLower(Get_register_name(regId)) + " "
+	inId := get_id(instr[arch.R : int(arch.R)+inBits])
+	result += strings.ToLower(Get_input_name(inId))
 	return result, nil
 }
 
 // Deferred instruction to wait for input to be received when other instructions are executed
-func (vm *VM) waitRecvI2rw(inp int) bool {
-	// fmt.Println("Waiting I2RW", vm.InputsValid[inp], vm.InputsRecv[inp])
+func (vm *VM) waitRecvSicv3(inp int) bool {
 	if !vm.InputsValid[inp] {
 		vm.InputsRecv[inp] = false
 		return true
@@ -204,29 +226,69 @@ func (vm *VM) waitRecvI2rw(inp int) bool {
 	return false
 }
 
-func (op I2rw) Simulate(vm *VM, instr string) error {
+func (op Sicv3) Simulate(vm *VM, instr string) error {
 	// "reference": {"support_gosim": "ok"}
 	inBits := vm.Mach.Inputs_bits()
 	regBits := vm.Mach.R
 	reg := get_id(instr[:regBits])
 	inp := get_id(instr[regBits : int(regBits)+inBits])
-	// fmt.Println("Entering I2RW", vm.InputsValid[inp], vm.InputsRecv[inp])
+
+	var sicv3State uint8
+	if state, ok := vm.Extra_states["sicv3_state"]; ok {
+		sicv3State = state.(uint8)
+	} else {
+		vm.Extra_states["sicv3_state"] = SICV3IDLE
+		sicv3State = SICV3IDLE
+	}
+
 	if vm.InputsValid[inp] {
-		vm.Registers[reg] = vm.Inputs[inp]
+		if sicv3State == SICV3IDLE {
+			switch vm.Mach.Rsize {
+			case 8:
+				vm.Registers[reg] = uint8(0)
+			case 16:
+				vm.Registers[reg] = uint16(0)
+			case 32:
+				vm.Registers[reg] = uint32(0)
+			case 64:
+				vm.Registers[reg] = uint64(0)
+			default:
+				return errors.New("go simulation only works on 8,16,32 or 64 bits registers")
+			}
+			sicv3State = SICV3WAIT
+			vm.Extra_states["sicv3_state"] = sicv3State
+		} else {
+			sicv3State = SICV3IDLE
+			vm.Extra_states["sicv3_state"] = sicv3State
+		}
 		vm.InputsRecv[inp] = true
 		vm.Pc = vm.Pc + 1
 		// Spawn a deferred instruction to wait for the input to be received
-		vm.AddDeferredInstruction("waitRecvI2rw"+strconv.Itoa(inp), func(vm *VM) bool {
-			return vm.waitRecvI2rw(inp)
+		vm.AddDeferredInstruction("waitRecvSicv3"+strconv.Itoa(inp), func(vm *VM) bool {
+			return vm.waitRecvSicv3(inp)
 		})
 	} else {
 		vm.InputsRecv[inp] = false
+		if sicv3State == SICV3WAIT {
+			switch vm.Mach.Rsize {
+			case 8:
+				vm.Registers[reg] = vm.Registers[reg].(uint8) + 1
+			case 16:
+				vm.Registers[reg] = vm.Registers[reg].(uint16) + 1
+			case 32:
+				vm.Registers[reg] = vm.Registers[reg].(uint32) + 1
+			case 64:
+				vm.Registers[reg] = vm.Registers[reg].(uint64) + 1
+			default:
+				return errors.New("go simulation only works on 8,16,32 or 64 bits registers")
+			}
+		}
 	}
 
 	return nil
 }
 
-func (op I2rw) Generate(arch *Arch) string {
+func (op Sicv3) Generate(arch *Arch) string {
 	inpbits := arch.Inputs_bits()
 	reg_num := 1 << arch.R
 	reg := rand.Intn(reg_num)
@@ -234,62 +296,43 @@ func (op I2rw) Generate(arch *Arch) string {
 	return zeros_prefix(int(arch.R), get_binary(reg)) + zeros_prefix(inpbits, get_binary(inp))
 }
 
-func (op I2rw) Required_shared() (bool, []string) {
+func (op Sicv3) Required_shared() (bool, []string) {
 	return false, []string{}
 }
 
-func (op I2rw) Required_modes() (bool, []string) {
+func (op Sicv3) Required_modes() (bool, []string) {
 	return false, []string{}
 }
 
-func (op I2rw) Forbidden_modes() (bool, []string) {
+func (op Sicv3) Forbidden_modes() (bool, []string) {
 	return false, []string{}
 }
 
-func (op I2rw) Op_instruction_internal_state(arch *Arch, flavor string) string {
+func (op Sicv3) Op_instruction_internal_state(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (Op I2rw) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
+func (Op Sicv3) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (Op I2rw) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
+func (Op Sicv3) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (Op I2rw) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
+func (Op Sicv3) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (Op I2rw) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
+func (Op Sicv3) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
 	return []string{}, []string{}
 }
 
-func (Op I2rw) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
-	seq0, types0 := Sequence_to_0(words[0])
-	seq1, types1 := Sequence_to_0(words[1])
-
-	if len(seq0) > 0 && types0 == O_REGISTER && len(seq1) > 0 && types1 == O_INPUT {
-
-		result := make([]UsageNotify, 2+len(seq1))
-		newnot0 := UsageNotify{C_OPCODE, "i2rw", I_NIL}
-		result[0] = newnot0
-		newnot1 := UsageNotify{C_REGSIZE, S_NIL, len(seq0)}
-		result[1] = newnot1
-
-		for i, _ := range seq1 {
-			result[i+2] = UsageNotify{C_INPUT, S_NIL, i + 1}
-		}
-
-		return result, nil
-
-	}
-
-	return []UsageNotify{}, errors.New("Wrong parameters")
+func (Op Sicv3) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
+	return []UsageNotify{}, errors.New("abstract Assembly not supported for this instruction")
 }
 
-func (Op I2rw) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
+func (Op Sicv3) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
 	opbits := arch.Opcodes_bits()
 	inbits := arch.Inputs_bits()
 	rom_word := arch.Max_word()
@@ -300,7 +343,7 @@ func (Op I2rw) Op_instruction_verilog_extra_block(arch *Arch, flavor string, lev
 
 	switch blockname {
 	case "input_data_received":
-		result += pref + "I2RW: begin\n"
+		result += pref + "SICV3: begin\n"
 		if inbits == 1 {
 			result += pref + "\tcase (current_instruction[" + strconv.Itoa(rom_word-opbits-int(arch.R)-1) + "])\n"
 		} else {
@@ -331,49 +374,26 @@ func (Op I2rw) Op_instruction_verilog_extra_block(arch *Arch, flavor string, lev
 	}
 	return result
 }
-func (Op I2rw) HLAssemblerMatch(arch *Arch) []string {
+func (Op Sicv3) HLAssemblerMatch(arch *Arch) []string {
+	// reference: {"support_hlasm": "yes"}
 	result := make([]string, 0)
-	result = append(result, "i2rw::*--type=reg::*--type=input")
-	result = append(result, "mov--iomode=sync::*--type=reg::*--type=input")
+	result = append(result, "sicv3::*--type=reg::*--type=input")
 	return result
 }
-func (Op I2rw) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+func (Op Sicv3) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
-	case "i2rw":
+	case "sicv3":
 		regNeed := line.Elements[0].GetValue()
 		inNeed := line.Elements[1].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "inputs", Value: inNeed, Op: bmreqs.OpAdd})
-		return line, nil
-	case "mov":
-		regVal := line.Elements[0].GetValue()
-		inVal := line.Elements[1].GetValue()
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "inputs", Value: inVal, Op: bmreqs.OpAdd})
-		if regVal != "" && inVal != "" {
-			newLine := new(bmline.BasmLine)
-			newOp := new(bmline.BasmElement)
-			newOp.SetValue("i2rw")
-			newLine.Operation = newOp
-			newArgs := make([]*bmline.BasmElement, 2)
-			newArg0 := new(bmline.BasmElement)
-			newArg0.BasmMeta = newArg0.SetMeta("type", "reg")
-			newArg0.SetValue(regVal)
-			newArgs[0] = newArg0
-			newArg1 := new(bmline.BasmElement)
-			newArg1.SetValue(inVal)
-			newArg1.BasmMeta = newArg1.SetMeta("type", "input")
-			newArgs[1] = newArg1
-			newLine.Elements = newArgs
-			return newLine, nil
-		}
 	}
-	return nil, errors.New("HL Assembly normalize failed")
+	return line, nil
 }
-func (Op I2rw) ExtraFiles(arch *Arch) ([]string, []string) {
+func (Op Sicv3) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
 }
 
-func (Op I2rw) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+func (Op Sicv3) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
 	return nil, nil
 }
