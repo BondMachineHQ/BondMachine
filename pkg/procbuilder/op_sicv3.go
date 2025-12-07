@@ -11,6 +11,11 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
+const (
+	SICV3IDLE = uint8(0) + iota
+	SICV3WAIT
+)
+
 type Sicv3 struct{}
 
 func (op Sicv3) Op_get_name() string {
@@ -203,11 +208,12 @@ func (op Sicv3) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Sicv3) Disassembler(arch *Arch, instr string) (string, error) {
-	inpbits := arch.Inputs_bits()
-	reg_id := get_id(instr[:arch.R])
-	result := strings.ToLower(Get_register_name(reg_id)) + " "
-	inp_id := get_id(instr[arch.R : int(arch.R)+inpbits])
-	result += strings.ToLower(Get_input_name(inp_id))
+	// {"reference": {"support_disasm": "yes"}
+	inBits := arch.Inputs_bits()
+	regId := get_id(instr[:arch.R])
+	result := strings.ToLower(Get_register_name(regId)) + " "
+	inId := get_id(instr[arch.R : int(arch.R)+inBits])
+	result += strings.ToLower(Get_input_name(inId))
 	return result, nil
 }
 
@@ -226,8 +232,35 @@ func (op Sicv3) Simulate(vm *VM, instr string) error {
 	regBits := vm.Mach.R
 	reg := get_id(instr[:regBits])
 	inp := get_id(instr[regBits : int(regBits)+inBits])
+
+	var sicv3State uint8
+	if state, ok := vm.Extra_states["sicv3_state"]; ok {
+		sicv3State = state.(uint8)
+	} else {
+		vm.Extra_states["sicv3_state"] = SICV3IDLE
+		sicv3State = SICV3IDLE
+	}
+
 	if vm.InputsValid[inp] {
-		vm.Registers[reg] = vm.Inputs[inp]
+		if sicv3State == SICV3IDLE {
+			switch vm.Mach.Rsize {
+			case 8:
+				vm.Registers[reg] = uint8(0)
+			case 16:
+				vm.Registers[reg] = uint16(0)
+			case 32:
+				vm.Registers[reg] = uint32(0)
+			case 64:
+				vm.Registers[reg] = uint64(0)
+			default:
+				return errors.New("go simulation only works on 8,16,32 or 64 bits registers")
+			}
+			sicv3State = SICV3WAIT
+			vm.Extra_states["sicv3_state"] = sicv3State
+		} else {
+			sicv3State = SICV3IDLE
+			vm.Extra_states["sicv3_state"] = sicv3State
+		}
 		vm.InputsRecv[inp] = true
 		vm.Pc = vm.Pc + 1
 		// Spawn a deferred instruction to wait for the input to be received
@@ -236,6 +269,20 @@ func (op Sicv3) Simulate(vm *VM, instr string) error {
 		})
 	} else {
 		vm.InputsRecv[inp] = false
+		if sicv3State == SICV3WAIT {
+			switch vm.Mach.Rsize {
+			case 8:
+				vm.Registers[reg] = vm.Registers[reg].(uint8) + 1
+			case 16:
+				vm.Registers[reg] = vm.Registers[reg].(uint16) + 1
+			case 32:
+				vm.Registers[reg] = vm.Registers[reg].(uint32) + 1
+			case 64:
+				vm.Registers[reg] = vm.Registers[reg].(uint64) + 1
+			default:
+				return errors.New("go simulation only works on 8,16,32 or 64 bits registers")
+			}
+		}
 	}
 
 	return nil
@@ -328,11 +375,20 @@ func (Op Sicv3) Op_instruction_verilog_extra_block(arch *Arch, flavor string, le
 	return result
 }
 func (Op Sicv3) HLAssemblerMatch(arch *Arch) []string {
+	// reference: {"support_hlasm": "yes"}
 	result := make([]string, 0)
+	result = append(result, "sicv3::*--type=reg::*--type=input")
 	return result
 }
 func (Op Sicv3) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
-	return nil, errors.New("HL Assembly not supported for this instruction")
+	switch line.Operation.GetValue() {
+	case "sicv3":
+		regNeed := line.Elements[0].GetValue()
+		inNeed := line.Elements[1].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regNeed, Op: bmreqs.OpAdd})
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "inputs", Value: inNeed, Op: bmreqs.OpAdd})
+	}
+	return line, nil
 }
 func (Op Sicv3) ExtraFiles(arch *Arch) ([]string, []string) {
 	return []string{}, []string{}
