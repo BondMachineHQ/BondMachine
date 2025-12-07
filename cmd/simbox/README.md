@@ -54,6 +54,7 @@ simbox -simbox-file rules.json -add "absolute:10:set:i0:5"
 - Relative/periodic rule: `relative:<interval>:<action>:<object>:<extra>`
 - On valid signal: `onvalid:<action>:<object>:<extra>`
 - On receive signal: `onrecv:<action>:<object>:<extra>`
+- On exit: `onexit:<action>:<object>:<extra>`
 - Configuration rule: `config:<option>`
 
 **Actions:**
@@ -73,6 +74,12 @@ simbox -simbox-file rules.json -add "relative:5:get:o0:unsigned"
 
 # Show processor 0 register 1 at tick 20
 simbox -simbox-file rules.json -add "absolute:20:show:p0r1:hex"
+
+# Get register r0 when simulation exits
+simbox -simbox-file rules.json -add "onexit:get:r0:unsigned"
+
+# Show register r1 in hex format when simulation exits
+simbox -simbox-file rules.json -add "onexit:show:r1:hex"
 
 # Configuration to show ticks
 simbox -simbox-file rules.json -add "config:show_ticks"

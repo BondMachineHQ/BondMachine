@@ -14,6 +14,7 @@ Rules follow a colon-separated format: `type:parameter:action:object:extra`
 - **relative** - Execute periodically every N ticks
 - **onvalid** - Execute when a valid signal is received
 - **onrecv** - Execute when a receive signal is triggered
+- **onexit** - Execute when the simulation ends
 - **config** - Configuration rules (no time constraint)
 
 ## Actions
@@ -81,7 +82,21 @@ onrecv:get:io_input:signed
 onrecv:show:r2               # Uses default 'unsigned' format
 ```
 
-### 5. Configuration Rules
+### 5. On Exit Rules
+
+Execute actions when the simulation ends. This is useful for capturing final state or generating summary reports at the end of a simulation run.
+
+**Format:** `onexit:<action>:<object>:<extra>` or `onexit:<action>:<object>`
+
+**Examples:**
+```
+onexit:get:r0:unsigned
+onexit:show:r1:hex
+onexit:get:io_output:signed
+onexit:show:r2               # Uses default 'unsigned' format
+```
+
+### 6. Configuration Rules
 
 Control simulation display and behavior.
 
@@ -173,6 +188,8 @@ onvalid:get:r0:unsigned
 onvalid:show:r1:hex
 onrecv:get:io_input:signed
 onrecv:show:r2
+onexit:get:r0:unsigned
+onexit:show:r1:hex
 config:show_ticks
 ```
 
@@ -185,6 +202,8 @@ absolute:0:set:r0:0
 relative:10:show:r0:unsigned
 onvalid:get:r1:hex
 onrecv:show:r2:signed
+onexit:get:r0:unsigned
+onexit:show:r1:hex
 config:get_all:hex
 ```
 
@@ -197,6 +216,8 @@ simbox.Add("absolute:100:set:r0:42")
 simbox.Add("relative:10:get:r1:unsigned")
 simbox.Add("onvalid:show:r2:hex")
 simbox.Add("onrecv:get:r3:signed")
+simbox.Add("onexit:get:r0:unsigned")
+simbox.Add("onexit:show:r1:hex")
 simbox.Add("config:show_pc")
 ```
 
@@ -230,7 +251,8 @@ Common errors:
 | Relative Time | `relative:<period>:<action>:<object>:<extra>` | `relative:10:get:r1:unsigned` |
 | On Valid | `onvalid:<action>:<object>:<extra>` | `onvalid:show:r2:hex` |
 | On Receive | `onrecv:<action>:<object>:<extra>` | `onrecv:get:r3:signed` |
+| On Exit | `onexit:<action>:<object>:<extra>` | `onexit:get:r0:unsigned` |
 | Config (simple) | `config:<option>` | `config:show_pc` |
 | Config (with param) | `config:<option>:<parameter>` | `config:get_all:hex` |
 
-**Note:** For `onvalid` and `onrecv` rules, if the `<extra>` parameter is omitted, it defaults to `unsigned`.
+**Note:** For `onvalid`, `onrecv`, and `onexit` rules, if the `<extra>` parameter is omitted, it defaults to `unsigned`.
