@@ -239,7 +239,7 @@ func (op Sicv2) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Sicv2) Simulate(vm *VM, instr string) error {
-	// "reference": {"support_sim": "testing"}
+	// "reference": {"support_gosim": "testing"}
 	inBits := vm.Mach.Inputs_bits()
 	regBits := vm.Mach.R
 	reg := get_id(instr[:regBits])
