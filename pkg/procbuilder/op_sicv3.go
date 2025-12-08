@@ -170,7 +170,7 @@ func (op Sicv3) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 }
 
 func (op Sicv3) Assembler(arch *Arch, words []string) (string, error) {
-	// {"reference": {"support_asm": "yes"}
+	// "reference": {"support_asm": "yes"}
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
 	romWord := arch.Max_word()
@@ -208,7 +208,7 @@ func (op Sicv3) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Sicv3) Disassembler(arch *Arch, instr string) (string, error) {
-	// {"reference": {"support_disasm": "yes"}
+	// "reference": {"support_disasm": "yes"}
 	inBits := arch.Inputs_bits()
 	regId := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(regId)) + " "
@@ -375,7 +375,7 @@ func (Op Sicv3) Op_instruction_verilog_extra_block(arch *Arch, flavor string, le
 	return result
 }
 func (Op Sicv3) HLAssemblerMatch(arch *Arch) []string {
-	// reference: {"support_hlasm": "yes"}
+	// "reference": {"support_hlasm": "yes"}
 	result := make([]string, 0)
 	result = append(result, "sicv3::*--type=reg::*--type=input")
 	return result

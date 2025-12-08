@@ -182,7 +182,7 @@ func (op Sicv2) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 }
 
 func (op Sicv2) Assembler(arch *Arch, words []string) (string, error) {
-	// reference: {"support_asm": "ok"}
+	// "reference": {"support_asm": "ok"}
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
 	romWord := arch.Max_word()
@@ -226,7 +226,7 @@ func (op Sicv2) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Sicv2) Disassembler(arch *Arch, instr string) (string, error) {
-	// reference: {"support_asm": "ok"}
+	// "reference": {"support_asm": "ok"}
 	inBits := arch.Inputs_bits()
 	regId := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(regId)) + " "
@@ -239,7 +239,7 @@ func (op Sicv2) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Sicv2) Simulate(vm *VM, instr string) error {
-	// reference: {"support_sim": "testing"}
+	// "reference": {"support_sim": "testing"}
 	inBits := vm.Mach.Inputs_bits()
 	regBits := vm.Mach.R
 	reg := get_id(instr[:regBits])
@@ -440,7 +440,7 @@ func (Op Sicv2) HLAssemblerMatch(arch *Arch) []string {
 	return result
 }
 func (Op Sicv2) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
-	// reference: {"support_hlasm": "notapplicable"}
+	// "reference": {"support_hlasm": "notapplicable"}
 	return nil, errors.New("HL Assembly normalize failed")
 }
 func (Op Sicv2) ExtraFiles(arch *Arch) ([]string, []string) {
@@ -448,6 +448,6 @@ func (Op Sicv2) ExtraFiles(arch *Arch) ([]string, []string) {
 }
 
 func (Op Sicv2) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
-	// reference: {"support_asmeta": "notapplicable"}
+	// "reference": {"support_asmeta": "notapplicable"}
 	return nil, nil
 }
