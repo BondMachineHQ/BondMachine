@@ -59,7 +59,7 @@ The possible support values are shown below:
 | [hit](hit.md) | - | - | - | - | - | - | - | - |
 | [hlt](hlt.md) | - | - | - | - | - | - | - | - |
 | [i2r](i2r.md) | - | - | - | - | - | - | - | - |
-| [i2rw](i2rw.md) | - | ![ok](iconok.png) | - | - | - | - | - | yes |
+| [i2rw](i2rw.md) | - | ![ok](iconok.png) | - | - | - | - | - | ![ok](iconok.png) |
 | [incc](incc.md) | - | - | - | - | - | - | - | - |
 | [inc](inc.md) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | - | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) |
 | [ja](ja.md) | - | - | - | - | - | - | - | - |
@@ -113,7 +113,7 @@ The possible support values are shown below:
 | [sbc](sbc.md) | - | - | - | - | - | - | - | - |
 | [sic](sic.md) | - | - | - | - | - | - | - | - |
 | [sicv2](sicv2.md) | - | - | - | ![notapplicable](iconnotapplicable.png) | ![testing](icontesting.png) | - | ![notapplicable](iconnotapplicable.png) | ![ok](iconok.png) |
-| [sicv3](sicv3.md) | yes | ![ok](iconok.png) | - | yes | - | - | - | yes |
+| [sicv3](sicv3.md) | ![ok](iconok.png) | ![ok](iconok.png) | - | yes | - | - | - | ![ok](iconok.png) |
 | [sub](sub.md) | - | - | - | - | - | - | - | - |
 | [t2r](t2r.md) | - | - | - | - | - | - | - | - |
 | [tsp](tsp.md) | - | - | - | - | - | - | - | - |

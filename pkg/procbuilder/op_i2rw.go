@@ -148,7 +148,7 @@ func (op I2rw) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 }
 
 func (op I2rw) Assembler(arch *Arch, words []string) (string, error) {
-	// "reference": {"support_asm": "yes"}
+	// "reference": {"support_asm": "ok"}
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
 	romWord := arch.Max_word()

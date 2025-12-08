@@ -170,7 +170,7 @@ func (op Sicv3) Op_instruction_verilog_footer(arch *Arch, flavor string) string 
 }
 
 func (op Sicv3) Assembler(arch *Arch, words []string) (string, error) {
-	// "reference": {"support_asm": "yes"}
+	// "reference": {"support_asm": "ok"}
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
 	romWord := arch.Max_word()
@@ -208,7 +208,7 @@ func (op Sicv3) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Sicv3) Disassembler(arch *Arch, instr string) (string, error) {
-	// "reference": {"support_disasm": "yes"}
+	// "reference": {"support_disasm": "ok"}
 	inBits := arch.Inputs_bits()
 	regId := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(regId)) + " "
