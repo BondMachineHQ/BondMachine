@@ -29,6 +29,7 @@ type FragTester struct {
 	Outputs       []string
 	Sympy         string
 	NeuronLibPath string
+	BenchcoreV2   bool
 }
 
 func NewFragTester() *FragTester {
@@ -308,19 +309,37 @@ func (ft *FragTester) WriteApp(flavor string) (string, error) {
 	}
 }
 
+func (ft *FragTester) ListAppFlavors() []string {
+	return []string{"cpynqapi", "cpynqapibenchv2"}
+}
+
 func (ft *FragTester) WriteStatistics() (string, error) {
 	result := "{\"" + ft.Name + ft.NameSuffix + "\": 1}\n"
 	return result, nil
 }
 
+func (ft *FragTester) WriteSicv2Endpoints() (string, error) {
+	if len(ft.Inputs) == 0 || len(ft.Outputs) == 0 {
+		return "", fmt.Errorf("cannot create SICv2 endpoints without inputs and outputs")
+	}
+
+	return fmt.Sprintf("i0,p0o%d", len(ft.Outputs)-1), nil
+}
+
 func (ft *FragTester) CreateMappingFile(filename string) error {
 	ioMap := new(bondmachine.IOmap)
 	ioMap.Assoc = make(map[string]string)
+	numOutputs := len(ft.Outputs)
+
+	// If benchcoreV2 is active, add an extra output for the SICv2 output
+	if ft.BenchcoreV2 {
+		numOutputs++
+	}
 
 	for i := range ft.Inputs {
 		ioMap.Assoc["i"+strconv.Itoa(i)] = strconv.Itoa(i)
 	}
-	for i := range ft.Outputs {
+	for i := 0; i < numOutputs; i++ {
 		ioMap.Assoc["o"+strconv.Itoa(i)] = strconv.Itoa(i)
 	}
 

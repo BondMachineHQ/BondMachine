@@ -113,6 +113,7 @@ var simbox_file = flag.String("simbox-file", "", "Filename of the simulation dat
 
 var sim = flag.Bool("sim", false, "Simulate bond machine")
 var simInteractions = flag.Int("sim-interactions", 10, "Simulation interaction")
+var simStopOnValidOf = flag.Int("sim-stop-on-valid-of", -1, "Stop simulation when a valid output is produced on the given output")
 var simReport = flag.String("sim-report", "", "Simulation report file")
 
 var emu = flag.Bool("emu", false, "Emulate bond machine")
@@ -188,6 +189,7 @@ var ps2keyboardIoMap = flag.String("ps2-keyboard-io-map", "", "PS2 Keyboard via 
 var ps2keyboard = flag.Bool("ps2-keyboard", false, "PS2 Keyboard support via SO")
 
 var attach_benchmark_core string_slice
+var attachBenchmarkCoreV2 string_slice
 
 var bmInfoFile = flag.String("bminfo-file", "", "File containing the bondmachine extra info")
 var bmRequirementsFile = flag.String("bmrequirements-file", "", "File containing the bondmachine requirements")
@@ -215,6 +217,7 @@ func init() {
 	flag.Var(&connect_processor_shared_object, "connect-processor-shared-object", "Connect a processor to a shared object")
 	flag.Var(&disconnect_processor_shared_object, "disconnect-processor-shared-object", "Disconnect a processor from a shared object")
 	flag.Var(&attach_benchmark_core, "attach-benchmark-core", "Attach a benchmark core")
+	flag.Var(&attachBenchmarkCoreV2, "attach-benchmark-core-v2", "Attach a benchmark core v2")
 
 	flag.Parse()
 
@@ -326,6 +329,11 @@ func main() {
 
 		if &attach_benchmark_core != nil && len(attach_benchmark_core) == 2 {
 			err := bmach.Attach_benchmark_core(attach_benchmark_core)
+			check(err)
+		}
+
+		if &attachBenchmarkCoreV2 != nil && len(attachBenchmarkCoreV2) == 2 {
+			err := bmach.AttachBenchmarkCoreV2(attachBenchmarkCoreV2)
 			check(err)
 		}
 
@@ -917,23 +925,34 @@ func main() {
 			err := vm.Init()
 			check(err)
 
+			oldVm := new(bondmachine.VM)
+			oldVm.Bmach = bmach
+			err = oldVm.Init()
+			check(err)
+
 			var pstatevm *bondmachine.VM
 
 			// Build the simulation configuration
-			sconfig := new(bondmachine.Sim_config)
+			sconfig := new(bondmachine.SimConfig)
 			scerr := sconfig.Init(sbox, vm, conf)
 			check(scerr)
 
 			// Build the simulation driver
-			sdrive := new(bondmachine.Sim_drive)
+			sdrive := new(bondmachine.SimDrive)
 			sderr := sdrive.Init(conf, sbox, vm)
 			check(sderr)
 
-			// Build the simultion report
-			srep := new(bondmachine.Sim_report)
+			// Build the simulation report
+			srep := new(bondmachine.SimReport)
 			srerr := srep.Init(sbox, vm)
 			check(srerr)
 
+			// Build the simulation report for the old VM
+			srepOld := new(bondmachine.SimReport)
+			srerrOld := srepOld.Init(sbox, oldVm)
+			check(srerrOld)
+
+			// Launch the processors
 			lerr := vm.Launch_processors(sbox)
 			check(lerr)
 
@@ -977,53 +996,75 @@ func main() {
 
 			var oldRecordC *[]string
 
+			if *simStopOnValidOf != -1 {
+				if *simStopOnValidOf >= len(vm.OutputsValid) {
+					log.Fatal("sim-stop-on-valid-of index out of range")
+				}
+			}
+
 			// Main simulation loop, tick by tick
 			for i := uint64(0); i < uint64(*simInteractions); i++ {
 
-				// Manage the valid/recv states of the inputs
-				for inIdx, inRecv := range vm.InputsRecv {
-					if inRecv {
-						vm.InputsValid[inIdx] = false
+				shutDownSim := false
+
+				if *simStopOnValidOf != -1 {
+					if vm.OutputsValid[*simStopOnValidOf] {
+						if *debug {
+							log.Printf("Stopping simulation at tick %d due to sim-stop-on-valid-of\n", i)
+						}
+						shutDownSim = true
+						// The simulation will stop, but we want to show the last values
+						// so we execute the show/report part after this block
 					}
 				}
 
-				// This will get actions eventually to do on this tick
-				if act, exist_actions := sdrive.AbsSet[i]; exist_actions {
-					for k, val := range act {
-						*sdrive.Injectables[k] = val
-						if inIdx, ok := sdrive.NeedValid[k]; ok {
-							vm.InputsValid[inIdx] = true
+				if !shutDownSim {
+					// Manage the valid/recv states of the inputs
+					for inIdx, inRecv := range vm.InputsRecv {
+						if inRecv {
+							vm.InputsValid[inIdx] = false
 						}
 					}
-				}
 
-				// TODO Periodic set
-
-				if *emit_dot {
-					gvfile := bmach.Dot(conf, "", vm, pstatevm)
-					filename := fmt.Sprintf("graphviz%0"+intlen_s+"d", int(i))
-					f, err := os.Create(filename + ".dot")
-					check(err)
-					_, err = f.WriteString(gvfile)
-					check(err)
-					f.Close()
-
-					pstatevm.CopyState(vm)
-				}
-
-				result, err := vm.Step(sconfig)
-				check(err)
-
-				// Manage the valid/recv states of the outputs
-				for outIdx, outValid := range vm.OutputsValid {
-					if outValid {
-						vm.OutputsRecv[outIdx] = true
-					} else {
-						vm.OutputsRecv[outIdx] = false
+					// This will get actions eventually to do on this tick
+					if act, exist_actions := sdrive.AbsSet[i]; exist_actions {
+						for k, val := range act {
+							*sdrive.Injectables[k] = val
+							if inIdx, ok := sdrive.NeedValid[k]; ok {
+								vm.InputsValid[inIdx] = true
+							}
+						}
 					}
-				}
 
-				fmt.Print(result)
+					// TODO Periodic set
+
+					if *emit_dot {
+						gvfile := bmach.Dot(conf, "", vm, pstatevm)
+						filename := fmt.Sprintf("graphviz%0"+intlen_s+"d", int(i))
+						f, err := os.Create(filename + ".dot")
+						check(err)
+						_, err = f.WriteString(gvfile)
+						check(err)
+						f.Close()
+
+						err = pstatevm.CopyState(vm)
+						check(err)
+					}
+
+					result, err := vm.Step(sconfig)
+					check(err)
+
+					// Manage the valid/recv states of the outputs
+					for outIdx, outValid := range vm.OutputsValid {
+						if outValid {
+							vm.OutputsRecv[outIdx] = true
+						} else {
+							vm.OutputsRecv[outIdx] = false
+						}
+					}
+
+					fmt.Print(result)
+				}
 
 				showList := make([]int, 0, len(srep.Showables))
 
@@ -1049,6 +1090,24 @@ func main() {
 								showList = append(showList, k)
 							}
 						}
+					}
+				}
+
+				// This will get value to show on events
+				slist, err := bondmachine.EventListShow(shutDownSim, srep, srepOld, vm, oldVm)
+				if err != nil {
+					log.Fatal(err)
+				}
+				for k, _ := range slist {
+					alredtIn := false
+					for _, v := range showList {
+						if v == k {
+							alredtIn = true
+							break
+						}
+					}
+					if !alredtIn {
+						showList = append(showList, k)
 					}
 				}
 
@@ -1121,6 +1180,9 @@ func main() {
 								}
 							}
 						}
+
+						// TODO get from events
+
 					}
 
 					// sort.Ints(repList)
@@ -1190,6 +1252,13 @@ func main() {
 						oldRecordC = &recordC
 					}
 				}
+
+				if shutDownSim {
+					break
+				}
+
+				err = oldVm.CopyState(vm)
+				check(err)
 			}
 		} else if *emu {
 
@@ -1212,7 +1281,7 @@ func main() {
 			check(err)
 
 			// the emulation configuration is not really needed
-			sconfig := new(bondmachine.Sim_config)
+			sconfig := new(bondmachine.SimConfig)
 			scerr := sconfig.Init(nil, vm, conf)
 			check(scerr)
 

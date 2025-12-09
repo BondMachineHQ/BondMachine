@@ -37,57 +37,59 @@ func (op I2r) Op_get_instruction_len(arch *Arch) int {
 func (op I2r) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pname string) string {
 	result := ""
 
-	opbits := arch.Opcodes_bits()
-	rom_word := arch.Max_word()
+	if arch.OnlyOne(op.Op_get_name(), unique["inputrecv"]) {
 
-	result += "\n"
-	// Data received fro inputs
-	for j := 0; j < int(arch.N); j++ {
-		result += "\treg " + strings.ToLower(Get_input_name(j)) + "_recv;\n"
-	}
+		opbits := arch.Opcodes_bits()
+		rom_word := arch.Max_word()
 
-	result += "\n"
-
-	for j := 0; j < int(arch.N); j++ {
-
-		objects := make([]string, 1)
-		objects[0] = strings.ToLower(Get_input_name(j))
-
-		// Process for data outputs data valid
-		result += "\talways @(posedge clock_signal, posedge reset_signal)\n"
-		result += "\tbegin\n"
-
-		result += "\t\tif (reset_signal)\n"
-		result += "\t\tbegin\n"
-		result += "\t\t\t" + strings.ToLower(Get_input_name(j)) + "_recv <= #1 1'b0;\n"
-		result += "\t\tend\n"
-		result += "\t\telse\n"
-		result += "\t\tbegin\n"
-
-		if opbits == 1 {
-			result += "\t\t\tcase(current_instruction[" + strconv.Itoa(rom_word-1) + "])\n"
-		} else {
-			result += "\t\t\tcase(current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
+		result += "\n"
+		// Data received fro inputs
+		for j := 0; j < int(arch.N); j++ {
+			result += "\treg " + strings.ToLower(Get_input_name(j)) + "_recv;\n"
 		}
 
-		for _, currop := range arch.Op {
-			result += currop.Op_instruction_verilog_extra_block(arch, flavor, uint8(4), "input_data_received", objects)
+		result += "\n"
+
+		for j := 0; j < int(arch.N); j++ {
+
+			objects := make([]string, 1)
+			objects[0] = strings.ToLower(Get_input_name(j))
+
+			// Process for data outputs data valid
+			result += "\talways @(posedge clock_signal, posedge reset_signal)\n"
+			result += "\tbegin\n"
+
+			result += "\t\tif (reset_signal)\n"
+			result += "\t\tbegin\n"
+			result += "\t\t\t" + strings.ToLower(Get_input_name(j)) + "_recv <= #1 1'b0;\n"
+			result += "\t\tend\n"
+			result += "\t\telse\n"
+			result += "\t\tbegin\n"
+
+			if opbits == 1 {
+				result += "\t\t\tcase(current_instruction[" + strconv.Itoa(rom_word-1) + "])\n"
+			} else {
+				result += "\t\t\tcase(current_instruction[" + strconv.Itoa(rom_word-1) + ":" + strconv.Itoa(rom_word-opbits) + "])\n"
+			}
+
+			for _, currop := range arch.Op {
+				result += currop.Op_instruction_verilog_extra_block(arch, flavor, uint8(4), "input_data_received", objects)
+			}
+
+			result += "\t\t\t\tdefault: begin\n"
+			result += "\t\t\t\t\tif (!" + strings.ToLower(Get_input_name(j)) + "_valid)\n"
+			result += "\t\t\t\t\tbegin\n"
+			result += "\t\t\t\t\t\t" + strings.ToLower(Get_input_name(j)) + "_recv <= #1 1'b0;\n"
+			result += "\t\t\t\t\tend\n"
+			result += "\t\t\t\tend\n"
+
+			result += "\t\t\tendcase\n"
+
+			result += "\t\tend\n"
+
+			result += "\tend\n"
 		}
-
-		result += "\t\t\t\tdefault: begin\n"
-		result += "\t\t\t\t\tif (!" + strings.ToLower(Get_input_name(j)) + "_valid)\n"
-		result += "\t\t\t\t\tbegin\n"
-		result += "\t\t\t\t\t\t" + strings.ToLower(Get_input_name(j)) + "_recv <= #1 1'b0;\n"
-		result += "\t\t\t\t\tend\n"
-		result += "\t\t\t\tend\n"
-
-		result += "\t\t\tendcase\n"
-
-		result += "\t\tend\n"
-
-		result += "\tend\n"
 	}
-
 	return result
 }
 
