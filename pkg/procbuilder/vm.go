@@ -3,6 +3,7 @@ package procbuilder
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"strconv"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/simbox"
@@ -22,46 +23,65 @@ type VM struct {
 	InputsRecv  []bool
 	OutputsRecv []bool
 
+	DeferredInstructions map[string]DeferredInstruction
+
 	Pc           uint64
 	Extra_states map[string]interface{}
 	CmdChan      chan []byte
 }
 
-func (vm *VM) CopyState(vmsource *VM) {
-	for i, reg := range vmsource.Registers {
-		vm.Registers[i] = reg
+// CopyState copies the state from vmSource to vm
+func (vm *VM) CopyState(vmSource *VM) error {
+	if vm == nil || vmSource == nil {
+		return errors.New("cannot copy state from or to a nil VM")
 	}
-	for i, inp := range vmsource.Inputs {
-		vm.Inputs[i] = inp
-	}
-	for i, outp := range vmsource.Outputs {
-		vm.Outputs[i] = outp
-	}
-	// TODO FINISH
+
+	vm.CpID = 0             // Copying to a new VM, reset CpID
+	vm.Mach = vmSource.Mach // Assuming Machine is immutable, just copy the reference
+
+	copy(vm.Registers, vmSource.Registers)
+	copy(vm.Memory, vmSource.Memory)
+	copy(vm.Inputs, vmSource.Inputs)
+	copy(vm.Outputs, vmSource.Outputs)
+	copy(vm.InputsValid, vmSource.InputsValid)
+	copy(vm.OutputsValid, vmSource.OutputsValid)
+	copy(vm.InputsRecv, vmSource.InputsRecv)
+	copy(vm.OutputsRecv, vmSource.OutputsRecv)
+
+	vm.DeferredInstructions = make(map[string]DeferredInstruction)
+	maps.Copy(vm.DeferredInstructions, vmSource.DeferredInstructions)
+
+	vm.Extra_states = make(map[string]interface{})
+	maps.Copy(vm.Extra_states, vmSource.Extra_states)
+
+	vm.Pc = vmSource.Pc
+	vm.CmdChan = vmSource.CmdChan
+
+	return nil
 }
 
 // Simbox rules are converted in a sim drive when the simulation starts and applied during the simulation
-type Sim_tick_set map[int]interface{}
-type Sim_drive struct {
+type SimTickSet map[int]interface{}
+type SimDrive struct {
 	Injectables []*interface{}
-	AbsSet      map[uint64]Sim_tick_set
+	AbsSet      map[uint64]SimTickSet
 }
 
 // This is initializated when the simulation starts and filled on the way
-type Sim_tick_get map[int]interface{}
-type Sim_report struct {
+type SimTickGet map[int]interface{}
+type SimReport struct {
 	Reportables []*interface{}
-	AbsGet      map[uint64]Sim_tick_get
+	AbsGet      map[uint64]SimTickGet
 }
 
-type Sim_config struct {
+type SimConfig struct {
 	Show_pc          bool
 	Show_instruction bool
 	Show_disasm      bool
 	Show_regs_pre    bool
 	Show_regs_post   bool
-	Show_io_pre      bool
-	Show_io_post     bool
+	ShowIoPre        bool
+	ShowIoPost       bool
 }
 
 func (vm *VM) Init() error {
@@ -92,6 +112,8 @@ func (vm *VM) Init() error {
 	vm.OutputsValid = make([]bool, vm.Mach.M)
 	vm.InputsRecv = make([]bool, vm.Mach.N)
 	vm.OutputsRecv = make([]bool, vm.Mach.M)
+
+	vm.DeferredInstructions = make(map[string]DeferredInstruction)
 
 	vm.Pc = 0
 
@@ -156,7 +178,7 @@ func (vm *VM) Init() error {
 	return nil
 }
 
-func (vm *VM) Step(psc *Sim_config) (string, error) {
+func (vm *VM) Step(psc *SimConfig) (string, error) {
 	result := ""
 
 	if psc != nil {
@@ -171,6 +193,11 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 
 	if int(vm.Pc) > num_instr {
 		return "", Prerror{"Program counter outside limits"}
+	}
+
+	// Executing deferred instructions before the next instruction
+	if err := vm.ExecuteDeferredInstructions(); err != nil {
+		return "", errors.New("Error executing deferred instructions: " + err.Error())
 	}
 
 	if int(vm.Pc) == num_instr {
@@ -199,7 +226,7 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 				}
 			}
 			if psc != nil {
-				if psc.Show_io_pre {
+				if psc.ShowIoPre {
 					result += "\t\tPre-compute IO: " + vm.DumpIO() + "\n"
 				}
 				if psc.Show_regs_pre {
@@ -212,7 +239,7 @@ func (vm *VM) Step(psc *Sim_config) (string, error) {
 			}
 
 			if psc != nil {
-				if psc.Show_io_pre {
+				if psc.ShowIoPre {
 					result += "\t\tPost-compute IO: " + vm.DumpIO() + "\n"
 				}
 				if psc.Show_regs_pre {
@@ -291,11 +318,15 @@ func (vm *VM) GetElementLocation(mnemonic string) (*interface{}, error) {
 	return nil, Prerror{mnemonic + " unknown"}
 }
 
-func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM) error {
+func (sc *SimConfig) Init(s *simbox.Simbox, vm *VM) error {
 
 	if s != nil {
 
 		for _, rule := range s.Rules {
+			// Skip suspended rules
+			if rule.Suspended {
+				continue
+			}
 			// Intercept the set rules
 			if rule.Timec == simbox.TIMEC_NONE && rule.Action == simbox.ACTION_CONFIG {
 				switch rule.Object {
@@ -310,9 +341,9 @@ func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM) error {
 				case "show_proc_regs_post":
 					sc.Show_regs_post = true
 				case "show_proc_io_pre":
-					sc.Show_io_pre = true
+					sc.ShowIoPre = true
 				case "show_proc_io_post":
-					sc.Show_io_post = true
+					sc.ShowIoPost = true
 				}
 			}
 		}
@@ -320,14 +351,18 @@ func (sc *Sim_config) Init(s *simbox.Simbox, vm *VM) error {
 	return nil
 }
 
-func (sd *Sim_drive) Init(s *simbox.Simbox, vm *VM) error {
+func (sd *SimDrive) Init(s *simbox.Simbox, vm *VM) error {
 
 	if s != nil {
 
 		inj := make([]*interface{}, 0)
-		act := make(map[uint64]Sim_tick_set)
+		act := make(map[uint64]SimTickSet)
 
 		for _, rule := range s.Rules {
+			// Skip suspended rules
+			if rule.Suspended {
+				continue
+			}
 			fmt.Println(rule)
 			// Intercept the set rules
 			if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_SET {
@@ -389,14 +424,18 @@ func (sd *Sim_drive) Init(s *simbox.Simbox, vm *VM) error {
 	return nil
 }
 
-func (sd *Sim_report) Init(s *simbox.Simbox, vm *VM) error {
+func (sd *SimReport) Init(s *simbox.Simbox, vm *VM) error {
 
 	if s != nil {
 
 		rep := make([]*interface{}, 0)
-		str := make(map[uint64]Sim_tick_get)
+		str := make(map[uint64]SimTickGet)
 
 		for _, rule := range s.Rules {
+			// Skip suspended rules
+			if rule.Suspended {
+				continue
+			}
 			fmt.Println(rule)
 			// Intercept the set rules
 			if rule.Timec == simbox.TIMEC_ABS && rule.Action == simbox.ACTION_GET {

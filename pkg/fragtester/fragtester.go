@@ -17,7 +17,7 @@ type FragTester struct {
 	DataType      string
 	TypePrefix    string
 	Params        map[string]string
-	Ranges        map[string][]float32
+	Ranges        map[string][]string
 	Instances     map[string][]string
 	Vars          []string
 	OpString      string
@@ -29,6 +29,7 @@ type FragTester struct {
 	Outputs       []string
 	Sympy         string
 	NeuronLibPath string
+	BenchcoreV2   bool
 }
 
 func NewFragTester() *FragTester {
@@ -37,7 +38,7 @@ func NewFragTester() *FragTester {
 		DataType:      "float32",
 		TypePrefix:    "0f",
 		Params:        make(map[string]string),
-		Ranges:        make(map[string][]float32),
+		Ranges:        make(map[string][]string),
 		Instances:     make(map[string][]string),
 		Vars:          make([]string, 0),
 		OpString:      "",
@@ -69,9 +70,24 @@ func (ft *FragTester) AnalyzeFragment(fragment string) error {
 			fromF, _ := strconv.ParseFloat(from, 32)
 			toF, _ := strconv.ParseFloat(to, 32)
 			stepF, _ := strconv.ParseFloat(step, 32)
-			ft.Ranges[param] = make([]float32, 0)
+			ft.Ranges[param] = make([]string, 0)
 			for i := fromF; i < toF; i += stepF {
-				ft.Ranges[param] = append(ft.Ranges[param], float32(i))
+				ft.Ranges[param] = append(ft.Ranges[param], fmt.Sprintf("%f", i))
+			}
+			ft.Vars = append(ft.Vars, param)
+			continue
+		}
+		re = regexp.MustCompile(`^;fragtester\s+range\s+(?P<param>\w+)\s+(?P<seq>\S+)$`)
+		if re.MatchString(line) {
+			param := re.ReplaceAllString(line, "${param}")
+			seq := re.ReplaceAllString(line, "${seq}")
+			ft.Ranges[param] = make([]string, 0)
+			for _, v := range strings.Split(seq, ",") {
+				v = strings.TrimSpace(v)
+				if v == "" {
+					continue
+				}
+				ft.Ranges[param] = append(ft.Ranges[param], v)
 			}
 			ft.Vars = append(ft.Vars, param)
 			continue
@@ -174,7 +190,7 @@ func (ft *FragTester) ApplySequence(seq int) {
 
 	for i, v := range ft.Vars {
 		if _, ok := ft.Ranges[v]; ok {
-			ft.Params[v] = fmt.Sprintf("%f", ft.Ranges[v][pos[i]])
+			ft.Params[v] = ft.Ranges[v][pos[i]]
 			ft.OpString += fmt.Sprintf(", %s:%s", v, ft.Params[v])
 		}
 		if _, ok := ft.Instances[v]; ok {
@@ -232,9 +248,9 @@ func (ft *FragTester) DescribeFragment() {
 		fmt.Printf("  %s: ", param)
 		for i, v := range rng {
 			if i == len(rng)-1 {
-				fmt.Printf("%f", v)
+				fmt.Printf("%s", v)
 			} else {
-				fmt.Printf("%f, ", v)
+				fmt.Printf("%s, ", v)
 			}
 		}
 		fmt.Printf("\n")
@@ -293,19 +309,37 @@ func (ft *FragTester) WriteApp(flavor string) (string, error) {
 	}
 }
 
+func (ft *FragTester) ListAppFlavors() []string {
+	return []string{"cpynqapi", "cpynqapibenchv2"}
+}
+
 func (ft *FragTester) WriteStatistics() (string, error) {
 	result := "{\"" + ft.Name + ft.NameSuffix + "\": 1}\n"
 	return result, nil
 }
 
+func (ft *FragTester) WriteSicv2Endpoints() (string, error) {
+	if len(ft.Inputs) == 0 || len(ft.Outputs) == 0 {
+		return "", fmt.Errorf("cannot create SICv2 endpoints without inputs and outputs")
+	}
+
+	return fmt.Sprintf("i0,p0o%d", len(ft.Outputs)-1), nil
+}
+
 func (ft *FragTester) CreateMappingFile(filename string) error {
 	ioMap := new(bondmachine.IOmap)
 	ioMap.Assoc = make(map[string]string)
+	numOutputs := len(ft.Outputs)
+
+	// If benchcoreV2 is active, add an extra output for the SICv2 output
+	if ft.BenchcoreV2 {
+		numOutputs++
+	}
 
 	for i := range ft.Inputs {
 		ioMap.Assoc["i"+strconv.Itoa(i)] = strconv.Itoa(i)
 	}
-	for i := range ft.Outputs {
+	for i := 0; i < numOutputs; i++ {
 		ioMap.Assoc["o"+strconv.Itoa(i)] = strconv.Itoa(i)
 	}
 

@@ -1,0 +1,4 @@
+; zero
+%fragment numzero template:true default_setop:rset resout:r0
+	{{ .Params.setop }}	r0, {{.Params.prefix}}0.0
+%endfragment
