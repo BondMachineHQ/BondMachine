@@ -375,7 +375,7 @@ func (Op Sicv3) Op_instruction_verilog_extra_block(arch *Arch, flavor string, le
 	return result
 }
 func (Op Sicv3) HLAssemblerMatch(arch *Arch) []string {
-	// "reference": {"support_hlasm": "yes"}
+	// "reference": {"support_hlasm": "ok"}
 	result := make([]string, 0)
 	result = append(result, "sicv3::*--type=reg::*--type=input")
 	return result
