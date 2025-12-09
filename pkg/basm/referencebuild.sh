@@ -150,13 +150,15 @@ The features are the following:
 | Feature | Description |
 | --- | --- |
 | hdl | The instruction can be translated to hardware description language |
+| hwopt | The instruction has hardware optimizations available |
 | asm | The instruction can be assembled by the assembler |
 | disasm | The instruction can be disassembled by the disassembler |
 | hlasm | The instruction can be assembled by the high-level assembler (Basm) |
 | asmeta | The instruction has metadata for the assembler |
 | gosim | The instruction can be simulated in the Go-based simulator |
+| gosimlat | The instruction simulation has latency setup aligned to the hardware |
 | hdlsim | The instruction can be simulated in the hardware description language simulator |
-| mt | Instruction thread support |
+| mt | Instruction multi-thread support |
 
 The possible support values are shown below:
 
