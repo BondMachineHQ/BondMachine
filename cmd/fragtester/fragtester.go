@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -23,6 +24,8 @@ var saveExpression = flag.String("save-expression", "", "Create an expression fi
 var saveStatistics = flag.String("save-statistics", "", "Create a statistics file")
 
 var createBmApi = flag.String("create-bmapi", "", "Create a mapping file for the BondMachine I/O over BMAPI")
+
+var createSicv2Endpoints = flag.String("sicv2-endpoints", "", "Create SICv2 endpoints and activate the benchcore module")
 
 var buildApp = flag.Bool("build-app", false, "Build an hardware connected app")
 var appFlavor = flag.String("app-flavor", "", "App flavor for the selected operating mode")
@@ -56,12 +59,17 @@ func main() {
 		ft.Debug = true
 	}
 
-	if *neuronLibPath != "" {
-		ft.NeuronLibPath = *neuronLibPath
-	} else {
-		panic("No neuron library path specified")
+	// Requests that does not need fragment analysis
+
+	if *appFlavorList {
+		flavors := ft.ListAppFlavors()
+		for _, flavor := range flavors {
+			fmt.Println(flavor)
+		}
+		os.Exit(0)
 	}
 
+	// Set the data type
 	if *dataType != "" {
 		found := false
 		for _, tpy := range bmnumbers.AllTypes {
@@ -110,6 +118,14 @@ func main() {
 		}
 	}
 
+	// Set the neuron library path
+	if *neuronLibPath != "" {
+		ft.NeuronLibPath = *neuronLibPath
+	} else {
+		panic("No neuron library path specified")
+	}
+
+	// Load the fragment file and analyze it
 	if *fragmentFile != "" {
 		// Load the fragment file
 		if file, err := os.ReadFile(*neuronLibPath + "/" + *fragmentFile); err != nil {
@@ -121,15 +137,12 @@ func main() {
 		panic("No fragment file specified")
 	}
 
+	// Check if the fragment is valid
 	if !ft.Valid {
 		os.Exit(1)
 	}
 
-	if *describe {
-		ft.DescribeFragment()
-		os.Exit(0)
-	}
-
+	// Check the sequences
 	seq := ft.Sequences()
 	if *sequence >= seq {
 		panic("Invalid sequence: " + strconv.Itoa(*sequence))
@@ -137,42 +150,66 @@ func main() {
 
 	ft.ApplySequence(*sequence)
 
-	if *createBmApi != "" {
-		if err := ft.CreateMappingFile(*createBmApi); err != nil {
-			panic(err)
+	// Requests that need fragment analysis and are mutually exclusive
+
+	// Describe the fragment
+	if *describe {
+		ft.DescribeFragment()
+
+	} else {
+		// Run the fragment and produce outputs
+
+		// Activate benchcoreV2 if requested
+		if *createSicv2Endpoints != "" {
+			if sicv2Ends, err := ft.WriteSicv2Endpoints(); err == nil {
+				os.WriteFile(*createSicv2Endpoints, []byte(sicv2Ends), 0644)
+				ft.BenchcoreV2 = true
+			} else {
+				panic(err)
+			}
+		}
+
+		// Create the BMAPI mapping file if requested
+		if *createBmApi != "" {
+			if err := ft.CreateMappingFile(*createBmApi); err != nil {
+				panic(err)
+			}
+		}
+
+		// Build the app if requested
+		if *buildApp && *appFile != "" {
+			if appSource, err := ft.WriteApp(*appFlavor); err == nil {
+				os.WriteFile(*appFile, []byte(appSource), 0644)
+			} else {
+				panic(err)
+			}
+		}
+
+		// Produce the requested output files
+		if *saveBasm != "" {
+			if basmFile, err := ft.WriteBasm(); err == nil {
+				os.WriteFile(*saveBasm, []byte(basmFile), 0644)
+			} else {
+				panic(err)
+			}
+		}
+
+		// Produce the requested output files
+		if *saveExpression != "" {
+			if expressionFile, err := ft.WriteSympy(); err == nil {
+				os.WriteFile(*saveExpression, []byte(expressionFile), 0644)
+			} else {
+				panic(err)
+			}
+		}
+
+		// Produce the requested output files
+		if *saveStatistics != "" {
+			if statisticsFile, err := ft.WriteStatistics(); err == nil {
+				os.WriteFile(*saveStatistics, []byte(statisticsFile), 0644)
+			} else {
+				panic(err)
+			}
 		}
 	}
-
-	if *buildApp && *appFile != "" {
-		if appSource, err := ft.WriteApp(*appFlavor); err == nil {
-			os.WriteFile(*appFile, []byte(appSource), 0644)
-		} else {
-			panic(err)
-		}
-	}
-
-	if *saveBasm != "" {
-		if basmFile, err := ft.WriteBasm(); err == nil {
-			os.WriteFile(*saveBasm, []byte(basmFile), 0644)
-		} else {
-			panic(err)
-		}
-	}
-
-	if *saveExpression != "" {
-		if expressionFile, err := ft.WriteSympy(); err == nil {
-			os.WriteFile(*saveExpression, []byte(expressionFile), 0644)
-		} else {
-			panic(err)
-		}
-	}
-
-	if *saveStatistics != "" {
-		if statisticsFile, err := ft.WriteStatistics(); err == nil {
-			os.WriteFile(*saveStatistics, []byte(statisticsFile), 0644)
-		} else {
-			panic(err)
-		}
-	}
-
 }

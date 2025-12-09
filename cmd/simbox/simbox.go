@@ -28,15 +28,17 @@ func (i *string_slice) Set(value string) error {
 var debug = flag.Bool("d", false, "Debug")
 var verbose = flag.Bool("v", false, "Verbose")
 
-var simboxFile = flag.String("simbox-file", "", "Filename of the simulation data file")
-var machine_file = flag.String("machine-file", "", "Machine in JSON format")
-var bondmachine_file = flag.String("bondmachine-file", "", "Bondmachine in JSON format")
+var sbFile = flag.String("simbox-file", "", "Filename of the simulation data file")
+var machineFile = flag.String("machine-file", "", "Machine in JSON format")
+var bondmachineFile = flag.String("bondmachine-file", "", "Bondmachine in JSON format")
 
 var verify = flag.Bool("verify", false, "Verify the simbox against a machine file or a bondmachine file")
 
 var list = flag.Bool("list", false, "List rules")
 var add = flag.String("add", "", "Add e rule")
 var del = flag.Int("del", -1, "Remove a rule")
+var suspend = flag.Int("suspend", -1, "Suspend a rule")
+var unsuspend = flag.Int("unsuspend", -1, "Unsuspend (reactivate) a rule")
 
 func check(e error) {
 	if e != nil {
@@ -52,11 +54,11 @@ func init() {
 func main() {
 	sBox := new(simbox.Simbox)
 
-	if *simboxFile != "" {
-		if _, err := os.Stat(*simboxFile); err == nil {
+	if *sbFile != "" {
+		if _, err := os.Stat(*sbFile); err == nil {
 			// Open the simbox file is exists
-			if simboxJSON, err := os.ReadFile(*simboxFile); err == nil {
-				if err := json.Unmarshal([]byte(simboxJSON), sBox); err != nil {
+			if sbJSON, err := os.ReadFile(*sbFile); err == nil {
+				if err := json.Unmarshal([]byte(sbJSON), sBox); err != nil {
 					panic(err)
 				}
 			} else {
@@ -64,9 +66,9 @@ func main() {
 			}
 		}
 		if *verify {
-			if *machine_file != "" {
+			if *machineFile != "" {
 				// TODO machine verify
-			} else if *bondmachine_file != "" {
+			} else if *bondmachineFile != "" {
 				// TODO bondmachine verify
 			} else {
 				panic("Missing machine or bondmachine file")
@@ -79,16 +81,22 @@ func main() {
 		} else if *del != -1 {
 			err := sBox.Del(*del)
 			check(err)
+		} else if *suspend != -1 {
+			err := sBox.Suspend(*suspend)
+			check(err)
+		} else if *unsuspend != -1 {
+			err := sBox.Reactivate(*unsuspend)
+			check(err)
 		}
 
 		// Write the simbox file
-		f, err := os.Create(*simboxFile)
-		check(err)
+		f, errI := os.Create(*sbFile)
+		check(errI)
 		defer f.Close()
-		b, errj := json.Marshal(sBox)
-		check(errj)
-		_, err = f.WriteString(string(b))
-		check(err)
+		b, errJ := json.Marshal(sBox)
+		check(errJ)
+		_, errI = f.WriteString(string(b))
+		check(errI)
 	} else {
 		panic("simbox-file is a mandatory option")
 	}

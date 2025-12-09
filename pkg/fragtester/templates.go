@@ -97,9 +97,17 @@ func (ft *FragTester) ApplySympyTemplate() (string, error) {
 
 func (ft *FragTester) ApplyAppTemplate(flavor string) (string, error) {
 	var data string
+
+	// If the benchcoreV2 is active, force the suffix benchv2
+	if ft.BenchcoreV2 && flavor == "cpynqapi" {
+		flavor = "cpynqapibenchv2"
+	}
+
 	switch flavor {
 	case "cpynqapi":
 		data = CPynqApi
+	case "cpynqapibenchv2":
+		data = CPynqApiBenchV2
 	default:
 		return "", errors.New("unknown app template flavor: " + flavor)
 	}

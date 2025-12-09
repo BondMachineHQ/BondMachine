@@ -81,8 +81,8 @@ type Bondmachine struct {
 	Inputs  int
 	Outputs int
 
-	Internal_inputs  []Bond // These are what internally in considered and input, i.e. Processors inputs and Shell outputs, lets say they are N
-	Internal_outputs []Bond // These are what internally in considered and output, i.e. Processors outputs and Shell inputs, lets say they are M
+	Internal_inputs  []Bond // These are what internally is considered an input, i.e. Processors inputs and Shell outputs, lets say they are N
+	Internal_outputs []Bond // These are what internally is considered an output, i.e. Processors outputs and Shell inputs, lets say they are M
 
 	Links []int // Is the link matrix for Internal_inputs that may be connected only to one Internal_output (they are N!). A value of -1 means the input is unconnected, otherwise it points to the Internal_output id
 
@@ -656,6 +656,76 @@ func (bmach *Bondmachine) Attach_benchmark_core(endpoints []string) error {
 		myarch.Shared_constraints = ""
 
 		prog := "sic r0 i0\nsic r0 i1\nr2o r0 o0\nj 0\n"
+
+		if prog, err := myarch.Assembler([]byte(prog)); err == nil {
+			mybcore.Program = prog
+		} else {
+			fmt.Println(err)
+		}
+
+		bmach.Domains = append(bmach.Domains, mybcore)
+		bmach.Add_processor(len(bmach.Domains) - 1)
+		newpnum := strconv.Itoa(len(bmach.Processors) - 1)
+		bmach.Add_bond([]string{"p" + newpnum + "i0", e0})
+		bmach.Add_bond([]string{"p" + newpnum + "i1", e1})
+		bmach.Add_output()
+		newonum := strconv.Itoa(bmach.Outputs - 1)
+		bmach.Add_bond([]string{"p" + newpnum + "o0", "o" + newonum})
+	} else {
+		return Prerror{"Benchmark core endpoints has to be internal outputs"}
+	}
+	return nil
+}
+
+func (bmach *Bondmachine) AttachBenchmarkCoreV2(endpoints []string) error {
+	var e0 string
+	var e1 string
+
+	for _, outp := range bmach.Internal_outputs {
+		if outp.String() == endpoints[0] {
+			e0 = endpoints[0]
+		}
+		if outp.String() == endpoints[1] {
+			e1 = endpoints[1]
+		}
+	}
+
+	if e0 != "" && e1 != "" {
+		mybcore := new(procbuilder.Machine)
+
+		myarch := &mybcore.Arch
+
+		myarch.Rsize = uint8(bmach.Rsize)
+
+		myarch.Modes = make([]string, 1)
+		myarch.Modes[0] = "ha"
+
+		opcodes := make([]procbuilder.Opcode, 0)
+
+		for _, op := range procbuilder.Allopcodes {
+			for _, opn := range []string{"sicv3", "r2owa", "j"} {
+				if opn == op.Op_get_name() {
+					opcodes = append(opcodes, op)
+					break
+				}
+			}
+		}
+
+		sort.Sort(procbuilder.ByName(opcodes))
+
+		myarch.Op = opcodes
+
+		myarch.R = uint8(1)
+		myarch.L = uint8(0)
+		myarch.N = uint8(2)
+		myarch.M = uint8(1)
+		// myarch.O = uint8(3)
+		myarch.Shared_constraints = ""
+
+		prog := "sicv3 r0 i0\nsicv3 r0 i1\nr2owa r0 o0\nj 0\n"
+
+		// ROM size depends on number of lines
+		myarch.O = uint8(Needed_bits(len(strings.Split(prog, "\n"))))
 
 		if prog, err := myarch.Assembler([]byte(prog)); err == nil {
 			mybcore.Program = prog

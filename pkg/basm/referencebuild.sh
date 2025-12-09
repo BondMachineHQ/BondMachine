@@ -153,7 +153,7 @@ The features are the following:
 | asm | The instruction can be assembled by the assembler |
 | disasm | The instruction can be disassembled by the disassembler |
 | hlasm | The instruction can be assembled by the high-level assembler (Basm) |
-| asmmeta | The instruction has metadata for the assembler |
+| asmeta | The instruction has metadata for the assembler |
 | gosim | The instruction can be simulated in the Go-based simulator |
 | hdlsim | The instruction can be simulated in the hardware description language simulator |
 | mt | Instruction thread support |
