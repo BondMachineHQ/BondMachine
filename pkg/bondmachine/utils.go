@@ -27,6 +27,42 @@ func (bmach *Bondmachine) Get_so_name(id int) (string, bool) {
 	return "", false
 }
 
+func (bmach *Bondmachine) GetInternalInputName(id int) (string, bool) {
+
+	if len(bmach.Internal_inputs) > id {
+		bond := bmach.Internal_inputs[id]
+		switch bond.Map_to {
+		case BMINPUT:
+			return "i" + strconv.Itoa(bond.Res_id), true
+		case BMOUTPUT:
+			return "o" + strconv.Itoa(bond.Res_id), true
+		case CPINPUT:
+			return "p" + strconv.Itoa(bond.Res_id) + "i" + strconv.Itoa(bond.Ext_id), true
+		case CPOUTPUT:
+			return "p" + strconv.Itoa(bond.Res_id) + "o" + strconv.Itoa(bond.Ext_id), true
+		}
+	}
+	return "", false
+}
+
+func (bmach *Bondmachine) GetInternalOutputName(id int) (string, bool) {
+
+	if len(bmach.Internal_outputs) > id {
+		bond := bmach.Internal_outputs[id]
+		switch bond.Map_to {
+		case BMINPUT:
+			return "i" + strconv.Itoa(bond.Res_id), true
+		case BMOUTPUT:
+			return "o" + strconv.Itoa(bond.Res_id), true
+		case CPINPUT:
+			return "p" + strconv.Itoa(bond.Res_id) + "i" + strconv.Itoa(bond.Ext_id), true
+		case CPOUTPUT:
+			return "p" + strconv.Itoa(bond.Res_id) + "o" + strconv.Itoa(bond.Ext_id), true
+		}
+	}
+	return "", false
+}
+
 func Get_input_name(i int) string {
 	result := "i" + strconv.Itoa(i)
 	return result

@@ -164,10 +164,10 @@ func (op Sic) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Sic) Simulate(vm *VM, instr string) error {
-	inpbits := vm.Mach.Inputs_bits()
-	reg_bits := vm.Mach.R
-	reg := get_id(instr[:reg_bits])
-	inp := get_id(instr[reg_bits : int(reg_bits)+inpbits])
+	inBits := vm.Mach.Inputs_bits()
+	regBits := vm.Mach.R
+	reg := get_id(instr[:regBits])
+	inp := get_id(instr[regBits : int(regBits)+inBits])
 	if sic_state, ok := vm.Extra_states["sic_state"]; ok {
 		if sic_state == true {
 			if vm.Extra_states["sic_reg"] == vm.Inputs[inp] {
@@ -176,8 +176,12 @@ func (op Sic) Simulate(vm *VM, instr string) error {
 					vm.Registers[reg] = vm.Registers[reg].(uint8) + 1
 				case 16:
 					vm.Registers[reg] = vm.Registers[reg].(uint16) + 1
+				case 32:
+					vm.Registers[reg] = vm.Registers[reg].(uint32) + 1
+				case 64:
+					vm.Registers[reg] = vm.Registers[reg].(uint64) + 1
 				default:
-					// TODO Fix
+					return errors.New("SIC: Unsupported register size")
 				}
 			} else {
 				vm.Extra_states["sic_state"] = false
@@ -191,8 +195,12 @@ func (op Sic) Simulate(vm *VM, instr string) error {
 				vm.Registers[reg] = uint8(0)
 			case 16:
 				vm.Registers[reg] = uint16(0)
+			case 32:
+				vm.Registers[reg] = uint32(0)
+			case 64:
+				vm.Registers[reg] = uint64(0)
 			default:
-				// TODO Fix
+				return errors.New("SIC: Unsupported register size")
 			}
 		}
 	} else {
@@ -203,8 +211,12 @@ func (op Sic) Simulate(vm *VM, instr string) error {
 			vm.Registers[reg] = uint8(0)
 		case 16:
 			vm.Registers[reg] = uint16(0)
+		case 32:
+			vm.Registers[reg] = uint32(0)
+		case 64:
+			vm.Registers[reg] = uint64(0)
 		default:
-			// TODO Fix
+			return errors.New("SIC: Unsupported register size")
 		}
 	}
 	return nil
