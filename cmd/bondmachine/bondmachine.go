@@ -115,6 +115,7 @@ var sim = flag.Bool("sim", false, "Simulate bond machine")
 var simInteractions = flag.Int("sim-interactions", 10, "Simulation interaction")
 var simStopOnValidOf = flag.Int("sim-stop-on-valid-of", -1, "Stop simulation when a valid output is produced on the given output")
 var simReport = flag.String("sim-report", "", "Simulation report file")
+var simDelaysFile = flag.String("sim-delays-file", "", "Simulation delays file")
 
 var emu = flag.Bool("emu", false, "Emulate bond machine")
 var emu_interactions = flag.Int("emu-interactions", 10, "Emulation interaction (0 means forever)")
@@ -922,11 +923,24 @@ func main() {
 			// Build the simulation VM
 			vm := new(bondmachine.VM)
 			vm.Bmach = bmach
+
+			// Load the sim delays if provided
+			if *simDelaysFile != "" {
+				sDelay, err := simbox.LoadSimDelaysFromFile(*simDelaysFile)
+				if err != nil {
+					panic(err)
+				}
+				vm.SimDelayMap = sDelay
+			} else {
+				vm.SimDelayMap = nil
+			}
+
 			err := vm.Init()
 			check(err)
 
 			oldVm := new(bondmachine.VM)
 			oldVm.Bmach = bmach
+			oldVm.SimDelayMap = vm.SimDelayMap
 			err = oldVm.Init()
 			check(err)
 

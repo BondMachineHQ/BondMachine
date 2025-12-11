@@ -25,7 +25,12 @@ type VM struct {
 
 	DeferredInstructions map[string]DeferredInstruction
 
+	SimDelayArray []*simbox.DelayDistribution // One distribution per opcode
+
 	Pc           uint64
+	LastPc       uint64
+	DelayCounter int32
+
 	Extra_states map[string]interface{}
 	CmdChan      chan []byte
 }
@@ -50,6 +55,9 @@ func (vm *VM) CopyState(vmSource *VM) error {
 
 	vm.DeferredInstructions = make(map[string]DeferredInstruction)
 	maps.Copy(vm.DeferredInstructions, vmSource.DeferredInstructions)
+
+	vm.SimDelayArray = make([]*simbox.DelayDistribution, len(vmSource.SimDelayArray))
+	copy(vm.SimDelayArray, vmSource.SimDelayArray)
 
 	vm.Extra_states = make(map[string]interface{})
 	maps.Copy(vm.Extra_states, vmSource.Extra_states)
@@ -219,7 +227,7 @@ func (vm *VM) Step(psc *SimConfig) (string, error) {
 				if psc.Show_disasm {
 					curline := "\t\tDisasm: " + op.Op_get_name() + " "
 					if disas, err := op.Disassembler(&vm.Mach.Arch, instr[opBits:]); err != nil {
-						return "", Prerror{"Disassembling falied"}
+						return "", Prerror{"Disassembling failed"}
 					} else {
 						result += curline + disas + "\n"
 					}
@@ -234,8 +242,25 @@ func (vm *VM) Step(psc *SimConfig) (string, error) {
 				}
 			}
 
-			if err := op.Simulate(vm, instr[opBits:]); err != nil {
-				return "", Prerror{"Simulation failed"}
+			if vm.DelayCounter == 0 {
+				// Update the last pc
+				vm.LastPc = vm.Pc
+
+				if err := op.Simulate(vm, instr[opBits:]); err != nil {
+					return "", Prerror{"Simulation failed"}
+				}
+
+				if vm.SimDelayArray != nil && vm.SimDelayArray[opcode_id] != nil && vm.LastPc != vm.Pc {
+					// The instruction changed the pc and there is a delay distribution for this opcode (the last)
+					// Set the delay counter
+					delayDist := vm.SimDelayArray[opcode_id]
+					delay := delayDist.GetValue()
+					vm.DelayCounter = delay
+				}
+
+			} else {
+				// Just decrement the delay counter
+				vm.DelayCounter--
 			}
 
 			if psc != nil {

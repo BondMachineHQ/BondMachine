@@ -38,6 +38,8 @@ type VM struct {
 
 	DeferredInstructions map[string]DeferredInstruction
 
+	SimDelayMap *simbox.SimDelays
+
 	EmuDrivers []EmuDriver
 	cmdChan    chan []byte
 
@@ -188,8 +190,23 @@ func (vm *VM) Init() error {
 		pvm.Mach = vm.Bmach.Domains[proc_dom_id]
 		pvm.CpID = uint32(i)
 		pvm.CmdChan = cmdChan
-		pvm.Init()
 
+		if vm.SimDelayMap != nil {
+			pvm.SimDelayArray = make([]*simbox.DelayDistribution, len(pvm.Mach.Op))
+			for j, opcode := range pvm.Mach.Op {
+				opName := opcode.Op_get_name()
+				if delayDistr, ok := vm.SimDelayMap.OpcodeDelays[opName]; ok {
+					delayDistr.Normalize()
+					pvm.SimDelayArray[j] = &delayDistr
+				} else {
+					pvm.SimDelayArray[j] = nil
+				}
+			}
+		} else {
+			pvm.SimDelayArray = nil
+		}
+
+		pvm.Init()
 		vm.Processors[i] = pvm
 	}
 
