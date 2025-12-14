@@ -11,7 +11,6 @@ import (
 )
 
 type Cmpv struct {
-	pipeline *bool
 }
 
 func (op Cmpv) Op_get_name() string {
@@ -19,17 +18,21 @@ func (op Cmpv) Op_get_name() string {
 }
 
 func (op Cmpv) Op_get_desc() string {
-	return "Input valid check"
+	// "reference": {"desc":"The CMPV instruction check if the input given as argument has a valid signal and sets the cmpflag accordingly."}
+	// "reference": {"desc1": "If the input has valid data, cmpflag is set to 1, otherwise it is set to 0."}
+	// "reference": {"desc2": "The flag cmpflag can be used by other instructions to take decisions based on the result of this comparison."}
+	return "Check if the given input has valid data and set cmpflag accordingly"
 }
 
 func (op Cmpv) Op_show_assembler(arch *Arch) string {
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
-	result := "cmpv [" + strconv.Itoa(inBits) + "(Input)]	// Check if a given input has data valid [" + strconv.Itoa(opBits+inBits) + "]\n"
+	result := "cmpv [" + strconv.Itoa(inBits) + "(Input)]	// Check if the given input has valid data and set cmpflag accordingly [" + strconv.Itoa(opBits+inBits) + "]\n"
 	return result
 }
 
 func (op Cmpv) Op_get_instruction_len(arch *Arch) int {
+	// "reference": {"length": "opBits + inBits"}
 	opBits := arch.Opcodes_bits()
 	inBits := arch.Inputs_bits()
 	return opBits + inBits // The bits for the opcode + bits for an input
@@ -47,44 +50,35 @@ func (op Cmpv) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor strin
 func (op Cmpv) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	romWord := arch.Max_word()
 	opBits := arch.Opcodes_bits()
+	inBits := arch.Inputs_bits()
 
-	reg_num := 1 << arch.R
+	tabsNum := 5
 
 	result := ""
-	result += "					CMPV: begin\n"
-
-	if arch.R == 1 {
-		result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + "])\n"
-	} else {
-		result += "						case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)) + "])\n"
-	}
-	for i := 0; i < reg_num; i++ {
-
-		result += "						" + strings.ToUpper(Get_register_name(i)) + " : begin\n"
-
-		if arch.R == 1 {
-			result += "							case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + "])\n"
+	result += tabs(tabsNum) + "CMPV: begin\n"
+	if arch.N > 0 {
+		if inBits == 1 {
+			result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + "])\n"
 		} else {
-			result += "							case (current_instruction[" + strconv.Itoa(romWord-opBits-int(arch.R)-1) + ":" + strconv.Itoa(romWord-opBits-int(arch.R)-int(arch.R)) + "])\n"
+			result += tabs(tabsNum+1) + "case (current_instruction[" + strconv.Itoa(romWord-opBits-1) + ":" + strconv.Itoa(romWord-opBits-int(inBits)) + "])\n"
 		}
 
-		for j := 0; j < reg_num; j++ {
-
-			result += "							" + strings.ToUpper(Get_register_name(j)) + " : begin\n"
-			result += "								if (_" + strings.ToLower(Get_register_name(j)) + " == _" + strings.ToLower(Get_register_name(i)) + ") begin\n"
-			result += "									cmpflag <= 1'b1;\n"
-			result += "								end else begin\n"
-			result += "									cmpflag <= 1'b0;\n"
-			result += "								end\n"
-			result += "								$display(\"CMPV " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(Get_register_name(j)) + "\");\n"
-			result += "							end\n"
+		for i := 0; i < int(arch.N); i++ {
+			result += tabs(tabsNum+1) + strings.ToUpper(Get_input_name(i)) + " : begin\n"
+			result += tabs(tabsNum+2) + "if (" + strings.ToLower(Get_input_name(i)) + "_valid) begin\n"
+			result += tabs(tabsNum+3) + "cmpflag <= 1'b1;\n"
+			result += tabs(tabsNum+2) + "end else begin\n"
+			result += tabs(tabsNum+3) + "cmpflag <= 1'b0;\n"
+			result += tabs(tabsNum+2) + "end\n"
+			result += tabs(tabsNum+1) + "end\n"
 		}
-		result += "							endcase\n"
-		result += "						end\n"
+	} else {
+		result += tabs(tabsNum+1) + "$display(\"NOP\");\n"
 	}
-	result += "						endcase\n"
+
+	result += tabs(tabsNum+1) + "endcase\n"
 	result += NextInstruction(conf, arch, 6, "_pc + 1'b1")
-	result += "					end\n"
+	result += tabs(tabsNum) + "end\n"
 	return result
 }
 
@@ -93,42 +87,24 @@ func (op Cmpv) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 }
 
 func (op Cmpv) Assembler(arch *Arch, words []string) (string, error) {
+	// "reference": {"support_asm": "ok"}
 	opBits := arch.Opcodes_bits()
-	rom_word := arch.Max_word()
+	inBits := arch.Inputs_bits()
+	romWord := arch.Max_word()
 
-	reg_num := 1 << arch.R
-
-	if len(words) != 2 {
-		return "", Prerror{"Wrong arguments number"}
+	if len(words) != 1 {
+		return "", errors.New("wrong arguments number")
 	}
 
 	result := ""
-	for i := 0; i < reg_num; i++ {
-		if words[0] == strings.ToLower(Get_register_name(i)) {
-			result += zeros_prefix(int(arch.R), get_binary(i))
-			break
-		}
+
+	if partial, err := Process_input(words[0], int(arch.N)); err == nil {
+		result += zeros_prefix(inBits, partial)
+	} else {
+		return "", err
 	}
 
-	if result == "" {
-		return "", Prerror{"Unknown register name " + words[0]}
-	}
-
-	partial := ""
-	for i := 0; i < reg_num; i++ {
-		if words[1] == strings.ToLower(Get_register_name(i)) {
-			partial += zeros_prefix(int(arch.R), get_binary(i))
-			break
-		}
-	}
-
-	if partial == "" {
-		return "", Prerror{"Unknown register name " + words[1]}
-	}
-
-	result += partial
-
-	for i := opBits + 2*int(arch.R); i < rom_word; i++ {
+	for i := opBits + inBits; i < romWord; i++ {
 		result += "0"
 	}
 
@@ -136,10 +112,10 @@ func (op Cmpv) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Cmpv) Disassembler(arch *Arch, instr string) (string, error) {
-	reg_id := get_id(instr[:arch.R])
-	result := strings.ToLower(Get_register_name(reg_id)) + " "
-	reg_id = get_id(instr[arch.R : 2*int(arch.R)])
-	result += strings.ToLower(Get_register_name(reg_id))
+	// "reference": {"support_disasm": "ok"}
+	inBits := arch.Inputs_bits()
+	inId := get_id(instr[:inBits])
+	result := strings.ToLower(Get_input_name(inId))
 	return result, nil
 }
 
@@ -201,20 +177,30 @@ func (op Cmpv) Op_instruction_verilog_extra_block(arch *Arch, flavor string, lev
 }
 func (op Cmpv) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
-	result = append(result, "cmpv::*--type=reg::*--type=reg")
+	result = append(result, "cmpv::*--type=input")
+	result = append(result, "chk::*--type=input")
 	return result
 }
 func (op Cmpv) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
 	case "cmpv":
-		regDst := line.Elements[0].GetValue()
-		regSrc := line.Elements[1].GetValue()
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regDst, Op: bmreqs.OpAdd})
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regSrc, Op: bmreqs.OpAdd})
-		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "opcodes", Value: "cmpv", Op: bmreqs.OpAdd})
-		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:cmpv", T: bmreqs.ObjectSet, Name: "destregs", Value: regDst, Op: bmreqs.OpAdd})
-		rg.Requirement(bmreqs.ReqRequest{Node: node + "/opcodes:cmpv", T: bmreqs.ObjectSet, Name: "sourceregs", Value: regSrc, Op: bmreqs.OpAdd})
+		inNeed := line.Elements[0].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "inputs", Value: inNeed, Op: bmreqs.OpAdd})
 		return line, nil
+	case "chk":
+		inNeed := line.Elements[0].GetValue()
+		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "inputs", Value: inNeed, Op: bmreqs.OpAdd})
+		newLine := new(bmline.BasmLine)
+		newOp := new(bmline.BasmElement)
+		newOp.SetValue("cmpv")
+		newLine.Operation = newOp
+		newArgs := make([]*bmline.BasmElement, 1)
+		newArg1 := new(bmline.BasmElement)
+		newArg1.SetValue(inNeed)
+		newArg1.BasmMeta = newArg1.SetMeta("type", "input")
+		newArgs[0] = newArg1
+		newLine.Elements = newArgs
+		return newLine, nil
 	}
 	return nil, errors.New("HL Assembly normalize failed")
 }
