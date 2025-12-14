@@ -192,7 +192,7 @@ for i in `ls ../procbuilder/op_* | sort`
 do
 	opname=`basename $i | cut -d_ -f2- | cut -d. -f1`
 	echo -n "| [$opname]($opname.md) |" >> ./reference/matrix.md
-	for feature in "${!SupportArray[@]}"
+	for feature in $(echo "${!SupportArray[@]}" | tr ' ' '\n' | sort)
 	do
 		valueok="false"
 		export IFS=$'\n'
@@ -213,7 +213,6 @@ do
 				valueok="true"
 				break
 			fi
-
 		done
 		unset IFS
 		if [[ "$valueok" == "false" ]]
@@ -249,7 +248,7 @@ for i in `ls ../procbuilder/dynop_* | sort`
 do
 	opname=`basename $i | cut -d_ -f2- | cut -d. -f1`
 	echo -n "| [$opname]($opname.md) |" >> ./reference/matrix.md
-	for feature in "${!SupportArrayDyn[@]}"
+	for feature in $(echo "${!SupportArrayDyn[@]}" | tr ' ' '\n' | sort)
 	do
 		valueok="false"
 		export IFS=$'\n'

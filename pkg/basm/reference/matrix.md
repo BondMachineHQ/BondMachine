@@ -46,10 +46,10 @@ The possible support values are shown below:
 | [cirn](cirn.md) | - | - | - | - | - | - | - | - | - |
 | [clc](clc.md) | - | - | - | - | - | - | - | - | - |
 | [clr](clr.md) | - | - | - | - | - | - | - | - | - |
-| [cmpr](cmpr.md) | ![ok](iconok.png) | - | - | - | - | - | - | - | ![ok](iconok.png) |
+| [cmpr](cmpr.md) | ![ok](iconok.png) | - | ![ok](iconok.png) | - | - | - | - | - | - |
 | [cmprlt](cmprlt.md) | - | - | - | - | - | - | - | - | - |
-| [cmpv](cmpv.md) | ![ok](iconok.png) | - | - | - | - | - | - | - | ![ok](iconok.png) |
-| [cpy](cpy.md) | - | - | - | - | - | - | - | - | ![ok](iconok.png) |
+| [cmpv](cmpv.md) | ![ok](iconok.png) | - | ![ok](iconok.png) | - | - | - | - | - | - |
+| [cpy](cpy.md) | ![ok](iconok.png) | - | - | - | - | - | - | - | - |
 | [cset](cset.md) | - | - | - | - | - | - | - | - | - |
 | [dec](dec.md) | - | - | - | - | - | - | - | - | - |
 | [divf16](divf16.md) | - | - | - | - | - | - | - | - | - |
@@ -61,7 +61,7 @@ The possible support values are shown below:
 | [hit](hit.md) | - | - | - | - | - | - | - | - | - |
 | [hlt](hlt.md) | - | - | - | - | - | - | - | - | - |
 | [i2r](i2r.md) | - | - | - | - | - | - | - | - | - |
-| [i2rw](i2rw.md) | - | ![ok](iconok.png) | - | - | - | - | - | - | ![ok](iconok.png) |
+| [i2rw](i2rw.md) | ![ok](iconok.png) | - | - | ![ok](iconok.png) | - | - | - | - | - |
 | [incc](incc.md) | - | - | - | - | - | - | - | - | - |
 | [inc](inc.md) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) |
 | [ja](ja.md) | - | - | - | - | - | - | - | - | - |
@@ -90,7 +90,7 @@ The possible support values are shown below:
 | [mult](mult.md) | - | - | - | - | - | - | - | - | - |
 | [multp](multp.md) | - | - | - | - | - | - | - | - | - |
 | [nand](nand.md) | - | - | - | - | - | - | - | - | - |
-| [nop](nop.md) | ![ok](iconok.png) | ![ok](iconok.png) | ![testing](icontesting.png) | ![ok](iconok.png) | - | ![ok](iconok.png) | ![ok](iconok.png) | - | ![ok](iconok.png) |
+| [nop](nop.md) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | ![ok](iconok.png) | - | ![ok](iconok.png) | ![ok](iconok.png) | - | ![testing](icontesting.png) |
 | [nor](nor.md) | - | - | - | - | - | - | - | - | - |
 | [not](not.md) | - | - | - | - | - | - | - | - | - |
 | [or](or.md) | - | - | - | - | - | - | - | - | - |
@@ -99,7 +99,7 @@ The possible support values are shown below:
 | [r2mri](r2mri.md) | - | - | - | - | - | - | - | - | - |
 | [r2o](r2o.md) | - | - | - | - | - | - | - | - | - |
 | [r2owaa](r2owaa.md) | - | - | - | - | - | - | - | - | - |
-| [r2owa](r2owa.md) | - | ![ok](iconok.png) | - | - | - | - | - | - | - |
+| [r2owa](r2owa.md) | - | - | - | ![ok](iconok.png) | - | - | - | - | - |
 | [r2q](r2q.md) | - | - | - | - | - | - | - | - | - |
 | [r2s](r2s.md) | - | - | - | - | - | - | - | - | - |
 | [r2t](r2t.md) | - | - | - | - | - | - | - | - | - |
@@ -109,13 +109,13 @@ The possible support values are shown below:
 | [ro2r](ro2r.md) | - | - | - | - | - | - | - | - | - |
 | [ro2rri](ro2rri.md) | - | - | - | - | - | - | - | - | - |
 | [rsc](rsc.md) | - | - | - | - | - | - | - | - | - |
-| [rset](rset.md) | - | ![ok](iconok.png) | - | - | - | - | - | ![ok](iconok.png) | - |
+| [rset](rset.md) | - | - | - | ![ok](iconok.png) | ![ok](iconok.png) | - | - | - | - |
 | [s2r](s2r.md) | - | - | - | - | - | - | - | - | - |
 | [saj](saj.md) | - | - | - | - | - | - | - | - | - |
 | [sbc](sbc.md) | - | - | - | - | - | - | - | - | - |
 | [sic](sic.md) | - | - | - | - | - | - | - | - | - |
-| [sicv2](sicv2.md) | - | ![testing](icontesting.png) | - | ![notapplicable](iconnotapplicable.png) | - | - | ![notapplicable](iconnotapplicable.png) | - | ![ok](iconok.png) |
-| [sicv3](sicv3.md) | ![ok](iconok.png) | ![ok](iconok.png) | - | ![ok](iconok.png) | - | - | - | - | ![ok](iconok.png) |
+| [sicv2](sicv2.md) | ![ok](iconok.png) | ![notapplicable](iconnotapplicable.png) | - | ![testing](icontesting.png) | - | - | ![notapplicable](iconnotapplicable.png) | - | - |
+| [sicv3](sicv3.md) | ![ok](iconok.png) | - | ![ok](iconok.png) | ![ok](iconok.png) | - | - | ![ok](iconok.png) | - | - |
 | [sub](sub.md) | - | - | - | - | - | - | - | - | - |
 | [t2r](t2r.md) | - | - | - | - | - | - | - | - | - |
 | [tsp](tsp.md) | - | - | - | - | - | - | - | - | - |
@@ -131,7 +131,7 @@ The possible support values are shown below:
 | --- | --- | --- | --- |
 | [call](call.md) | - | - | - |
 | [fixed_point](fixed_point.md) | - | - | - |
-| [flopoco](flopoco.md) | ![ok](iconok.png) | ![notapplicable](iconnotapplicable.png) | ![ok](iconok.png) |
+| [flopoco](flopoco.md) | ![ok](iconok.png) | ![ok](iconok.png) | ![notapplicable](iconnotapplicable.png) |
 | [linear_quantizer](linear_quantizer.md) | - | - | - |
 | [rsets](rsets.md) | - | - | - |
 | [stack](stack.md) | - | - | - |
