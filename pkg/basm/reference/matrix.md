@@ -46,9 +46,9 @@ The possible support values are shown below:
 | [cirn](cirn.md) | - | - | - | - | - | - | - | - | - |
 | [clc](clc.md) | - | - | - | - | - | - | - | - | - |
 | [clr](clr.md) | - | - | - | - | - | - | - | - | - |
-| [cmpr](cmpr.md) | - | - | - | - | - | - | - | - | - |
+| [cmpr](cmpr.md) | ![ok](iconok.png) | - | - | - | - | - | - | - | ![ok](iconok.png) |
 | [cmprlt](cmprlt.md) | - | - | - | - | - | - | - | - | - |
-| [cmpv](cmpv.md) | - | - | - | - | - | - | - | - | - |
+| [cmpv](cmpv.md) | ![ok](iconok.png) | - | - | - | - | - | - | - | ![ok](iconok.png) |
 | [cpy](cpy.md) | - | - | - | - | - | - | - | - | ![ok](iconok.png) |
 | [cset](cset.md) | - | - | - | - | - | - | - | - | - |
 | [dec](dec.md) | - | - | - | - | - | - | - | - | - |
