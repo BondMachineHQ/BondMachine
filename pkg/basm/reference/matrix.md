@@ -29,7 +29,7 @@ The possible support values are shown below:
 
 ## Support Matrix for Static Instructions
 
-| Instruction | disasm | gosim | mt | hlasm | hwopt | hdl | asmeta | gosimlat | asm |
+| Instruction | asm | asmeta | disasm | gosim | gosimlat | hdl | hlasm | hwopt | mt |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [adc](adc.md) | - | - | - | - | - | - | - | - | - |
 | [addf16](addf16.md) | - | - | - | - | - | - | - | - | - |
@@ -127,7 +127,7 @@ The possible support values are shown below:
 
 ## Support Matrix for Dynamical Instructions
 
-| Instruction | disasm | gosim | asm |
+| Instruction | asm | disasm | gosim |
 | --- | --- | --- | --- |
 | [call](call.md) | - | - | - |
 | [fixed_point](fixed_point.md) | - | - | - |

@@ -175,14 +175,14 @@ The possible support values are shown below:
 EOF
 
 echo -n "| Instruction |" >> ./reference/matrix.md
-for feature in "${!SupportArray[@]}"
+for feature in $(echo "${!SupportArray[@]}" | tr ' ' '\n' | sort)
 do
 	echo -n " $feature |" >> ./reference/matrix.md
 done
 echo "" >> ./reference/matrix.md
 
 echo -n "| --- |" >> ./reference/matrix.md
-for feature in "${!SupportArray[@]}"
+for feature in $(echo "${!SupportArray[@]}" | tr ' ' '\n' | sort)
 do
 	echo -n " --- |" >> ./reference/matrix.md
 done
@@ -231,7 +231,7 @@ cat >> ./reference/matrix.md << EOF
 EOF
 
 echo -n "| Instruction |" >> ./reference/matrix.md
-for feature in "${!SupportArrayDyn[@]}"
+for feature in $(echo "${!SupportArrayDyn[@]}" | tr ' ' '\n' | sort)
 do
 	echo -n " $feature |" >> ./reference/matrix.md
 done
@@ -239,7 +239,7 @@ done
 echo "" >> ./reference/matrix.md
 
 echo -n "| --- |" >> ./reference/matrix.md
-for feature in "${!SupportArrayDyn[@]}"
+for feature in $(echo "${!SupportArrayDyn[@]}" | tr ' ' '\n' | sort)
 do
 	echo -n " --- |" >> ./reference/matrix.md
 done
