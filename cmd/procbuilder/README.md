@@ -65,7 +65,7 @@ These flags define the processor architecture when creating a new processor:
 Procbuilder can load programs from various sources:
 
 - `-input-assembly <file>`: Load assembly program from file
-- `-input-binary <file>`: Load binary program from file (TODO: not fully implemented)
+- `-input-binary <file>`: Load binary program from file (limited support - not fully implemented)
 - `-input-random`: Generate a random program
 
 ## Machine State Management
@@ -322,6 +322,6 @@ The machine JSON file contains the complete processor state:
 
 ## See Also
 
-- [Procbuilder Package Documentation](../../pkg/procbuilder/README.md)
+- [procbuilder package documentation](../../pkg/procbuilder/README.md)
 - [Simbox CLI](../simbox/README.md)
 - [BondMachine Documentation](https://www.bondmachine.it)
