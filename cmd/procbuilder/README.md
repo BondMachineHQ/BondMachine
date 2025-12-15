@@ -65,8 +65,8 @@ These flags define the processor architecture when creating a new processor:
 Procbuilder can load programs from various sources:
 
 - `-input-assembly <file>`: Load assembly program from file
-- `-input-binary <file>`: Load binary program from file (limited support - not fully implemented)
-- `-input-random`: Generate a random program
+- `-input-binary <file>`: Load binary program from file (not yet implemented - flag exists but has no functionality)
+- `-input-random`: Generate a random program (not yet implemented)
 
 ## Machine State Management
 
