@@ -65,7 +65,7 @@ func (op Cmpv) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg
 
 		for i := 0; i < int(arch.N); i++ {
 			result += tabs(tabsNum+1) + strings.ToUpper(Get_input_name(i)) + " : begin\n"
-			result += tabs(tabsNum+2) + "if (" + strings.ToLower(Get_input_name(i)) + "_valid) begin\n"
+			result += tabs(tabsNum+2) + "if (" + strings.ToLower(Get_input_name(i)) + "_valid && !" + strings.ToLower(Get_input_name(i)) + "_received) begin\n"
 			result += tabs(tabsNum+3) + "cmpflag <= 1'b1;\n"
 			result += tabs(tabsNum+2) + "end else begin\n"
 			result += tabs(tabsNum+3) + "cmpflag <= 1'b0;\n"
