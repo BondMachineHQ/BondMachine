@@ -125,6 +125,8 @@ func (op Rset) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Rset) Simulate(vm *VM, instr string) error {
+	// "reference": {"support_gosim":"ok"}
+	// "reference": {"support_gosimlat":"ok"}
 	reg_bits := vm.Mach.R
 	reg := get_id(instr[:reg_bits])
 	memVal := get_id(instr[reg_bits : reg_bits+vm.Mach.Rsize])

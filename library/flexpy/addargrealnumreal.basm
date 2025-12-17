@@ -1,17 +1,14 @@
-;fragtester range numberreal arange(-5,5,2)
+;fragtester range numberreal arange(-5,5,1)
 ;sympy from sympy import *
 ;sympy x = Symbol('x', real=True)
 ;sympy symbols = [x]
-;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
-;sympy     'imag: x': list(np.arange(-5,5,2)),
-;sympy     'real: y': list(np.arange(-5,5,2)),
-;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy testRanges = {'real: x': list(np.arange(-50,50,0.1)),
 ;sympy     }
 ;sympy with evaluate(False):
 ;sympy     spExpr = x + {{ .Params.numberreal }}
 ;
 ;
-; addition of a real number passed as an argument and an immaginary number passed as an immediate value
+; addition of a real number passed as an argument and an imaginary number passed as an immediate value
 ; r0 is the real part of the argument
 ; {{ .Params.numberreal }} is the imaginary part of the immediate value
 %fragment addargrealnumreal template:true default_setop:rset resin:r0 resout:r0
