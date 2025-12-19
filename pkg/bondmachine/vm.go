@@ -196,7 +196,7 @@ func (vm *VM) Init() error {
 			for j, opcode := range pvm.Mach.Op {
 				opName := opcode.Op_get_name()
 				if delayDistr, ok := vm.SimDelayMap.OpcodeDelays[opName]; ok {
-					delayDistr.Normalize()
+					// delayDistr.Normalize() // This will break concurrency. Must be done before starting the simulation.
 					pvm.SimDelayArray[j] = &delayDistr
 				} else {
 					pvm.SimDelayArray[j] = nil

@@ -214,12 +214,12 @@ func (p *Population) SelectParent(tournamentSize int) *Individual {
 // Evolve runs the genetic algorithm for the configured number of generations
 func (p *Population) Evolve(fitnessFunc FitnessFunc) *SimDelays {
 	for generation := 0; generation < p.Config.Generations; generation++ {
-		if p.Config.Debug {
-			fmt.Printf("Generation %d: Best Fitness = %.16f, Average Fitness = %.16f\n",
-				generation,
-				p.GetBest().Fitness,
-				p.GetAverageFitness())
-		}
+
+		fmt.Printf("Generation %d: Best Fitness = %.16f, Average Fitness = %.16f\n",
+			generation,
+			p.GetBest().Fitness,
+			p.GetAverageFitness())
+
 		// Evaluate fitness
 		p.EvaluatePopulation(fitnessFunc)
 

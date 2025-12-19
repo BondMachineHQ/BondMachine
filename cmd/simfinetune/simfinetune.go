@@ -20,6 +20,7 @@ var inputsFile = flag.String("inputs-file", "", "Inputs in CSV format")
 var outputsFile = flag.String("outputs-file", "", "Outputs in CSV format, with expected results and latencies")
 var delaysFile = flag.String("delays-file", "delaysout.json", "Output delays parameters in JSON format")
 var geneticConfigFile = flag.String("genetic-config-file", "", "Genetic algorithm configuration in JSON format")
+var workers = flag.Int("workers", 4, "Number of concurrent workers for simulation")
 
 type record []string
 
@@ -27,6 +28,7 @@ type FitnessEnv struct {
 	Inputs        []record
 	Outputs       []record
 	RealLatencies []uint32
+	Workers       int
 	BM            *bondmachine.Bondmachine
 }
 
@@ -51,14 +53,72 @@ func init() {
 func (fe *FitnessEnv) FitnessFunction(simDelays *simbox.SimDelays) float64 {
 	bm := fe.BM
 	computedLatencies := make([]uint32, len(fe.Outputs))
-	for i, rec := range fe.Inputs {
-		if out, err := bm.SinglePipelineSimulate("float32", rec, simDelays); err == nil {
-			latency := out[bm.Outputs-1]
-			fmt.Sscanf(latency, "%d", &computedLatencies[i])
-			// fmt.Printf("Input: %v, Output: %v, Expected: %v\n", rec, out, fe.Outputs[i])
-		} else {
-			return 0.0
+	// wg := sync.WaitGroup{}
+	// wg.Add(len(fe.Inputs))
+	// for i, rec := range fe.Inputs {
+	// 	go func(i int, rec record) {
+	// 		defer wg.Done()
+	// 		if out, err := bm.SinglePipelineSimulate("float32", rec, simDelays); err == nil {
+	// 			latency := out[bm.Outputs-1]
+	// 			fmt.Sscanf(latency, "%d", &computedLatencies[i])
+	// 			// fmt.Printf("Input: %v, Output: %v, Expected: %v\n", rec, out, fe.Outputs[i])
+	// 		} else {
+	// 			return
+	// 		}
+	// 	}(i, rec)
+	// }
+	// wg.Wait()
+
+	chanExits := make(chan struct{})
+	chanIn := make(chan int)
+	chanOut := make(chan struct {
+		Index   int
+		Latency uint32
+	})
+
+	workers := fe.Workers
+	if workers <= 0 {
+		workers = 1
+	}
+	for w := 0; w < workers; w++ {
+		go func() {
+			for {
+				select {
+				case <-chanExits:
+					return
+				case i := <-chanIn:
+					rec := fe.Inputs[i]
+					if out, err := bm.SinglePipelineSimulate("float32", rec, simDelays); err == nil {
+						latency := out[bm.Outputs-1]
+						var latencyVal uint32
+						fmt.Sscanf(latency, "%d", &latencyVal)
+						chanOut <- struct {
+							Index   int
+							Latency uint32
+						}{Index: i, Latency: latencyVal}
+					}
+				}
+			}
+		}()
+	}
+
+	for i, j := 0, 0; i < len(fe.Inputs)*2; i++ {
+		if j >= len(fe.Inputs) {
+			result := <-chanOut
+			computedLatencies[result.Index] = result.Latency
+			continue
 		}
+
+		select {
+		case chanIn <- j:
+			j++
+		case result := <-chanOut:
+			computedLatencies[result.Index] = result.Latency
+		}
+	}
+
+	for w := 0; w < workers; w++ {
+		chanExits <- struct{}{}
 	}
 
 	// Compute fitness based on the difference between computed and real latencies
@@ -70,7 +130,7 @@ func (fe *FitnessEnv) FitnessFunction(simDelays *simbox.SimDelays) float64 {
 	}
 	// Lower error means better fitness; we can invert it
 	if totalError > 0 {
-		fmt.Println(1.0 / totalError)
+		// fmt.Println(1.0 / totalError)
 		return 1.0 / totalError
 	}
 	return 1.0
@@ -156,6 +216,7 @@ func main() {
 		Inputs:  inputs,
 		Outputs: outputs,
 		BM:      bm,
+		Workers: *workers,
 	}
 
 	// Convert the real latencies from outputs
@@ -179,6 +240,9 @@ func main() {
 	bestSimDelays, _ := simbox.RunGeneticAlgorithm(usedOpcodes, geneticConfig, fe.FitnessFunction)
 
 	// Save the best delays to the delays file
-	fmt.Println("Best SimDelays:", bestSimDelays)
+	simDelaysJSON, err := json.MarshalIndent(bestSimDelays, "", "  ")
+	check(err)
+	err = os.WriteFile(*delaysFile, simDelaysJSON, 0644)
+	check(err)
 
 }

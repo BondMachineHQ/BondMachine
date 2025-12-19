@@ -31,6 +31,10 @@ func LoadSimDelaysFromFile(filename string) (*SimDelays, error) {
 			}
 		}
 	}
+	// Normalize all delay distributions
+	for _, delayDistr := range simDelays.OpcodeDelays {
+		delayDistr.Normalize()
+	}
 	return simDelays, nil
 }
 
