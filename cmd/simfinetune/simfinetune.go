@@ -21,6 +21,8 @@ var outputsFile = flag.String("outputs-file", "", "Outputs in CSV format, with e
 var delaysFile = flag.String("delays-file", "delaysout.json", "Output delays parameters in JSON format")
 var geneticConfigFile = flag.String("genetic-config-file", "", "Genetic algorithm configuration in JSON format")
 var workers = flag.Int("workers", 4, "Number of concurrent workers for simulation")
+var includeOpcodes = flag.String("include-opcodes", "", "Comma-separated list of opcodes to include in the optimization")
+var excludeOpcodes = flag.String("exclude-opcodes", "", "Comma-separated list of opcodes to exclude from the optimization")
 
 type record []string
 
@@ -47,6 +49,10 @@ func init() {
 	if *delaysFile == "" {
 		flag.Usage()
 		panic("Missing required argument for delays file")
+	}
+	if *includeOpcodes != "" && *excludeOpcodes != "" {
+		flag.Usage()
+		panic("Cannot use both include-opcodes and exclude-opcodes at the same time")
 	}
 }
 
@@ -211,6 +217,33 @@ func main() {
 	}
 
 	usedOpcodes := bm.GetUsedOpcodes()
+	if *includeOpcodes != "" {
+		included := strings.Split(*includeOpcodes, ",")
+		opcodeSet := make(map[string]struct{})
+		for _, op := range included {
+			opcodeSet[strings.TrimSpace(op)] = struct{}{}
+		}
+		var filtered []string
+		for _, op := range usedOpcodes {
+			if _, ok := opcodeSet[op]; ok {
+				filtered = append(filtered, op)
+			}
+		}
+		usedOpcodes = filtered
+	} else if *excludeOpcodes != "" {
+		excluded := strings.Split(*excludeOpcodes, ",")
+		opcodeSet := make(map[string]struct{})
+		for _, op := range excluded {
+			opcodeSet[strings.TrimSpace(op)] = struct{}{}
+		}
+		var filtered []string
+		for _, op := range usedOpcodes {
+			if _, ok := opcodeSet[op]; !ok {
+				filtered = append(filtered, op)
+			}
+		}
+		usedOpcodes = filtered
+	}
 
 	fe := &FitnessEnv{
 		Inputs:  inputs,
