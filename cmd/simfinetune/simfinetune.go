@@ -28,12 +28,13 @@ var excludeOpcodes = flag.String("exclude-opcodes", "", "Comma-separated list of
 type record []string
 
 type FitnessEnv struct {
-	Inputs        []record
-	Outputs       []record
-	RealLatencies []uint32
-	Workers       int
-	BM            *bondmachine.Bondmachine
-	SimDelays     *simbox.SimDelays
+	Inputs              []record
+	Outputs             []record
+	RealLatencies       []uint32
+	LatencyDistribution *simbox.DelayDistribution
+	Workers             int
+	BM                  *bondmachine.Bondmachine
+	SimDelays           *simbox.SimDelays
 }
 
 func check(e error) {
@@ -117,13 +118,24 @@ func (fe *FitnessEnv) FitnessFunction(simDelays *simbox.SimDelays) float64 {
 		chanExits <- struct{}{}
 	}
 
+	latencyDistribution := make(simbox.DelayDistribution)
+	for _, cl := range computedLatencies {
+		if val, ok := (latencyDistribution)[int32(cl)]; ok {
+			latencyDistribution[int32(cl)] = val + 1
+		} else {
+			latencyDistribution[int32(cl)] = 1
+		}
+	}
+
 	// Compute fitness based on the difference between computed and real latencies
 	var totalError float64
-	for i, realLatency := range fe.RealLatencies {
-		computedLatency := computedLatencies[i]
-		error := float64(realLatency) - float64(computedLatency)
-		totalError += error * error // Squared error
-	}
+	// for i, realLatency := range fe.RealLatencies {
+	// 	computedLatency := computedLatencies[i]
+	// 	error := float64(realLatency) - float64(computedLatency)
+	// 	totalError += error * error // Squared error
+	// }
+	totalError = simbox.DistributionDistance(latencyDistribution, *fe.LatencyDistribution)
+
 	// Lower error means better fitness; we can invert it
 	if totalError > 0 {
 		// fmt.Println(1.0 / totalError)
@@ -272,6 +284,16 @@ func main() {
 	}
 	fe.RealLatencies = realLatencies
 
+	latencyDistribution := make(simbox.DelayDistribution)
+	for _, rl := range realLatencies {
+		if val, ok := (latencyDistribution)[int32(rl)]; ok {
+			latencyDistribution[int32(rl)] = val + 1
+		} else {
+			latencyDistribution[int32(rl)] = 1
+		}
+	}
+
+	fe.LatencyDistribution = &latencyDistribution
 	// At this point, we have the Bondmachine, inputs, and outputs loaded
 	// Further processing would go here
 

@@ -63,3 +63,29 @@ func (d *DelayDistribution) GetValue() int32 {
 	}
 	return lastDelay
 }
+
+func DistributionDistance(d1, d2 DelayDistribution) float64 {
+	var distance float64 = 0.0
+	// Get all unique keys
+	keys := make(map[int32]struct{})
+	for k := range d1 {
+		keys[k] = struct{}{}
+		if _, ok := d2[k]; !ok {
+			d2[k] = 0.0
+		}
+	}
+	for k := range d2 {
+		keys[k] = struct{}{}
+		if _, ok := d1[k]; !ok {
+			d1[k] = 0.0
+		}
+	}
+	// Compute distance
+	for k := range keys {
+		p1 := float64(d1[k])
+		p2 := float64(d2[k])
+		diff := p1 - p2
+		distance += diff * diff
+	}
+	return distance
+}
