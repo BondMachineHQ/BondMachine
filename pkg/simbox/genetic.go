@@ -1,12 +1,16 @@
 package simbox
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand/v2"
+	"os"
 	"sort"
 )
 
 // GeneticConfig holds configuration for the genetic algorithm
 type GeneticConfig struct {
+	Debug            bool    // Enable debug output
 	PopulationSize   int     // Number of individuals in the population
 	Generations      int     // Number of generations to evolve
 	MutationRate     float64 // Probability of mutation (0.0 to 1.0)
@@ -182,6 +186,9 @@ func BlankFitness(sd *SimDelays) float64 {
 func (p *Population) EvaluatePopulation(fitnessFunc FitnessFunc) {
 	for _, individual := range p.Individuals {
 		individual.Fitness = fitnessFunc(individual.SimDelays)
+		if p.Config.Debug {
+			fmt.Printf("Individual Fitness: %.16f\n", individual.Fitness)
+		}
 	}
 }
 
@@ -207,6 +214,12 @@ func (p *Population) SelectParent(tournamentSize int) *Individual {
 // Evolve runs the genetic algorithm for the configured number of generations
 func (p *Population) Evolve(fitnessFunc FitnessFunc) *SimDelays {
 	for generation := 0; generation < p.Config.Generations; generation++ {
+		if p.Config.Debug {
+			fmt.Printf("Generation %d: Best Fitness = %.16f, Average Fitness = %.16f\n",
+				generation,
+				p.GetBest().Fitness,
+				p.GetAverageFitness())
+		}
 		// Evaluate fitness
 		p.EvaluatePopulation(fitnessFunc)
 
@@ -283,4 +296,48 @@ func RunGeneticAlgorithm(opcodes []string, config GeneticConfig, fitnessFunc Fit
 	population := NewPopulation(opcodes, config)
 	bestSimDelays := population.Evolve(fitnessFunc)
 	return bestSimDelays, population
+}
+
+func GetDefaultGeneticConfig() GeneticConfig {
+	return GeneticConfig{
+		Debug:            false,
+		PopulationSize:   50,
+		Generations:      100,
+		MutationRate:     0.1,
+		CrossoverRate:    0.7,
+		ElitismCount:     5,
+		MinDelay:         1,
+		MaxDelay:         10,
+		DistributionSize: 5,
+	}
+}
+
+func GetGeneticConfigFromJSON(fileName string) (GeneticConfig, error) {
+	config := GetDefaultGeneticConfig()
+
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		return config, err
+	}
+
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		return config, err
+	}
+
+	return config, nil
+}
+
+func (gc *GeneticConfig) ToJSONFile(fileName string) error {
+	data, err := json.MarshalIndent(gc, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(fileName, data, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

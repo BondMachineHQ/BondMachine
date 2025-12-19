@@ -1,0 +1,11 @@
+{
+  "Debug": true,
+  "PopulationSize": 50,
+  "Generations": 100,
+  "MutationRate": 0.1,
+  "CrossoverRate": 0.7,
+  "ElitismCount": 5,
+  "MinDelay": 1,
+  "MaxDelay": 10,
+  "DistributionSize": 5
+}
