@@ -18,7 +18,8 @@ var verbose = flag.Bool("v", false, "Verbose")
 var bondmachineFile = flag.String("bondmachine-file", "", "Bondmachine in JSON format")
 var inputsFile = flag.String("inputs-file", "", "Inputs in CSV format")
 var outputsFile = flag.String("outputs-file", "", "Outputs in CSV format, with expected results and latencies")
-var delaysFile = flag.String("delays-file", "delaysout.json", "Output delays parameters in JSON format")
+var delaysInFile = flag.String("delays-input-file", "", "Input delays parameters in JSON format")
+var delaysOutFile = flag.String("delays-output-file", "delaysout.json", "Output delays parameters in JSON format")
 var geneticConfigFile = flag.String("genetic-config-file", "", "Genetic algorithm configuration in JSON format")
 var workers = flag.Int("workers", 4, "Number of concurrent workers for simulation")
 var includeOpcodes = flag.String("include-opcodes", "", "Comma-separated list of opcodes to include in the optimization")
@@ -32,6 +33,7 @@ type FitnessEnv struct {
 	RealLatencies []uint32
 	Workers       int
 	BM            *bondmachine.Bondmachine
+	SimDelays     *simbox.SimDelays
 }
 
 func check(e error) {
@@ -46,7 +48,7 @@ func init() {
 		flag.Usage()
 		panic("Missing required arguments")
 	}
-	if *delaysFile == "" {
+	if *delaysOutFile == "" {
 		flag.Usage()
 		panic("Missing required argument for delays file")
 	}
@@ -59,21 +61,6 @@ func init() {
 func (fe *FitnessEnv) FitnessFunction(simDelays *simbox.SimDelays) float64 {
 	bm := fe.BM
 	computedLatencies := make([]uint32, len(fe.Outputs))
-	// wg := sync.WaitGroup{}
-	// wg.Add(len(fe.Inputs))
-	// for i, rec := range fe.Inputs {
-	// 	go func(i int, rec record) {
-	// 		defer wg.Done()
-	// 		if out, err := bm.SinglePipelineSimulate("float32", rec, simDelays); err == nil {
-	// 			latency := out[bm.Outputs-1]
-	// 			fmt.Sscanf(latency, "%d", &computedLatencies[i])
-	// 			// fmt.Printf("Input: %v, Output: %v, Expected: %v\n", rec, out, fe.Outputs[i])
-	// 		} else {
-	// 			return
-	// 		}
-	// 	}(i, rec)
-	// }
-	// wg.Wait()
 
 	chanExits := make(chan struct{})
 	chanIn := make(chan int)
@@ -81,6 +68,9 @@ func (fe *FitnessEnv) FitnessFunction(simDelays *simbox.SimDelays) float64 {
 		Index   int
 		Latency uint32
 	})
+
+	// Merge the base simDelays with the candidate simDelays updates
+	mergedSimDelays := simbox.MergeSimDelays(fe.SimDelays, simDelays)
 
 	workers := fe.Workers
 	if workers <= 0 {
@@ -94,7 +84,7 @@ func (fe *FitnessEnv) FitnessFunction(simDelays *simbox.SimDelays) float64 {
 					return
 				case i := <-chanIn:
 					rec := fe.Inputs[i]
-					if out, err := bm.SinglePipelineSimulate("float32", rec, simDelays); err == nil {
+					if out, err := bm.SinglePipelineSimulate("float32", rec, mergedSimDelays); err == nil {
 						latency := out[bm.Outputs-1]
 						var latencyVal uint32
 						fmt.Sscanf(latency, "%d", &latencyVal)
@@ -216,6 +206,20 @@ func main() {
 		geneticConfig = simbox.GetDefaultGeneticConfig()
 	}
 
+	// Whenever available, load existing delays from file, to be used as base for the optimization
+	// the opcodes under optimization will be modified, while the others will remain as in the loaded file
+	var simDelays *simbox.SimDelays
+	if *delaysInFile != "" {
+		if sd, err := simbox.LoadSimDelaysFromFile(*delaysInFile); err != nil {
+			panic(err)
+		} else {
+			simDelays = sd
+		}
+	} else {
+		simDelays = simbox.NewSimDelays()
+	}
+
+	// Determine the used opcodes in the Bondmachine
 	usedOpcodes := bm.GetUsedOpcodes()
 	if *includeOpcodes != "" {
 		included := strings.Split(*includeOpcodes, ",")
@@ -246,10 +250,11 @@ func main() {
 	}
 
 	fe := &FitnessEnv{
-		Inputs:  inputs,
-		Outputs: outputs,
-		BM:      bm,
-		Workers: *workers,
+		Inputs:    inputs,
+		Outputs:   outputs,
+		BM:        bm,
+		Workers:   *workers,
+		SimDelays: simDelays,
 	}
 
 	// Convert the real latencies from outputs
@@ -273,9 +278,9 @@ func main() {
 	bestSimDelays, _ := simbox.RunGeneticAlgorithm(usedOpcodes, geneticConfig, fe.FitnessFunction)
 
 	// Save the best delays to the delays file
-	simDelaysJSON, err := json.MarshalIndent(bestSimDelays, "", "  ")
+	simDelaysJSON, err := json.MarshalIndent(simbox.MergeSimDelays(simDelays, bestSimDelays), "", "  ")
 	check(err)
-	err = os.WriteFile(*delaysFile, simDelaysJSON, 0644)
+	err = os.WriteFile(*delaysOutFile, simDelaysJSON, 0644)
 	check(err)
 
 }

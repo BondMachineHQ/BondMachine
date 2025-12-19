@@ -275,6 +275,18 @@ func copySimDelays(sd *SimDelays) *SimDelays {
 	return newSD
 }
 
+func MergeSimDelays(sdPrimary, sdSecondary *SimDelays) *SimDelays {
+	if sdPrimary == nil {
+		return sdSecondary
+	}
+	if sdSecondary != nil {
+		for opcode, distrSecondary := range sdSecondary.OpcodeDelays {
+			sdPrimary.OpcodeDelays[opcode] = distrSecondary
+		}
+	}
+	return sdPrimary
+}
+
 // GetBest returns the best individual in the population
 func (p *Population) GetBest() *Individual {
 	p.SortByFitness()
