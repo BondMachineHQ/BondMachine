@@ -1,7 +1,7 @@
 {
-  "Debug": true,
+  "Debug": false,
   "PopulationSize": 50,
-  "Generations": 1,
+  "Generations": 100,
   "MutationRate": 0.1,
   "CrossoverRate": 0.7,
   "ElitismCount": 3,
