@@ -190,6 +190,7 @@ func (vm *VM) Init() error {
 	for i, proc_dom_id := range vm.Bmach.Processors {
 		pvm := new(procbuilder.VM)
 		pvm.Mach = vm.Bmach.Domains[proc_dom_id]
+		pvm.Emulating = vm.Emulating
 		pvm.CpID = uint32(i)
 		pvm.CmdChan = cmdChan
 
