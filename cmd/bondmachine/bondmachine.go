@@ -922,6 +922,7 @@ func main() {
 
 			// Build the simulation VM
 			vm := new(bondmachine.VM)
+			vm.Emulating = false
 			vm.Bmach = bmach
 
 			// Load the sim delays if provided
@@ -939,6 +940,7 @@ func main() {
 			check(err)
 
 			oldVm := new(bondmachine.VM)
+			oldVm.Emulating = false
 			oldVm.Bmach = bmach
 			oldVm.SimDelayMap = vm.SimDelayMap
 			err = oldVm.Init()
@@ -1289,6 +1291,7 @@ func main() {
 			}
 
 			vm := new(bondmachine.VM)
+			vm.Emulating = true
 			vm.Bmach = bmach
 			vm.EmuDrivers = emuDrivers
 			err := vm.Init()

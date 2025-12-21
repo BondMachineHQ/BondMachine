@@ -31,6 +31,8 @@ type VM struct {
 	LastPc       uint64
 	DelayCounter int32
 
+	Emulating bool
+
 	Extra_states map[string]interface{}
 	CmdChan      chan []byte
 }
@@ -43,6 +45,7 @@ func (vm *VM) CopyState(vmSource *VM) error {
 
 	vm.CpID = 0             // Copying to a new VM, reset CpID
 	vm.Mach = vmSource.Mach // Assuming Machine is immutable, just copy the reference
+	vm.Emulating = vmSource.Emulating
 
 	copy(vm.Registers, vmSource.Registers)
 	copy(vm.Memory, vmSource.Memory)

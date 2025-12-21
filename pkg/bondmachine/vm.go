@@ -43,6 +43,8 @@ type VM struct {
 	EmuDrivers []EmuDriver
 	cmdChan    chan []byte
 
+	Emulating bool
+
 	send_chans   []chan int
 	result_chans []chan string
 	recv_chan    chan int
