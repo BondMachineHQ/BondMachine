@@ -28,6 +28,7 @@ var excludeOpcodes = flag.String("exclude-opcodes", "", "Comma-separated list of
 type record []string
 
 type FitnessEnv struct {
+	Debug               bool
 	Inputs              []record
 	Outputs             []record
 	RealLatencies       []uint32
@@ -72,6 +73,10 @@ func (fe *FitnessEnv) FitnessFunction(simDelays *simbox.SimDelays) float64 {
 
 	// Merge the base simDelays with the candidate simDelays updates
 	mergedSimDelays := simbox.MergeSimDelays(fe.SimDelays, simDelays)
+
+	if fe.Debug {
+		fmt.Println("Simulating with delays:", mergedSimDelays)
+	}
 
 	workers := fe.Workers
 	if workers <= 0 {
@@ -137,11 +142,7 @@ func (fe *FitnessEnv) FitnessFunction(simDelays *simbox.SimDelays) float64 {
 	totalError = simbox.DistributionDistance(latencyDistribution, *fe.LatencyDistribution)
 
 	// Lower error means better fitness; we can invert it
-	if totalError > 0 {
-		// fmt.Println(1.0 / totalError)
-		return 1.0 / totalError
-	}
-	return 1.0
+	return 1.0 / (1.0 + totalError)
 }
 
 func main() {
@@ -262,6 +263,7 @@ func main() {
 	}
 
 	fe := &FitnessEnv{
+		Debug:     *debug,
 		Inputs:    inputs,
 		Outputs:   outputs,
 		BM:        bm,

@@ -2,8 +2,10 @@ package simbox
 
 import (
 	"encoding/json"
+	"math"
 	"math/rand/v2"
 	"os"
+	"sort"
 )
 
 type DelayDistribution map[int32]float32 // map of delay in clocks to probability
@@ -65,27 +67,49 @@ func (d *DelayDistribution) GetValue() int32 {
 }
 
 func DistributionDistance(d1, d2 DelayDistribution) float64 {
-	var distance float64 = 0.0
-	// Get all unique keys
-	keys := make(map[int32]struct{})
+	// Compute 1-Wasserstein distance (Earth Mover's Distance) between two probability distributions
+	// This metric is more appropriate for comparing distributions as it considers the
+	// "distance" between delay values, not just probability differences
+
+	// Get all unique delay values
+	delaySet := make(map[int32]struct{})
 	for k := range d1 {
-		keys[k] = struct{}{}
-		if _, ok := d2[k]; !ok {
-			d2[k] = 0.0
-		}
+		delaySet[k] = struct{}{}
 	}
 	for k := range d2 {
-		keys[k] = struct{}{}
-		if _, ok := d1[k]; !ok {
-			d1[k] = 0.0
+		delaySet[k] = struct{}{}
+	}
+
+	// Convert to sorted slice
+	delays := make([]int32, 0, len(delaySet))
+	for k := range delaySet {
+		delays = append(delays, k)
+	}
+	sort.Slice(delays, func(i, j int) bool { return delays[i] < delays[j] })
+
+	// Compute Wasserstein distance using cumulative distributions
+	var distance float64 = 0.0
+	var cdf1, cdf2 float64 = 0.0, 0.0
+
+	for i := 0; i < len(delays); i++ {
+		delay := delays[i]
+
+		// Add probabilities to cumulative distribution functions
+		cdf1 += float64(d1[delay]) // Will be 0.0 if key doesn't exist
+		cdf2 += float64(d2[delay]) // Will be 0.0 if key doesn't exist
+
+		// Compute the step size for integration
+		var stepSize float64
+		if i < len(delays)-1 {
+			stepSize = float64(delays[i+1] - delays[i])
+		} else {
+			// For the last element, we use step size of 1
+			stepSize = 1.0
 		}
+
+		// Add the area between CDFs
+		distance += math.Abs(cdf1-cdf2) * stepSize
 	}
-	// Compute distance
-	for k := range keys {
-		p1 := float64(d1[k])
-		p2 := float64(d2[k])
-		diff := p1 - p2
-		distance += diff * diff
-	}
+
 	return distance
 }
