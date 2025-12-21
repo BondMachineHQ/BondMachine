@@ -68,9 +68,13 @@ func (p *Population) generateRandomIndividual() *Individual {
 		simDelays.OpcodeDelays[opcode] = distr
 	}
 
+	if p.Config.Debug {
+		fmt.Printf("New Individual: %+v\n", simDelays)
+	}
+
 	return &Individual{
 		SimDelays: simDelays,
-		Fitness:   0.0,
+		Fitness:   -1.0,
 	}
 }
 
@@ -185,9 +189,11 @@ func BlankFitness(sd *SimDelays) float64 {
 // EvaluatePopulation evaluates the fitness of all individuals in the population
 func (p *Population) EvaluatePopulation(fitnessFunc FitnessFunc) {
 	for _, individual := range p.Individuals {
-		individual.Fitness = fitnessFunc(individual.SimDelays)
-		if p.Config.Debug {
-			fmt.Printf("Individual Fitness: %.16f\n", individual.Fitness)
+		if individual.Fitness < 0.0 {
+			individual.Fitness = fitnessFunc(individual.SimDelays)
+			if p.Config.Debug {
+				fmt.Println("Individual", individual.SimDelays.OpcodeDelays, "Fitness", individual.Fitness)
+			}
 		}
 	}
 }
@@ -214,17 +220,18 @@ func (p *Population) SelectParent(tournamentSize int) *Individual {
 // Evolve runs the genetic algorithm for the configured number of generations
 func (p *Population) Evolve(fitnessFunc FitnessFunc) *SimDelays {
 	for generation := 0; generation < p.Config.Generations; generation++ {
-
-		fmt.Printf("Generation %d: Best Fitness = %.16f, Average Fitness = %.16f\n",
-			generation,
-			p.GetBest().Fitness,
-			p.GetAverageFitness())
-
 		// Evaluate fitness
 		p.EvaluatePopulation(fitnessFunc)
 
 		// Sort by fitness
 		p.SortByFitness()
+
+		// Output best fitness of the generation
+		fmt.Printf("Generation %d: Best Fitness = %.16f, Best SimDelays = %v, Average Fitness = %.16f\n",
+			generation,
+			p.GetBest().Fitness,
+			p.GetBest().SimDelays.OpcodeDelays,
+			p.GetAverageFitness())
 
 		// Create new generation
 		newIndividuals := make([]*Individual, p.Config.PopulationSize)
@@ -251,7 +258,7 @@ func (p *Population) Evolve(fitnessFunc FitnessFunc) *SimDelays {
 
 			newIndividuals[i] = &Individual{
 				SimDelays: offspring,
-				Fitness:   0.0,
+				Fitness:   -1.0,
 			}
 		}
 
