@@ -19,7 +19,7 @@
 	mov     r1, {{ .Params.prefix }}1.0 ; r1 is the result, starts at 1.0
 
 	; Check if exponent is zero
-	jz	r2, exit
+	jz	r2, is_zero
 	
 loop:
 	{{ .Params.multop }}	r1, r0 ; multiply result by base
@@ -28,6 +28,11 @@ loop:
 	jz	r2, exit ; if counter reaches 0, exit
 	j	loop ;
 	
+is_zero:
+        mov     r1, {{ .Params.prefix }}1
+        j       exit
+        
+
 exit:
 	nop	
 %endfragment

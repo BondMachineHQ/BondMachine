@@ -106,17 +106,18 @@ func (op Cmpr) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 }
 
 func (op Cmpr) Assembler(arch *Arch, words []string) (string, error) {
+	// "reference": {"support_asm": "ok"}
 	opBits := arch.Opcodes_bits()
-	rom_word := arch.Max_word()
+	romWord := arch.Max_word()
 
-	reg_num := 1 << arch.R
+	regNum := 1 << arch.R
 
 	if len(words) != 2 {
 		return "", Prerror{"Wrong arguments number"}
 	}
 
 	result := ""
-	for i := 0; i < reg_num; i++ {
+	for i := 0; i < regNum; i++ {
 		if words[0] == strings.ToLower(Get_register_name(i)) {
 			result += zeros_prefix(int(arch.R), get_binary(i))
 			break
@@ -128,7 +129,7 @@ func (op Cmpr) Assembler(arch *Arch, words []string) (string, error) {
 	}
 
 	partial := ""
-	for i := 0; i < reg_num; i++ {
+	for i := 0; i < regNum; i++ {
 		if words[1] == strings.ToLower(Get_register_name(i)) {
 			partial += zeros_prefix(int(arch.R), get_binary(i))
 			break
@@ -141,7 +142,7 @@ func (op Cmpr) Assembler(arch *Arch, words []string) (string, error) {
 
 	result += partial
 
-	for i := opBits + 2*int(arch.R); i < rom_word; i++ {
+	for i := opBits + 2*int(arch.R); i < romWord; i++ {
 		result += "0"
 	}
 
@@ -149,10 +150,11 @@ func (op Cmpr) Assembler(arch *Arch, words []string) (string, error) {
 }
 
 func (op Cmpr) Disassembler(arch *Arch, instr string) (string, error) {
-	reg_id := get_id(instr[:arch.R])
-	result := strings.ToLower(Get_register_name(reg_id)) + " "
-	reg_id = get_id(instr[arch.R : 2*int(arch.R)])
-	result += strings.ToLower(Get_register_name(reg_id))
+	// "reference": {"support_disasm": "ok"}
+	regId := get_id(instr[:arch.R])
+	result := strings.ToLower(Get_register_name(regId)) + " "
+	regId = get_id(instr[arch.R : 2*int(arch.R)])
+	result += strings.ToLower(Get_register_name(regId))
 	return result, nil
 }
 

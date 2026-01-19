@@ -1,0 +1,144 @@
+;fragtester instance cosprec 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
+;sympy from sympy import *
+;sympy x = Symbol('x', real=False)
+;sympy symbols = [x]
+;sympy testRanges = {'real: x': list(np.arange(-5,5,0.5)),
+;sympy     'imag: x': list(np.arange(-5,5,0.5)),
+;sympy     'real: y': list(np.arange(-5,5,2)),
+;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy     }
+;sympy with evaluate(False):
+;sympy     spExpr = cos(x)  
+;
+;
+; cosine function of complex number passed as argument
+; r0 is the real part of the number
+; r1 is the imaginary part of the number
+; Result: cos(a + bi) = cos(a)cosh(b) - i*sin(a)sinh(b)
+%fragment cosargfull template:true default_cosprec:20 resin:r0:r1 resout:r0:r1 default_prefix:0f
+	; Compute cos(a) where a is the real part (r0)
+	mov     r2, {{ .Params.prefix }}1.0 ; r2 = cos(a) result
+        mov     r3, {{ .Params.prefix }}1.0 ; r3 = index for cos
+        mov     r4, {{ .Params.prefix }}1.0 ; r4 = denominator for cos
+        mov     r5, {{ .Params.prefix }}1.0 ; r5 = numerator for cos
+	mov     r6, {{ .Params.prefix }}1.0 ; r6 = temp for division
+	mov     r7, {{ .Params.prefix }}1.0 ; r7 = increment value
+	mov     r8, {{ .Params.cosprec }} ; r8 = precision counter
+	
+loop_cos:
+	mov     r9, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r4, r9 ; sign inversion
+	mov     r9, {{ .Params.prefix }}1.0
+	
+	{{ .Params.multop }}	r4, r3 ; factorial progression
+	{{ .Params.multop }}	r5, r0 ; numerator progression
+	{{ .Params.addop }}	r3, r7 ; increment index
+	
+	{{ .Params.multop }}	r4, r3 ; factorial progression (second step)
+	{{ .Params.multop }}	r5, r0 ; numerator progression (second step)
+	{{ .Params.addop }}	r3, r7 ; increment index
+	
+	cpy	r6, r5
+	{{ .Params.divop }}	r6, r4
+	{{ .Params.addop }}	r2, r6 ; add term to cos(a) result
+	
+	dec	r8
+	jz	r8, init_sin
+	j	loop_cos
+	
+init_sin:
+	; Compute sin(a) where a is the real part (r0)
+	mov     r9, {{ .Params.prefix }}0.0 ; r9 = sin(a) result
+        mov     r10, {{ .Params.prefix }}1.0 ; r10 = index for sin
+        mov     r11, {{ .Params.prefix }}1.0 ; r11 = denominator for sin
+        mov     r12, {{ .Params.prefix }}1.0 ; r12 = numerator for sin
+	mov     r8, {{ .Params.cosprec }} ; r8 = precision counter
+	
+loop_sin:
+	{{ .Params.multop }}	r11, r10 ; factorial progression
+	{{ .Params.multop }}	r12, r0 ; numerator progression
+	{{ .Params.addop }}	r10, r7 ; increment index
+	
+	cpy	r6, r12
+	{{ .Params.divop }}	r6, r11
+	{{ .Params.addop }}	r9, r6 ; add term to sin(a) result
+	
+	{{ .Params.multop }}	r11, r10 ; factorial progression (second step)
+	{{ .Params.multop }}	r12, r0 ; numerator progression (second step)
+	{{ .Params.addop }}	r10, r7 ; increment index
+	
+	mov     r6, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r11, r6 ; sign inversion
+	mov     r6, {{ .Params.prefix }}1.0
+	
+	dec	r8
+	jz	r8, init_cosh
+	j	loop_sin
+	
+init_cosh:
+	; Compute cosh(b) where b is the imaginary part (r1)
+	mov     r13, {{ .Params.prefix }}1.0 ; r13 = cosh(b) result
+        mov     r14, {{ .Params.prefix }}1.0 ; r14 = index for cosh
+        mov     r15, {{ .Params.prefix }}1.0 ; r15 = denominator for cosh
+        mov     r16, {{ .Params.prefix }}1.0 ; r16 = numerator for cosh
+	mov     r8, {{ .Params.cosprec }} ; r8 = precision counter
+	
+loop_cosh:
+	; Note: cosh has all positive terms
+	{{ .Params.multop }}	r15, r14 ; factorial progression
+	{{ .Params.multop }}	r16, r1 ; numerator progression
+	{{ .Params.addop }}	r14, r7 ; increment index
+	
+	{{ .Params.multop }}	r15, r14 ; factorial progression (second step)
+	{{ .Params.multop }}	r16, r1 ; numerator progression (second step)
+	{{ .Params.addop }}	r14, r7 ; increment index
+	
+	cpy	r6, r16
+	{{ .Params.divop }}	r6, r15
+	{{ .Params.addop }}	r13, r6 ; add term to cosh(b) result
+	
+	dec	r8
+	jz	r8, init_sinh
+	j	loop_cosh
+	
+init_sinh:
+	; Compute sinh(b) where b is the imaginary part (r1)
+	mov     r17, r1 ; r17 = sinh(b) result, starts with b
+        mov     r18, {{ .Params.prefix }}2.0 ; r18 = index for sinh (starts at 2)
+        mov     r19, {{ .Params.prefix }}1.0 ; r19 = denominator for sinh
+        mov     r20, r1 ; r20 = numerator for sinh, starts with b
+	mov     r8, {{ .Params.cosprec }} ; r8 = precision counter
+	
+loop_sinh:
+	; Note: sinh has all positive terms
+	{{ .Params.multop }}	r19, r18 ; factorial progression
+	{{ .Params.multop }}	r20, r1 ; numerator progression
+	{{ .Params.addop }}	r18, r7 ; increment index
+	
+	{{ .Params.multop }}	r19, r18 ; factorial progression (second step)
+	{{ .Params.multop }}	r20, r1 ; numerator progression (second step)
+	{{ .Params.addop }}	r18, r7 ; increment index
+	
+	cpy	r6, r20
+	{{ .Params.divop }}	r6, r19
+	{{ .Params.addop }}	r17, r6 ; add term to sinh(b) result
+	
+	dec	r8
+	jz	r8, multiply
+	j	loop_sinh
+	
+multiply:
+	; Compute cos(a + bi) = cos(a)cosh(b) - i*sin(a)sinh(b)
+	; Real part = cos(a) * cosh(b)
+	; Imaginary part = -sin(a) * sinh(b)
+	
+	{{ .Params.multop }}	r2, r13 ; r2 = cos(a) * cosh(b)
+	{{ .Params.multop }}	r9, r17 ; r9 = sin(a) * sinh(b)
+	
+	mov     r6, {{ .Params.prefix }}-1.0
+	{{ .Params.multop }}	r9, r6 ; r9 = -sin(a) * sinh(b)
+	
+	cpy	r0, r2 ; real part = cos(a)cosh(b)
+	cpy	r1, r9 ; imaginary part = -sin(a)sinh(b)
+	nop	
+%endfragment

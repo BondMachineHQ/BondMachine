@@ -3,10 +3,10 @@
 ;sympy x = Symbol('x', real=False)
 ;sympy y = Symbol('y', real=True)
 ;sympy symbols = [x,y]
-;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
-;sympy     'imag: x': list(np.arange(-5,5,2)),
-;sympy     'real: y': list(np.arange(-5,5,2)),
-;sympy     'imag: y': list(np.arange(-5,5,2)),
+;sympy testRanges = {'real: x': list(np.arange(-5,5,1)),
+;sympy     'imag: x': list(np.arange(-5,5,1)),
+;sympy     'real: y': list(np.arange(-5,5,1)),
+;sympy     'imag: y': list(np.arange(-5,5,1)),
 ;sympy     }
 ;sympy with evaluate(False):
 ;sympy     spExpr = x * y
