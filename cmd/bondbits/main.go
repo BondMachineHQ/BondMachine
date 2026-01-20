@@ -10,13 +10,23 @@ import (
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/basm"
-	"github.com/BondMachineHQ/BondMachine/pkg/bmconfig"
-	"github.com/BondMachineHQ/BondMachine/pkg/bminfo"
 	"github.com/BondMachineHQ/BondMachine/pkg/bmnumbers"
 	"github.com/BondMachineHQ/BondMachine/pkg/bondmachine"
 	"github.com/BondMachineHQ/BondMachine/pkg/procbuilder"
-	"google.golang.org/protobuf/proto"
 )
+
+type string_slice []string
+
+func (i *string_slice) String() string {
+	return fmt.Sprint(*i)
+}
+
+func (i *string_slice) Set(value string) error {
+	for _, dt := range strings.Split(value, ",") {
+		*i = append(*i, dt)
+	}
+	return nil
+}
 
 var verbose = flag.Bool("v", false, "Verbose")
 var debug = flag.Bool("d", false, "Verbose")
@@ -24,17 +34,18 @@ var debug = flag.Bool("d", false, "Verbose")
 // BondMachine targets
 
 var bondmachineFile = flag.String("bondmachine", "", "Load a bondmachine JSON file")
-var symInFile = flag.String("si", "", "Load a symbols JSON file")
-var bmOutFile = flag.String("o", "", "BondMachine Output file")
-var bcofOutFile = flag.String("bo", "", "BCOF Output file")
-var symOutFile = flag.String("so", "", "Symbols Output file")
+
+// var symInFile = flag.String("si", "", "Load a symbols JSON file")
+// var bmOutFile = flag.String("o", "", "BondMachine Output file")
+// var bcofOutFile = flag.String("bo", "", "BCOF Output file")
+// var symOutFile = flag.String("so", "", "Symbols Output file")
 
 // Utils
-var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parameter of the BondMachine")
+// var getMeta = flag.String("getmeta", "", "Get the metadata of an internal parameter of the BondMachine")
 
 // Optionals
-var bmInfoFile = flag.String("bminfo-file", "", "Load additional information about the BondMachine")
-var dumpRequirements = flag.String("dump-requirements", "", "Dump the requirements of the BondMachine in a JSON file")
+// var bmInfoFile = flag.String("bminfo-file", "", "Load additional information about the BondMachine")
+// var dumpRequirements = flag.String("dump-requirements", "", "Dump the requirements of the BondMachine in a JSON file")
 
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
@@ -48,11 +59,16 @@ var listOptimizations = flag.Bool("list-optimizations", false, "List the availab
 var actOptimizations = flag.String("activate-optimizations", "", "List of comma separated optional optimizations to activate (default: none, everything: all)")
 
 // Config
-var disableDynamicalMatching = flag.Bool("disable-dynamical-matching", false, "Disable the dynamical matching")
-var chooserMinWordSize = flag.Bool("chooser-min-word-size", false, "Choose the minimum word size for the chooser")
-var chooserForceSameName = flag.Bool("chooser-force-same-name", false, "Force the chooser to use the same name for the ROM and the RAM")
+// var disableDynamicalMatching = flag.Bool("disable-dynamical-matching", false, "Disable the dynamical matching")
+// var chooserMinWordSize = flag.Bool("chooser-min-word-size", false, "Choose the minimum word size for the chooser")
+// var chooserForceSameName = flag.Bool("chooser-force-same-name", false, "Force the chooser to use the same name for the ROM and the RAM")
+
+// Bondbits rules
+var bondBitsRules string_slice
+var saveDirectory = flag.String("save-directory", ".", "Directory where to save the generated files")
 
 func init() {
+	flag.Var(&bondBitsRules, "bbr", "Add a bondbits rule (can be repeated)")
 	flag.Parse()
 
 	// if *debug {
@@ -114,30 +130,30 @@ func main() {
 	}
 
 	// The BMinfo is always initialized and used internally. If the user wants to use it, it must be loaded from a file. Specifying the file is optional and it will be save only if specified.
-	bi.BMinfo = new(bminfo.BMinfo)
+	// bi.BMinfo = new(bminfo.BMinfo)
 
-	if *bmInfoFile != "" {
-		if bmInfoJSON, err := os.ReadFile(*bmInfoFile); err == nil {
-			if err := json.Unmarshal(bmInfoJSON, bi.BMinfo); err != nil {
-				panic(err)
-			}
-		} else {
-			panic(err)
-		}
-	}
+	// if *bmInfoFile != "" {
+	// 	if bmInfoJSON, err := os.ReadFile(*bmInfoFile); err == nil {
+	// 		if err := json.Unmarshal(bmInfoJSON, bi.BMinfo); err != nil {
+	// 			panic(err)
+	// 		}
+	// 	} else {
+	// 		panic(err)
+	// 	}
+	// }
 
 	bi.BasmInstanceInit(bm)
 
 	// Config options
-	if *disableDynamicalMatching {
-		bi.Activate(bmconfig.DisableDynamicalMatching)
-	}
-	if *chooserMinWordSize {
-		bi.Activate(bmconfig.ChooserMinWordSize)
-	}
-	if *chooserForceSameName {
-		bi.Activate(bmconfig.ChooserForceSameName)
-	}
+	// if *disableDynamicalMatching {
+	// 	bi.Activate(bmconfig.DisableDynamicalMatching)
+	// }
+	// if *chooserMinWordSize {
+	// 	bi.Activate(bmconfig.ChooserMinWordSize)
+	// }
+	// if *chooserForceSameName {
+	// 	bi.Activate(bmconfig.ChooserForceSameName)
+	// }
 
 	mne := basm.GetPassMnemonic()
 
@@ -242,70 +258,81 @@ func main() {
 		return
 	}
 
+	// Start processing bondbits rules
+	for _, rule := range bondBitsRules {
+		if *debug || *verbose {
+			fmt.Println("Applying bondbits rule:", rule)
+		}
+		if err := bi.ApplyBondBitsRule(rule, *saveDirectory); err != nil {
+			bi.Alert("Error while applying bondbits rule:", err)
+			return
+		}
+	}
+
 	// All the utils
 
-	if *getMeta != "" {
-		if meta, err := bi.GetMeta(*getMeta); err == nil {
-			fmt.Println(meta)
-		} else {
-			bi.Alert(err)
-		}
-		return
-	}
+	// if *getMeta != "" {
+	// 	if meta, err := bi.GetMeta(*getMeta); err == nil {
+	// 		fmt.Println(meta)
+	// 	} else {
+	// 		bi.Alert(err)
+	// 	}
+	// 	return
+	// }
 
 	// Targets
 
-	if *bmOutFile != "" {
-		if err := bi.Assembler2BondMachine(); err != nil {
-			bi.Alert("Error in creating a BondMachine", err)
-			return
-		}
+	// if *bmOutFile != "" {
+	// 	if err := bi.Assembler2BondMachine(); err != nil {
+	// 		bi.Alert("Error in creating a BondMachine", err)
+	// 		return
+	// 	}
 
-		var outF string
-		if *bmOutFile != "" {
-			outF = *bmOutFile
-		} else {
-			outF = "bondmachine.json"
-		}
+	// 	var outF string
+	// 	if *bmOutFile != "" {
+	// 		outF = *bmOutFile
+	// 	} else {
+	// 		outF = "bondmachine.json"
+	// 	}
 
-		bMach := bi.GetBondMachine()
+	// 	bMach := bi.GetBondMachine()
 
-		// Write the bondmachine file (TODO rewrite)
-		f, _ := os.Create(outF)
-		defer f.Close()
-		b, _ := json.Marshal(bMach.Jsoner())
-		f.WriteString(string(b))
+	// 	// Write the bondmachine file (TODO rewrite)
+	// 	f, _ := os.Create(outF)
+	// 	defer f.Close()
+	// 	b, _ := json.Marshal(bMach.Jsoner())
+	// 	f.WriteString(string(b))
 
-		if *bmInfoFile != "" {
-			// Write the config file
-			if bmInfoFileJSON, err := json.MarshalIndent(bi.BMinfo, "", "  "); err == nil {
-				os.WriteFile(*bmInfoFile, bmInfoFileJSON, 0644)
-			} else {
-				panic(err)
-			}
-		}
+	// 	if *bmInfoFile != "" {
+	// 		// Write the config file
+	// 		if bmInfoFileJSON, err := json.MarshalIndent(bi.BMinfo, "", "  "); err == nil {
+	// 			os.WriteFile(*bmInfoFile, bmInfoFileJSON, 0644)
+	// 		} else {
+	// 			panic(err)
+	// 		}
+	// 	}
 
-		if *dumpRequirements != "" {
-			// Write the requirements file
-			if requirementsJSON, err := json.MarshalIndent(bi.DumpRequirements(), "", "  "); err == nil {
-				os.WriteFile(*dumpRequirements, requirementsJSON, 0644)
-			} else {
-				panic(err)
-			}
-		}
-	}
+	// 	if *dumpRequirements != "" {
+	// 		// Write the requirements file
+	// 		if requirementsJSON, err := json.MarshalIndent(bi.DumpRequirements(), "", "  "); err == nil {
+	// 			os.WriteFile(*dumpRequirements, requirementsJSON, 0644)
+	// 		} else {
+	// 			panic(err)
+	// 		}
+	// 	}
+	// }
 
-	if *bcofOutFile != "" {
-		if err := bi.Assembler2BCOF(); err != nil {
-			panic("Error in creating a BCOF file")
-		} else {
-			bcofBytes, err := proto.Marshal(bi.GetBCOF())
-			if err != nil {
-				panic("failed to marshal BCOF")
-			}
-			if err := os.WriteFile(*bcofOutFile, bcofBytes, 0644); err != nil {
-				panic("failed to write BCOF file")
-			}
-		}
-	}
+	// if *bcofOutFile != "" {
+	// 	if err := bi.Assembler2BCOF(); err != nil {
+	// 		panic("Error in creating a BCOF file")
+	// 	} else {
+	// 		bcofBytes, err := proto.Marshal(bi.GetBCOF())
+	// 		if err != nil {
+	// 			panic("failed to marshal BCOF")
+	// 		}
+	// 		if err := os.WriteFile(*bcofOutFile, bcofBytes, 0644); err != nil {
+	// 			panic("failed to write BCOF file")
+	// 		}
+	// 	}
+	// }
 }
