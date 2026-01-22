@@ -5,6 +5,7 @@ import "errors"
 const (
 	passClusterChecker = uint64(1) << iota
 	passTemplateResolver
+	passDependencyResolver
 	passMetadataInfer1
 	passMacroResolver
 	passCallResolver
@@ -31,6 +32,7 @@ const (
 func getPassFunction() map[uint64]func(*BasmInstance) error {
 	return map[uint64]func(*BasmInstance) error{
 		passTemplateResolver:      templateResolver,
+		passDependencyResolver:    dependencyResolver,
 		passDynamicalInstructions: dynamicalInstructions,
 		passSymbolTagger1:         symbolTagger,
 		passSymbolTagger2:         symbolTagger,
@@ -58,6 +60,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 func getPassFunctionName() map[uint64]string {
 	return map[uint64]string{
 		passTemplateResolver:      "templateResolver",
+		passDependencyResolver:    "dependencyResolver",
 		passDynamicalInstructions: "dynamicalInstructions",
 		passSymbolTagger1:         "symbolTagger (1)",
 		passSymbolTagger2:         "symbolTagger (2)",
@@ -86,6 +89,7 @@ func IsOptionalPass(frontEnd string) map[uint64]bool {
 	if frontEnd == "bondbits" {
 		return map[uint64]bool{
 			passTemplateResolver:      true,
+			passDependencyResolver:    true,
 			passDynamicalInstructions: true,
 			passSymbolTagger1:         true,
 			passSymbolTagger2:         true,
@@ -111,6 +115,7 @@ func IsOptionalPass(frontEnd string) map[uint64]bool {
 	} else {
 		return map[uint64]bool{
 			passTemplateResolver:      false,
+			passDependencyResolver:    false,
 			passDynamicalInstructions: false,
 			passSymbolTagger1:         false,
 			passSymbolTagger2:         false,
@@ -143,6 +148,7 @@ func (bi *BasmInstance) ActivePass(active uint64) bool {
 func GetPassMnemonic() map[uint64]string {
 	return map[uint64]string{
 		passTemplateResolver:      "templateresolver",
+		passDependencyResolver:    "dependencyresolver",
 		passDynamicalInstructions: "dynamicalinstructions",
 		passSymbolTagger1:         "symboltagger1",
 		passSymbolTagger2:         "symboltagger2",

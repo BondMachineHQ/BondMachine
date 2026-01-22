@@ -63,6 +63,7 @@ type BasmInstance struct {
 	fis                   []*bmline.BasmElement // Fragment instances
 	fiLinks               []*bmline.BasmElement // Fragment links
 	fiLinkAttach          []*bmline.BasmElement // Fragment link attachments
+	deps                  *dependencies
 }
 
 // Sections and Macros
@@ -107,6 +108,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 	bi.chunks = make(map[string]*BasmChunk)
 	bi.symbols = make(map[string]int64)
 	bi.passes = passTemplateResolver |
+		// passDependencyResolver |
 		passDynamicalInstructions |
 		passSymbolTagger1 |
 		passSymbolTagger2 |
@@ -136,6 +138,9 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 	bi.dynMatcherOps = make([]procbuilder.DynamicInstruction, 0)
 
 	bi.rg = bmreqs.NewReqRoot()
+
+	bi.deps = new(dependencies)
+	bi.deps.depList = make([]depObj, 0)
 
 	bi.cps = make([]*bmline.BasmElement, 0)
 	bi.sos = make([]*bmline.BasmElement, 0)
@@ -409,6 +414,36 @@ func (bi *BasmInstance) String() string {
 		result += purple("\tDyn Matchers") + ":\n"
 		for _, matcher := range bi.dynMatchers {
 			result += "\t\t" + matcher.String() + "\n"
+		}
+	}
+	if bi.deps != nil && len(bi.deps.depList) > 0 {
+		result += purple("\tDependencies") + ":\n"
+		for _, dep := range bi.deps.depList {
+			switch dep.obType {
+			case OB_CP:
+				result += fmt.Sprintf("\t\t"+green("type")+": "+blue("cp")+", "+green("name")+": %s\n", blue(dep.name))
+			case OB_ROMTEXT:
+				result += fmt.Sprintf("\t\t"+green("type")+": "+blue("romcode")+", "+green("name")+": %s\n", blue(dep.name))
+			case OB_RAMTEXT:
+				result += fmt.Sprintf("\t\t"+green("type")+": "+blue("ramcode")+", "+green("name")+": %s\n", blue(dep.name))
+			case OB_FRAGMENT:
+				result += fmt.Sprintf("\t\t"+green("type")+": "+blue("fragment")+", "+green("name")+": %s\n", blue(dep.name))
+			}
+			if len(dep.depList) > 0 {
+				result += "\t\t\t" + green("depends on:") + "\n"
+				for _, subdep := range dep.depList {
+					switch subdep.obType {
+					case OB_CP:
+						result += fmt.Sprintf("\t\t\t\t"+green("type")+": "+blue("cp")+", "+green("name")+": %s\n", blue(subdep.name))
+					case OB_ROMTEXT:
+						result += fmt.Sprintf("\t\t\t\t"+green("type")+": "+blue("romcode")+", "+green("name")+": %s\n", blue(subdep.name))
+					case OB_RAMTEXT:
+						result += fmt.Sprintf("\t\t\t\t"+green("type")+": "+blue("ramcode")+", "+green("name")+": %s\n", blue(subdep.name))
+					case OB_FRAGMENT:
+						result += fmt.Sprintf("\t\t\t\t"+green("type")+": "+blue("fragment")+", "+green("name")+": %s\n", blue(subdep.name))
+					}
+				}
+			}
 		}
 	}
 	if bi.symbols != nil {
