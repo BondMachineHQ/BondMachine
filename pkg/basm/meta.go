@@ -222,6 +222,7 @@ func (bi *BasmInstance) filteredMetaAdd(el *bmline.BasmElement, key string, valu
 		case "ramsize":
 		case "execmode":
 		case "fragcollapse":
+		case "fragmap":
 		default:
 			// If there in an unknown key, it is a user defined key that eventually will be used in a template.
 			// Setting the CP as templated and the resolver will create a new instance of the code

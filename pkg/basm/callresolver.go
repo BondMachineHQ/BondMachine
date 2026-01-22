@@ -9,7 +9,8 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-// section entry points detection, the pass detects the symbol used as entry point of the section and sign it as metadata.
+// pass to resolve call instructions to their appropriate rom/ram versions and handle fragment inlining. It will only
+// target sections of type romtext and ramtext.
 func callResolver(bi *BasmInstance) error {
 	symbolTagger(bi)
 
