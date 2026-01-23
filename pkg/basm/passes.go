@@ -17,6 +17,7 @@ const (
 	passFragmentOptimizer1
 	passFragmentPruner
 	passFragmentComposer
+	passFragmentMapper
 	passMetadataInfer3
 	passEntryPoints
 	passTemplateFinalizer
@@ -47,6 +48,7 @@ func getPassFunction() map[uint64]func(*BasmInstance) error {
 		passFragmentAnalyzer:      fragmentAnalyzer,
 		passFragmentPruner:        fragmentPruner,
 		passFragmentComposer:      fragmentComposer,
+		passFragmentMapper:        fragmentMapper,
 		passFragmentOptimizer1:    fragmentOptimizer,
 		passMemComposer:           memComposer,
 		passSectionCleaner:        sectionCleaner,
@@ -75,6 +77,7 @@ func getPassFunctionName() map[uint64]string {
 		passFragmentAnalyzer:      "fragmentAnalyzer",
 		passFragmentPruner:        "fragmentPruner",
 		passFragmentComposer:      "fragmentComposer",
+		passFragmentMapper:        "fragmentMapper",
 		passFragmentOptimizer1:    "fragmentOptimizer",
 		passMemComposer:           "memComposer",
 		passSectionCleaner:        "sectionCleaner",
@@ -104,6 +107,7 @@ func IsOptionalPass(frontEnd string) map[uint64]bool {
 			passFragmentAnalyzer:      true,
 			passFragmentPruner:        true,
 			passFragmentComposer:      true,
+			passFragmentMapper:        true,
 			passFragmentOptimizer1:    true,
 			passMemComposer:           true,
 			passSectionCleaner:        true,
@@ -130,6 +134,7 @@ func IsOptionalPass(frontEnd string) map[uint64]bool {
 			passFragmentAnalyzer:      false,
 			passFragmentPruner:        false,
 			passFragmentComposer:      false,
+			passFragmentMapper:        true,
 			passFragmentOptimizer1:    true,
 			passMemComposer:           false,
 			passSectionCleaner:        false,
@@ -163,6 +168,7 @@ func GetPassMnemonic() map[uint64]string {
 		passFragmentAnalyzer:      "fragmentanalyzer",
 		passFragmentPruner:        "fragmentpruner",
 		passFragmentComposer:      "fragmentcomposer",
+		passFragmentMapper:        "fragmentmapper",
 		passFragmentOptimizer1:    "fragmentoptimizer",
 		passMemComposer:           "memcomposer",
 		passSectionCleaner:        "sectioncleaner",

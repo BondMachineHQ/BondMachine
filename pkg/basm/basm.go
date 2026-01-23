@@ -123,6 +123,7 @@ func (bi *BasmInstance) BasmInstanceInit(bm *bondmachine.Bondmachine) {
 		// passFragmentAnalyzer |
 		passFragmentPruner |
 		passFragmentComposer |
+		// passFragmentMapper |
 		passFragmentOptimizer1 |
 		passMemComposer |
 		passSectionCleaner |
