@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (bi *BasmInstance) ApplyBondBitsRule(rule string, saveDirectory string) error {
+func (bi *BasmInstance) ApplyBondBitsRule(rule string) error {
 	// Trim spaces for left and right
 	rule = strings.Trim(rule, " ")
 
@@ -25,7 +25,7 @@ func (bi *BasmInstance) ApplyBondBitsRule(rule string, saveDirectory string) err
 		source1 := parts[1]
 		source2 := parts[2]
 		target := parts[3]
-		return bi.mergeFragments(source1, source2, target, saveDirectory)
+		return bi.mergeFragments(source1, source2, target)
 	default:
 		return errors.New("unknown bondbits rule type: " + parts[0])
 	}
