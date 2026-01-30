@@ -217,6 +217,7 @@ func main() {
 	}
 
 	// TODO Rules may need of specific passes or optimizations activated
+	// Rules have to be validated against each other. (some rules may be incompatible)
 	// Plus, rules may be given to the CLI or as metadata inside the assembly itself
 	// Examples: annotate for a specific call type.
 	// TODO Create functions to export basminstance to BASM files
