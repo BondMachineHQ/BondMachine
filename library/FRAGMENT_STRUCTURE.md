@@ -50,12 +50,12 @@ Defined as `default_<param_name>:<value>`:
 
 some attributes specify requirements for the CP that will use the fragment:
 
-- **`require_llmemname:memname1:memname2:...`** - Requires blocks of `local` linear memory with specified names (the number of names and sizes must match those in `require_llmemsize`)
-- **`require_llmemsize:size1:size2:...`** - For every memory name in `require_llmemname`, specifies the required size in bytes
-- **`require_clmemname:memname1:memname2:...`** - Requires blocks of linear memory in the common linear memory space of the target CP with specified names
-- **`require_clmemsize:size1:size2:...`** - For every memory name in `require_clmemname`, specifies the required size in bytes.
+- **`require_llramname:memname1:memname2:...`** - Requires blocks of `local` linear RAM memory with specified names (the number of names and sizes must match those in `require_llramsize`)
+- **`require_llramsize:size1:size2:...`** - For every memory name in `require_llramname`, specifies the required size in bytes
+- **`require_clramname:memname1:memname2:...`** - Requires blocks of linear memory in the common linear memory space of the target CP with specified names
+- **`require_clramsize:size1:size2:...`** - For every memory name in `require_clramname`, specifies the required size in bytes.
 
-When different fragments have the same memory name in their clmemname they need to be on the sale CP and have the same size. 
+When different fragments have the same RAM memory name in their clramname they need to be on the sale CP and have the same size. 
 TODO: Think about shared memory across different CPs and concurrency.
 
 ## Meta Directives
