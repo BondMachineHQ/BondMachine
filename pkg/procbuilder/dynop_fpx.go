@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"errors"
+	"os"
 	"strconv"
 	"strings"
 
@@ -45,15 +46,46 @@ func (op FPX) Op_get_instruction_len(arch *Arch) int {
 
 func (op FPX) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
 	result := ""
-	result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + op.fpName + "_" + arch.Tag + "_input_a;\n"
-	result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + op.fpName + "_" + arch.Tag + "_input_b;\n"
-	result += "\twire [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + op.fpName + "_" + arch.Tag + "_output_z;\n"
 
-	result += "\treg	[1:0] " + op.fpName + "_" + arch.Tag + "_state;\n"
-	result += "parameter " + op.fpName + "_" + arch.Tag + "_put         = 2'd0,\n"
-	result += "          " + op.fpName + "_" + arch.Tag + "_get         = 2'd1;\n"
+	dri := op.fpName + "_" + arch.Tag
 
-	result += "\t" + op.fpName + "_" + arch.Tag + " " + op.fpName + "_" + arch.Tag + "_inst (" + op.fpName + "_" + arch.Tag + "_input_a, " + op.fpName + "_" + arch.Tag + "_input_b,  " + op.fpName + "_" + arch.Tag + "_output_z);\n\n"
+	result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + dri + "_input_a;\n"
+	result += "\treg [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + dri + "_input_b;\n"
+	result += "\twire [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] " + dri + "_output_z;\n"
+
+	result += "\treg	[1:0] " + dri + "_state;\n"
+	result += "parameter " + dri + "_put         = 2'd0,\n"
+	result += "          " + dri + "_get         = 2'd1;\n"
+
+	var fxpModule string
+	switch op.opType {
+	case LQADD:
+		fxpModule = "fxp_add"
+	case LQMULT:
+		fxpModule = "fxp_mul"
+	case LQDIV:
+		fxpModule = "fxp_div"
+	default:
+		return result
+	}
+
+	s := strconv.Itoa(op.s - op.f)
+	f := strconv.Itoa(op.f)
+
+	result += "\t" + fxpModule + " #(\n"
+	result += "\t\t.WIIA(" + s + "),\n"
+	result += "\t\t.WIFA(" + f + "),\n"
+	result += "\t\t.WIIB(" + s + "),\n"
+	result += "\t\t.WIFB(" + f + "),\n"
+	result += "\t\t.WOI(" + s + "),\n"
+	result += "\t\t.WOF(" + f + ")\n"
+	result += "\t) " + dri + "_inst (\n"
+	result += "\t\t.ina(" + dri + "_input_a),\n"
+	result += "\t\t.inb(" + dri + "_input_b),\n"
+	result += "\t\t.out(" + dri + "_output_z)\n"
+	result += "\t);\n\n"
+
+	//result += "\t" + fxpModule + " " + dri + "_inst (" + dri + "_input_a, " + dri + "_input_b, " + dri + "_output_z);\n\n"
 
 	return result
 }
@@ -221,9 +253,9 @@ func (op FPX) Simulate(vm *VM, instr string) error {
 	regSrc := get_id(instr[regBits : regBits*2])
 
 	switch *op.pipeline {
-	case FPPUT:
-		*op.pipeline = LQGET
-	case LQGET:
+	case FPXPUT:
+		*op.pipeline = FPXGET
+	case FPXGET:
 		var dest int64
 		var src int64
 		var res int64
@@ -303,7 +335,7 @@ func (Op FPX) Op_instruction_verilog_internal_state(arch *Arch, flavor string) s
 }
 
 func (op FPX) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
-	result := "\n\n"
+	/*result := "\n\n"
 	var moduleName string
 	s := strconv.Itoa(op.s - 1)
 	f := strconv.Itoa(op.f)
@@ -333,7 +365,8 @@ func (op FPX) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([
 	moduleNames := []string{moduleName}
 	moduleCodes := []string{result}
 
-	return moduleNames, moduleCodes
+	return moduleNames, moduleCodes*/
+	return []string{}, []string{}
 }
 
 func (Op FPX) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
@@ -369,8 +402,12 @@ func (Op FPX) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 	return nil, errors.New("HL Assembly normalize failed")
 }
 
-func (Op FPX) ExtraFiles(arch *Arch) ([]string, []string) {
-	return []string{}, []string{}
+func (Op FPX) ExtraFiles(_ *Arch) ([]string, []string) {
+	data, err := os.ReadFile("/home/giuspru/Desktop/GoldenEyeProject/fixedpoint.v")
+	if err != nil {
+		return nil, nil
+	}
+	return []string{"fixedpoint.v"}, []string{string(data)}
 }
 
 func (Op FPX) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
