@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"errors"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -59,11 +60,11 @@ func (op FPX) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 
 	var fxpModule string
 	switch op.opType {
-	case LQADD:
+	case FPXADD:
 		fxpModule = "fxp_add"
-	case LQMULT:
+	case FPXMULT:
 		fxpModule = "fxp_mul"
-	case LQDIV:
+	case FPXDIV:
 		fxpModule = "fxp_div"
 	default:
 		return result
@@ -402,12 +403,40 @@ func (Op FPX) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 	return nil, errors.New("HL Assembly normalize failed")
 }
 
-func (Op FPX) ExtraFiles(_ *Arch) ([]string, []string) {
-	data, err := os.ReadFile("/home/giuspru/Desktop/GoldenEyeProject/fixedpoint.v")
-	if err != nil {
-		return nil, nil
+func (Op FPX) ExtraFiles(arch *Arch) ([]string, []string) {
+	fileList := make([]string, 0)
+	switch Op.opType {
+	case FPXADD:
+		fileList = append(fileList, "fxp_zoom.v")
+		fileList = append(fileList, "fxp_add.v")
+	case FPXMULT:
+		fileList = append(fileList, "fxp_zoom.v")
+		fileList = append(fileList, "fxp_mult.v")
+	case FPXDIV:
+		fileList = append(fileList, "fxp_zoom.v")
+		fileList = append(fileList, "fxp_div.v")
 	}
-	return []string{"fixedpoint.v"}, []string{string(data)}
+
+	names := make([]string, 0)
+	codes := make([]string, 0)
+
+	for _, fileName := range fileList {
+		if !stringInSlice(fileName, strings.Split(arch.Conproc.SharedHDLOps, ",")) {
+
+			if data, err := os.ReadFile("/tmp/fxpcode/" + fileName); err != nil {
+				log.Fatal("unable to load file")
+			} else {
+
+				if len(arch.Conproc.SharedHDLOps) > 0 {
+					arch.Conproc.SharedHDLOps += ","
+				}
+				arch.Conproc.SharedHDLOps += fileName
+				names = append(names, fileName)
+				codes = append(codes, string(data))
+			}
+		}
+	}
+	return names, codes
 }
 
 func (Op FPX) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {

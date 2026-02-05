@@ -52,6 +52,8 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 			}
 		}
 
+		sharedHDLOps := ""
+
 		//Instantiation of the Processor
 		for i, dom_id := range bmach.Processors {
 
@@ -79,6 +81,7 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 
 			// Set the arch tag to a deterministic value
 			dom.Conproc.CpID = uint32(i)
+			dom.Conproc.SharedHDLOps = sharedHDLOps
 
 			if _, err := os.Stat(arch_filename + ".v"); os.IsNotExist(err) {
 				f, err := os.Create(arch_filename + ".v")
@@ -115,6 +118,8 @@ func (bmach *Bondmachine) Write_verilog(conf *Config, flavor string, iomaps *IOm
 					f.Close()
 				}
 			}
+
+			sharedHDLOps = dom.Arch.Conproc.SharedHDLOps
 		}
 
 		if len(bmach.Shared_objects) > 0 {

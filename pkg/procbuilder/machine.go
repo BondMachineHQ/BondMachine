@@ -140,6 +140,7 @@ func init() {
 
 	AllDynamicalInstructions = make([]DynamicInstruction, 0)
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynFloPoCo{})
+	AllDynamicalInstructions = append(AllDynamicalInstructions, DynFloPoCoFixedPoint{})
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynLinearQuantizer{Ranges: nil})
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynRsets{})
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynCall{})

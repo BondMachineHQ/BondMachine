@@ -46,6 +46,7 @@ func init() {
 
 	AllDynamicalTypes = make([]DynamicalType, 0)
 	AllDynamicalTypes = append(AllDynamicalTypes, DynFloPoCo{})
+	AllDynamicalTypes = append(AllDynamicalTypes, DynFloPoCoFixedPoint{})
 	dynLQ := DynLinearQuantizer{}
 	dynLQRages := make(map[int]LinearDataRange)
 	dynLQ.Ranges = &dynLQRages
@@ -64,7 +65,7 @@ func init() {
 	EventuallyCreateType("lqs8t0", nil)
 	EventuallyCreateType("fps8f4", nil)
 	EventuallyCreateType("fpxs8f4", nil)
-
+	EventuallyCreateType("flpfps8f4", nil)
 }
 
 func ListTypes() {
