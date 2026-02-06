@@ -2,10 +2,10 @@ package bmnumbers
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
-	"fmt"
 )
 
 type Float32 struct{}
@@ -25,8 +25,8 @@ func (d Float32) GetSize() int {
 func (d Float32) importMatchers() map[string]ImportFunc {
 	result := make(map[string]ImportFunc)
 
-	result["^0f<32>(?P<number>[^pPlL].*)$"] = float32Import
-	result["^0f(?P<number>[^pPlL<].*)$"] = float32Import
+	result["^0f<32>(?P<number>[^pxPlL].*)$"] = float32Import
+	result["^0f(?P<number>[^pxPlL<].*)$"] = float32Import
 
 	return result
 }
@@ -74,8 +74,8 @@ func (d Float32) ExportString(n *BMNumber) (string, error) {
 		s = s | (uint32(n.number[i]) << uint32(8*i))
 	}
 
-	 // return "0f<32>" + strconv.FormatFloat(float64(math.Float32frombits(s)), 'f', -1, 32), nil
-	 return "0f<32>" + fmt.Sprintf("%.20f", float64(math.Float32frombits(s))), nil
+	// return "0f<32>" + strconv.FormatFloat(float64(math.Float32frombits(s)), 'f', -1, 32), nil
+	return "0f<32>" + fmt.Sprintf("%.20f", float64(math.Float32frombits(s))), nil
 }
 
 func (d Float32) ShowInstructions() map[string]string {

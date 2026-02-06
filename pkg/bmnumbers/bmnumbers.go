@@ -51,7 +51,7 @@ func init() {
 	dynLQ.Ranges = &dynLQRages
 	AllDynamicalTypes = append(AllDynamicalTypes, dynLQ)
 	AllDynamicalTypes = append(AllDynamicalTypes, DynFixedPoint{})
-	AllDynamicalTypes = append(AllDynamicalTypes, DynFPX{})
+	AllDynamicalTypes = append(AllDynamicalTypes, DynFXP{})
 
 	AllMatchers = make(map[string]ImportFunc)
 	for _, t := range AllTypes {
@@ -63,7 +63,7 @@ func init() {
 	EventuallyCreateType("flpe4f4", nil)
 	EventuallyCreateType("lqs8t0", nil)
 	EventuallyCreateType("fps8f4", nil)
-	EventuallyCreateType("fpxs8f4", nil)
+	EventuallyCreateType("fxps8f4", nil)
 
 }
 

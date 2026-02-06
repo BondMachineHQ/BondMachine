@@ -13,12 +13,12 @@ import (
 )
 
 const (
-	FPXPUT = uint8(0) + iota
-	FPXGET
+	FXPPUT = uint8(0) + iota
+	FXPGET
 )
 
-// The FPX opcode is both a basic instruction and a template for other instructions.
-type FPX struct {
+// The FXP opcode is both a basic instruction and a template for other instructions.
+type FXP struct {
 	fpName   string
 	s        int
 	f        int
@@ -26,26 +26,26 @@ type FPX struct {
 	pipeline *uint8
 }
 
-func (op FPX) Op_get_name() string {
+func (op FXP) Op_get_name() string {
 	return op.fpName
 }
 
-func (op FPX) Op_get_desc() string {
-	return "FPX dynamical instruction " + op.fpName
+func (op FXP) Op_get_desc() string {
+	return "FXP dynamical instruction " + op.fpName
 }
 
-func (op FPX) Op_show_assembler(arch *Arch) string {
+func (op FXP) Op_show_assembler(arch *Arch) string {
 	opBits := arch.Opcodes_bits()
 	result := op.fpName + " [" + strconv.Itoa(int(arch.R)) + "(Reg)] [" + strconv.Itoa(int(arch.R)) + "(Reg)]	// Set a register to the sum of its value with another register [" + strconv.Itoa(opBits+int(arch.R)+int(arch.R)) + "]\n"
 	return result
 }
 
-func (op FPX) Op_get_instruction_len(arch *Arch) int {
+func (op FXP) Op_get_instruction_len(arch *Arch) int {
 	opBits := arch.Opcodes_bits()
 	return opBits + int(arch.R) + int(arch.R) // The bits for the opcode + bits for a register + bits for another register
 }
 
-func (op FPX) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
+func (op FXP) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string, pName string) string {
 	result := ""
 
 	dri := op.fpName + "_" + arch.Tag
@@ -82,7 +82,7 @@ func (op FPX) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	result += "\t\t.WOF(" + f + ")\n"
 	result += "\t) " + dri + "_inst (\n"
 	switch op.opType {
-	case FPXDIV:
+	case FXPDIV:
 		result += "\t\t.dividend(" + dri + "_input_a),\n"
 		result += "\t\t.divisor(" + dri + "_input_b),\n"
 	default:
@@ -95,7 +95,7 @@ func (op FPX) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	return result
 }
 
-func (op FPX) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
+func (op FXP) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	rom_word := arch.Max_word()
 	opBits := arch.Opcodes_bits()
 
@@ -160,12 +160,12 @@ func (op FPX) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 	return result
 }
 
-func (op FPX) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
+func (op FXP) Op_instruction_verilog_footer(arch *Arch, flavor string) string {
 	// TODO
 	return ""
 }
 
-func (op FPX) Assembler(arch *Arch, words []string) (string, error) {
+func (op FXP) Assembler(arch *Arch, words []string) (string, error) {
 	opBits := arch.Opcodes_bits()
 	rom_word := arch.Max_word()
 
@@ -208,7 +208,7 @@ func (op FPX) Assembler(arch *Arch, words []string) (string, error) {
 	return result, nil
 }
 
-func (op FPX) Disassembler(arch *Arch, instr string) (string, error) {
+func (op FXP) Disassembler(arch *Arch, instr string) (string, error) {
 	reg_id := get_id(instr[:arch.R])
 	result := strings.ToLower(Get_register_name(reg_id)) + " "
 	reg_id = get_id(instr[arch.R : 2*int(arch.R)])
@@ -216,7 +216,7 @@ func (op FPX) Disassembler(arch *Arch, instr string) (string, error) {
 	return result, nil
 }
 
-func fpxMult(a, b, regsize, fsize int64) int64 {
+func fxpMult(a, b, regsize, fsize int64) int64 {
 	shifted_a := a >> regsize
 	shifted_b := b >> regsize
 
@@ -227,7 +227,7 @@ func fpxMult(a, b, regsize, fsize int64) int64 {
 	return multResult
 }
 
-func fpxDiv(num1, num2, regsize, fsize int64) int64 {
+func fxpDiv(num1, num2, regsize, fsize int64) int64 {
 	bit1 := (num1 >> (regsize - 1)) & 1
 	bit2 := (num2 >> (regsize - 1)) & 1
 
@@ -252,15 +252,15 @@ func fpxDiv(num1, num2, regsize, fsize int64) int64 {
 	}
 }
 
-func (op FPX) Simulate(vm *VM, instr string) error {
+func (op FXP) Simulate(vm *VM, instr string) error {
 	regBits := vm.Mach.R
 	regDest := get_id(instr[:regBits])
 	regSrc := get_id(instr[regBits : regBits*2])
 
 	switch *op.pipeline {
-	case FPXPUT:
-		*op.pipeline = FPXGET
-	case FPXGET:
+	case FXPPUT:
+		*op.pipeline = FXPGET
+	case FXPGET:
 		var dest int64
 		var src int64
 		var res int64
@@ -283,9 +283,9 @@ func (op FPX) Simulate(vm *VM, instr string) error {
 		case LQADD:
 			res = dest + src
 		case LQMULT:
-			res = fpxMult(dest, src, int64(op.s), int64(op.f))
+			res = fxpMult(dest, src, int64(op.s), int64(op.f))
 		case LQDIV:
-			res = fpxDiv(dest, src, int64(op.s), int64(op.f))
+			res = fxpDiv(dest, src, int64(op.s), int64(op.f))
 		}
 		if vm.Mach.Rsize <= 8 {
 			vm.Registers[regDest] = uint8(Int8bits(int8(res)))
@@ -305,50 +305,50 @@ func (op FPX) Simulate(vm *VM, instr string) error {
 }
 
 // The random genaration does nothing
-func (op FPX) Generate(arch *Arch) string {
+func (op FXP) Generate(arch *Arch) string {
 	// TODO
 	return ""
 }
 
-func (op FPX) Required_shared() (bool, []string) {
+func (op FXP) Required_shared() (bool, []string) {
 	// TODO
 	return false, []string{}
 }
 
-func (op FPX) Required_modes() (bool, []string) {
+func (op FXP) Required_modes() (bool, []string) {
 	return false, []string{}
 }
 
-func (op FPX) Forbidden_modes() (bool, []string) {
+func (op FXP) Forbidden_modes() (bool, []string) {
 	return false, []string{}
 }
 
-func (op FPX) Op_instruction_internal_state(arch *Arch, flavor string) string {
+func (op FXP) Op_instruction_internal_state(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (Op FPX) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
+func (Op FXP) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (Op FPX) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
+func (Op FXP) Op_instruction_verilog_default_state(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (Op FPX) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
+func (Op FXP) Op_instruction_verilog_internal_state(arch *Arch, flavor string) string {
 	return ""
 }
 
-func (op FPX) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
+func (op FXP) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
 	return []string{}, []string{}
 }
 
-func (Op FPX) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
+func (Op FXP) AbstractAssembler(arch *Arch, words []string) ([]UsageNotify, error) {
 	result := make([]UsageNotify, 0)
 	return result, nil
 }
 
-func (Op FPX) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
+func (Op FXP) Op_instruction_verilog_extra_block(arch *Arch, flavor string, level uint8, blockname string, objects []string) string {
 	result := ""
 	switch blockname {
 	default:
@@ -356,12 +356,12 @@ func (Op FPX) Op_instruction_verilog_extra_block(arch *Arch, flavor string, leve
 	}
 	return result
 }
-func (Op FPX) HLAssemblerMatch(arch *Arch) []string {
+func (Op FXP) HLAssemblerMatch(arch *Arch) []string {
 	result := make([]string, 0)
 	result = append(result, Op.fpName+"::*--type=reg::*--type=reg")
 	return result
 }
-func (Op FPX) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
+func (Op FXP) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, line *bmline.BasmLine) (*bmline.BasmLine, error) {
 	switch line.Operation.GetValue() {
 	case Op.fpName:
 		regDst := line.Elements[0].GetValue()
@@ -376,16 +376,16 @@ func (Op FPX) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 	return nil, errors.New("HL Assembly normalize failed")
 }
 
-func (Op FPX) ExtraFiles(arch *Arch) ([]string, []string) {
+func (Op FXP) ExtraFiles(arch *Arch) ([]string, []string) {
 	fileList := make([]string, 0)
 	switch Op.opType {
-	case FPXADD:
+	case FXPADD:
 		fileList = append(fileList, "fxp_zoom.v")
 		fileList = append(fileList, "fxp_add.v")
-	case FPXMULT:
+	case FXPMULT:
 		fileList = append(fileList, "fxp_zoom.v")
-		fileList = append(fileList, "fxp_mult.v")
-	case FPXDIV:
+		fileList = append(fileList, "fxp_mul.v")
+	case FXPDIV:
 		fileList = append(fileList, "fxp_zoom.v")
 		fileList = append(fileList, "fxp_div.v")
 	}
@@ -412,6 +412,6 @@ func (Op FPX) ExtraFiles(arch *Arch) ([]string, []string) {
 	return names, codes
 }
 
-func (Op FPX) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
+func (Op FXP) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {
 	return nil, nil
 }

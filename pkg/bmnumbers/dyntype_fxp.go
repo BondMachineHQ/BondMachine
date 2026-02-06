@@ -8,34 +8,34 @@ import (
 	"strconv"
 )
 
-type FPX struct {
+type FXP struct {
 	FixedPointName string
 	s              int
 	f              int
 	instructions   map[string]string
 }
 
-func (d FPX) GetName() string {
+func (d FXP) GetName() string {
 	return d.FixedPointName
 }
 
-func (d FPX) getInfo() string {
+func (d FXP) getInfo() string {
 	return ""
 }
 
-func (d FPX) GetSize() int {
+func (d FXP) GetSize() int {
 	return d.s
 }
 
-func (d FPX) importMatchers() map[string]ImportFunc {
+func (d FXP) importMatchers() map[string]ImportFunc {
 	result := make(map[string]ImportFunc)
 
-	result["^0fpx<(?P<s>[0-9]+)\\.(?P<f>[0-9]+)>(?P<number>.+)$"] = fpxImport
+	result["^0fxp<(?P<s>[0-9]+)\\.(?P<f>[0-9]+)>(?P<number>.+)$"] = fxpImport
 
 	return result
 }
 
-func (d FPX) Convert(n *BMNumber) error {
+func (d FXP) Convert(n *BMNumber) error {
 	convertFrom := n.nType.GetName()
 
 	switch convertFrom {
@@ -45,7 +45,7 @@ func (d FPX) Convert(n *BMNumber) error {
 	return nil
 }
 
-func fpxImport(re *regexp.Regexp, input string) (*BMNumber, error) {
+func fxpImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 	number := re.ReplaceAllString(input, "${number}")
 	ss := re.ReplaceAllString(input, "${s}")
 	fs := re.ReplaceAllString(input, "${f}")
@@ -56,7 +56,7 @@ func fpxImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 		return nil, errors.New("invalid s value for fixed point")
 	}
 
-	EventuallyCreateType("fpxs"+ss+"f"+fs, nil)
+	EventuallyCreateType("fxps"+ss+"f"+fs, nil)
 
 	if numberNum, err := strconv.ParseFloat(number, 64); err != nil {
 		return nil, errors.New("invalid number for fixed point")
@@ -72,7 +72,7 @@ func fpxImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 		toCopy := (s-1)/8 + 1
 
 		newNumber := BMNumber{}
-		newNumber.nType = FPX{FixedPointName: "fpxs" + ss + "f" + fs, s: s, f: f}
+		newNumber.nType = FXP{FixedPointName: "fxps" + ss + "f" + fs, s: s, f: f}
 		newNumber.number = make([]byte, toCopy)
 		copy(newNumber.number, buf.Bytes()[0:toCopy])
 		newNumber.bits = s
@@ -85,7 +85,7 @@ func fpxImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 	}
 }
 
-func (d FPX) ExportString(n *BMNumber) (string, error) {
+func (d FXP) ExportString(n *BMNumber) (string, error) {
 	s := d.s
 	f := d.f
 	ss := strconv.Itoa(s)
@@ -125,14 +125,14 @@ func (d FPX) ExportString(n *BMNumber) (string, error) {
 
 	numberF := float64(number) / scale
 
-	result := "0fpx<" + ss + "." + fs + ">" + strconv.FormatFloat(numberF, 'f', -1, 64)
+	result := "0fxp<" + ss + "." + fs + ">" + strconv.FormatFloat(numberF, 'f', -1, 64)
 	return result, nil
 }
 
-func (d FPX) ShowInstructions() map[string]string {
+func (d FXP) ShowInstructions() map[string]string {
 	return d.instructions
 }
 
-func (d FPX) ShowPrefix() string {
-	return "0fpx<" + strconv.Itoa(d.s) + "." + strconv.Itoa(d.f) + ">"
+func (d FXP) ShowPrefix() string {
+	return "0fxp<" + strconv.Itoa(d.s) + "." + strconv.Itoa(d.f) + ">"
 }
