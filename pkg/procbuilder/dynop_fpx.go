@@ -2,6 +2,7 @@ package procbuilder
 
 import (
 	"errors"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -80,12 +81,16 @@ func (op FPX) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 	result += "\t\t.WOI(" + s + "),\n"
 	result += "\t\t.WOF(" + f + ")\n"
 	result += "\t) " + dri + "_inst (\n"
-	result += "\t\t.ina(" + dri + "_input_a),\n"
-	result += "\t\t.inb(" + dri + "_input_b),\n"
+	switch op.opType {
+	case FPXDIV:
+		result += "\t\t.dividend(" + dri + "_input_a),\n"
+		result += "\t\t.divisor(" + dri + "_input_b),\n"
+	default:
+		result += "\t\t.ina(" + dri + "_input_a),\n"
+		result += "\t\t.inb(" + dri + "_input_b),\n"
+	}
 	result += "\t\t.out(" + dri + "_output_z)\n"
 	result += "\t);\n\n"
-
-	//result += "\t" + fxpModule + " " + dri + "_inst (" + dri + "_input_a, " + dri + "_input_b, " + dri + "_output_z);\n\n"
 
 	return result
 }
@@ -335,37 +340,6 @@ func (Op FPX) Op_instruction_verilog_internal_state(arch *Arch, flavor string) s
 }
 
 func (op FPX) Op_instruction_verilog_extra_modules(arch *Arch, flavor string) ([]string, []string) {
-	/*result := "\n\n"
-	var moduleName string
-	s := strconv.Itoa(op.s - 1)
-	f := strconv.Itoa(op.f)
-
-	result += "module " + op.fpName + "_" + arch.Tag + "(\n"
-	result += "input_a,\n"
-	result += "input_b,\n"
-	result += "output_z);\n"
-	result += "	input signed    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input_a;\n"
-	result += "	input signed    [" + strconv.Itoa(int(arch.Rsize)-1) + ":0] input_b;\n"
-	result += "	output signed   [" + strconv.Itoa(int(arch.Rsize)*2-1) + ":0] output_z;\n"
-	result += "\n"
-
-	switch op.opType {
-	case LQADD:
-		result += "	assign output_z = input_a + input_b;\n"
-		moduleName = "adder"
-	case LQMULT:
-		result += " assign output_z = (input_a[" + s + "] || input_b[" + s + "]) ? ((input_a * input_b) >>> " + f + ") : ((input_a * input_b) >> " + f + ");\n"
-		moduleName = "multiplier"
-	case LQDIV:
-		result += "	assign output_z = (input_a[" + s + "] ^ input_b[" + s + "]) ? -((((input_a[" + s + "] ? -input_a : input_a) <<< " + f + ") / (input_b[" + s + "] ? -input_b : input_b))) : ((input_a <<< " + f + ") / input_b);\n"
-		moduleName = "divider"
-	}
-	result += "endmodule\n"
-
-	moduleNames := []string{moduleName}
-	moduleCodes := []string{result}
-
-	return moduleNames, moduleCodes*/
 	return []string{}, []string{}
 }
 
@@ -402,12 +376,40 @@ func (Op FPX) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 	return nil, errors.New("HL Assembly normalize failed")
 }
 
-func (Op FPX) ExtraFiles(_ *Arch) ([]string, []string) {
-	data, err := os.ReadFile("/home/giuspru/Desktop/GoldenEyeProject/fixedpoint.v")
-	if err != nil {
-		return nil, nil
+func (Op FPX) ExtraFiles(arch *Arch) ([]string, []string) {
+	fileList := make([]string, 0)
+	switch Op.opType {
+	case FPXADD:
+		fileList = append(fileList, "fxp_zoom.v")
+		fileList = append(fileList, "fxp_add.v")
+	case FPXMULT:
+		fileList = append(fileList, "fxp_zoom.v")
+		fileList = append(fileList, "fxp_mult.v")
+	case FPXDIV:
+		fileList = append(fileList, "fxp_zoom.v")
+		fileList = append(fileList, "fxp_div.v")
 	}
-	return []string{"fixedpoint.v"}, []string{string(data)}
+
+	names := make([]string, 0)
+	codes := make([]string, 0)
+
+	for _, fileName := range fileList {
+		if !stringInSlice(fileName, strings.Split(arch.Conproc.SharedHDLOps, ",")) {
+
+			if data, err := os.ReadFile("/tmp/fxpcode/" + fileName); err != nil {
+				log.Fatal("unable to load file")
+			} else {
+
+				if len(arch.Conproc.SharedHDLOps) > 0 {
+					arch.Conproc.SharedHDLOps += ","
+				}
+				arch.Conproc.SharedHDLOps += fileName
+				names = append(names, fileName)
+				codes = append(codes, string(data))
+			}
+		}
+	}
+	return names, codes
 }
 
 func (Op FPX) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {

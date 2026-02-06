@@ -337,7 +337,7 @@ const (
 	);
  
 	reg [2:0] counter;
-	reg [15:0] output_mutex = 1;
+	reg [15:0] output_mutex = {{ if eq $.Rsize 8 }}0{{ else }}1{{ end }};
 	reg [15:0] input_reader = 1;
 	reg [15:0] input_reader_index = 0;
  
@@ -355,7 +355,7 @@ const (
             {{- end }}
 			read_pointer <= 1'b0;
 			read_pointer_output  <= 1'b0;
-			output_mutex <= 1;
+			output_mutex <= {{ if eq $.Rsize 8 }}0{{ else }}1{{ end }};
 			input_reader_index <= 0;
         end
         else begin
@@ -404,27 +404,41 @@ const (
  
 					{{- end }}
 					{{ if eq $.Rsize 16 }}
+						{{- if eq (len .Inputs) 1 }}
 						case (read_state)
- 
+							32'd0: begin
+								if (outputs_counter_incr[0] == 1'b0) begin
+									{{ index .Inputs 0 }}_r <= stream_data_fifo[outputs_counter];
+								end else begin
+									{{ index .Inputs 0 }}_r <= stream_data_fifo_backup[outputs_counter];
+								end
+								read_pointer <= read_pointer + 1;	
+								read_state <= 32'd1;
+							end
+						endcase
+						{{- else }}
+						case (read_state)
+
 							{{- if .Inputs }}
 							{{- $inputsLen := len .Inputs }}
 							{{- range $i, $input := .Inputs }}
- 
+
 							32'd{{ $i }}: begin
 								{{- if eq (mod $i 2) 0 }}
 									{{ $input }}_r <= stream_data_fifo[outputs_counter+{{ div $i 2 }}];
 								{{- else }}
 									{{ $input }}_r <= stream_data_fifo_backup[outputs_counter+{{ div $i 2 }}];
 								{{- end }}
- 
+
 								read_pointer <= read_pointer + 1;	
 								read_state <= 32'd{{ (inc $i) }};
 							end
- 
+
 							{{- end }}
 							{{- end }}
 						endcase
- 
+						{{- end }}
+
 						if (read_pointer >= (bminputs)) begin
 							read_state <= 32'd0;
 							read_pointer <= 0;
@@ -439,47 +453,54 @@ const (
 					{{- end }}
 
 					{{ if eq $.Rsize 8 }}
-					 	case (read_state)
- 
-							{{- if .Inputs }}
-							{{- $inputsLen := len .Inputs }}
-							{{- range $i, $input := .Inputs }}
- 
-							32'd{{ $i }}: begin
-								{{- if eq (mod $i 4) 0 }}
-								{{ $input }}_r <= stream_data_fifo[outputs_counter+{{ div $i 4 }}];
-								 {{- end }}
-								{{- if eq (mod $i 4) 1 }}
-								{{ $input }}_r <= stream_data_fifo_backup[outputs_counter+{{ div $i 4 }}];
-								 {{- end }}
-								 {{- if eq (mod $i 4) 2 }}
-								{{ $input }}_r <= stream_data_fifo_backup_2[outputs_counter+{{ div $i 4 }}];
-								 {{- end }}
-								 {{- if eq (mod $i 4) 3 }}
-								{{ $input }}_r <= stream_data_fifo_backup_3[outputs_counter+{{ div $i 4 }}];
-								 {{- end }}
-
-
-								read_pointer <= read_pointer + 1;
-								read_state <= 32'd{{ (inc $i) }};
-							end
- 
-							{{- end }}
-							{{- end }}
-						endcase
- 
-						if (read_pointer >= (bminputs-1)) begin
-							read_state <= 32'd0;
-							read_pointer <= 0;
-							send <= 2'b10;
-							{{- if .Inputs }}
-							{{- $inputsLen := len .Inputs }}
-							{{- range $i, $input := .Inputs }}
-							{{ $input }}_valid_r <= 1'b1;
-							{{- end }}
-							{{- end }}
+					{{- if eq (len .Inputs) 1 }}
+					// Special case for single input: cycle through 4 FIFOs based on sample index
+					case (read_state)
+						32'd0: begin
+							case (outputs_counter_incr[1:0])
+								2'b00: {{ index .Inputs 0 }}_r <= stream_data_fifo[outputs_counter][7:0];
+								2'b01: {{ index .Inputs 0 }}_r <= stream_data_fifo_backup[outputs_counter][7:0];
+								2'b10: {{ index .Inputs 0 }}_r <= stream_data_fifo_backup_2[outputs_counter][7:0];
+								2'b11: {{ index .Inputs 0 }}_r <= stream_data_fifo_backup_3[outputs_counter][7:0];
+							endcase
+							read_pointer <= read_pointer + 1;
+							read_state <= 32'd1;
 						end
-					 {{- end }}
+					endcase
+					{{- else }}
+					// Multiple inputs: use global input index
+					case (read_state)
+						{{- if .Inputs }}
+						{{- $inputsLen := len .Inputs }}
+						{{- range $i, $input := .Inputs }}
+						32'd{{ $i }}: begin
+							// Global input index = outputs_counter_incr * bminputs + {{ $i }}
+							// For 8-bit: address = global_index / 4, selector = global_index % 4
+							case ((outputs_counter_incr * bminputs + {{ $i }}) % 4)
+								2'd0: {{ $input }}_r <= stream_data_fifo[(outputs_counter_incr * bminputs + {{ $i }}) / 4][7:0];
+								2'd1: {{ $input }}_r <= stream_data_fifo_backup[(outputs_counter_incr * bminputs + {{ $i }}) / 4][7:0];
+								2'd2: {{ $input }}_r <= stream_data_fifo_backup_2[(outputs_counter_incr * bminputs + {{ $i }}) / 4][7:0];
+								2'd3: {{ $input }}_r <= stream_data_fifo_backup_3[(outputs_counter_incr * bminputs + {{ $i }}) / 4][7:0];
+							endcase
+							read_pointer <= read_pointer + 1;
+							read_state <= 32'd{{ inc $i }};
+						end
+						{{- end }}
+						{{- end }}
+					endcase
+					{{- end }}
+
+					if (read_pointer >= bminputs) begin
+						read_state <= 32'd0;
+						read_pointer <= 0;
+						send <= 2'b10;
+						{{- if .Inputs }}
+						{{- range .Inputs }}
+						{{ . }}_valid_r <= 1'b1;
+						{{- end }}
+						{{- end }}
+					end
+				{{- end }}
 				end
 				else if (send == 2'b10) begin
 					 if (
