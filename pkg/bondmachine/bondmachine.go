@@ -1049,3 +1049,21 @@ func (bmach *Bondmachine) Dot(conf *Config, prefix string, vm *VM, oldvmstate *V
 
 	return result
 }
+
+func (bmach *Bondmachine) GetUsedOpcodes() []string {
+	usedopcodes := make(map[string]struct{})
+	if len(bmach.Processors) != 0 {
+		for _, dom_id := range bmach.Processors {
+			mymachine := bmach.Domains[dom_id]
+			for _, op := range mymachine.Op {
+				usedopcodes[op.Op_get_name()] = struct{}{}
+			}
+		}
+	}
+	result := make([]string, 0)
+	for opname, _ := range usedopcodes {
+		result = append(result, opname)
+	}
+	sort.Strings(result)
+	return result
+}

@@ -2,7 +2,7 @@
 ;sympy from sympy import *
 ;sympy x = Symbol('x', real=True)
 ;sympy symbols = [x]
-;sympy testRanges = {'real: x': list(np.arange(-5,5,2)),
+;sympy testRanges = {'real: x': list(np.arange(-50,50,0.1)),
 ;sympy     }
 ;sympy with evaluate(False):
 ;sympy     spExpr = x * {{ .Params.numberreal }}
