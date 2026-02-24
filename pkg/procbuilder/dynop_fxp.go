@@ -60,11 +60,11 @@ func (op FXP) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 
 	var fxpModule string
 	switch op.opType {
-	case LQADD:
+	case FPXADD:
 		fxpModule = "fxp_add"
-	case LQMULT:
+	case FPXMULT:
 		fxpModule = "fxp_mul"
-	case LQDIV:
+	case FPXDIV:
 		fxpModule = "fxp_div"
 	default:
 		return result
