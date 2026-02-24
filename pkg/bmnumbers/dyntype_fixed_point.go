@@ -6,7 +6,6 @@ import (
 	"errors"
 	"regexp"
 	"strconv"
-	"log"
 )
 
 type FixedPoint struct {
@@ -81,8 +80,6 @@ func fixedPointImport(re *regexp.Regexp, input string) (*BMNumber, error) {
 		// Use a mask to clear the eventually unused bits on the last byte
 		mask := byte(0xFF >> uint(8-(s-1)%8-1))
 		newNumber.number[toCopy-1] = newNumber.number[toCopy-1] & mask
-
-		log.Printf("FixedPoint import: %s -> %s", input, newNumber.number)
 
 		return &newNumber, nil
 	}
