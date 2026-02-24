@@ -310,7 +310,7 @@ func (ft *FragTester) WriteApp(flavor string) (string, error) {
 }
 
 func (ft *FragTester) ListAppFlavors() []string {
-	return []string{"cpynqapi", "cpynqapibenchv2"}
+	return []string{"cpynqapi", "cpynqapiunsigned", "cpynqapibenchv2", "cpynqapiunsignedbenchv2"}
 }
 
 func (ft *FragTester) WriteStatistics() (string, error) {

@@ -13,6 +13,13 @@ import (
 	"github.com/BondMachineHQ/BondMachine/pkg/bmreqs"
 )
 
+const (
+	ANOMALYSTATE_NO = uint8(0) + iota
+	ANOMALYSTATE_SET
+	ANOMALYSTATE_RUNNING
+	ANOMALYSTATE_DONE
+)
+
 // The Addf opcode is both a basic instruction and a template for other instructions.
 type Addf struct{}
 
@@ -196,6 +203,46 @@ func (op Addf) Disassembler(arch *Arch, instr string) (string, error) {
 }
 
 func (op Addf) Simulate(vm *VM, instr string) error {
+
+	// Check for zero anomaly, when this istruction adds to a zero, the hardware
+	// spends several cycles to compute the result. To simulate this, we add
+	// a delay on the execution of this instruction when the zero anomaly is active.
+
+	var zeroAnomaly uint8
+	var zeroAnomalyState uint8
+	if !vm.Emulating {
+		if state, ok := vm.Extra_states["zeroAnomaly"]; ok {
+			zeroAnomaly = state.(uint8)
+		} else {
+			vm.Extra_states["zeroAnomaly"] = uint8(0)
+			zeroAnomaly = uint8(0)
+		}
+
+		if state, ok := vm.Extra_states["zeroAnomalyState"]; ok {
+			zeroAnomalyState = state.(uint8)
+		} else {
+			vm.Extra_states["zeroAnomalyState"] = ANOMALYSTATE_NO
+			zeroAnomalyState = ANOMALYSTATE_NO
+		}
+
+		switch zeroAnomalyState {
+		case ANOMALYSTATE_NO:
+		case ANOMALYSTATE_SET:
+			vm.Extra_states["zeroAnomaly"] = uint8(120)
+			vm.Extra_states["zeroAnomalyState"] = ANOMALYSTATE_RUNNING
+			return nil
+		case ANOMALYSTATE_RUNNING:
+			if zeroAnomaly > 0 {
+				vm.Extra_states["zeroAnomaly"] = zeroAnomaly - 1
+				return nil
+			} else {
+				vm.Extra_states["zeroAnomalyState"] = ANOMALYSTATE_DONE
+				return nil
+			}
+		case ANOMALYSTATE_DONE:
+		}
+	}
+
 	reg_bits := vm.Mach.R
 	regDest := get_id(instr[:reg_bits])
 	regSrc := get_id(instr[reg_bits : reg_bits*2])
@@ -212,6 +259,16 @@ func (op Addf) Simulate(vm *VM, instr string) error {
 			floatSrc = math.Float32frombits(v)
 		} else {
 			floatSrc = float32(0.0)
+		}
+		if !vm.Emulating && (floatDest+floatSrc == 0.0) {
+			switch zeroAnomalyState {
+			case ANOMALYSTATE_NO:
+				vm.Extra_states["zeroAnomalyState"] = ANOMALYSTATE_SET
+				return nil
+			case ANOMALYSTATE_DONE:
+				// Reset the anomaly state for future operations (no return here)
+				vm.Extra_states["zeroAnomalyState"] = ANOMALYSTATE_NO
+			}
 		}
 		vm.Registers[regDest] = math.Float32bits(floatDest + floatSrc)
 	default:

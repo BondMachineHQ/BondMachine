@@ -99,15 +99,24 @@ func (ft *FragTester) ApplyAppTemplate(flavor string) (string, error) {
 	var data string
 
 	// If the benchcoreV2 is active, force the suffix benchv2
-	if ft.BenchcoreV2 && flavor == "cpynqapi" {
-		flavor = "cpynqapibenchv2"
+	if ft.BenchcoreV2 {
+		switch flavor {
+		case "cpynqapi":
+			flavor = "cpynqapibenchv2"
+		case "cpynqapiunsigned":
+			flavor = "cpynqapiunsignedbenchv2"
+		}
 	}
 
 	switch flavor {
 	case "cpynqapi":
 		data = CPynqApi
+	case "cpynqapiunsigned":
+		data = CPynqApiUnsigned
 	case "cpynqapibenchv2":
 		data = CPynqApiBenchV2
+	case "cpynqapiunsignedbenchv2":
+		data = CPynqApiUnsignedBenchV2
 	default:
 		return "", errors.New("unknown app template flavor: " + flavor)
 	}

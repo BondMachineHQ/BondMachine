@@ -19,3 +19,6 @@
 [submodule "apps/bitcache"]
 	path = apps/bitcache
 	url = git@github.com:BondMachineHQ/bitcache.git
+[submodule "apps/bwasm"]
+	path = apps/bwasm
+	url = git@github.com:BondMachineHQ/bwasm.git
