@@ -57,6 +57,7 @@ func init() {
 	Allopcodes = append(Allopcodes, Clr{})
 	Allopcodes = append(Allopcodes, Cmpr{})
 	Allopcodes = append(Allopcodes, Cmprlt{})
+	Allopcodes = append(Allopcodes, Cmpv{})
 	Allopcodes = append(Allopcodes, Cpy{})
 	Allopcodes = append(Allopcodes, Cset{})
 	Allopcodes = append(Allopcodes, Dec{})
@@ -144,6 +145,7 @@ func init() {
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynCall{})
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynStack{})
 	AllDynamicalInstructions = append(AllDynamicalInstructions, DynFixedPoint{})
+	AllDynamicalInstructions = append(AllDynamicalInstructions, DynFXP{})
 
 	Allshared = make([]Sharedel, 0)
 	Allshared = append(Allshared, Sharedmem{})

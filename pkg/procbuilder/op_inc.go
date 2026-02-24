@@ -56,6 +56,7 @@ func (Op Inc) Op_instruction_verilog_default_state(arch *Arch, flavor string) st
 func (op Inc) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg *bmreqs.ReqRoot, flavor string) string {
 	// "reference": {"support_hdl":"ok"}
 	// "reference": {"support_mt":"ok"}
+	// "reference": {"support_hwopt":"ok"}
 	romWord := arch.Max_word()
 	opBits := arch.Opcodes_bits()
 	tabsNum := 5
@@ -140,6 +141,7 @@ func (op Inc) Disassembler(arch *Arch, instr string) (string, error) {
 
 func (op Inc) Simulate(vm *VM, instr string) error {
 	// "reference": {"support_gosim":"ok"}
+	// "reference": {"support_gosimlat":"ok"}
 	reg_bits := vm.Mach.R
 	reg := get_id(instr[:reg_bits])
 	switch vm.Mach.Rsize {

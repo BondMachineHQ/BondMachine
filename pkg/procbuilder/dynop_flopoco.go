@@ -59,7 +59,7 @@ func (op FloPoCo) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor st
 	result += "\treg	[" + strconv.Itoa(pipBits-1) + ":0] " + op.floPoCoName + "_" + arch.Tag + "_pipeline;\n"
 	result += "\n"
 
-	result += "\tcp" + arch.Tag + "_" + op.floPoCoName + " cp" + arch.Tag + "_" + op.floPoCoName + "_inst (\n"
+	result += "\t" + op.floPoCoName + " cp" + arch.Tag + "_" + op.floPoCoName + "_inst (\n"
 	result += "\t\t.clk(clock_signal),\n"
 	result += "\t\t.rst(reset_signal),\n"
 	result += "\t\t.X(" + op.floPoCoName + "_" + arch.Tag + "_input_a" + "),\n"
@@ -283,15 +283,23 @@ func (Op FloPoCo) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node stri
 }
 
 func (Op FloPoCo) ExtraFiles(arch *Arch) ([]string, []string) {
-	vHDL := Op.vHDL
-	for _, ent := range Op.entities {
-		if ent == Op.topEntity {
-			vHDL = strings.ReplaceAll(vHDL, ent, "cp"+arch.Tag+"_"+Op.floPoCoName)
-		} else {
-			vHDL = strings.ReplaceAll(vHDL, ent, "cp"+arch.Tag+"_"+ent)
+	if !stringInSlice(Op.floPoCoName, strings.Split(arch.Conproc.SharedHDLOps, ",")) {
+		vHDL := Op.vHDL
+		for _, ent := range Op.entities {
+			if ent == Op.topEntity {
+				vHDL = strings.ReplaceAll(vHDL, ent, Op.floPoCoName)
+			} else {
+				vHDL = strings.ReplaceAll(vHDL, ent, Op.floPoCoName+"_"+ent)
+			}
 		}
+		if len(arch.Conproc.SharedHDLOps) > 0 {
+			arch.Conproc.SharedHDLOps += ","
+		}
+		arch.Conproc.SharedHDLOps += Op.floPoCoName
+		return []string{Op.floPoCoName + ".vhd"}, []string{vHDL}
+	} else {
+		return []string{}, []string{}
 	}
-	return []string{"cp" + arch.Tag + "_" + Op.floPoCoName + ".vhd"}, []string{vHDL}
 }
 
 func (Op FloPoCo) HLAssemblerInstructionMetadata(arch *Arch, line *bmline.BasmLine) (*bmmeta.BasmMeta, error) {

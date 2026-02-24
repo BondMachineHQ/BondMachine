@@ -18,13 +18,14 @@ const (
 
 // The CPU
 type Conproc struct {
-	CpID     uint32
-	Rsize    uint8
-	R        uint8 // Number of n-bit registers
-	N        uint8 // Number of n-bit inputs
-	M        uint8 // Number of n-bit outputs
-	Op       []Opcode
-	Threaded int
+	CpID         uint32
+	Rsize        uint8
+	R            uint8 // Number of n-bit registers
+	N            uint8 // Number of n-bit inputs
+	M            uint8 // Number of n-bit outputs
+	Op           []Opcode
+	Threaded     int
+	SharedHDLOps string
 }
 
 type Config struct {
