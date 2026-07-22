@@ -64,7 +64,17 @@ func (op R2u) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 }
 
 func (Op R2u) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
+	uSo := Uart{}
+	uartNum := arch.Shared_num(uSo.Shr_get_name())
+
 	result := ""
+	if arch.OnlyOne(Op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q", "r2u", "u2r", "k2r"}) {
+		result += "			stackqueueSM <= #1 1'b0;\n"
+	}
+	for i := 0; i < uartNum; i++ {
+		result += "			" + Op.getUartName(i) + "senderData <= #1 " + strconv.Itoa(int(arch.Rsize)) + "'d0;\n"
+		result += "			" + Op.getUartName(i) + "senderWrite <= #1 1'b0;\n"
+	}
 	return result
 }
 
@@ -183,25 +193,8 @@ func (op R2u) Disassembler(arch *Arch, instr string) (string, error) {
 	return result, nil
 }
 
-// The simulation does nothing
+// The simulation does not model the UART: the instruction just advances the PC
 func (op R2u) Simulate(vm *VM, instr string) error {
-	// TODO
-
-	regBits := vm.Mach.R
-	regPay := get_id(instr[:regBits])
-	posS := instr[regBits : regBits+8]
-
-	pos := uint8(get_id(posS))
-	payload := vm.Registers[regPay].(uint8)
-
-	cmd := make([]byte, 0)
-
-	cmd = append(cmd, byte(vm.CpID))
-	cmd = append(cmd, byte(pos))
-	cmd = append(cmd, byte(payload))
-
-	vm.CmdChan <- cmd
-
 	vm.Pc = vm.Pc + 1
 	return nil
 }
@@ -266,13 +259,13 @@ func (Op R2u) HLAssemblerNormalize(arch *Arch, rg *bmreqs.ReqRoot, node string, 
 	case "r2u":
 		regVal := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		soVal := line.Elements[0].GetValue()
+		soVal := line.Elements[1].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		return line, nil
 	case "touart":
 		regVal := line.Elements[0].GetValue()
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "registers", Value: regVal, Op: bmreqs.OpAdd})
-		soVal := "u0" // Push implicitely uses the first stack
+		soVal := "u0" // Touart implicitely uses the first uart
 		rg.Requirement(bmreqs.ReqRequest{Node: node, T: bmreqs.ObjectSet, Name: "sos", Value: soVal, Op: bmreqs.OpAdd})
 		if regVal != "" && soVal != "" {
 			newLine := new(bmline.BasmLine)

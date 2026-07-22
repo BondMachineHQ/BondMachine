@@ -14,6 +14,15 @@ type UartTemplate struct {
 	BaudRate  string
 	Receivers []string
 	Senders   []string
+	// CpPorts lists the CP-facing ports in the same order the shared object
+	// is positionally instantiated within the BondMachine main module
+	// (processor by processor, sender ports before receiver ports)
+	CpPorts []UartCpPort
+}
+
+type UartCpPort struct {
+	Name string
+	Dir  string // "send" (CP writes, r2u) or "recv" (CP reads, u2r)
 }
 
 type BMAPIExtra struct {

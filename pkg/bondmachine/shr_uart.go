@@ -80,20 +80,28 @@ func (sm Uart_instance) Write_verilog(bmach *Bondmachine, soIndex int, uartName 
 	result := ""
 
 	// Compute the receivers and senders of the uart, senders will be the writers of the fifo, receivers will be the readers of the fifo
+	// cpPorts keeps the CP-facing ports in the same order the shared object is
+	// positionally instantiated within the BondMachine main module: processor
+	// by processor, sender ports before receiver ports
 	receivers := make([]string, 0)
 	senders := make([]string, 0)
+	cpPorts := make([]UartCpPort, 0)
 
 	for numProcessor, soList := range bmach.Shared_links {
 		for _, soId := range soList {
 			if soId == soIndex {
 				for _, op := range bmach.Domains[bmach.Processors[numProcessor]].Op {
-					switch op.Op_get_name() {
-					case "u2r":
-						receivers = append(receivers, "p"+strconv.Itoa(numProcessor)+"uart_recv")
-						continue
-					case "r2u":
+					if op.Op_get_name() == "r2u" {
 						senders = append(senders, "p"+strconv.Itoa(numProcessor)+"uart_send")
-						continue
+						cpPorts = append(cpPorts, UartCpPort{Name: "p" + strconv.Itoa(numProcessor) + "uart_send", Dir: "send"})
+						break
+					}
+				}
+				for _, op := range bmach.Domains[bmach.Processors[numProcessor]].Op {
+					if op.Op_get_name() == "u2r" {
+						receivers = append(receivers, "p"+strconv.Itoa(numProcessor)+"uart_recv")
+						cpPorts = append(cpPorts, UartCpPort{Name: "p" + strconv.Itoa(numProcessor) + "uart_recv", Dir: "recv"})
+						break
 					}
 				}
 			}
@@ -145,6 +153,7 @@ func (sm Uart_instance) Write_verilog(bmach *Bondmachine, soIndex int, uartName 
 	// The receivers and senders are inverted because is a cp write to the fifo the uart reads from and viceversa
 	uartData.Receivers = senders
 	uartData.Senders = receivers
+	uartData.CpPorts = cpPorts
 	u, _ := template.New("uartso").Parse(uartSO)
 	s, _ := os.Create(uartName + "uartso.v")
 	u.Execute(s, uartData)

@@ -1801,7 +1801,6 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 
 	if uartModule {
 		for name, value := range uartParams {
-			fmt.Println(name[len(name)-3:])
 			if name[len(name)-3:] == "_rx" {
 				result += "\tinput " + value + ",\n"
 			}
@@ -2119,7 +2118,6 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 
 	if uartModule {
 		for name, value := range uartParams {
-			fmt.Println(name[len(name)-3:])
 			if name[len(name)-3:] == "_rx" {
 				result += "\tassign " + name + "=" + value + ";\n"
 			}

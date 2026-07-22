@@ -64,7 +64,16 @@ func (op U2r) OpInstructionVerilogHeader(conf *Config, arch *Arch, flavor string
 }
 
 func (Op U2r) Op_instruction_verilog_reset(arch *Arch, flavor string) string {
+	uSo := Uart{}
+	uartNum := arch.Shared_num(uSo.Shr_get_name())
+
 	result := ""
+	if arch.OnlyOne(Op.Op_get_name(), []string{"r2t", "t2r", "q2r", "r2q", "r2u", "u2r", "k2r"}) {
+		result += "			stackqueueSM <= #1 1'b0;\n"
+	}
+	for i := 0; i < uartNum; i++ {
+		result += "			" + Op.getUartName(i) + "receiverRead <= #1 1'b0;\n"
+	}
 	return result
 }
 
@@ -104,7 +113,7 @@ func (op U2r) Op_instruction_verilog_state_machine(conf *Config, arch *Arch, rg 
 				result += "								else begin\n"
 				result += "								       " + strings.ToLower(op.getUartName(j)) + "receiverRead <= #1 1'b1;\n"
 				result += "								end\n"
-				result += "								$display(\"T2R " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(op.getUartName(j)) + "\");\n"
+				result += "								$display(\"U2R " + strings.ToUpper(Get_register_name(i)) + " " + strings.ToUpper(op.getUartName(j)) + "\");\n"
 				result += "							end\n"
 
 			}
@@ -176,25 +185,8 @@ func (op U2r) Disassembler(arch *Arch, instr string) (string, error) {
 	return result, nil
 }
 
-// The simulation does nothing
+// The simulation does not model the UART: the instruction just advances the PC
 func (op U2r) Simulate(vm *VM, instr string) error {
-	// TODO
-
-	reg_bits := vm.Mach.R
-	regPay := get_id(instr[:reg_bits])
-	posS := instr[reg_bits : reg_bits+8]
-
-	pos := uint8(get_id(posS))
-	payload := vm.Registers[regPay].(uint8)
-
-	cmd := make([]byte, 0)
-
-	cmd = append(cmd, byte(vm.CpID))
-	cmd = append(cmd, byte(pos))
-	cmd = append(cmd, byte(payload))
-
-	vm.CmdChan <- cmd
-
 	vm.Pc = vm.Pc + 1
 	return nil
 }
