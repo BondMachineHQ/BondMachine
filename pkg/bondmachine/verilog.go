@@ -2105,7 +2105,7 @@ func (bmach *Bondmachine) Write_verilog_board(conf *Config, module_name string, 
 	}
 
 	if bmapiModule {
-		result += "\twire transconnectd;\n"
+		result += "\twire [2:0] transconnected;\n"
 	}
 
 	// Processing Headers from External ports of SOs

@@ -171,6 +171,20 @@ func bmapiInit(device string, tr func(context.Context, string, bool) (chan<- uin
 		go result.monitorLoop(ctx)
 	}
 
+	// Watchdog: if the transceiver closes its ended channel unexpectedly
+	// (e.g. UART error), cancel the BMAPI context so all goroutines unblock
+	// and the application can detect the failure via BMr2o/BMi2r errors.
+	go func() {
+		select {
+		case <-ctx.Done():
+			// Normal shutdown initiated by AcceleratorStop – nothing to do.
+		case <-result.endedChan:
+			// Transceiver died before AcceleratorStop was called.
+			result.stateSet(stateWAIT)
+			result.cancel()
+		}
+	}()
+
 	return result, nil
 }
 
