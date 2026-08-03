@@ -253,7 +253,20 @@ func (sim *BmQSimulator) BmMatrixFromOperation(op []*bmline.BasmLine) (*bmmatrix
 				for i, arg := range op[fundLine].Elements {
 					argName := arg.GetValue()
 					if _, ok := sim.qbitsNum[argName]; ok {
-						localOrder[i] = sim.qbitsNum[argName]
+						// The order must be expressed in terms of the CURRENT position of
+						// the qbit in localQBits, not its original global index: previous
+						// gates in the same operation may already have swapped the qbits
+						// around. Using the stale global index (sim.qbitsNum) here produces
+						// wrong swaps whenever more than one multi-qbit gate is packed into
+						// the same operation (only possible with more than 3 qbits).
+						pos := -1
+						for p, lq := range localQBits {
+							if lq == argName {
+								pos = p
+								break
+							}
+						}
+						localOrder[i] = pos
 					} else {
 						// Leaving out the arguments that are not qbits
 						localOrder[i] = -1
