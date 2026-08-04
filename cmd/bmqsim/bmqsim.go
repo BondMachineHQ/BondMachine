@@ -33,6 +33,10 @@ var swaps qbitSwaps
 var verbose = flag.Bool("v", false, "Verbose")
 var debug = flag.Bool("d", false, "Debug")
 
+// TODO Temporary flags, the information about the quantum circuit to be parametrized should be obtained from the builder
+var parametricBuild bool
+var nonParametricBuild bool
+
 var linearDataRange = flag.String("linear-data-range", "", "Load a linear data range file (with the syntax index,filename)")
 
 // Build modes
@@ -54,6 +58,9 @@ var softwareSimulationOutput = flag.String("software-simulation-output", "", "So
 
 // 5
 var buildMatrixSeqHLS = flag.Bool("build-matrix-seq-hls", false, "Build a matrix sequence HLS code with hardcoded quantum circuit")
+
+// 6
+var buildParametricMatrixSeq = flag.Bool("build-parametric-matrix-seq", false, "Build a parametric matrix sequence BM with hardcoded parametric quantum circuit")
 
 // Common options
 
@@ -85,27 +92,39 @@ func init() {
 	// 	fmt.Println("basm init")
 	// }
 
+	nonParametricBuild = false
+	parametricBuild = false
+
 	numOp := 0
 	if *buildFullHardwareHardcoded {
 		numOp++
+		nonParametricBuild = true
 	}
 	if *buildMatrixSeqHardcoded {
 		numOp++
+		nonParametricBuild = true
 	}
 	if *buildMatrixSeq || *buildMatrixSeqCompiled {
 		numOp++
+		nonParametricBuild = true
 	}
 	if *buildMatrixSeqHLS {
 		numOp++
+		nonParametricBuild = true
 	}
 	if *softwareSimulation {
 		numOp++
+		nonParametricBuild = true
+	}
+	if *buildParametricMatrixSeq {
+		numOp++
+		parametricBuild = true
 	}
 	if numOp == 0 {
 		log.Fatal("No build mode selected")
 	}
 	if numOp > 1 {
-		log.Fatal("Only one build mode can be selected among: build-full-hw-hardcoded, build-matrix-seq(_compiled), build-matrix-seq-hardcoded, software-simulation, build-matrix-seq-hls")
+		log.Fatal("Only one build mode can be selected among: build-full-hw-hardcoded, build-matrix-seq(_compiled), build-matrix-seq-hardcoded, software-simulation, build-matrix-seq-hls, build-parametric-matrix-seq")
 	}
 
 	if *linearDataRange != "" {
@@ -131,22 +150,23 @@ func init() {
 }
 
 func main() {
+
+	// Create a new builder
 	bld := new(bmbuilder.BMBuilder)
-	sim := new(bmqsim.BmQSimulator)
 
+	// Initialize the builder
 	bld.BMBuilderInit()
-	sim.BmQSimulatorInit()
 
+	// Set the debug and verbose flags
 	if *debug {
 		bld.SetDebug()
-		sim.SetDebug()
 	}
-
 	if *verbose {
 		bld.SetVerbose()
-		sim.SetVerbose()
 	}
 
+	// if startBuilding is true, then we have some files to parse and build the quantum circuit, otherwise we have
+	// nothing to do and we will just list the available hardware flavors or app flavors, if requested
 	startBuilding := false
 
 	for _, bmqFile := range flag.Args() {
@@ -173,104 +193,132 @@ func main() {
 		}
 	}
 
-	if startBuilding {
+	// TODO get the information about the quantum circuit to be parametrized from the builder
 
-		if *buildFullHardwareHardcoded {
-			// Build a full hardware BM with hardcoded quantum circuit this is a special case incompatible with the rest of the modes
-			// Matrices won't be generated, the hardware will be built directly
+	// Processing the non parametric quantum circuit
+	if nonParametricBuild {
 
-			// Run the builder with the full set of passes
-			if err := bld.RunBuilder(); err != nil {
-				bld.Alert(err)
-				return
-			}
+		// Create a new non parametric simulator
+		sim := new(bmqsim.BmQSimulator)
+		sim.BmQSimulatorInit()
 
-			var outF string
-			if *bmFile != "" {
-				outF = *bmFile
+		if *debug {
+			sim.SetDebug()
+		}
+		if *verbose {
+			sim.SetVerbose()
+		}
+
+		if startBuilding {
+			if *buildFullHardwareHardcoded {
+				// Build a full hardware BM with hardcoded quantum circuit this is a special case incompatible with the rest of the modes
+				// Matrices won't be generated, the hardware will be built directly
+
+				// Run the builder with the full set of passes
+				if err := bld.RunBuilder(); err != nil {
+					bld.Alert(err)
+					return
+				}
+
+				var outF string
+				if *bmFile != "" {
+					outF = *bmFile
+				} else {
+					outF = "bondmachine.json"
+				}
+
+				bMach := bld.GetBondMachine()
+
+				// Write the bondmachine file (TODO rewrite)
+				f, _ := os.Create(outF)
+				defer f.Close()
+				b, _ := json.Marshal(bMach.Jsoner())
+				f.WriteString(string(b))
 			} else {
-				outF = "bondmachine.json"
-			}
+				// All the other modes run the builder with a minimal set of passes only to parse the quantum circuit
+				// and generate the matrices
 
-			bMach := bld.GetBondMachine()
+				bld.UnsetActive("generatorsexec")
 
-			// Write the bondmachine file (TODO rewrite)
-			f, _ := os.Create(outF)
-			defer f.Close()
-			b, _ := json.Marshal(bMach.Jsoner())
-			f.WriteString(string(b))
-		} else {
-			// All the other modes run the builder with a minimal set of passes only to parse the quantum circuit
-			// and generate the matrices
+				if err := bld.RunBuilder(); err != nil {
+					bld.Alert(err)
+					return
+				}
 
-			bld.UnsetActive("generatorsexec")
+				if *debug {
+					fmt.Println(purple("BmBuilder completed"))
+				}
 
-			if err := bld.RunBuilder(); err != nil {
-				bld.Alert(err)
-				return
-			}
+				var body *bmline.BasmBody
 
-			if *debug {
-				fmt.Println(purple("BmBuilder completed"))
-			}
+				if *debug {
+					fmt.Println(purple("Exporting circuit"))
+				}
 
-			var body *bmline.BasmBody
+				// Export the BasmBody to generate the matrices
+				if v, err := bld.ExportBasmBody(); err != nil {
+					bld.Alert(err)
+					return
+				} else {
+					body = v
+				}
 
-			if *debug {
-				fmt.Println(purple("Exporting circuit"))
-			}
-
-			// Export the BasmBody to generate the matrices
-			if v, err := bld.ExportBasmBody(); err != nil {
-				bld.Alert(err)
-				return
-			} else {
-				body = v
-			}
-
-			if *debug {
-				fmt.Println(purple("Processing circuit to matrices"))
-			}
-			// Get the circuit matrices from the BasmBody
-			if matrices, err := sim.QasmToBmMatrices(body); err != nil {
-				bld.Alert(err)
-				return
-			} else {
-				sim.Mtx = make([]*bmmatrix.BmMatrixSquareComplex, len(matrices))
-				copy(sim.Mtx, matrices)
+				if *debug {
+					fmt.Println(purple("Processing circuit to matrices"))
+				}
+				// Get the circuit matrices from the BasmBody
+				if matrices, err := sim.QasmToBmMatrices(body); err != nil {
+					bld.Alert(err)
+					return
+				} else {
+					sim.Mtx = make([]*bmmatrix.BmMatrixSquareComplex, len(matrices))
+					copy(sim.Mtx, matrices)
+				}
 			}
 		}
 
 		if *showMatrices {
-			if sim.Mtx == nil {
-				bld.Alert("No matrices to show")
-				return
-			} else {
-				for i, m := range sim.Mtx {
-					fmt.Println(green("Matrix:"), yellow(strconv.Itoa(i)))
-					fmt.Println(m.StringColor(green))
+			if startBuilding {
+				if sim.Mtx == nil {
+					bld.Alert("No matrices to show")
+					return
+				} else {
+					for i, m := range sim.Mtx {
+						fmt.Println(green("Matrix:"), yellow(strconv.Itoa(i)))
+						fmt.Println(m.StringColor(green))
+					}
 				}
+			} else {
+				bld.Alert("No quantum circuit to show the matrices")
 			}
 		}
 
 		if *showCircuitMatrix {
-			mm := sim.Mtx[len(sim.Mtx)-1]
-			for i := len(sim.Mtx) - 2; i >= 0; i-- {
-				mm = bmmatrix.MatrixProductComplex(mm, sim.Mtx[i])
-			}
-
-			if len(swaps) > 0 {
-				for _, swap := range swaps {
-					swap1s := strings.Split(swap, ",")[0]
-					swap2s := strings.Split(swap, ",")[1]
-					swap1, _ := strconv.Atoi(swap1s)
-					swap2, _ := strconv.Atoi(swap2s)
-					mm = sim.SwapQbits(mm, swap1, swap2)
+			if startBuilding {
+				if sim.Mtx == nil {
+					bld.Alert("No matrices to show")
+					return
 				}
-			}
+				mm := sim.Mtx[len(sim.Mtx)-1]
+				for i := len(sim.Mtx) - 2; i >= 0; i-- {
+					mm = bmmatrix.MatrixProductComplex(mm, sim.Mtx[i])
+				}
 
-			fmt.Println(green("Whole circuit matrix:"))
-			fmt.Println(mm.StringColor(green))
+				if len(swaps) > 0 {
+					for _, swap := range swaps {
+						swap1s := strings.Split(swap, ",")[0]
+						swap2s := strings.Split(swap, ",")[1]
+						swap1, _ := strconv.Atoi(swap1s)
+						swap2, _ := strconv.Atoi(swap2s)
+						mm = sim.SwapQbits(mm, swap1, swap2)
+					}
+				}
+
+				fmt.Println(green("Whole circuit matrix:"))
+				fmt.Println(mm.StringColor(green))
+			} else {
+				bld.Alert("No quantum circuit to show the whole circuit matrix")
+			}
 		}
 
 		if *emitBMAPIMaps {
@@ -290,179 +338,189 @@ func main() {
 			}
 		}
 
-	}
+		if *buildMatrixSeqHardcoded {
+			// Build a matrix sequence BM with hardcoded quantum circuit
 
-	if *buildMatrixSeqHardcoded {
-		// Build a matrix sequence BM with hardcoded quantum circuit
+			modeTags := []string{"real", "complex"}
 
-		modeTags := []string{"real", "complex"}
-
-		if *hardwareFlavorList {
-			// List of available hardware flavors for the selected operating mode
-			for t := range bmqsim.HardwareFlavors {
-				flavorTags := bmqsim.HardwareFlavorsTags[t]
-				for _, tag := range modeTags {
-					if bmqsim.StringInSlice(tag, flavorTags) {
-						fmt.Println(t)
+			if *hardwareFlavorList {
+				// List of available hardware flavors for the selected operating mode
+				for t := range bmqsim.HardwareFlavors {
+					flavorTags := bmqsim.HardwareFlavorsTags[t]
+					for _, tag := range modeTags {
+						if bmqsim.StringInSlice(tag, flavorTags) {
+							fmt.Println(t)
+						}
 					}
 				}
-			}
-		} else if *hardwareFlavor != "" {
-			if startBuilding {
-				if _, ok := bmqsim.HardwareFlavors[*hardwareFlavor]; ok {
-					if sim.VerifyConditions(*hardwareFlavor) == nil {
-						if basmFileData, err := sim.ApplyTemplate(*hardwareFlavor); err != nil {
-							bld.Alert(err)
+			} else if *hardwareFlavor != "" {
+				if startBuilding {
+					if _, ok := bmqsim.HardwareFlavors[*hardwareFlavor]; ok {
+						if sim.VerifyConditions(*hardwareFlavor) == nil {
+							if basmFileData, err := sim.ApplyTemplate(*hardwareFlavor); err != nil {
+								bld.Alert(err)
+							} else {
+								os.WriteFile(*basmFile, []byte(basmFileData), 0644)
+							}
 						} else {
-							os.WriteFile(*basmFile, []byte(basmFileData), 0644)
+							bld.Alert("Hardware flavor not compatible with the quantum circuit")
 						}
 					} else {
-						bld.Alert("Hardware flavor not compatible with the quantum circuit")
+						bld.Alert("Hardware flavor not found")
 					}
 				} else {
-					bld.Alert("Hardware flavor not found")
+					bld.Alert("No quantum circuit to build the matrix sequence")
 				}
 			} else {
-				bld.Alert("No quantum circuit to build the matrix sequence")
+				bld.Alert("Hardware flavor must be selected")
 			}
-		} else {
-			bld.Alert("Hardware flavor must be selected")
 		}
-	}
 
-	if *buildMatrixSeq || *buildMatrixSeqCompiled {
-		// Build a matrix sequence BM with a loadable quantum circuit file
-		fmt.Println("Under construction")
+		if *buildMatrixSeq || *buildMatrixSeqCompiled {
+			// Build a matrix sequence BM with a loadable quantum circuit file
+			fmt.Println("Under construction")
 
-		if *hardwareFlavorList {
-			// List of available hardware flavors for the selected operating mode
-		} else if *hardwareFlavor != "" {
-		} else {
-			bld.Alert("Hardware flavor must be selected")
+			if *hardwareFlavorList {
+				// List of available hardware flavors for the selected operating mode
+			} else if *hardwareFlavor != "" {
+			} else {
+				bld.Alert("Hardware flavor must be selected")
+			}
 		}
-	}
 
-	if *buildMatrixSeqHLS {
-		// Build a matrix sequence HLS code
-		modeTags := []string{"real", "complex"}
+		if *buildMatrixSeqHLS {
+			// Build a matrix sequence HLS code
+			modeTags := []string{"real", "complex"}
 
-		if *hardwareFlavorList {
-			// List of available hardware flavors for the selected operating mode
-			for t := range bmqsim.HLSFlavors {
-				flavorTags := bmqsim.HLSFlavorsTags[t]
-				for _, tag := range modeTags {
-					if bmqsim.StringInSlice(tag, flavorTags) {
-						fmt.Println(t)
+			if *hardwareFlavorList {
+				// List of available hardware flavors for the selected operating mode
+				for t := range bmqsim.HLSFlavors {
+					flavorTags := bmqsim.HLSFlavorsTags[t]
+					for _, tag := range modeTags {
+						if bmqsim.StringInSlice(tag, flavorTags) {
+							fmt.Println(t)
+						}
 					}
 				}
+			} else if *hardwareFlavor != "" {
+				// The output of this mode is a bundle directory
+				if *bundleDir == "" {
+					bld.Alert("Bundle directory must be provided")
+					return
+				}
+				if startBuilding {
+					if _, ok := bmqsim.HLSFlavors[*hardwareFlavor]; ok {
+						if sim.VerifyConditions(*hardwareFlavor) == nil {
+							if err := sim.ApplyTemplateBundle(*hardwareFlavor, *bundleDir); err != nil {
+								bld.Alert(err)
+							}
+						} else {
+							bld.Alert("Hardware flavor not compatible with the quantum circuit")
+						}
+					} else {
+						bld.Alert("Hardware flavor not found")
+					}
+				} else {
+					bld.Alert("No quantum circuit to build the matrix sequence")
+				}
+			} else {
+				bld.Alert("Hardware flavor must be selected")
 			}
-		} else if *hardwareFlavor != "" {
-			// The output of this mode is a bundle directory
-			if *bundleDir == "" {
-				bld.Alert("Bundle directory must be provided")
-				return
-			}
+		}
+
+		if *softwareSimulation {
 			if startBuilding {
-				if _, ok := bmqsim.HLSFlavors[*hardwareFlavor]; ok {
-					if sim.VerifyConditions(*hardwareFlavor) == nil {
-						if err := sim.ApplyTemplateBundle(*hardwareFlavor, *bundleDir); err != nil {
-							bld.Alert(err)
+				// Software simulation mode
+				if *softwareSimulationInput != "" {
+					// Load the input data from a json file
+					inputs := new([]bmqsim.StateArray)
+					if inputJSON, err := os.ReadFile(*softwareSimulationInput); err == nil {
+						if err := json.Unmarshal([]byte(inputJSON), inputs); err != nil {
+							panic(err)
 						}
 					} else {
-						bld.Alert("Hardware flavor not compatible with the quantum circuit")
-					}
-				} else {
-					bld.Alert("Hardware flavor not found")
-				}
-			} else {
-				bld.Alert("No quantum circuit to build the matrix sequence")
-			}
-		} else {
-			bld.Alert("Hardware flavor must be selected")
-		}
-	}
-
-	if *softwareSimulation {
-		if startBuilding {
-			// Software simulation mode
-			if *softwareSimulationInput != "" {
-				// Load the input data from a json file
-				inputs := new([]bmqsim.StateArray)
-				if inputJSON, err := os.ReadFile(*softwareSimulationInput); err == nil {
-					if err := json.Unmarshal([]byte(inputJSON), inputs); err != nil {
 						panic(err)
+					}
+					sim.Inputs = *inputs
+				} else {
+					// Zero state
+					inputs := new(bmqsim.StateArray)
+					inputs.Vector = make([]bmmatrix.Complex32, sim.StateSize())
+					for i := range inputs.Vector {
+						if i == 0 {
+							inputs.Vector[i] = bmmatrix.Complex32{Real: 1, Imag: 0}
+						} else {
+							inputs.Vector[i] = bmmatrix.Complex32{Real: 0, Imag: 0}
+						}
+					}
+					sim.Inputs = make([]bmqsim.StateArray, 1)
+					sim.Inputs[0] = *inputs
+				}
+
+				if err := sim.RunSoftwareSimulation(); err != nil {
+					bld.Alert(err)
+					return
+				}
+
+				// Save the output data to a json file or print it to stdout
+				if outputJSON, err := json.Marshal(sim.Outputs); err == nil {
+					if *softwareSimulationOutput != "" {
+						os.WriteFile(*softwareSimulationOutput, outputJSON, 0644)
+					} else {
+						fmt.Println(string(outputJSON))
 					}
 				} else {
 					panic(err)
 				}
-				sim.Inputs = *inputs
+
 			} else {
-				// Zero state
-				inputs := new(bmqsim.StateArray)
-				inputs.Vector = make([]bmmatrix.Complex32, sim.StateSize())
-				for i := range inputs.Vector {
-					if i == 0 {
-						inputs.Vector[i] = bmmatrix.Complex32{Real: 1, Imag: 0}
-					} else {
-						inputs.Vector[i] = bmmatrix.Complex32{Real: 0, Imag: 0}
-					}
-				}
-				sim.Inputs = make([]bmqsim.StateArray, 1)
-				sim.Inputs[0] = *inputs
+				bld.Alert("No quantum circuit to run the software simulation")
 			}
-
-			if err := sim.RunSoftwareSimulation(); err != nil {
-				bld.Alert(err)
-				return
-			}
-
-			// Save the output data to a json file or print it to stdout
-			if outputJSON, err := json.Marshal(sim.Outputs); err == nil {
-				if *softwareSimulationOutput != "" {
-					os.WriteFile(*softwareSimulationOutput, outputJSON, 0644)
-				} else {
-					fmt.Println(string(outputJSON))
-				}
-			} else {
-				panic(err)
-			}
-
-		} else {
-			bld.Alert("No quantum circuit to run the software simulation")
 		}
-	}
 
-	if *buildApp {
-		// Build an hardware connected app
+		if *buildApp {
+			// Build an hardware connected app
 
-		modeTags := []string{"real", "complex"}
+			modeTags := []string{"real", "complex"}
 
-		if *appFlavorList {
-			// List of available app flavors for the selected operating mode
-			for t := range bmqsim.AppFlavors {
-				flavorTags := bmqsim.AppFlavorsTags[t]
-				for _, tag := range modeTags {
-					if bmqsim.StringInSlice(tag, flavorTags) {
-						fmt.Println(t)
+			if *appFlavorList {
+				// List of available app flavors for the selected operating mode
+				for t := range bmqsim.AppFlavors {
+					flavorTags := bmqsim.AppFlavorsTags[t]
+					for _, tag := range modeTags {
+						if bmqsim.StringInSlice(tag, flavorTags) {
+							fmt.Println(t)
+						}
 					}
 				}
-			}
-		} else if *appFlavor != "" {
-			if startBuilding {
-				if _, ok := bmqsim.AppFlavors[*appFlavor]; ok {
-					if appFileData, err := sim.ApplyTemplate(*appFlavor); err != nil {
-						bld.Alert(err)
+			} else if *appFlavor != "" {
+				if startBuilding {
+					if _, ok := bmqsim.AppFlavors[*appFlavor]; ok {
+						if appFileData, err := sim.ApplyTemplate(*appFlavor); err != nil {
+							bld.Alert(err)
+						} else {
+							os.WriteFile(*appFile, []byte(appFileData), 0644)
+						}
 					} else {
-						os.WriteFile(*appFile, []byte(appFileData), 0644)
+						bld.Alert("App flavor not found")
 					}
 				} else {
-					bld.Alert("App flavor not found")
+					bld.Alert("No quantum circuit to build the matrix sequence")
 				}
 			} else {
-				bld.Alert("No quantum circuit to build the matrix sequence")
+				bld.Alert("App flavor must be selected")
 			}
-		} else {
-			bld.Alert("App flavor must be selected")
+		}
+	} else {
+		// Create a new parametric simulator
+		pSim := new(bmqsim.BmQSimulatorParametric)
+		pSim.BmQSimulatorParametricInit()
+
+		if *debug {
+			pSim.SetDebug()
+		}
+		if *verbose {
+			pSim.SetVerbose()
 		}
 	}
 }

@@ -14,6 +14,10 @@ type StateArray struct {
 	Vector []bmmatrix.Complex32
 }
 
+type ParamArray struct {
+	Vector []bmmatrix.Complex32
+}
+
 type IOmap struct {
 	Assoc map[string]string
 }
@@ -27,12 +31,32 @@ type BmQSimulator struct {
 	Outputs  []StateArray
 }
 
+type BmQSimulatorParametric struct {
+	verbose  bool
+	debug    bool
+	qBits    []string
+	qBitsNum map[string]int
+	params   []string
+	paramNum map[string]int
+	Inputs   []ParamArray
+	Outputs  []ParamArray
+}
+
 // BmQSimulatorInit initializes the BmQSimulator
 func (sim *BmQSimulator) BmQSimulatorInit() {
 	sim.verbose = false
 	sim.debug = false
 	sim.qbits = make([]string, 0)
 	sim.qbitsNum = make(map[string]int)
+}
+
+func (pSim *BmQSimulatorParametric) BmQSimulatorParametricInit() {
+	pSim.verbose = false
+	pSim.debug = false
+	pSim.qBits = make([]string, 0)
+	pSim.qBitsNum = make(map[string]int)
+	pSim.params = make([]string, 0)
+	pSim.paramNum = make(map[string]int)
 }
 
 func (sim *BmQSimulator) QbitsNum() int {
@@ -53,6 +77,14 @@ func (sim *BmQSimulator) SetVerbose() {
 
 func (sim *BmQSimulator) SetDebug() {
 	sim.debug = true
+}
+
+func (pSim *BmQSimulatorParametric) SetVerbose() {
+	pSim.verbose = true
+}
+
+func (pSim *BmQSimulatorParametric) SetDebug() {
+	pSim.debug = true
 }
 
 // QasmToBmMatrices converts a QASM file to a list of BmMatrixSquareComplex, the input is a BasmBody with all the metadata and the list of quantum instructions
