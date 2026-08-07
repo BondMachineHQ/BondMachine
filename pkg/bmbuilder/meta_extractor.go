@@ -26,17 +26,32 @@ func metaExtractor(b *BMBuilder) error {
 
 			switch operand {
 			case "qbits":
-				qbits := make([]string, 0)
-				qbitCheck := make(map[string]struct{})
+				qBits := make([]string, 0)
+				qBitCheck := make(map[string]struct{})
 				for _, element := range line.Elements {
-					if _, ok := qbitCheck[element.GetValue()]; ok {
+					if _, ok := qBitCheck[element.GetValue()]; ok {
 						return fmt.Errorf("Qbit %s already defined", element.GetValue())
 					}
-					qbits = append(qbits, element.GetValue())
-					qbitCheck[element.GetValue()] = struct{}{}
+					qBits = append(qBits, element.GetValue())
+					qBitCheck[element.GetValue()] = struct{}{}
 				}
-				meta := strings.Join(qbits, ":")
+				meta := strings.Join(qBits, ":")
 				block.blockBody.BasmMeta = block.blockBody.BasmMeta.SetMeta("qbits", meta)
+
+				// Remove the line from the block
+				block.blockBody.Lines = append(block.blockBody.Lines[:i], block.blockBody.Lines[i+1:]...)
+			case "cparams":
+				cParams := make([]string, 0)
+				cParamCheck := make(map[string]struct{})
+				for _, element := range line.Elements {
+					if _, ok := cParamCheck[element.GetValue()]; ok {
+						return fmt.Errorf("Cparam %s already defined", element.GetValue())
+					}
+					cParams = append(cParams, element.GetValue())
+					cParamCheck[element.GetValue()] = struct{}{}
+				}
+				meta := strings.Join(cParams, ":")
+				block.blockBody.BasmMeta = block.blockBody.BasmMeta.SetMeta("cparams", meta)
 
 				// Remove the line from the block
 				block.blockBody.Lines = append(block.blockBody.Lines[:i], block.blockBody.Lines[i+1:]...)
