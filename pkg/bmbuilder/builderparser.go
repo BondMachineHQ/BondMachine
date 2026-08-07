@@ -3,33 +3,25 @@ package bmbuilder
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/BondMachineHQ/BondMachine/pkg/bmline"
 )
 
-// TODO Horrific and temporary code, a proper parser/lexer is desireable
-func idiotParser(s string) ([]string, int) {
-	// Convert tabs into spaces
-	tab := regexp.MustCompile(`\t`)
-	st := tab.ReplaceAllString(s, " ")
-	// Strip away all duplicates whitspace characters and comments
-	comment := regexp.MustCompile(`;.*`)
-	//space := regexp.MustCompile(`\s+`)
-	//stripped := strings.TrimSpace(space.ReplaceAllString(comment.ReplaceAllString(s, ""), " "))
-	stripped := strings.TrimSpace(comment.ReplaceAllString(st, ""))
+// tokenizeLine splits a source line into whitespace-separated operands while ignoring comments.
+func tokenizeLine(s string) ([]string, int) {
+	if idx := strings.Index(s, ";"); idx >= 0 {
+		s = s[:idx]
+	}
 
-	// Splitting the line using spaces
-	splitted := strings.Split(stripped, " ")
-
-	return splitted, len(splitted)
+	tokens := strings.Fields(s)
+	return tokens, len(tokens)
 }
 
 func basmParser(bi *BMBuilder, s string, lineNo uint32) error {
 	line := strconv.Itoa(int(lineNo))
-	argS, argN := idiotParser(s)
+	argS, argN := tokenizeLine(s)
 
 	if bi.debug {
 		fmt.Print("\t" + green(lineNo))
