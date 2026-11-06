@@ -248,11 +248,14 @@ func (bmach *Bondmachine) WriteBMAPI(conf *Config, flavor string, iomaps *IOmap,
 
 		case "zedboard", "ebaz4205", "zc702":
 			vFiles := make(map[string]string)
-			if bmapiFlavorVersion == "basic" {
+			switch bmapiFlavorVersion {
+			case "basic":
+				vFiles["axistream.v"] = basicAXIStream
+			case "basicbram":
 				vFiles["axistream.v"] = basicAXIStreamBram
-			} else if bmapiFlavorVersion == "optimized" {
+			case "optimized":
 				vFiles["axistream.v"] = optimizedAXIStream
-			} else {
+			default:
 				return errors.New("unknown AXI Stream flavor version")
 			}
 
