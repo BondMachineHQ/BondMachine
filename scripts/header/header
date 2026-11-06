@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""Create, read or list BondMachine header .mem files.
+
+A header file holds one string as hex bytes (0xNN), one char per line,
+centered and zero-padded to a fixed number of lines.
+"""
+import argparse
+import glob
+import os
+import sys
+
+SIZE = 100
+
+
+def read_header(path, delimit=True):
+    with open(path) as f:
+        data = bytes(int(tok, 16) for tok in f.read().split())
+    text = data.decode("utf-8", errors="replace").replace("\x00", " ")
+    return f"|{text}|" if delimit else text
+
+
+def write_header(path, text):
+    data = text.encode("utf-8")
+    if len(data) > SIZE:
+        sys.exit(f"error: string is {len(data)} bytes, maximum is {SIZE}")
+    left = (SIZE - len(data)) // 2
+    data = b"\x00" * left + data + b"\x00" * (SIZE - len(data) - left)
+    with open(path, "w") as f:
+        f.writelines(f"0x{b:02x}\n" for b in data)
+
+
+def list_headers(directory):
+    rows = []
+    for path in sorted(glob.glob(os.path.join(directory, "*.mem"))):
+        try:
+            rows.append((os.path.basename(path), read_header(path, False)))
+        except ValueError:
+            rows.append((os.path.basename(path), "<invalid header>"))
+    if not rows:
+        print("no .mem files found")
+        return
+    w = max(len("FILENAME"), *(len(r[0]) for r in rows))
+    sw = max(len("STRING"), *(len(r[1]) for r in rows))
+    print(f"{'FILENAME':<{w}} | {'STRING':^{sw}} |")
+    print(f"{'-' * w}-+-{'-' * sw}-+")
+    for name, text in rows:
+        print(f"{name:<{w}} | {text:<{sw}} |")
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sub = p.add_subparsers(dest="cmd", required=True)
+    r = sub.add_parser("read", help="show the string of a header file")
+    r.add_argument("file")
+    w = sub.add_parser("write", help="write a string into a header file")
+    w.add_argument("string")
+    w.add_argument("file")
+    l = sub.add_parser("list", help="list .mem files in a directory")
+    l.add_argument("directory", nargs="?", default=os.path.dirname(os.path.abspath(__file__)))
+    a = p.parse_args()
+
+    if a.cmd == "read":
+        print(read_header(a.file))
+    elif a.cmd == "write":
+        write_header(a.file, a.string)
+    else:
+        list_headers(a.directory)
+
+
+if __name__ == "__main__":
+    main()
